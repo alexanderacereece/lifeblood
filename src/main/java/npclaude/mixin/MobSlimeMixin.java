@@ -6,8 +6,10 @@ import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.world.World;
 import npclaude.combat.NpcTargeting;
 import npclaude.entity.EntityNPC;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -25,6 +27,10 @@ public abstract class MobSlimeMixin extends Mob {
 	public float squish;
 	@Shadow
 	private int jumpDelay;
+	/** The NPC being hunted, re-picked every few ticks rather than searched for every tick. */
+	@Unique
+	@Nullable
+	private EntityNPC npclaude$prey;
 
 	protected MobSlimeMixin(World world) {
 		super(world);
@@ -35,7 +41,11 @@ public abstract class MobSlimeMixin extends Mob {
 
 	@Inject(method = "updateAI", at = @At("HEAD"), cancellable = true)
 	private void npclaude$huntNpcs(CallbackInfo ci) {
-		EntityNPC npc = NpcTargeting.nearestVisibleNpc(this, HUNT_RANGE, HUNT_RANGE);
+		if (NpcTargeting.isSearchTick(this) || this.npclaude$prey != null && !this.npclaude$prey.isAlive()) {
+			this.npclaude$prey = NpcTargeting.nearestVisibleNpc(this, HUNT_RANGE, HUNT_RANGE);
+		}
+
+		EntityNPC npc = this.npclaude$prey;
 		if (npc == null) {
 			return;
 		}

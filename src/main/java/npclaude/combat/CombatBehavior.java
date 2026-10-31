@@ -161,7 +161,7 @@ public class CombatBehavior implements NpcBehavior {
 		NpcArchery.readyBow(npc);
 		npc.setLookTarget(target, 10);
 		boolean visible = npc.canEntityBeSeen(target);
-		boolean clearShot = visible && NpcArchery.hasClearShot(npc, target, threat.allies);
+		boolean clearShot = visible && NpcArchery.hasClearShot(npc, target, threat.hostiles);
 		boolean repath = --this.repathCooldown <= 0;
 		if (repath) {
 			this.repathCooldown = REPATH_INTERVAL;
@@ -234,7 +234,7 @@ public class CombatBehavior implements NpcBehavior {
 			double angle = awayAngle + offset;
 			int x = MathHelper.floor(npc.x + Math.cos(angle) * distance);
 			int z = MathHelper.floor(npc.z + Math.sin(angle) * distance);
-			for (int dy : new int[]{0, 1, -1, 2, -2}) {
+			for (int dy : new int[]{0, 1, -1}) {
 				if (npc.navigator.moveTo(x, y + dy, z)) {
 					return;
 				}

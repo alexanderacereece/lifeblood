@@ -45,6 +45,7 @@ import org.joml.Vector3dc;
  * /npc faction create|delete <faction>
  * /npc faction relation <faction> <faction> [ally|neutral|hostile]
  * /npc faction set <name> <faction>
+ * /npc relation <name> [ally|neutral|hostile]   (how the NPC regards you)
  * /npc list
  * /npc skins [reload]
  *
@@ -210,6 +211,25 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 							npc.setFaction(faction);
 							return reply(c, npc.nickname + " has joined the " + faction + ".");
 						})))))
+			.then(literal("relation")
+				.then(npcArgument()
+					.executes(c -> {
+						Player player = requirePlayer(c.getSource());
+						EntityNPC npc = findNpc(c);
+						return reply(c, npc.nickname + " is " + describePersonal(npc.relations.get(player)) + ".");
+					})
+					.then(argument("relation", ArgumentTypeString.word()).suggests(RELATION_NAMES).executes(c -> {
+						Player player = requirePlayer(c.getSource());
+						EntityNPC npc = findNpc(c);
+						String relationName = ArgumentTypeString.getString(c, "relation");
+						FactionRelation relation = FactionRelation.byName(relationName);
+						if (relation == null) {
+							throw error("Unknown relation '" + relationName + "'. Use ally, neutral or hostile.");
+						}
+
+						npc.relations.set(player, relation);
+						return reply(c, npc.nickname + " is now " + describePersonal(relation) + ".");
+					}))))
 			.then(literal("remove")
 				.then(npcArgument().executes(c -> {
 					EntityNPC npc = findNpc(c);
@@ -339,6 +359,14 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 		}
 
 		return factions.size();
+	}
+
+	private static String describePersonal(FactionRelation relation) {
+		return switch (relation) {
+			case ALLY -> "your ally";
+			case NEUTRAL -> "neutral toward you";
+			case HOSTILE -> "hostile toward you";
+		};
 	}
 
 	private static String describe(FactionRelation relation) {

@@ -27,7 +27,8 @@ import org.joml.primitives.AABBd;
 
 /**
  * A snapshot of how dangerous an NPC's surroundings are: the hostiles nearby,
- * weighed against the NPC's own fighting strength plus that of its allies (NPCs of its faction, and players).
+ * weighed against the NPC's own fighting strength plus that of its allies: NPCs its faction is allied with, and players
+ * it is personally allied with. Players it is neutral toward don't count either way.
  * Everyone's strength uses the same formula, so an unarmed player helps no more than an unarmed NPC.
  *
  * danger = threat / strength. Around 1 means an even fight; the NPC's bravery decides how much it will accept.
@@ -74,8 +75,7 @@ public final class ThreatAssessment {
 
 		result.strength = strengthOf(npc);
 		for (Entity entity : nearby) {
-			boolean ally = entity instanceof EntityNPC other ? npc.isAlliedWith(other) : entity instanceof Player;
-			if (ally && entity instanceof Mob mob && mob.isAlive()) {
+			if (entity instanceof Mob mob && mob.isAlive() && relationTo(npc, mob) == FactionRelation.ALLY) {
 				result.allies.add(mob);
 				result.strength += strengthOf(mob);
 			}
@@ -101,23 +101,40 @@ public final class ThreatAssessment {
 	}
 
 	/**
-	 * Hostile: NPCs of an enemy faction, anything hunting this NPC or its allies, whoever recently hurt it,
-	 * and naturally aggressive monsters it can see. Players and allied NPCs never are.
+	 * How the NPC regards a person: other NPCs through faction relations, players through its personal relations.
+	 * Monsters and animals have no relation and are judged separately.
+	 */
+	@Nullable
+	public static FactionRelation relationTo(EntityNPC npc, Mob mob) {
+		if (mob instanceof EntityNPC other) {
+			return NpcFactions.relation(npc, other);
+		}
+
+		if (mob instanceof Player player) {
+			return npc.relations.get(player);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Hostile: NPCs of an enemy faction, players the NPC is hostile toward, anything hunting this NPC or its allies,
+	 * whoever recently hurt it (unless an ally), and naturally aggressive monsters it can see.
 	 */
 	private static boolean isHostile(EntityNPC npc, Mob mob, List<Entity> allies) {
-		if (!mob.isAlive() || mob instanceof Player) {
+		if (!mob.isAlive() || mob instanceof Player player && !player.getGamemode().hasHostileMobs()) {
 			return false;
 		}
 
-		if (mob instanceof EntityNPC other) {
-			FactionRelation relation = NpcFactions.relation(npc, other);
+		FactionRelation relation = relationTo(npc, mob);
+		if (relation != null) {
 			if (relation == FactionRelation.ALLY) {
 				return false;
 			}
 
-			// Neutral NPCs are left alone unless they start something.
-			boolean grudge = other == npc.getLastAttacker() && npc.ticksSinceAttacked() < GRUDGE_TICKS;
-			return grudge || relation == FactionRelation.HOSTILE && npc.canEntityBeSeen(other);
+			// Neutral people are left alone unless they start something.
+			boolean grudge = mob == npc.getLastAttacker() && npc.ticksSinceAttacked() < GRUDGE_TICKS;
+			return grudge || relation == FactionRelation.HOSTILE && npc.canEntityBeSeen(mob);
 		}
 
 		if (mob == npc.getLastAttacker() && npc.ticksSinceAttacked() < GRUDGE_TICKS) {
@@ -143,10 +160,10 @@ public final class ThreatAssessment {
 			|| mob instanceof EntityNPC npc && NpcArchery.canShoot(npc);
 	}
 
-	/** Enemy NPCs are rated like allies are: by their fighting strength. */
+	/** Enemy NPCs and players are rated like allies are: by their fighting strength. */
 	private static double threatOf(Mob mob) {
-		if (mob instanceof EntityNPC npc) {
-			return strengthOf(npc);
+		if (mob instanceof EntityNPC || mob instanceof Player) {
+			return strengthOf(mob);
 		}
 
 		double health = Math.max(0.25, Math.min(2.0, mob.getHealth() / 20.0));

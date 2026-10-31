@@ -26,6 +26,7 @@ import npclaude.combat.CombatBehavior;
 import npclaude.combat.CombatStyle;
 import npclaude.combat.MonsterContact;
 import npclaude.combat.NpcFactions;
+import npclaude.combat.NpcRelations;
 import npclaude.dialogue.NpcDialogue;
 import npclaude.interaction.NpcInteractions;
 import npclaude.inventory.NpcInventory;
@@ -58,6 +59,8 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	public final NpcNavigator navigator = new NpcNavigator(this);
 	public final NpcInventory inventory = new NpcInventory(this);
 	public final NpcPersonality personality = new NpcPersonality();
+	/** Personal standing with individual players, separate from faction relations. */
+	public final NpcRelations relations = new NpcRelations();
 	private boolean invulnerable = false;
 	private double homeX;
 	private double homeY;
@@ -515,6 +518,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		npc.putDouble("HomeZ", this.homeZ);
 		npc.putList("Behaviors", this.brain.save());
 		npc.putList("Inventory", this.inventory.save());
+		npc.putList("PlayerRelations", this.relations.save());
 		tag.putCompound(SAVE_KEY, npc);
 	}
 
@@ -546,6 +550,10 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 
 		if (npc.containsKey("Inventory")) {
 			this.inventory.load(npc.getList("Inventory"));
+		}
+
+		if (npc.containsKey("PlayerRelations")) {
+			this.relations.load(npc.getList("PlayerRelations"));
 		}
 	}
 }

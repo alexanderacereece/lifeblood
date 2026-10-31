@@ -2,6 +2,7 @@ package npclaude.combat;
 
 import java.util.List;
 import net.minecraft.core.entity.Entity;
+import net.minecraft.core.entity.Mob;
 import net.minecraft.core.entity.projectile.Projectile;
 import net.minecraft.core.entity.projectile.ProjectileArrow;
 import net.minecraft.core.entity.projectile.ProjectileArrowFlaming;
@@ -11,8 +12,10 @@ import net.minecraft.core.enums.HumanArmorShape;
 import net.minecraft.core.item.ItemBow;
 import net.minecraft.core.item.ItemStack;
 import net.minecraft.core.item.Items;
+import net.minecraft.core.util.helper.MathHelper;
 import npclaude.entity.EntityNPC;
 import org.jetbrains.annotations.Nullable;
+import org.joml.primitives.AABBd;
 import org.joml.primitives.AABBdc;
 
 /**
@@ -27,8 +30,8 @@ public final class NpcArchery {
 	private static final double ARROW_GRAVITY = 0.03;
 	/** Ticks between shots, about as fast as a player clicking steadily. */
 	private static final int SHOT_COOLDOWN = 20;
-	/** Extra room around allies when checking the line of fire. */
-	private static final double ALLY_MARGIN = 0.3;
+	/** Extra room around bystanders when checking the line of fire. */
+	private static final double BYSTANDER_MARGIN = 0.3;
 
 	private NpcArchery() {
 	}
@@ -131,16 +134,22 @@ public final class NpcArchery {
 		return null;
 	}
 
-	/** False if any ally stands in the line of fire between the NPC and its target. */
-	public static boolean hasClearShot(EntityNPC npc, Entity target, List<Entity> allies) {
+	/**
+	 * False if anyone who isn't hostile (allies, neutral players and NPCs, animals) stands in the line of fire
+	 * between the NPC and its target.
+	 */
+	public static boolean hasClearShot(EntityNPC npc, Entity target, List<Mob> hostiles) {
 		double x0 = npc.x;
 		double y0 = npc.y + npc.getHeadHeight() - 0.1;
 		double z0 = npc.z;
 		double x1 = target.x;
 		double y1 = targetCenterY(target);
 		double z1 = target.z;
-		for (Entity ally : allies) {
-			if (ally != npc && ally != target && segmentHitsBox(x0, y0, z0, x1, y1, z1, ally.bb, ALLY_MARGIN)) {
+		AABBd lineBounds = new AABBd(Math.min(x0, x1), Math.min(y0, y1), Math.min(z0, z1), Math.max(x0, x1), Math.max(y0, y1), Math.max(z0, z1));
+		MathHelper.aabbGrow(lineBounds, 1.0, 1.0, 1.0, lineBounds);
+		for (Entity entity : npc.world.getEntitiesWithinAABBExcludingEntity(npc, lineBounds)) {
+			if (entity instanceof Mob bystander && bystander != target && bystander.isAlive() && !hostiles.contains(bystander)
+				&& segmentHitsBox(x0, y0, z0, x1, y1, z1, bystander.bb, BYSTANDER_MARGIN)) {
 				return false;
 			}
 		}
