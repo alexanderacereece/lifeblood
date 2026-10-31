@@ -59,9 +59,14 @@ public final class ThreatAssessment {
 	}
 
 	public static ThreatAssessment of(EntityNPC npc) {
+		return of(npc, SCAN_RADIUS);
+	}
+
+	/** A wider radius keeps pursuers in mind while running, so the NPC doesn't turn back just because they fell behind. */
+	public static ThreatAssessment of(EntityNPC npc, double radius) {
 		ThreatAssessment result = new ThreatAssessment();
 		AABBd area = new AABBd(npc.x, npc.y, npc.z, npc.x, npc.y, npc.z);
-		MathHelper.aabbGrow(area, SCAN_RADIUS, 4.0, SCAN_RADIUS, area);
+		MathHelper.aabbGrow(area, radius, 4.0, radius, area);
 		List<Entity> nearby = npc.world.getEntitiesWithinAABBExcludingEntity(npc, area);
 
 		result.strength = strengthOf(npc);
@@ -92,10 +97,17 @@ public final class ThreatAssessment {
 		return result;
 	}
 
-	/** Hostile: anything hunting this NPC or its allies, whoever recently hurt it, and naturally aggressive monsters it can see. */
+	/**
+	 * Hostile: NPCs of an enemy faction, anything hunting this NPC or its allies, whoever recently hurt it,
+	 * and naturally aggressive monsters it can see. Players and allied NPCs never are.
+	 */
 	private static boolean isHostile(EntityNPC npc, Mob mob, List<Entity> allies) {
-		if (!mob.isAlive() || mob instanceof Player || mob instanceof EntityNPC) {
+		if (!mob.isAlive() || mob instanceof Player) {
 			return false;
+		}
+
+		if (mob instanceof EntityNPC other) {
+			return NpcFactions.areEnemies(npc, other) && (npc.canEntityBeSeen(other) || other == npc.getLastAttacker());
 		}
 
 		if (mob == npc.getLastAttacker() && npc.ticksSinceAttacked() < GRUDGE_TICKS) {
@@ -117,10 +129,16 @@ public final class ThreatAssessment {
 
 	/** Mobs that hurt from a distance are as dangerous far away as up close. */
 	private static boolean isRanged(Mob mob) {
-		return mob instanceof MobSkeleton || mob instanceof MobGhast || mob instanceof MobSnowman;
+		return mob instanceof MobSkeleton || mob instanceof MobGhast || mob instanceof MobSnowman
+			|| mob instanceof EntityNPC npc && NpcArchery.canShoot(npc);
 	}
 
+	/** Enemy NPCs are rated like allies are: by their fighting strength. */
 	private static double threatOf(Mob mob) {
+		if (mob instanceof EntityNPC npc) {
+			return strengthOf(npc);
+		}
+
 		double health = Math.max(0.25, Math.min(2.0, mob.getHealth() / 20.0));
 		double kind;
 		if (mob instanceof MobCreeper || mob instanceof MobZombieArmored) {

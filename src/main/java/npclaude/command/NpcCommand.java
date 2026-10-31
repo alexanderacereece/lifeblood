@@ -26,6 +26,7 @@ import npclaude.ai.behavior.FollowPlayerBehavior;
 import npclaude.ai.behavior.StayBehavior;
 import npclaude.ai.behavior.WanderBehavior;
 import npclaude.client.NpcSkins;
+import npclaude.combat.NpcFactions;
 import npclaude.entity.EntityNPC;
 import npclaude.entity.SkinModel;
 import npclaude.skin.NpcSkinFiles;
@@ -38,6 +39,7 @@ import org.joml.Vector3dc;
  * /npc skin <name> <skin> [auto|wide|slim]
  * /npc invulnerable <name> <true|false>
  * /npc personality <name> bravery <0-100>
+ * /npc faction <name> <faction>
  * /npc list
  * /npc skins [reload]
  *
@@ -54,6 +56,13 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 	private static final SuggestionProvider<CommandSource> SKIN_NAMES = (c, builder) -> {
 		for (String skin : NpcSkinFiles.list()) {
 			builder.suggest(skin);
+		}
+
+		return builder.buildFuture();
+	};
+	private static final SuggestionProvider<CommandSource> FACTION_NAMES = (c, builder) -> {
+		for (String faction : NpcFactions.ALL) {
+			builder.suggest(faction);
 		}
 
 		return builder.buildFuture();
@@ -129,6 +138,20 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 							npc.personality.setBravery(value / 100.0F);
 							return reply(c, npc.nickname + "'s bravery is now " + value + ".");
 						})))))
+			.then(literal("faction")
+				.then(npcArgument()
+					.then(argument("faction", ArgumentTypeString.word())
+						.suggests(FACTION_NAMES)
+						.executes(c -> {
+							EntityNPC npc = findNpc(c);
+							String faction = ArgumentTypeString.getString(c, "faction").toLowerCase(Locale.ROOT);
+							if (!NpcFactions.isKnown(faction)) {
+								throw error("Unknown faction '" + faction + "'. Factions: " + String.join(", ", NpcFactions.ALL));
+							}
+
+							npc.setFaction(faction);
+							return reply(c, npc.nickname + " has joined the " + faction + ".");
+						}))))
 			.then(literal("remove")
 				.then(npcArgument().executes(c -> {
 					EntityNPC npc = findNpc(c);

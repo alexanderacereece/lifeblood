@@ -4,6 +4,7 @@ import com.mojang.nbt.tags.CompoundTag;
 import com.mojang.nbt.tags.ListTag;
 import com.mojang.nbt.tags.Tag;
 import java.util.Arrays;
+import java.util.function.Predicate;
 import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.item.ItemStack;
 import net.minecraft.core.player.inventory.InventorySorter;
@@ -100,6 +101,44 @@ public class NpcInventory implements Container {
 		System.arraycopy(this.items, PACK_START, pack, 0, PACK_SIZE);
 		InventorySorter.sortInventory(pack);
 		System.arraycopy(pack, 0, this.items, PACK_START, PACK_SIZE);
+	}
+
+	/** The first hand or pack slot whose item matches, checking the hand first; -1 if none. */
+	public int findSlot(Predicate<ItemStack> matches) {
+		for (int i = -1; i < PACK_SIZE; i++) {
+			int slot = i < 0 ? HAND_SLOT : PACK_START + i;
+			ItemStack stack = this.items[slot];
+			if (stack != null && matches.test(stack)) {
+				return slot;
+			}
+		}
+
+		return -1;
+	}
+
+	/** Swaps an item into the hand, putting what was held in its place, like switching hotbar slots. */
+	public void swapWithHand(int slot) {
+		if (slot != HAND_SLOT) {
+			ItemStack held = this.items[HAND_SLOT];
+			this.items[HAND_SLOT] = this.items[slot];
+			this.items[slot] = held;
+		}
+	}
+
+	/** Uses up one item from the hand or pack that matches; returns whether there was one. */
+	public boolean consumeOne(Predicate<ItemStack> matches) {
+		int slot = this.findSlot(matches);
+		if (slot < 0) {
+			return false;
+		}
+
+		ItemStack stack = this.items[slot];
+		stack.stackSize--;
+		if (stack.stackSize <= 0) {
+			this.items[slot] = null;
+		}
+
+		return true;
 	}
 
 	public void dropAll() {

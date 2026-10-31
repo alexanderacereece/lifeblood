@@ -12,6 +12,7 @@ import net.minecraft.core.entity.monster.MobSlime;
 import net.minecraft.core.entity.projectile.Projectile;
 import net.minecraft.core.enums.Difficulty;
 import net.minecraft.core.enums.HumanArmorShape;
+import net.minecraft.core.item.ItemBow;
 import net.minecraft.core.item.ItemFood;
 import net.minecraft.core.item.ItemSoup;
 import net.minecraft.core.item.ItemStack;
@@ -46,6 +47,8 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private static final float TALK_DISTANCE = 8.0F;
 	/** How often the NPC checks whether it should eat, in ticks. */
 	private static final int EAT_CHECK_INTERVAL = 10;
+	/** How long food is held before it's eaten, so the switch is visible. */
+	private static final int EAT_HOLD_TICKS = 20;
 	/** Ticks between melee hits; players can click faster, monsters wait 20. */
 	private static final int MELEE_COOLDOWN = 15;
 	private static final double MELEE_REACH = 2.5;
@@ -71,6 +74,10 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private int lastAttackedTick = Integer.MIN_VALUE / 2;
 	private boolean swinging;
 	private int swingTicks;
+	/** Ticks left before the held food is eaten; 0 when not eating. */
+	private int eatTicks;
+	/** Where the item held before eating went, to switch back to it afterwards; -1 if none. */
+	private int eatReturnSlot = -1;
 
 	public EntityNPC(World world) {
 		super(world);
@@ -144,39 +151,56 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 			}
 		}
 
-		if (this.tickCount % EAT_CHECK_INTERVAL == 0) {
-			this.tryEatFood();
+		if (this.eatTicks > 0) {
+			if (--this.eatTicks == 0) {
+				this.finishEating();
+			}
+		} else if (this.tickCount % EAT_CHECK_INTERVAL == 0) {
+			this.startEating();
 		}
 	}
 
-	/**
-	 * Eats one food item from the hand or inventory under the same rule as players:
-	 * only while health plus the healing still queued from earlier food is below max. Soup leaves its bowl behind.
-	 */
-	public boolean tryEatFood() {
-		if (this.getHealth() <= 0 || this.getHealth() + this.getTotalHealingRemaining() >= this.getMaxHealth()) {
-			return false;
+	/** The player's rule for eating: only while health plus the healing still queued from earlier food is below max. */
+	private boolean wantsFood() {
+		return this.getHealth() > 0 && this.getHealth() + this.getTotalHealingRemaining() < this.getMaxHealth();
+	}
+
+	public boolean isEating() {
+		return this.eatTicks > 0;
+	}
+
+	/** Switches food into the hand; it's eaten a second later, like a player picking the food then using it. */
+	private void startEating() {
+		if (!this.wantsFood()) {
+			return;
 		}
 
-		// The hand first, then the pack.
-		for (int i = -1; i < NpcInventory.PACK_SIZE; i++) {
-			int slot = i < 0 ? NpcInventory.HAND_SLOT : NpcInventory.PACK_START + i;
-			ItemStack stack = this.inventory.getItem(slot);
-			if (stack == null || !(stack.getItem() instanceof ItemFood food) || !stack.consumeItem(null)) {
-				continue;
-			}
+		int slot = this.inventory.findSlot(stack -> stack.getItem() instanceof ItemFood);
+		if (slot < 0) {
+			return;
+		}
 
+		this.inventory.swapWithHand(slot);
+		this.eatReturnSlot = slot == NpcInventory.HAND_SLOT ? -1 : slot;
+		this.eatTicks = EAT_HOLD_TICKS;
+	}
+
+	/** Eats one of the held food (soup leaves its bowl behind), then switches back to what was held before. */
+	private void finishEating() {
+		ItemStack stack = this.getHeldItem();
+		if (stack != null && stack.getItem() instanceof ItemFood food && this.wantsFood() && stack.consumeItem(null)) {
 			this.eatFood(stack);
 			this.world.playSoundAtEntity(null, this, food.getTicksPerHeal(stack) >= 10 ? "random.bite_extended" : "random.bite",
 				0.5F + (this.random.nextFloat() - this.random.nextFloat()) * 0.1F, 1.1F + (this.random.nextFloat() - this.random.nextFloat()) * 0.1F);
 			if (stack.stackSize <= 0) {
-				this.inventory.setItem(slot, food instanceof ItemSoup ? Items.BOWL.getDefaultStack() : null);
+				this.setHeldItem(food instanceof ItemSoup ? Items.BOWL.getDefaultStack() : null);
 			}
-
-			return true;
 		}
 
-		return false;
+		if (this.eatReturnSlot >= 0) {
+			this.inventory.swapWithHand(this.eatReturnSlot);
+			this.eatReturnSlot = -1;
+		}
 	}
 
 	public void teleportTo(double x, double y, double z) {
@@ -257,26 +281,34 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	 * like a player switching to their sword. Does nothing if the hand already holds the best option.
 	 */
 	public void readyMeleeWeapon() {
+		if (this.isEating()) {
+			return;
+		}
+
 		ItemStack held = this.getHeldItem();
 		int bestDamage = held != null ? held.getDamageVsEntity(this) : 1;
 		int bestSlot = -1;
 		for (int i = 0; i < NpcInventory.PACK_SIZE; i++) {
 			ItemStack stack = this.inventory.getItem(NpcInventory.PACK_START + i);
-			if (stack != null && stack.getDamageVsEntity(this) > bestDamage) {
+			if (stack != null && !(stack.getItem() instanceof ItemBow) && stack.getDamageVsEntity(this) > bestDamage) {
 				bestDamage = stack.getDamageVsEntity(this);
 				bestSlot = NpcInventory.PACK_START + i;
 			}
 		}
 
 		if (bestSlot >= 0) {
-			this.inventory.setItem(NpcInventory.HAND_SLOT, this.inventory.getItem(bestSlot));
-			this.inventory.setItem(bestSlot, held);
+			this.inventory.swapWithHand(bestSlot);
 		}
+	}
+
+	/** True if anything carried hits harder than a bare fist (bows don't count). */
+	public boolean hasMeleeWeapon() {
+		return this.inventory.findSlot(stack -> !(stack.getItem() instanceof ItemBow) && stack.getDamageVsEntity(this) > 1) >= 0;
 	}
 
 	/** Hits the target with the held item, like a player's attack, if it's in reach and the cooldown is over. */
 	public boolean tryMeleeAttack(Entity target) {
-		if (this.attackTime > 0 || target.distanceToSqr(this) > MELEE_REACH * MELEE_REACH
+		if (this.attackTime > 0 || this.isEating() || target.distanceToSqr(this) > MELEE_REACH * MELEE_REACH
 			|| target.bb.maxY <= this.bb.minY || target.bb.minY >= this.bb.maxY) {
 			return false;
 		}
@@ -492,7 +524,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 			this.personality.setBravery(npc.getFloat("Bravery"));
 		}
 
-		this.faction = npc.getStringOrDefault("Faction", NpcFactions.DEFAULT);
+		this.faction = NpcFactions.normalize(npc.getStringOrDefault("Faction", NpcFactions.DEFAULT));
 		this.combatStyle = CombatStyle.byId(npc.getByte("CombatStyle"));
 		this.setHome(npc.getDouble("HomeX"), npc.getDouble("HomeY"), npc.getDouble("HomeZ"));
 		if (npc.containsKey("Behaviors")) {
