@@ -530,17 +530,20 @@ Generated NPCs are assembled from layers instead of using one fixed skin. Hand-m
 
 ### Layers
 
-Each layer is a 64x64 skin-format PNG, drawn mostly in grayscale so it can be tinted:
+Each layer is a 64x64 skin-format PNG. Recolorable layers are drawn in grayscale and tinted; fixed layers are drawn in full color and used as they are.
 
-| Layer | Tinted by | Examples |
-|---|---|---|
-| Body | skin tone | the base, in wide and slim arm versions |
-| Eyes | eye color | several eye shapes |
-| Face | | mouths, brows, freckles, scars |
-| Facial hair | hair color | beards, moustaches |
-| Hair | hair color | styles, using the outer layer for volume |
-| Clothing | dye colors | shirts, trousers, dresses, shoes, aprons, hats |
-| Accessories | | the guardian amulet, scarves, glasses |
+| Layer | Recolorable? | Tinted by | Examples |
+|---|---|---|---|
+| Base | yes | skin tone | the body, in wide and slim arm versions |
+| Eyes | yes | eye color | several eye shapes |
+| Mouth | no | | mouths and expressions |
+| Facial hair | yes | hair color | beards, moustaches |
+| Hair | yes | hair color | styles, using the outer layer for volume |
+| Tops | either | dye color, if recolorable | shirts, tunics, dresses, aprons |
+| Bottoms | either | dye color, if recolorable | trousers, skirts, shoes |
+| Accessories | no | | the guardian amulet, scarves, glasses, hats |
+
+Tops and bottoms are recolorable or fixed per item: plain clothes come in any dye color, while patterned or detailed ones keep their drawn colors.
 
 Layers are stacked in order and combined into a single texture per NPC, built once and cached by its exact combination. Two NPCs with identical looks share a texture. Rebuilding a 64x64 texture is cheap, so changing clothes costs almost nothing.
 
