@@ -3,6 +3,7 @@ package npclaude.dialogue;
 import java.util.List;
 import npclaude.combat.CombatStyle;
 import npclaude.entity.EntityNPC;
+import npclaude.entity.FollowDistance;
 
 /** What an NPC says when a conversation reaches this point, and the replies the player can pick. */
 public record NpcDialogue(String line, List<DialogueOption> options) {
@@ -15,6 +16,15 @@ public record NpcDialogue(String line, List<DialogueOption> options) {
 		return new NpcDialogue(line, List.of(
 			new DialogueOption("Hi.", session -> session.say("Hey.")),
 			new DialogueOption("Let me see your inventory.", DialogueSession::openInventory),
+			new DialogueOption("Follow distance: " + npc.getFollowDistance().displayName(), session -> {
+				FollowDistance distance = npc.getFollowDistance().next();
+				npc.setFollowDistance(distance);
+				session.show(placeholder(npc, switch (distance) {
+					case SHORT -> "I'll stay close.";
+					case MEDIUM -> "I'll give you some room.";
+					case LONG -> "I'll keep my distance.";
+				}));
+			}),
 			// Debug: cycles the NPC's combat style.
 			new DialogueOption("Combat style: " + npc.getCombatStyle().displayName(), session -> {
 				CombatStyle style = npc.getCombatStyle().next();

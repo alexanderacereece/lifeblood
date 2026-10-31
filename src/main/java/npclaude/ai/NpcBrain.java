@@ -71,6 +71,18 @@ public class NpcBrain {
 		return Collections.unmodifiableList(this.behaviors);
 	}
 
+	/** The first behavior (not instinct) of the given type, if the NPC has one. */
+	@Nullable
+	public <T extends NpcBehavior> T findBehavior(Class<T> type) {
+		for (NpcBehavior behavior : this.behaviors) {
+			if (type.isInstance(behavior)) {
+				return type.cast(behavior);
+			}
+		}
+
+		return null;
+	}
+
 	@Nullable
 	public NpcBehavior getActive() {
 		return this.active;

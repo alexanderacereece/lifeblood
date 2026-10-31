@@ -42,8 +42,9 @@ import org.joml.Vector3dc;
 /**
  * /npc summon <name> [skin|default] [faction]
  * /npc follow|stay|remove <name>
- * /npc goto <name> [<x y z> | npc <other>]   (walks there, then stays; no target means to you)
- * /npc tp <name> [<x y z> | npc <other>]     (teleports there; no target means to you)
+ * /npc goto <name> [<position>|<target>]       (walks there, then stays; no target means to you)
+ * /npc teleport <name> [<position>|<target>]   (like /teleport; no target means to you)
+ *   A target is another NPC's name, a player's name, or @s for yourself.
  * /npc tpto <name>                           (teleports you to the NPC)
  * /npc gender <name> [male|female]
  * /npc perf                 (AI and pathfinding cost over the last second)
@@ -90,6 +91,18 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 
 		return builder.buildFuture();
 	};
+	private static final SuggestionProvider<CommandSource> TARGET_NAMES = (c, builder) -> {
+		builder.suggest("@s");
+		for (Player player : c.getSource().getWorld().players) {
+			builder.suggest(player.username);
+		}
+
+		for (EntityNPC npc : getNpcs(c.getSource().getWorld())) {
+			builder.suggest(ArgumentTypeString.escapeIfRequired(npc.nickname));
+		}
+
+		return builder.buildFuture();
+	};
 	private static final SuggestionProvider<CommandSource> GENDER_NAMES = (c, builder) -> {
 		for (NpcGender gender : NpcGender.values()) {
 			builder.suggest(gender.name().toLowerCase(Locale.ROOT));
@@ -132,37 +145,27 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 						return goTo(c, player.x, player.bb.minY(), player.z, "you");
 					})
 					.then(argument("position", ArgumentTypeVector3d.vec3d()).executes(c -> {
-						DoubleCoordinates position = c.getArgument("position", DoubleCoordinates.class);
-						CommandSource source = c.getSource();
-						double x = position.getX(source);
-						double y = position.getY(source, true);
-						double z = position.getZ(source);
-						return goTo(c, x, y, z, String.format(Locale.ROOT, "%.0f %.0f %.0f", x, y, z));
+						double[] pos = position(c);
+						return goTo(c, pos[0], pos[1], pos[2], describe(pos));
 					}))
-					.then(literal("npc")
-						.then(argument("other", ArgumentTypeString.string()).suggests(NPC_NAMES).executes(c -> {
-							EntityNPC other = findNpcNamed(c, ArgumentTypeString.getString(c, "other"));
-							return goTo(c, other.x, other.y, other.z, other.nickname);
-						})))))
-			.then(literal("tp")
+					.then(argument("target", ArgumentTypeString.string()).suggests(TARGET_NAMES).executes(c -> {
+						Entity target = findTarget(c);
+						return goTo(c, target.x, target.bb.minY(), target.z, nameOf(target));
+					}))))
+			.then(literal("teleport")
 				.then(npcArgument()
 					.executes(c -> {
 						Player player = requirePlayer(c.getSource());
 						return teleport(c, player.x, player.bb.minY(), player.z, "you");
 					})
 					.then(argument("position", ArgumentTypeVector3d.vec3d()).executes(c -> {
-						DoubleCoordinates position = c.getArgument("position", DoubleCoordinates.class);
-						CommandSource source = c.getSource();
-						double x = position.getX(source);
-						double y = position.getY(source, true);
-						double z = position.getZ(source);
-						return teleport(c, x, y, z, String.format(Locale.ROOT, "%.0f %.0f %.0f", x, y, z));
+						double[] pos = position(c);
+						return teleport(c, pos[0], pos[1], pos[2], describe(pos));
 					}))
-					.then(literal("npc")
-						.then(argument("other", ArgumentTypeString.string()).suggests(NPC_NAMES).executes(c -> {
-							EntityNPC other = findNpcNamed(c, ArgumentTypeString.getString(c, "other"));
-							return teleport(c, other.x, other.y, other.z, other.nickname);
-						})))))
+					.then(argument("target", ArgumentTypeString.string()).suggests(TARGET_NAMES).executes(c -> {
+						Entity target = findTarget(c);
+						return teleport(c, target.x, target.bb.minY(), target.z, nameOf(target));
+					}))))
 			.then(literal("tpto")
 				.then(npcArgument().executes(c -> {
 					Player player = requirePlayer(c.getSource());
@@ -379,6 +382,45 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 		}
 
 		return reply(c, "Summoned " + name + " of the " + npc.getFaction() + " (" + skinInfo + ").");
+	}
+
+	private static double[] position(CommandContext<CommandSource> c) throws CommandSyntaxException {
+		DoubleCoordinates position = c.getArgument("position", DoubleCoordinates.class);
+		CommandSource source = c.getSource();
+		return new double[]{position.getX(source), position.getY(source, true), position.getZ(source)};
+	}
+
+	private static String describe(double[] pos) {
+		return String.format(Locale.ROOT, "%.0f %.0f %.0f", pos[0], pos[1], pos[2]);
+	}
+
+	/** Resolves a target like vanilla /teleport: @s is you, otherwise an NPC's name or a player's name. */
+	private static Entity findTarget(CommandContext<CommandSource> c) throws CommandSyntaxException {
+		String name = ArgumentTypeString.getString(c, "target");
+		if (name.equals("@s")) {
+			return requirePlayer(c.getSource());
+		}
+
+		for (EntityNPC npc : getNpcs(c.getSource().getWorld())) {
+			if (npc.nickname.equalsIgnoreCase(name)) {
+				return findNpcNamed(c, name);
+			}
+		}
+
+		Player player = c.getSource().getWorld().getPlayerEntityByName(name);
+		if (player == null) {
+			throw error("No NPC or player named '" + name + "'.");
+		}
+
+		return player;
+	}
+
+	private static String nameOf(Entity entity) {
+		if (entity instanceof EntityNPC npc) {
+			return npc.nickname;
+		}
+
+		return entity instanceof Player player ? player.username : "there";
 	}
 
 	private static int goTo(CommandContext<CommandSource> c, double x, double y, double z, String where) throws CommandSyntaxException {

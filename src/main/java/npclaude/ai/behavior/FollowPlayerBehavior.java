@@ -5,15 +5,12 @@ import java.util.UUID;
 import net.minecraft.core.entity.player.Player;
 import npclaude.ai.NpcBehavior;
 import npclaude.entity.EntityNPC;
+import npclaude.entity.FollowDistance;
 import org.jetbrains.annotations.Nullable;
 
 /** Walks after a player, teleporting to them when left too far behind. */
 public class FollowPlayerBehavior implements NpcBehavior {
 	public static final String ID = "follow";
-	/** Starts walking when the player gets this far away... */
-	private static final float START_DISTANCE = 4.0F;
-	/** ...and stops once this close, so it doesn't crowd the player. */
-	private static final float STOP_DISTANCE = 2.5F;
 	/** Teleports when no path is found and the player is this far away. */
 	private static final float TELEPORT_DISTANCE = 12.0F;
 	/** Teleports regardless beyond this, since the pathfinder can't plan that far. */
@@ -60,7 +57,9 @@ public class FollowPlayerBehavior implements NpcBehavior {
 
 		npc.setLookTarget(player, 20);
 		float distance = player.distanceTo(npc);
-		if (distance <= STOP_DISTANCE) {
+		// Starts walking once the player is further than the NPC's follow distance, stops once close enough.
+		FollowDistance range = npc.getFollowDistance();
+		if (distance <= range.stop) {
 			npc.navigator.stop();
 			return;
 		}
@@ -75,7 +74,7 @@ public class FollowPlayerBehavior implements NpcBehavior {
 		}
 
 		this.repathCooldown = REPATH_INTERVAL;
-		if (distance < START_DISTANCE && !npc.navigator.isMoving()) {
+		if (distance < range.start && !npc.navigator.isMoving()) {
 			return;
 		}
 

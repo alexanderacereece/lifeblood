@@ -38,6 +38,8 @@ public final class ThreatAssessment {
 	/** Hostiles this close count fully; further ones count less, since they may not engage. */
 	private static final double CLOSE_RANGE = 6.0;
 	private static final double FAR_WEIGHT = 0.6;
+	/** How far from the player it follows an NPC will engage enemies. */
+	public static final double LEASH_RADIUS = 12.0;
 	/** How long the NPC remembers who attacked it, in ticks. */
 	public static final int GRUDGE_TICKS = 200;
 
@@ -81,9 +83,16 @@ public final class ThreatAssessment {
 			}
 		}
 
+		// An NPC following a player stays at their side: it ignores fights more than a short way from them,
+		// unless the enemy is coming for it or for the player.
+		Player leader = npc.getLeader();
 		double nearestDistance = Double.MAX_VALUE;
 		for (Entity entity : nearby) {
 			if (!(entity instanceof Mob mob) || !(mob == engaged && mob.isAlive() || isHostile(npc, mob, result.allies))) {
+				continue;
+			}
+
+			if (leader != null && mob.distanceTo(leader) > LEASH_RADIUS && !isComingFor(mob, npc, leader)) {
 				continue;
 			}
 
@@ -98,6 +107,15 @@ public final class ThreatAssessment {
 		}
 
 		return result;
+	}
+
+	/** Is this enemy attacking (or hunting) the NPC or the player it follows? */
+	private static boolean isComingFor(Mob mob, EntityNPC npc, Player leader) {
+		if (mob == npc.getLastAttacker() && npc.ticksSinceAttacked() < GRUDGE_TICKS) {
+			return true;
+		}
+
+		return mob instanceof MobPathfinder hunter && (hunter.getTarget() == npc || hunter.getTarget() == leader);
 	}
 
 	/**

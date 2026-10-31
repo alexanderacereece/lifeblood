@@ -22,6 +22,7 @@ import net.minecraft.core.util.helper.MathHelper;
 import net.minecraft.core.world.World;
 import npclaude.ai.NpcBrain;
 import npclaude.ai.NpcNavigator;
+import npclaude.ai.behavior.FollowPlayerBehavior;
 import npclaude.combat.CombatBehavior;
 import npclaude.combat.CombatStyle;
 import npclaude.combat.MonsterContact;
@@ -77,6 +78,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private Player talkingTo;
 	private String faction = NpcFactions.DEFAULT;
 	private NpcGender gender = NpcGender.MALE;
+	private FollowDistance followDistance = FollowDistance.SHORT;
 	private CombatStyle combatStyle = CombatStyle.AUTO;
 	@Nullable
 	private Entity lastAttacker;
@@ -240,6 +242,10 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		this.moveForward = WALK_INPUT;
 	}
 
+	public void stopWalking() {
+		this.moveForward = 0.0F;
+	}
+
 	public void setJumping(boolean jumping) {
 		this.isJumping = jumping;
 	}
@@ -385,6 +391,21 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 
 	public void setSkinModel(SkinModel model) {
 		this.entityData.set(DATA_SKIN_MODEL, (byte) model.ordinal());
+	}
+
+	public FollowDistance getFollowDistance() {
+		return this.followDistance;
+	}
+
+	public void setFollowDistance(FollowDistance followDistance) {
+		this.followDistance = followDistance;
+	}
+
+	/** The player this NPC is following, if it's following someone who is here. */
+	@Nullable
+	public Player getLeader() {
+		FollowPlayerBehavior follow = this.brain.findBehavior(FollowPlayerBehavior.class);
+		return follow != null ? follow.getPlayer(this) : null;
 	}
 
 	public NpcGender getGender() {
@@ -552,6 +573,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		npc.putCompound("Personality", this.personality.save());
 		npc.putString("Faction", this.faction);
 		npc.putByte("Gender", (byte) this.gender.ordinal());
+		npc.putByte("FollowDistance", (byte) this.followDistance.ordinal());
 		npc.putByte("CombatStyle", (byte) this.combatStyle.ordinal());
 		npc.putDouble("HomeX", this.homeX);
 		npc.putDouble("HomeY", this.homeY);
@@ -583,6 +605,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 
 		this.faction = NpcFactions.normalize(npc.getStringOrDefault("Faction", NpcFactions.DEFAULT));
 		this.gender = NpcGender.byId(npc.getByte("Gender"));
+		this.followDistance = FollowDistance.byId(npc.getByte("FollowDistance"));
 		this.combatStyle = CombatStyle.byId(npc.getByte("CombatStyle"));
 		this.setHome(npc.getDouble("HomeX"), npc.getDouble("HomeY"), npc.getDouble("HomeZ"));
 		if (npc.containsKey("Behaviors")) {

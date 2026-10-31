@@ -248,7 +248,9 @@ public final class NavSearch {
 				case SWIM -> this.offer(node, nx, node.y, nz, same, NavMove.SWIM, COST_SWIM * flat);
 				case CLIMB -> this.offer(node, nx, node.y, nz, same, NavMove.WALK, flat + 0.2);
 				case OPEN -> {
-					if (!this.tryDrop(node, nx, nz, flat) && !diagonal) {
+					// Both are offered: dropping into a narrow pit can be a dead end the jump across avoids.
+					this.tryDrop(node, nx, nz, flat);
+					if (!diagonal) {
 						this.tryGapJump(node, dx, dz);
 					}
 				}
@@ -274,23 +276,21 @@ public final class NavSearch {
 	}
 
 	/** Steps off a ledge and lands up to 3 blocks lower. */
-	private boolean tryDrop(Node node, int nx, int nz, double flat) {
+	private void tryDrop(Node node, int nx, int nz, double flat) {
 		for (int depth = 1; depth <= NavGrid.SAFE_DROP; depth++) {
 			NavGrid.Cell below = this.grid.cell(nx, node.y - depth, nz);
 			if (below.hazard || below.kind == NavGrid.Kind.BLOCKED) {
-				return false;
+				return;
 			}
 
 			if (below.isFooting()) {
 				this.offer(node, nx, node.y - depth, nz, below, NavMove.DROP, flat + COST_DROP_PER_BLOCK * depth);
-				return true;
+				return;
 			}
 		}
-
-		return false;
 	}
 
-	/** Jumps a one-block gap (too deep or dangerous to drop into) to land two blocks away, level or one lower. */
+	/** Jumps a one-block gap to land two blocks away, level or one lower. */
 	private void tryGapJump(Node node, int dx, int dz) {
 		if (!this.hasJumpRoom(node) || !this.grid.isClearBetween(node.x + dx, node.z + dz, node.feetY + NavGrid.BODY_HEIGHT, node.feetY + NavGrid.BODY_HEIGHT + 1.0)) {
 			return;

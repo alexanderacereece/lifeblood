@@ -48,6 +48,8 @@ public class NpcNavigator {
 	/** Fleeing routes avoid coming within this distance of attackers. */
 	private static final double FLEE_DANGER_RADIUS = 8.0;
 	private static final double FLEE_DANGER_COST = 0.8;
+	/** Within this distance (squared) of a landing spot while in the air, stop pushing forward. */
+	private static final double AIR_BRAKE_RADIUS_SQR = 0.45 * 0.45;
 
 	private final EntityNPC npc;
 	@Nullable
@@ -112,8 +114,20 @@ public class NpcNavigator {
 		double angle = Math.atan2(this.npc.z - cz, this.npc.x - cx);
 		double goalX = this.npc.x + Math.cos(angle) * distance;
 		double goalZ = this.npc.z + Math.sin(angle) * distance;
+		this.chaseTarget = null;
+		return this.request(NavSearch.near(goalX, this.npc.y, goalZ, 3.0), dangerField(threats), FLEE_SEARCH_NODES);
+	}
+
+	/** Runs to someone for safety (e.g. the player it follows), by a route that keeps clear of the attackers. */
+	public boolean fleeToward(Entity refuge, List<? extends Entity> threats) {
+		this.chaseTarget = null;
+		return this.request(NavSearch.near(refuge.x, refuge.bb.minY(), refuge.z, 2.0), dangerField(threats), FLEE_SEARCH_NODES);
+	}
+
+	/** Extra route cost for passing near attackers, growing the closer the route comes to one. */
+	private static NavSearch.CostField dangerField(List<? extends Entity> threats) {
 		List<Entity> dangers = new ArrayList<>(threats);
-		NavSearch.CostField danger = (x, y, z) -> {
+		return (x, y, z) -> {
 			double cost = 0.0;
 			for (Entity threat : dangers) {
 				double dx = x + 0.5 - threat.x;
@@ -126,9 +140,6 @@ public class NpcNavigator {
 
 			return cost;
 		};
-
-		this.chaseTarget = null;
-		return this.request(NavSearch.near(goalX, this.npc.y, goalZ, 3.0), danger, FLEE_SEARCH_NODES);
 	}
 
 	/** Runs straight along a heading (radians) for a while, for when no route can be found. Stops at hazards. */
@@ -239,6 +250,7 @@ public class NpcNavigator {
 
 		this.openDoorsAhead(step);
 		this.steer(step);
+		this.brakeInAir(step);
 		this.checkProgress(step);
 	}
 
@@ -298,6 +310,22 @@ public class NpcNavigator {
 					this.npc.setJumping(true);
 				}
 			}
+		}
+	}
+
+	/**
+	 * Once airborne over the landing spot, let go of forward (as a player does) so momentum doesn't carry the NPC
+	 * past narrow landings like fence tops.
+	 */
+	private void brakeInAir(NavStep step) {
+		if (this.npc.onGround || this.npc.isInWater() || step.move() == NavMove.CLIMB || step.move() == NavMove.DESCEND) {
+			return;
+		}
+
+		double dx = step.centerX() - this.npc.x;
+		double dz = step.centerZ() - this.npc.z;
+		if (dx * dx + dz * dz < AIR_BRAKE_RADIUS_SQR) {
+			this.npc.stopWalking();
 		}
 	}
 

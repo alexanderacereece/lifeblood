@@ -3,6 +3,7 @@ package npclaude.combat;
 import java.util.List;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.Mob;
+import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.util.helper.MathHelper;
 import npclaude.ai.NpcBehavior;
 import npclaude.entity.EntityNPC;
@@ -42,6 +43,8 @@ public class CombatBehavior implements NpcBehavior {
 	private static final double BOW_MAX_RANGE = 14.0;
 	private static final double BACK_OFF_DISTANCE = 6.0;
 	private static final double SIDESTEP_DISTANCE = 3.0;
+	/** A fleeing follower within this distance of its player is already as safe as it gets near them. */
+	private static final double LEADER_SAFE_DISTANCE = 3.0;
 
 	private ThreatAssessment assessment;
 	private int nextAssessTick;
@@ -216,6 +219,12 @@ public class CombatBehavior implements NpcBehavior {
 		}
 
 		this.repathCooldown = FLEE_REPATH_INTERVAL;
+		// A follower runs to the player it follows rather than off on its own.
+		Player leader = npc.getLeader();
+		if (leader != null && leader.distanceTo(npc) > LEADER_SAFE_DISTANCE && npc.navigator.fleeToward(leader, threat.hostiles)) {
+			return;
+		}
+
 		this.moveAwayFrom(npc, threat.hostiles, FLEE_DISTANCE);
 	}
 
