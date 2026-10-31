@@ -377,15 +377,13 @@ An invincible NPC fights, gets hurt and flees like anyone else. Damage that woul
 
 ### Making someone invincible
 
-The player chooses who they want to keep safe: a spouse, children, friends, companions, allies. Proposal: a **guardian amulet**, a craftable item that makes any NPC invincible while it's in their inventory.
-- **Your choice, visibly.** You decide who gets one, and you can see and take it back through their inventory screen.
+The player chooses who they want to keep safe: a spouse, children, friends, companions, allies. This is done with a **guardian amulet**, a craftable item that makes any NPC invincible while it's in their inventory.
+- **Gifted like any item.** You can give it to any NPC you could normally give gifts to, and they respond to it with their own lines (touched, flustered, suspicious of the gesture, and so on).
+- **Theirs to keep.** Once given, they keep it no matter what happens between you later. No special rules are needed: they can't die while carrying it, so it never drops.
 - **A real cost.** The recipe should be expensive enough (gold and a diamond, for example) that you protect the people who matter, not everyone.
-- **Earned.** You can only give an amulet to an NPC who'll accept it: someone with a good opinion of you. You can't hand one to an enemy.
-- Because an invincible NPC never dies, they never drop it.
+- **Visible.** The amulet shows on the NPC's model (section 11).
 
 Children are the exception: they're invincible by default, with no amulet needed.
-
-Open details: whether the amulet shows on the NPC's model, and whether an NPC who later turns against you keeps it.
 
 Brawls use the same rule for everyone involved: nobody can be reduced below 1 health by a brawl, and dropping low makes them yield.
 
@@ -526,7 +524,41 @@ Pairs:
 
 ---
 
-## 11. Implementation order
+## 11. Appearance
+
+Generated NPCs are assembled from layers instead of using one fixed skin. Hand-made skins stay supported, for unique characters and anyone who wants them.
+
+### Layers
+
+Each layer is a 64x64 skin-format PNG, drawn mostly in grayscale so it can be tinted:
+
+| Layer | Tinted by | Examples |
+|---|---|---|
+| Body | skin tone | the base, in wide and slim arm versions |
+| Eyes | eye color | several eye shapes |
+| Face | | mouths, brows, freckles, scars |
+| Facial hair | hair color | beards, moustaches |
+| Hair | hair color | styles, using the outer layer for volume |
+| Clothing | dye colors | shirts, trousers, dresses, shoes, aprons, hats |
+| Accessories | | the guardian amulet, scarves, glasses |
+
+Layers are stacked in order and combined into a single texture per NPC, built once and cached by its exact combination. Two NPCs with identical looks share a texture. Rebuilding a 64x64 texture is cheap, so changing clothes costs almost nothing.
+
+Variety comes from multiplying a modest amount of art: a dozen hairstyles in many colors, a range of skin tones, and clothing in dye colors already gives millions of combinations.
+
+### Clothing that changes
+
+An NPC's look is split into **body** (skin, eyes, face, hair: fixed for life, except hair could grow or be cut later) and **outfits** (sets of clothing layers). NPCs change outfits with their job and schedule: work clothes for the farmer, an apron for the cook, nightclothes for sleeping, something nicer for a wedding. Armor still draws on top of everything, as it does now.
+
+### Inheritance
+
+Children inherit body traits: skin tone blended from both parents, hair and eye color from one or a blend, and a chance at a parent's hairstyle or face features. Families visibly look related.
+
+### The art
+
+Layers live in a resource folder with a small data file describing each one (its slot, what tints it, which arm width), so adding a hairstyle means adding a PNG and a line of data. I can generate simple placeholder layers to get the system working; better art can replace them at any time.
+
+## 12. Implementation order
 
 1. **Health modes:** mortal, invincible, invulnerable. Small, and brawls need it.
 2. **Traits, quirks and food preferences:** data, generation with the blacklist, NBT saving, commands to view and set them. Courage replaces bravery.
@@ -535,7 +567,8 @@ Pairs:
 5. **First writing pass:** greetings, farewells, combat barks, low health, idle comments, all with full neutral coverage.
 6. **Brawls.**
 7. **Word book:** NPCs asking, personal and general words, spreading, the book screen.
-8. **Family graph**, then gossip, then romance (NPCs and the player), then children.
+8. **Modular appearance:** layers, tinting, outfits, the amulet showing.
+9. **Family graph**, then gossip, then romance (NPCs and the player), then children.
 
 ## Settled
 
@@ -547,5 +580,6 @@ Pairs:
 
 ## Open questions
 
-- Is the guardian amulet the right way to make NPCs invincible? Its recipe, and whether it shows on the model.
+- The guardian amulet's recipe.
+- Who draws the appearance layers beyond placeholders.
 - How long a child takes to grow up, and how children are drawn.
