@@ -340,7 +340,7 @@ public final class NavSearch {
 		// Includes the starting spot as the first step, so every real step has a step before it.
 		List<NavStep> steps = new ArrayList<>();
 		for (Node node = end; node != null; node = node.parent) {
-			steps.add(new NavStep(node.x, node.y, node.z, node.feetY, node.move, node.door));
+			steps.add(new NavStep(node.x, node.y, node.z, node.feetY, node.move, node.door, this.grid.cell(node.x, node.y, node.z).narrow));
 		}
 
 		Collections.reverse(steps);

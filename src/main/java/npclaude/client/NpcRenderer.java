@@ -4,14 +4,23 @@ import java.util.HashMap;
 import java.util.Map;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.render.entity.MobRendererBipedArmored;
+import net.minecraft.client.render.renderer.BlendFactor;
 import net.minecraft.client.render.renderer.GLRenderer;
+import net.minecraft.client.render.renderer.Shaders;
+import net.minecraft.client.render.renderer.State;
+import net.minecraft.client.render.tessellator.TessellatorGeneral;
+import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.util.collection.NamespaceID;
 import net.minecraft.core.util.helper.MathHelper;
+import npclaude.combat.FactionRelation;
 import npclaude.entity.EntityNPC;
+import npclaude.util.Geometry;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Math;
+import org.joml.Vector3dc;
 import org.useless.dragonfly.data.entity.mojang.EntityGeometryMojangData.Cache;
 import org.useless.dragonfly.models.entity.StaticEntityModel;
 
@@ -23,6 +32,11 @@ import org.useless.dragonfly.models.entity.StaticEntityModel;
 public class NpcRenderer extends MobRendererBipedArmored<EntityNPC> {
 	private static final NamespaceID PLAYER_MODELS = NamespaceID.fromPool("minecraft", "player");
 	private static final float PLAYER_SCALE = 0.9375F;
+	private static final double HEALTH_BAR_RANGE = 16.0;
+	/** Bar size in name-tag pixels; the name tag sits 0.8 above the head, the bar just above it. */
+	private static final float HEALTH_BAR_WIDTH = 40.0F;
+	private static final float HEALTH_BAR_THICKNESS = 3.0F;
+	private static final float HEALTH_BAR_HEIGHT_ABOVE_HEAD = 1.15F;
 
 	private final Map<String, StaticEntityModel> models = new HashMap<>();
 
@@ -64,6 +78,61 @@ public class NpcRenderer extends MobRendererBipedArmored<EntityNPC> {
 	@Override
 	protected StaticEntityModel getModel(@NotNull String localId) {
 		return this.models.computeIfAbsent(localId, id -> Cache.getModelForEntity(PLAYER_MODELS, id));
+	}
+
+	/** Draws the name tag as usual, then a health bar above it if the viewer is looking at this NPC and it isn't hostile to them. */
+	@Override
+	protected void renderSpecials(@NotNull TessellatorGeneral tessellator, @NotNull EntityNPC entity, double x, double y, double z) {
+		super.renderSpecials(tessellator, entity, x, y, z);
+		Player viewer = Minecraft.getMinecraft().thePlayer;
+		if (viewer != null && entity.isAlive() && entity.relations.get(viewer) != FactionRelation.HOSTILE && isLookingAt(viewer, entity)) {
+			this.renderHealthBar(tessellator, entity, x, y, z);
+		}
+	}
+
+	/** Traces the viewer's line of sight (up to 16 blocks) against the NPC's body. */
+	private static boolean isLookingAt(Player viewer, EntityNPC entity) {
+		Vector3dc eye = viewer.getPosition(1.0F, true);
+		Vector3dc look = viewer.getViewVector(1.0F);
+		return Geometry.segmentHitsBox(eye.x(), eye.y(), eye.z(), eye.x() + look.x() * HEALTH_BAR_RANGE, eye.y() + look.y() * HEALTH_BAR_RANGE,
+			eye.z() + look.z() * HEALTH_BAR_RANGE, entity.bb, 0.1);
+	}
+
+	/** A bar above the name tag, green at full health through yellow to red, drawn facing the camera like the name. */
+	private void renderHealthBar(TessellatorGeneral t, EntityNPC entity, double x, double y, double z) {
+		float fraction = Math.max(0.0F, Math.min(1.0F, entity.getHealth() / (float) entity.getMaxHealth()));
+		float red = fraction < 0.5F ? 1.0F : 2.0F * (1.0F - fraction);
+		float green = fraction > 0.5F ? 1.0F : 2.0F * fraction;
+		float half = HEALTH_BAR_WIDTH / 2.0F;
+		float filled = -half + HEALTH_BAR_WIDTH * fraction;
+
+		GLRenderer.pushFrame();
+		GLRenderer.modelM4f().translate((float) x, (float) y + entity.getHeadHeight() + HEALTH_BAR_HEIGHT_ABOVE_HEAD, (float) z);
+		GLRenderer.modelM4f().rotateY(Math.toRadians(-this.renderDispatcher.viewLerpYaw));
+		GLRenderer.modelM4f().rotateX(Math.toRadians(this.renderDispatcher.viewLerpPitch));
+		GLRenderer.modelM4f().scale(-0.026666667F, -0.026666667F, 0.026666667F);
+		GLRenderer.globalSetLightEnabled(false);
+		GLRenderer.setDepthMask(false);
+		GLRenderer.enableState(State.BLEND);
+		GLRenderer.setBlendFunc(BlendFactor.SRC_ALPHA, BlendFactor.ONE_MINUS_SRC_ALPHA);
+		GLRenderer.setShader(Shaders.COLOR);
+		t.startDrawingQuads();
+		t.setColor4f(0.0F, 0.0F, 0.0F, 0.5F);
+		quad(t, -half - 1.0F, -1.0F, half + 1.0F, HEALTH_BAR_THICKNESS + 1.0F);
+		t.setColor4f(red, green, 0.1F, 0.9F);
+		quad(t, -half, 0.0F, filled, HEALTH_BAR_THICKNESS);
+		t.draw();
+		GLRenderer.setDepthMask(true);
+		GLRenderer.globalSetLightEnabled(true);
+		GLRenderer.disableState(State.BLEND);
+		GLRenderer.popFrame();
+	}
+
+	private static void quad(TessellatorGeneral t, float x0, float y0, float x1, float y1) {
+		t.addVertex(x0, y0, 0.0);
+		t.addVertex(x0, y1, 0.0);
+		t.addVertex(x1, y1, 0.0);
+		t.addVertex(x1, y0, 0.0);
 	}
 
 	@Nullable

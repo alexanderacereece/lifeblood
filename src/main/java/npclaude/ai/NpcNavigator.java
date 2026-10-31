@@ -36,6 +36,11 @@ public class NpcNavigator {
 	/** A chased target that has moved less than this (squared) since the route was planned doesn't need a new route. */
 	private static final double CHASE_REPLAN_DISTANCE_SQR = 1.5 * 1.5;
 	private static final double ARRIVE_RADIUS_SQR = 0.35 * 0.35;
+	/** On narrow footing the NPC must be nearly centered before it counts as arrived. */
+	private static final double NARROW_ARRIVE_RADIUS_SQR = 0.12 * 0.12;
+	/** On narrow footing, ease off the walk input within this distance of the center, down to this minimum. */
+	private static final double NARROW_SLOWDOWN_DISTANCE = 0.8;
+	private static final float NARROW_MIN_INPUT = 0.15F;
 	/** No progress toward the next step for this many ticks: try a jump. */
 	private static final int STUCK_JUMP_TICKS = 10;
 	/** Still none: plan again from here. */
@@ -50,6 +55,8 @@ public class NpcNavigator {
 	private static final double FLEE_DANGER_COST = 0.8;
 	/** Within this distance (squared) of a landing spot while in the air, stop pushing forward. */
 	private static final double AIR_BRAKE_RADIUS_SQR = 0.45 * 0.45;
+	/** Over narrow footing, only stop pushing when almost directly above it, so the jump isn't cut short. */
+	private static final double NARROW_AIR_BRAKE_RADIUS_SQR = 0.15 * 0.15;
 
 	private final EntityNPC npc;
 	@Nullable
@@ -261,13 +268,28 @@ public class NpcNavigator {
 		return switch (step.move()) {
 			case CLIMB -> horizontal < 0.25 && this.npc.y >= step.feetY() - 0.05;
 			case DESCEND -> this.npc.y <= step.feetY() + 0.2;
-			case DROP -> horizontal < ARRIVE_RADIUS_SQR && this.npc.y < step.feetY() + 3.5;
-			default -> horizontal < ARRIVE_RADIUS_SQR && Math.abs(this.npc.y - step.feetY()) < 1.1;
+			case DROP -> horizontal < this.arriveRadius(step) && this.npc.y < step.feetY() + 3.5;
+			default -> horizontal < this.arriveRadius(step) && Math.abs(this.npc.y - step.feetY()) < 1.1
+				&& (!step.narrow() || this.npc.onGround);
 		};
+	}
+
+	private double arriveRadius(NavStep step) {
+		return step.narrow() ? NARROW_ARRIVE_RADIUS_SQR : ARRIVE_RADIUS_SQR;
 	}
 
 	private void steer(NavStep step) {
 		boolean inWater = this.npc.isInWater();
+		if (step.narrow() && this.npc.onGround && step.move() != NavMove.JUMP_UP && step.move() != NavMove.GAP_JUMP) {
+			// Balancing on a fence top or onto one: slow down near the center instead of overshooting it.
+			double dx = step.centerX() - this.npc.x;
+			double dz = step.centerZ() - this.npc.z;
+			double distance = Math.sqrt(dx * dx + dz * dz);
+			float input = (float) Math.max(NARROW_MIN_INPUT, Math.min(1.0, distance / NARROW_SLOWDOWN_DISTANCE));
+			this.npc.steerToward(step.centerX(), step.centerZ(), input);
+			return;
+		}
+
 		switch (step.move()) {
 			case CLIMB -> {
 				// On a ladder, holding jump climbs; in water it swims up.
@@ -324,7 +346,7 @@ public class NpcNavigator {
 
 		double dx = step.centerX() - this.npc.x;
 		double dz = step.centerZ() - this.npc.z;
-		if (dx * dx + dz * dz < AIR_BRAKE_RADIUS_SQR) {
+		if (dx * dx + dz * dz < (step.narrow() ? NARROW_AIR_BRAKE_RADIUS_SQR : AIR_BRAKE_RADIUS_SQR)) {
 			this.npc.stopWalking();
 		}
 	}

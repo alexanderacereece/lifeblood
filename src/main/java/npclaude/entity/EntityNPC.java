@@ -236,10 +236,15 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 
 	/** Walks straight toward a point at player speed, turning at most 30 degrees a tick like vanilla path-following. */
 	public void steerToward(double x, double z) {
+		this.steerToward(x, z, WALK_INPUT);
+	}
+
+	/** Same, with a lighter push on the walk key (0 to 1), for careful footwork. */
+	public void steerToward(double x, double z, float input) {
 		float targetYaw = (float) (Math.atan2(z - this.z, x - this.x) * 180.0 / Math.PI) - 90.0F;
 		float turn = MathHelper.wrapDegrees(targetYaw - this.yRot);
 		this.yRot += Math.max(-30.0F, Math.min(30.0F, turn));
-		this.moveForward = WALK_INPUT;
+		this.moveForward = input;
 	}
 
 	public void stopWalking() {
