@@ -66,7 +66,7 @@ public class NpcInventoryScreen extends ScreenContainerAbstract {
 	@Override
 	protected void drawGuiContainerForegroundLayer() {
 		this.drawStringNoShadow(this.fontRenderer, this.npc.nickname, 86, 6, LABEL_COLOR);
-		this.drawStringNoShadow(this.fontRenderer, "Pack", 116, 16, LABEL_COLOR);
+		this.drawStringNoShadow(this.fontRenderer, "Inventory", 116, 16, LABEL_COLOR);
 		this.drawStringNoShadow(this.fontRenderer, "Hand", 86, 52, LABEL_COLOR);
 	}
 
