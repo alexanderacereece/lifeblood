@@ -1,26 +1,36 @@
 package npclaude.entity;
 
 import com.mojang.nbt.tags.CompoundTag;
+import java.util.List;
 import java.util.Random;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.IArmorWearing;
 import net.minecraft.core.entity.IItemHolding;
 import net.minecraft.core.entity.MobPathfinder;
 import net.minecraft.core.entity.player.Player;
+import net.minecraft.core.entity.monster.MobSlime;
 import net.minecraft.core.entity.projectile.Projectile;
+import net.minecraft.core.enums.Difficulty;
 import net.minecraft.core.enums.HumanArmorShape;
+import net.minecraft.core.item.ItemFood;
+import net.minecraft.core.item.ItemSoup;
 import net.minecraft.core.item.ItemStack;
 import net.minecraft.core.item.Items;
 import net.minecraft.core.util.helper.DamageType;
+import net.minecraft.core.util.helper.MathHelper;
 import net.minecraft.core.world.World;
 import npclaude.ai.NpcBrain;
 import npclaude.ai.NpcNavigator;
 import npclaude.combat.CombatBehavior;
+import npclaude.combat.CombatStyle;
+import npclaude.combat.MonsterContact;
+import npclaude.combat.NpcFactions;
 import npclaude.dialogue.NpcDialogue;
 import npclaude.interaction.NpcInteractions;
 import npclaude.inventory.NpcInventory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.joml.primitives.AABBd;
 
 /**
  * A general-purpose NPC. Its look comes from a skin file, its actions from the behaviors in its {@link NpcBrain}.
@@ -28,15 +38,14 @@ import org.jetbrains.annotations.Nullable;
  */
 public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmorShape>, IItemHolding {
 	/** Bump when the saved format changes, and convert older data in {@link #readAdditionalSaveData}. */
-	public static final int DATA_VERSION = 1;
+	public static final int DATA_VERSION = 2;
 	private static final String SAVE_KEY = "NPClaude";
 	private static final int DATA_SKIN = 20;
 	private static final int DATA_SKIN_MODEL = 21;
 	/** A conversation ends if the player walks further away than this. */
 	private static final float TALK_DISTANCE = 8.0F;
-	public static final float DEFAULT_BRAVERY = 0.5F;
-	private static final float WALK_SPEED = 0.1F;
-	private static final float RUN_SPEED = 0.14F;
+	/** How often the NPC checks whether it should eat, in ticks. */
+	private static final int EAT_CHECK_INTERVAL = 10;
 	/** Ticks between melee hits; players can click faster, monsters wait 20. */
 	private static final int MELEE_COOLDOWN = 15;
 	private static final double MELEE_REACH = 2.5;
@@ -45,6 +54,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	public final NpcBrain brain = new NpcBrain(this);
 	public final NpcNavigator navigator = new NpcNavigator(this);
 	public final NpcInventory inventory = new NpcInventory(this);
+	public final NpcPersonality personality = new NpcPersonality();
 	private boolean invulnerable = false;
 	private double homeX;
 	private double homeY;
@@ -54,8 +64,8 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private int lookTicks;
 	@Nullable
 	private Player talkingTo;
-	/** 0 = flees from any fair fight, 1 = stands its ground against about 3 to 1. */
-	private float bravery = DEFAULT_BRAVERY;
+	private String faction = NpcFactions.DEFAULT;
+	private CombatStyle combatStyle = CombatStyle.AUTO;
 	@Nullable
 	private Entity lastAttacker;
 	private int lastAttackedTick = Integer.MIN_VALUE / 2;
@@ -117,6 +127,58 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		this.swingProgress = this.swingTicks / (float) SWING_DURATION;
 	}
 
+	/** Player-equivalent upkeep: regenerating on Peaceful, being hurt by slimes on contact, and eating when injured. */
+	@Override
+	public void onLivingUpdate() {
+		if (this.world.getDifficulty() == Difficulty.PEACEFUL && this.getHealth() < this.getMaxHealth() && this.tickCount % 20 * 12 == 0) {
+			this.heal(1);
+		}
+
+		super.onLivingUpdate();
+		if (this.getHealth() > 0) {
+			List<MobSlime> slimes = this.world.getEntitiesWithinAABB(MobSlime.class, MathHelper.aabbGrow(this.bb, 1.0, 0.5, 1.0, new AABBd()));
+			for (MobSlime slime : slimes) {
+				if (!slime.removed) {
+					MonsterContact.slimeTouch(slime, this);
+				}
+			}
+		}
+
+		if (this.tickCount % EAT_CHECK_INTERVAL == 0) {
+			this.tryEatFood();
+		}
+	}
+
+	/**
+	 * Eats one food item from the hand or inventory under the same rule as players:
+	 * only while health plus the healing still queued from earlier food is below max. Soup leaves its bowl behind.
+	 */
+	public boolean tryEatFood() {
+		if (this.getHealth() <= 0 || this.getHealth() + this.getTotalHealingRemaining() >= this.getMaxHealth()) {
+			return false;
+		}
+
+		// The hand first, then the pack.
+		for (int i = -1; i < NpcInventory.PACK_SIZE; i++) {
+			int slot = i < 0 ? NpcInventory.HAND_SLOT : NpcInventory.PACK_START + i;
+			ItemStack stack = this.inventory.getItem(slot);
+			if (stack == null || !(stack.getItem() instanceof ItemFood food) || !stack.consumeItem(null)) {
+				continue;
+			}
+
+			this.eatFood(stack);
+			this.world.playSoundAtEntity(null, this, food.getTicksPerHeal(stack) >= 10 ? "random.bite_extended" : "random.bite",
+				0.5F + (this.random.nextFloat() - this.random.nextFloat()) * 0.1F, 1.1F + (this.random.nextFloat() - this.random.nextFloat()) * 0.1F);
+			if (stack.stackSize <= 0) {
+				this.inventory.setItem(slot, food instanceof ItemSoup ? Items.BOWL.getDefaultStack() : null);
+			}
+
+			return true;
+		}
+
+		return false;
+	}
+
 	public void teleportTo(double x, double y, double z) {
 		this.moveTo(x, y, z, this.yRot, this.xRot);
 		this.fallDistance = 0.0F;
@@ -141,7 +203,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 
 	/** The conversation offered to this player when they right-click the NPC. */
 	public NpcDialogue getDialogue(Player player) {
-		return NpcDialogue.placeholder();
+		return NpcDialogue.placeholder(this);
 	}
 
 	@Nullable
@@ -155,12 +217,25 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 
 	// Combat
 
-	public float getBravery() {
-		return this.bravery;
+	public String getFaction() {
+		return this.faction;
 	}
 
-	public void setBravery(float bravery) {
-		this.bravery = Math.max(0.0F, Math.min(1.0F, bravery));
+	public void setFaction(String faction) {
+		this.faction = faction;
+	}
+
+	public boolean isAlliedWith(EntityNPC other) {
+		return NpcFactions.areAllies(this, other);
+	}
+
+	/** The style chosen for this NPC; AUTO means it decides from its equipment. */
+	public CombatStyle getCombatStyle() {
+		return this.combatStyle;
+	}
+
+	public void setCombatStyle(CombatStyle combatStyle) {
+		this.combatStyle = combatStyle;
 	}
 
 	@Nullable
@@ -172,13 +247,31 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		return this.tickCount - this.lastAttackedTick;
 	}
 
-	public void setRunning(boolean running) {
-		this.speed = running ? RUN_SPEED : WALK_SPEED;
-	}
-
 	public void swingArm() {
 		this.swinging = true;
 		this.swingTicks = 0;
+	}
+
+	/**
+	 * Moves the hardest-hitting item from the inventory into the hand, swapping places with what was held,
+	 * like a player switching to their sword. Does nothing if the hand already holds the best option.
+	 */
+	public void readyMeleeWeapon() {
+		ItemStack held = this.getHeldItem();
+		int bestDamage = held != null ? held.getDamageVsEntity(this) : 1;
+		int bestSlot = -1;
+		for (int i = 0; i < NpcInventory.PACK_SIZE; i++) {
+			ItemStack stack = this.inventory.getItem(NpcInventory.PACK_START + i);
+			if (stack != null && stack.getDamageVsEntity(this) > bestDamage) {
+				bestDamage = stack.getDamageVsEntity(this);
+				bestSlot = NpcInventory.PACK_START + i;
+			}
+		}
+
+		if (bestSlot >= 0) {
+			this.inventory.setItem(NpcInventory.HAND_SLOT, this.inventory.getItem(bestSlot));
+			this.inventory.setItem(bestSlot, held);
+		}
 	}
 
 	/** Hits the target with the held item, like a player's attack, if it's in reach and the cooldown is over. */
@@ -369,7 +462,9 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		npc.putString("Skin", this.getSkin());
 		npc.putByte("SkinModel", (byte) this.getSkinModel().ordinal());
 		npc.putBoolean("Invulnerable", this.invulnerable);
-		npc.putFloat("Bravery", this.bravery);
+		npc.putCompound("Personality", this.personality.save());
+		npc.putString("Faction", this.faction);
+		npc.putByte("CombatStyle", (byte) this.combatStyle.ordinal());
 		npc.putDouble("HomeX", this.homeX);
 		npc.putDouble("HomeY", this.homeY);
 		npc.putDouble("HomeZ", this.homeZ);
@@ -390,7 +485,15 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		this.setSkin(npc.getString("Skin"));
 		this.setSkinModel(SkinModel.byId(npc.getByte("SkinModel")));
 		this.invulnerable = npc.getBoolean("Invulnerable");
-		this.setBravery(npc.getFloatOrDefault("Bravery", DEFAULT_BRAVERY));
+		if (npc.containsKey("Personality")) {
+			this.personality.load(npc.getCompound("Personality"));
+		} else if (npc.containsKey("Bravery")) {
+			// Version 1 stored bravery directly.
+			this.personality.setBravery(npc.getFloat("Bravery"));
+		}
+
+		this.faction = npc.getStringOrDefault("Faction", NpcFactions.DEFAULT);
+		this.combatStyle = CombatStyle.byId(npc.getByte("CombatStyle"));
 		this.setHome(npc.getDouble("HomeX"), npc.getDouble("HomeY"), npc.getDouble("HomeZ"));
 		if (npc.containsKey("Behaviors")) {
 			this.brain.load(npc.getList("Behaviors"));

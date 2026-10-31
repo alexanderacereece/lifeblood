@@ -6,8 +6,10 @@
     "defaultRequire": 1
   },
   "mixins": [
+    "MobGhastMixin",
     "MobMonsterMixin",
     "MobScorpionMixin",
+    "MobSlimeMixin",
     "MobSpiderMixin"
   ],
   "client": [

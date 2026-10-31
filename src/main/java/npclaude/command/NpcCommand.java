@@ -32,12 +32,12 @@ import npclaude.skin.NpcSkinFiles;
 import org.joml.Vector3dc;
 
 /**
- * /npc spawn <name> [skin]
+ * /npc summon <name> [skin]
  * /npc follow|stay|remove <name>
  * /npc wander <name> [radius]
  * /npc skin <name> <skin> [auto|wide|slim]
  * /npc invulnerable <name> <true|false>
- * /npc bravery <name> <0-100>
+ * /npc personality <name> bravery <0-100>
  * /npc list
  * /npc skins [reload]
  *
@@ -70,12 +70,12 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 	public void register(CommandDispatcher<CommandSource> dispatcher) {
 		dispatcher.register(literal("npc")
 			.requires(CommandSource::hasAdmin)
-			.then(literal("spawn")
+			.then(literal("summon")
 				.then(argument("name", ArgumentTypeString.string())
-					.executes(c -> spawn(c, null))
+					.executes(c -> summon(c, null))
 					.then(argument("skin", ArgumentTypeString.word())
 						.suggests(SKIN_NAMES)
-						.executes(c -> spawn(c, ArgumentTypeString.getString(c, "skin"))))))
+						.executes(c -> summon(c, ArgumentTypeString.getString(c, "skin"))))))
 			.then(literal("follow")
 				.then(npcArgument().executes(c -> {
 					Player player = requirePlayer(c.getSource());
@@ -119,14 +119,16 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 						npc.setInvulnerable(value);
 						return reply(c, npc.nickname + (value ? " is now invulnerable." : " can now be hurt."));
 					}))))
-			.then(literal("bravery")
+			.then(literal("personality")
 				.then(npcArgument()
-					.then(argument("value", ArgumentTypeInteger.integer(0, 100)).executes(c -> {
-						EntityNPC npc = findNpc(c);
-						int value = c.getArgument("value", Integer.class);
-						npc.setBravery(value / 100.0F);
-						return reply(c, npc.nickname + "'s bravery is now " + value + ".");
-					}))))
+					.executes(NpcCommand::showPersonality)
+					.then(literal("bravery")
+						.then(argument("value", ArgumentTypeInteger.integer(0, 100)).executes(c -> {
+							EntityNPC npc = findNpc(c);
+							int value = c.getArgument("value", Integer.class);
+							npc.personality.setBravery(value / 100.0F);
+							return reply(c, npc.nickname + "'s bravery is now " + value + ".");
+						})))))
 			.then(literal("remove")
 				.then(npcArgument().executes(c -> {
 					EntityNPC npc = findNpc(c);
@@ -145,12 +147,12 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 				}))));
 	}
 
-	private static int spawn(CommandContext<CommandSource> c, String skin) throws CommandSyntaxException {
+	private static int summon(CommandContext<CommandSource> c, String skin) throws CommandSyntaxException {
 		CommandSource source = c.getSource();
 		Player player = requirePlayer(source);
 		Vector3dc pos = source.getCoordinates(false);
 		if (pos == null) {
-			throw error("You must be in a world to spawn an NPC.");
+			throw error("You must be in a world to summon an NPC.");
 		}
 
 		String name = ArgumentTypeString.getString(c, "name").trim();
@@ -183,7 +185,7 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 			skinInfo += ", which is not in " + NpcSkinFiles.FOLDER_NAME + " yet";
 		}
 
-		return reply(c, "Spawned " + name + " (" + skinInfo + ").");
+		return reply(c, "Summoned " + name + " (" + skinInfo + ").");
 	}
 
 	private static int wander(CommandContext<CommandSource> c, int radius) throws CommandSyntaxException {
@@ -217,13 +219,18 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 			NpcBehavior active = npc.brain.getActive();
 			String doing = active != null ? active.describe() : "idle";
 			String skin = npc.getSkin().isEmpty() ? "default" : npc.getSkin();
-			c.getSource().sendMessage(String.format(Locale.ROOT, "- %s: %s, skin %s, bravery %d, health %d, at %d %d %d%s",
-				npc.nickname, doing, skin, Math.round(npc.getBravery() * 100), npc.getHealth(),
+			c.getSource().sendMessage(String.format(Locale.ROOT, "- %s: %s, skin %s, health %d, %s style, faction %s, at %d %d %d%s",
+				npc.nickname, doing, skin, npc.getHealth(), npc.getCombatStyle().displayName().toLowerCase(Locale.ROOT), npc.getFaction(),
 				(int) Math.floor(npc.x), (int) Math.floor(npc.y), (int) Math.floor(npc.z),
 				npc.isInvulnerable() ? ", invulnerable" : ""));
 		}
 
 		return npcs.size();
+	}
+
+	private static int showPersonality(CommandContext<CommandSource> c) throws CommandSyntaxException {
+		EntityNPC npc = findNpc(c);
+		return reply(c, npc.nickname + "'s personality: bravery " + Math.round(npc.personality.getBravery() * 100));
 	}
 
 	private static int listSkins(CommandContext<CommandSource> c) {

@@ -27,9 +27,9 @@ public class CombatBehavior implements NpcBehavior {
 	private boolean fleeing;
 	private int repathCooldown;
 
-	/** Courage threshold: bravery 0 runs at the first sign of a fair fight, bravery 1 stands against about 3 to 1. */
+	/** Courage threshold: bravery 0 runs from anything but easy fights, bravery 1 stands against about 3 to 1. */
 	public static double courageOf(EntityNPC npc) {
-		return 0.5 + npc.getBravery() * 2.5;
+		return 0.5 + npc.personality.getBravery() * 2.5;
 	}
 
 	@Override
@@ -77,17 +77,18 @@ public class CombatBehavior implements NpcBehavior {
 		if (afraid != this.fleeing) {
 			this.fleeing = afraid;
 			this.repathCooldown = 0;
-			npc.setRunning(afraid);
 		}
 
 		if (this.fleeing) {
 			this.flee(npc, threat);
 		} else {
+			// Bow combat isn't in yet, so every style fights in melee for now.
 			this.fight(npc, target);
 		}
 	}
 
 	private void fight(EntityNPC npc, Mob target) {
+		npc.readyMeleeWeapon();
 		npc.setLookTarget(target, 10);
 		double distance = Math.sqrt(target.distanceToSqr(npc));
 		if (distance > MELEE_RANGE) {
@@ -102,7 +103,10 @@ public class CombatBehavior implements NpcBehavior {
 		npc.tryMeleeAttack(target);
 	}
 
-	/** Runs directly away from the hostiles' center; if that's blocked, tries angling off to either side. */
+	/**
+	 * Runs directly away from the hostiles' center; if that's blocked, tries angling off to either side,
+	 * and a block up or down to follow the terrain.
+	 */
 	private void flee(EntityNPC npc, ThreatAssessment threat) {
 		if (--this.repathCooldown > 0 && npc.navigator.isMoving()) {
 			return;
@@ -119,12 +123,15 @@ public class CombatBehavior implements NpcBehavior {
 		cx /= threat.hostiles.size();
 		cz /= threat.hostiles.size();
 		double awayAngle = Math.atan2(npc.z - cz, npc.x - cx);
+		int y = MathHelper.floor(npc.y);
 		for (double offset : new double[]{0.0, 0.6, -0.6, 1.2, -1.2}) {
 			double angle = awayAngle + offset;
 			int x = MathHelper.floor(npc.x + Math.cos(angle) * FLEE_DISTANCE);
 			int z = MathHelper.floor(npc.z + Math.sin(angle) * FLEE_DISTANCE);
-			if (npc.navigator.moveTo(x, MathHelper.floor(npc.y), z)) {
-				return;
+			for (int dy : new int[]{0, 1, -1, 2, -2}) {
+				if (npc.navigator.moveTo(x, y + dy, z)) {
+					return;
+				}
 			}
 		}
 	}
@@ -132,7 +139,6 @@ public class CombatBehavior implements NpcBehavior {
 	@Override
 	public void stop(EntityNPC npc) {
 		npc.navigator.stop();
-		npc.setRunning(false);
 		this.fleeing = false;
 	}
 

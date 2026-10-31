@@ -3,13 +3,17 @@ package npclaude.combat;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.entity.Entity;
+import net.minecraft.core.entity.IArmorWearing;
+import net.minecraft.core.entity.IItemHolding;
 import net.minecraft.core.entity.Mob;
 import net.minecraft.core.entity.MobPathfinder;
 import net.minecraft.core.entity.monster.Enemy;
 import net.minecraft.core.entity.monster.MobCreeper;
+import net.minecraft.core.entity.monster.MobGhast;
 import net.minecraft.core.entity.monster.MobHuman;
 import net.minecraft.core.entity.monster.MobScorpion;
 import net.minecraft.core.entity.monster.MobSkeleton;
+import net.minecraft.core.entity.monster.MobSnowman;
 import net.minecraft.core.entity.monster.MobSpider;
 import net.minecraft.core.entity.monster.MobZombieArmored;
 import net.minecraft.core.entity.monster.MobZombiePig;
@@ -23,7 +27,8 @@ import org.joml.primitives.AABBd;
 
 /**
  * A snapshot of how dangerous an NPC's surroundings are: the hostiles nearby,
- * weighed against the NPC's own fighting strength plus that of its allies (other NPCs and players).
+ * weighed against the NPC's own fighting strength plus that of its allies (NPCs of its faction, and players).
+ * Everyone's strength uses the same formula, so an unarmed player helps no more than an unarmed NPC.
  *
  * danger = threat / strength. Around 1 means an even fight; the NPC's bravery decides how much it will accept.
  */
@@ -34,7 +39,6 @@ public final class ThreatAssessment {
 	private static final double FAR_WEIGHT = 0.6;
 	/** How long the NPC remembers who attacked it, in ticks. */
 	public static final int GRUDGE_TICKS = 200;
-	private static final double PLAYER_STRENGTH = 1.5;
 
 	public final List<Mob> hostiles = new ArrayList<>();
 	public final List<Entity> allies = new ArrayList<>();
@@ -62,12 +66,10 @@ public final class ThreatAssessment {
 
 		result.strength = strengthOf(npc);
 		for (Entity entity : nearby) {
-			if (entity instanceof EntityNPC other && other.isAlive()) {
-				result.allies.add(other);
-				result.strength += strengthOf(other);
-			} else if (entity instanceof Player player && player.isAlive()) {
-				result.allies.add(player);
-				result.strength += PLAYER_STRENGTH * player.getHealth() / (double) player.getMaxHealth();
+			boolean ally = entity instanceof EntityNPC other ? npc.isAlliedWith(other) : entity instanceof Player;
+			if (ally && entity instanceof Mob mob && mob.isAlive()) {
+				result.allies.add(mob);
+				result.strength += strengthOf(mob);
 			}
 		}
 
@@ -79,7 +81,8 @@ public final class ThreatAssessment {
 
 			double distance = Math.sqrt(mob.distanceToSqr(npc));
 			result.hostiles.add(mob);
-			result.threat += threatOf(mob) * (distance <= CLOSE_RANGE ? 1.0 : FAR_WEIGHT);
+			boolean inReach = distance <= CLOSE_RANGE || isRanged(mob);
+			result.threat += threatOf(mob) * (inReach ? 1.0 : FAR_WEIGHT);
 			if (distance < nearestDistance) {
 				nearestDistance = distance;
 				result.nearestHostile = mob;
@@ -112,6 +115,11 @@ public final class ThreatAssessment {
 		return mob instanceof Enemy && npc.canEntityBeSeen(mob);
 	}
 
+	/** Mobs that hurt from a distance are as dangerous far away as up close. */
+	private static boolean isRanged(Mob mob) {
+		return mob instanceof MobSkeleton || mob instanceof MobGhast || mob instanceof MobSnowman;
+	}
+
 	private static double threatOf(Mob mob) {
 		double health = Math.max(0.25, Math.min(2.0, mob.getHealth() / 20.0));
 		double kind;
@@ -127,19 +135,19 @@ public final class ThreatAssessment {
 	}
 
 	/**
-	 * How well an NPC can fight: health x weapon x armor. An unarmed NPC at full health is 0.25,
+	 * How well someone can fight, NPC or player alike: health x weapon x armor. Unarmed at full health is 0.25,
 	 * an iron sword makes it about 1.5, and full iron armor adds roughly half again.
 	 */
-	public static double strengthOf(EntityNPC npc) {
-		if (npc.isInvulnerable()) {
+	public static double strengthOf(Mob fighter) {
+		if (fighter instanceof EntityNPC npc && npc.isInvulnerable()) {
 			return 100.0;
 		}
 
-		double health = npc.getHealth() / (double) npc.getMaxHealth();
-		ItemStack held = npc.getHeldItem();
-		int damage = held != null ? held.getDamageVsEntity(npc) : 1;
+		double health = fighter.getHealth() / (double) fighter.getMaxHealth();
+		ItemStack held = fighter instanceof IItemHolding holder ? holder.getHeldItem() : null;
+		int damage = held != null ? held.getDamageVsEntity(fighter) : 1;
 		double attack = Math.max(0.25, Math.min(2.5, damage / 4.0));
-		double armor = npc.getTotalProtectionAmount(DamageType.COMBAT);
+		double armor = fighter instanceof IArmorWearing<?> wearer ? wearer.getTotalProtectionAmount(DamageType.COMBAT) : 0.0;
 		return health * attack * (1.0 + armor * 1.5);
 	}
 }

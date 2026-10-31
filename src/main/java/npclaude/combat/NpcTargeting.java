@@ -19,7 +19,7 @@ public final class NpcTargeting {
 	/** Returns whichever is closer to the monster: its current target or the nearest NPC it can see. */
 	@Nullable
 	public static Entity closerTarget(Mob monster, @Nullable Entity current) {
-		EntityNPC npc = nearestVisibleNpc(monster);
+		EntityNPC npc = nearestVisibleNpc(monster, MONSTER_SIGHT_RANGE, 4.0);
 		if (npc == null) {
 			return current;
 		}
@@ -28,12 +28,12 @@ public final class NpcTargeting {
 	}
 
 	@Nullable
-	private static EntityNPC nearestVisibleNpc(Mob monster) {
+	public static EntityNPC nearestVisibleNpc(Mob monster, double range, double verticalRange) {
 		AABBd area = new AABBd(monster.x, monster.y, monster.z, monster.x, monster.y, monster.z);
-		MathHelper.aabbGrow(area, MONSTER_SIGHT_RANGE, 4.0, MONSTER_SIGHT_RANGE, area);
+		MathHelper.aabbGrow(area, range, verticalRange, range, area);
 		List<EntityNPC> npcs = monster.world.getEntitiesWithinAABB(EntityNPC.class, area);
 		EntityNPC nearest = null;
-		double nearestDistance = MONSTER_SIGHT_RANGE * MONSTER_SIGHT_RANGE;
+		double nearestDistance = range * range;
 		for (EntityNPC npc : npcs) {
 			double distance = npc.distanceToSqr(monster);
 			if (npc.isAlive() && distance < nearestDistance && monster.canEntityBeSeen(npc)) {
