@@ -345,6 +345,12 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		super.dropDeathItems();
 	}
 
+	/** Same as a player (10 hearts); the vanilla mob default is only 10. */
+	@Override
+	public int getMaxHealth() {
+		return 20;
+	}
+
 	@Override
 	protected boolean canDespawn() {
 		return false;
