@@ -20,6 +20,8 @@ import net.minecraft.core.entity.EntityDispatcher;
 import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.net.command.CommandManager;
 import net.minecraft.core.net.command.CommandSource;
+import net.minecraft.core.net.command.arguments.ArgumentTypeVector3d;
+import net.minecraft.core.net.command.helpers.DoubleCoordinates;
 import net.minecraft.core.world.World;
 import npclaude.ai.NpcBehavior;
 import npclaude.ai.behavior.FollowPlayerBehavior;
@@ -30,6 +32,7 @@ import npclaude.client.NpcSkins;
 import npclaude.combat.FactionRegistry;
 import npclaude.combat.FactionRelation;
 import npclaude.entity.EntityNPC;
+import npclaude.entity.NpcGender;
 import npclaude.entity.SkinModel;
 import npclaude.perf.NpcProfiler;
 import npclaude.skin.NpcSkinFiles;
@@ -39,7 +42,10 @@ import org.joml.Vector3dc;
 /**
  * /npc summon <name> [skin|default] [faction]
  * /npc follow|stay|remove <name>
- * /npc goto <name>          (walks to where you stand, then stays)
+ * /npc goto <name> [<x y z> | npc <other>]   (walks there, then stays; no target means to you)
+ * /npc tp <name> [<x y z> | npc <other>]     (teleports there; no target means to you)
+ * /npc tpto <name>                           (teleports you to the NPC)
+ * /npc gender <name> [male|female]
  * /npc perf                 (AI and pathfinding cost over the last second)
  * /npc wander <name> [radius]
  * /npc skin <name> <skin> [auto|wide|slim]
@@ -84,6 +90,13 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 
 		return builder.buildFuture();
 	};
+	private static final SuggestionProvider<CommandSource> GENDER_NAMES = (c, builder) -> {
+		for (NpcGender gender : NpcGender.values()) {
+			builder.suggest(gender.name().toLowerCase(Locale.ROOT));
+		}
+
+		return builder.buildFuture();
+	};
 	private static final SuggestionProvider<CommandSource> SKIN_MODELS = (c, builder) -> {
 		for (SkinModel model : SkinModel.values()) {
 			builder.suggest(model.name().toLowerCase(Locale.ROOT));
@@ -113,12 +126,67 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 					return reply(c, npc.nickname + " is now following you.");
 				})))
 			.then(literal("goto")
+				.then(npcArgument()
+					.executes(c -> {
+						Player player = requirePlayer(c.getSource());
+						return goTo(c, player.x, player.bb.minY(), player.z, "you");
+					})
+					.then(argument("position", ArgumentTypeVector3d.vec3d()).executes(c -> {
+						DoubleCoordinates position = c.getArgument("position", DoubleCoordinates.class);
+						CommandSource source = c.getSource();
+						double x = position.getX(source);
+						double y = position.getY(source, true);
+						double z = position.getZ(source);
+						return goTo(c, x, y, z, String.format(Locale.ROOT, "%.0f %.0f %.0f", x, y, z));
+					}))
+					.then(literal("npc")
+						.then(argument("other", ArgumentTypeString.string()).suggests(NPC_NAMES).executes(c -> {
+							EntityNPC other = findNpcNamed(c, ArgumentTypeString.getString(c, "other"));
+							return goTo(c, other.x, other.y, other.z, other.nickname);
+						})))))
+			.then(literal("tp")
+				.then(npcArgument()
+					.executes(c -> {
+						Player player = requirePlayer(c.getSource());
+						return teleport(c, player.x, player.bb.minY(), player.z, "you");
+					})
+					.then(argument("position", ArgumentTypeVector3d.vec3d()).executes(c -> {
+						DoubleCoordinates position = c.getArgument("position", DoubleCoordinates.class);
+						CommandSource source = c.getSource();
+						double x = position.getX(source);
+						double y = position.getY(source, true);
+						double z = position.getZ(source);
+						return teleport(c, x, y, z, String.format(Locale.ROOT, "%.0f %.0f %.0f", x, y, z));
+					}))
+					.then(literal("npc")
+						.then(argument("other", ArgumentTypeString.string()).suggests(NPC_NAMES).executes(c -> {
+							EntityNPC other = findNpcNamed(c, ArgumentTypeString.getString(c, "other"));
+							return teleport(c, other.x, other.y, other.z, other.nickname);
+						})))))
+			.then(literal("tpto")
 				.then(npcArgument().executes(c -> {
 					Player player = requirePlayer(c.getSource());
 					EntityNPC npc = findNpc(c);
-					npc.brain.set(new GoToBehavior(player.x, player.bb.minY(), player.z));
-					return reply(c, npc.nickname + " is heading to you.");
+					c.getSource().teleportPlayerToPos(player, npc.x, npc.y, npc.z);
+					return reply(c, "Teleported you to " + npc.nickname + ".");
 				})))
+			.then(literal("gender")
+				.then(npcArgument()
+					.executes(c -> {
+						EntityNPC npc = findNpc(c);
+						return reply(c, npc.nickname + " is " + npc.getGender().displayName().toLowerCase(Locale.ROOT) + ".");
+					})
+					.then(argument("gender", ArgumentTypeString.word()).suggests(GENDER_NAMES).executes(c -> {
+						EntityNPC npc = findNpc(c);
+						String name = ArgumentTypeString.getString(c, "gender");
+						NpcGender gender = NpcGender.byName(name);
+						if (gender == null) {
+							throw error("Unknown gender '" + name + "'. Use male or female.");
+						}
+
+						npc.setGender(gender);
+						return reply(c, npc.nickname + " is now " + gender.displayName().toLowerCase(Locale.ROOT) + ".");
+					}))))
 			.then(literal("perf").executes(c -> {
 				int count = getNpcs(c.getSource().getWorld()).size();
 				return reply(c, count + " NPC(s) loaded. " + NpcProfiler.report());
@@ -294,6 +362,8 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 		npc.moveTo(pos.x(), pos.y() - player.heightOffset, pos.z(), player.yRot, 0.0F);
 		npc.setNickname(name);
 		npc.setSkin(skin);
+		// A first guess, changeable with /npc gender: slim-armed skins are usually female characters.
+		npc.setGender(NpcSkinFiles.isSlim(skin) ? NpcGender.FEMALE : NpcGender.MALE);
 		if (faction != null) {
 			npc.setFaction(faction);
 		}
@@ -309,6 +379,20 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 		}
 
 		return reply(c, "Summoned " + name + " of the " + npc.getFaction() + " (" + skinInfo + ").");
+	}
+
+	private static int goTo(CommandContext<CommandSource> c, double x, double y, double z, String where) throws CommandSyntaxException {
+		EntityNPC npc = findNpc(c);
+		npc.brain.set(new GoToBehavior(x, y, z));
+		return reply(c, npc.nickname + " is heading to " + where + ".");
+	}
+
+	private static int teleport(CommandContext<CommandSource> c, double x, double y, double z, String where) throws CommandSyntaxException {
+		EntityNPC npc = findNpc(c);
+		npc.navigator.stop();
+		npc.teleportTo(x, y, z);
+		npc.setHomeHere();
+		return reply(c, "Teleported " + npc.nickname + " to " + where + ".");
 	}
 
 	private static int wander(CommandContext<CommandSource> c, int radius) throws CommandSyntaxException {
@@ -342,8 +426,9 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 			NpcBehavior active = npc.brain.getActive();
 			String doing = active != null ? active.describe() : "idle";
 			String skin = npc.getSkin().isEmpty() ? "default" : npc.getSkin();
-			c.getSource().sendMessage(String.format(Locale.ROOT, "- %s: %s, skin %s, health %d, %s style, faction %s, at %d %d %d%s",
-				npc.nickname, doing, skin, npc.getHealth(), npc.getCombatStyle().displayName().toLowerCase(Locale.ROOT), npc.getFaction(),
+			c.getSource().sendMessage(String.format(Locale.ROOT, "- %s (%s): %s, skin %s, health %d, %s style, faction %s, at %d %d %d%s",
+				npc.nickname, npc.getGender().displayName().toLowerCase(Locale.ROOT), doing, skin, npc.getHealth(),
+				npc.getCombatStyle().displayName().toLowerCase(Locale.ROOT), npc.getFaction(),
 				(int) Math.floor(npc.x), (int) Math.floor(npc.y), (int) Math.floor(npc.z),
 				npc.isInvulnerable() ? ", invulnerable" : ""));
 		}
@@ -428,7 +513,10 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 
 	/** Finds the NPC named in the "npc" argument; with duplicates, the nearest one wins. */
 	private static EntityNPC findNpc(CommandContext<CommandSource> c) throws CommandSyntaxException {
-		String name = ArgumentTypeString.getString(c, "npc");
+		return findNpcNamed(c, ArgumentTypeString.getString(c, "npc"));
+	}
+
+	private static EntityNPC findNpcNamed(CommandContext<CommandSource> c, String name) throws CommandSyntaxException {
 		Player player = c.getSource().getSender();
 		EntityNPC best = null;
 		double bestDistance = Double.MAX_VALUE;

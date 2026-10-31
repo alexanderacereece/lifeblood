@@ -79,7 +79,9 @@ public class FollowPlayerBehavior implements NpcBehavior {
 			return;
 		}
 
-		if (!npc.navigator.moveTo(player) && distance > TELEPORT_DISTANCE) {
+		// No route, or one that only gets partway (the player climbed somewhere unreachable): catch up by teleporting.
+		boolean routed = npc.navigator.moveTo(player);
+		if ((!routed || !npc.navigator.isRouteComplete()) && distance > TELEPORT_DISTANCE) {
 			npc.navigator.teleportNear(player);
 		}
 	}

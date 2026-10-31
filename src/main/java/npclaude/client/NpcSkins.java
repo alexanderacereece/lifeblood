@@ -87,27 +87,10 @@ public final class NpcSkins {
 				return null;
 			}
 
-			return new RawSkin(image, detectSlim(image));
+			return new RawSkin(image, NpcSkinFiles.isSlim(image));
 		} catch (IOException e) {
 			NPClaude.LOGGER.warn("Could not read NPC skin '{}'", name, e);
 			return null;
 		}
-	}
-
-	/** Slim skins have 3-pixel-wide arms, leaving the 4th column of the right arm (x 54-55, y 20-31) transparent. */
-	private static boolean detectSlim(BufferedImage image) {
-		if (image.getHeight() != 64) {
-			return false;
-		}
-
-		for (int x = 54; x <= 55; x++) {
-			for (int y = 20; y <= 31; y++) {
-				if ((image.getRGB(x, y) >>> 24) != 0) {
-					return false;
-				}
-			}
-		}
-
-		return true;
 	}
 }

@@ -76,6 +76,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	@Nullable
 	private Player talkingTo;
 	private String faction = NpcFactions.DEFAULT;
+	private NpcGender gender = NpcGender.MALE;
 	private CombatStyle combatStyle = CombatStyle.AUTO;
 	@Nullable
 	private Entity lastAttacker;
@@ -386,6 +387,20 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		this.entityData.set(DATA_SKIN_MODEL, (byte) model.ordinal());
 	}
 
+	public NpcGender getGender() {
+		return this.gender;
+	}
+
+	public void setGender(NpcGender gender) {
+		this.gender = gender;
+	}
+
+	/** Female NPCs' hurt and death sounds are pitched up. */
+	@Override
+	protected float getPitchModifier() {
+		return super.getPitchModifier() + this.gender.pitchOffset;
+	}
+
 	public boolean isInvulnerable() {
 		return this.invulnerable;
 	}
@@ -536,6 +551,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		npc.putBoolean("Invulnerable", this.invulnerable);
 		npc.putCompound("Personality", this.personality.save());
 		npc.putString("Faction", this.faction);
+		npc.putByte("Gender", (byte) this.gender.ordinal());
 		npc.putByte("CombatStyle", (byte) this.combatStyle.ordinal());
 		npc.putDouble("HomeX", this.homeX);
 		npc.putDouble("HomeY", this.homeY);
@@ -566,6 +582,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		}
 
 		this.faction = NpcFactions.normalize(npc.getStringOrDefault("Faction", NpcFactions.DEFAULT));
+		this.gender = NpcGender.byId(npc.getByte("Gender"));
 		this.combatStyle = CombatStyle.byId(npc.getByte("CombatStyle"));
 		this.setHome(npc.getDouble("HomeX"), npc.getDouble("HomeY"), npc.getDouble("HomeZ"));
 		if (npc.containsKey("Behaviors")) {

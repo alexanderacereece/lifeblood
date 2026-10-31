@@ -28,6 +28,13 @@ public final class NavSearch {
 	private static final double COST_WET = 1.0;
 	private static final double COST_CLIMB = 1.5;
 	private static final double COST_DOOR = 1.5;
+	/** Walking along fence tops and other narrow footing is possible but avoided when there's another way. */
+	private static final double COST_NARROW = 2.0;
+	/** Walking up stairs costs a little more than flat ground, but far less than jumping. */
+	private static final double COST_STAIRS = 1.3;
+	/** Estimated cost per block of height still to climb, and to descend. Climbing is the slower of the two. */
+	private static final double ESTIMATE_UP = 1.0;
+	private static final double ESTIMATE_DOWN = 0.5;
 
 	/** Where the search is trying to get. */
 	public interface Goal {
@@ -57,7 +64,8 @@ public final class NavSearch {
 				double dx = Math.abs(x + 0.5 - gx);
 				double dz = Math.abs(z + 0.5 - gz);
 				double flat = Math.max(dx, dz) + (DIAGONAL - 1.0) * Math.min(dx, dz);
-				return Math.max(0.0, flat - radius) + Math.abs(y - gy) * 0.5;
+				double rise = gy - y;
+				return Math.max(0.0, flat - radius) + (rise > 0 ? rise * ESTIMATE_UP : -rise * ESTIMATE_DOWN);
 			}
 		};
 	}
@@ -125,22 +133,15 @@ public final class NavSearch {
 
 	@Nullable
 	private NavPath run(double startX, double startY, double startZ, int maxNodes) {
-		int sx = MathHelper.floor(startX);
-		int sz = MathHelper.floor(startZ);
-		int sy = MathHelper.floor(startY + 0.01);
-		NavGrid.Cell start = null;
-		// Mid-jump or on a slab edge the feet may be a little above their resting spot.
-		for (int dy = 0; dy <= 2 && start == null; dy++) {
-			NavGrid.Cell cell = this.grid.cell(sx, sy - dy, sz);
-			if (cell.isFooting()) {
-				start = cell;
-				sy -= dy;
-			}
-		}
-
-		if (start == null) {
+		int[] spot = this.findStart(startX, startY, startZ);
+		if (spot == null) {
 			return null;
 		}
+
+		int sx = spot[0];
+		int sy = spot[1];
+		int sz = spot[2];
+		NavGrid.Cell start = this.grid.cell(sx, sy, sz);
 
 		Node first = new Node(sx, sy, sz, start.feetY, 0.0, this.goal.estimate(sx, sy, sz), null, NavMove.WALK, false);
 		this.closest = first;
@@ -166,13 +167,51 @@ public final class NavSearch {
 		return this.closest == first ? null : this.build(this.closest, false);
 	}
 
+	/**
+	 * The block space the feet are really in. Usually the one under the body's center, but standing on an edge or
+	 * pressed against a fence the center hangs over a space that can't be stood in; then it's whichever space the
+	 * body overlaps that the feet are actually resting in.
+	 */
+	@Nullable
+	private int[] findStart(double startX, double startY, double startZ) {
+		int sy = MathHelper.floor(startY + 0.01);
+		int[] best = null;
+		double bestDistance = Double.MAX_VALUE;
+		for (double ox : new double[]{0.0, -NavGrid.HALF_WIDTH, NavGrid.HALF_WIDTH}) {
+			for (double oz : new double[]{0.0, -NavGrid.HALF_WIDTH, NavGrid.HALF_WIDTH}) {
+				int x = MathHelper.floor(startX + ox);
+				int z = MathHelper.floor(startZ + oz);
+				// Mid-jump or on a slab the feet may be a little above their resting spot.
+				for (int dy = 0; dy <= 2; dy++) {
+					NavGrid.Cell cell = this.grid.cell(x, sy - dy, z);
+					if (!cell.isFooting()) {
+						continue;
+					}
+
+					double cx = x + 0.5 - startX;
+					double cz = z + 0.5 - startZ;
+					double distance = cx * cx + cz * cz + Math.abs(cell.feetY - startY) * 2.0;
+					if (distance < bestDistance) {
+						bestDistance = distance;
+						best = new int[]{x, sy - dy, z};
+					}
+
+					break;
+				}
+			}
+		}
+
+		return best;
+	}
+
 	private void expand(Node node) {
 		NavGrid.Cell here = this.grid.cell(node.x, node.y, node.z);
 
-		// Straight up or down: ladders, and swimming.
-		if (here.kind == NavGrid.Kind.CLIMB || here.kind == NavGrid.Kind.SWIM) {
+		// Straight up or down: ladders (also from their foot) and swimming. At a ladder's top the NPC climbs
+		// into the open space above it, then steps off onto the ledge beside it.
+		if (here.climbable || here.kind == NavGrid.Kind.CLIMB || here.kind == NavGrid.Kind.SWIM) {
 			NavGrid.Cell up = this.grid.cell(node.x, node.y + 1, node.z);
-			if (up.isFooting()) {
+			if (up.isFooting() || here.climbable && up.kind == NavGrid.Kind.OPEN) {
 				this.offer(node, node.x, node.y + 1, node.z, up, NavMove.CLIMB, COST_CLIMB);
 			}
 
@@ -188,8 +227,10 @@ public final class NavSearch {
 			boolean diagonal = dx != 0 && dz != 0;
 			int nx = node.x + dx;
 			int nz = node.z + dz;
-			// Diagonals only where both side squares are open too, so the NPC never clips a corner.
-			if (diagonal && !(this.grid.cell(node.x + dx, node.y, node.z).isPassable() && this.grid.cell(node.x, node.y, node.z + dz).isPassable())) {
+			// Diagonals only where the body fits through the corner: both side squares are open, or (between thin
+			// things like fence posts) there's room at the halfway point.
+			if (diagonal && !(this.grid.cell(node.x + dx, node.y, node.z).isPassable() && this.grid.cell(node.x, node.y, node.z + dz).isPassable())
+				&& !this.grid.bodyFitsAt(node.x + 0.5 + dx * 0.5, node.z + 0.5 + dz * 0.5, node.feetY)) {
 				continue;
 			}
 
@@ -222,6 +263,8 @@ public final class NavSearch {
 					if (rise <= NavGrid.STEP_HEIGHT + 1.0E-3) {
 						// From a slab, a full block ahead is only half a block up: a step, not a jump.
 						this.offer(node, nx, node.y + 1, nz, above, NavMove.WALK, flat);
+					} else if (rise <= 1.0 + 1.0E-3 && this.grid.isStairAscent(nx, node.y, nz, dx, dz, node.feetY)) {
+						this.offer(node, nx, node.y + 1, nz, above, NavMove.WALK, COST_STAIRS);
 					} else if (rise <= NavGrid.JUMP_HEIGHT && this.hasJumpRoom(node)) {
 						this.offer(node, nx, node.y + 1, nz, above, NavMove.JUMP_UP, COST_JUMP);
 					}
@@ -274,7 +317,7 @@ public final class NavSearch {
 			return;
 		}
 
-		double g = from.g + cost + (cell.door ? COST_DOOR : 0.0);
+		double g = from.g + cost + (cell.door ? COST_DOOR : 0.0) + (cell.narrow ? COST_NARROW : 0.0);
 		if (this.field != null) {
 			g += this.field.extraCost(x, y, z);
 		}

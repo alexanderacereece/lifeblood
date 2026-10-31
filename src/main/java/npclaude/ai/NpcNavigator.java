@@ -43,8 +43,8 @@ public class NpcNavigator {
 	/** Further than this (squared) from the next step means the NPC was knocked off its route. */
 	private static final double OFF_ROUTE_SQR = 3.0 * 3.0;
 	private static final double DOOR_REACH_SQR = 2.5 * 2.5;
-	/** Doors are closed again once the NPC is this far (squared) past them. */
-	private static final double DOOR_CLOSE_SQR = 2.5 * 2.5;
+	/** Doors are closed again as soon as the body has cleared the doorway (horizontal distance, squared). */
+	private static final double DOOR_CLOSE_SQR = 1.0 * 1.0;
 	/** Fleeing routes avoid coming within this distance of attackers. */
 	private static final double FLEE_DANGER_RADIUS = 8.0;
 	private static final double FLEE_DANGER_COST = 0.8;
@@ -267,7 +267,9 @@ public class NpcNavigator {
 				this.npc.steerToward(step.centerX(), step.centerZ());
 				double dx = step.centerX() - this.npc.x;
 				double dz = step.centerZ() - this.npc.z;
-				if ((this.npc.onGround || inWater) && dx * dx + dz * dz < 1.4 * 1.4) {
+				// Jump only while still below the ledge; once up, just walk to the step's center.
+				boolean below = this.npc.y < step.feetY() - 0.4;
+				if (below && (this.npc.onGround || inWater) && dx * dx + dz * dz < 1.4 * 1.4) {
 					this.npc.setJumping(true);
 				}
 			}
@@ -367,7 +369,7 @@ public class NpcNavigator {
 		}
 	}
 
-	/** Closes doors this NPC opened once it has walked through and away from them. */
+	/** Closes doors this NPC opened as soon as its body has cleared the doorway, unless its route leads back through. */
 	private void closeDoorsBehind() {
 		Iterator<TilePos> doors = this.openedDoors.iterator();
 		while (doors.hasNext()) {
@@ -375,18 +377,53 @@ public class NpcNavigator {
 			Block<?> block = this.npc.world.getBlockType(pos);
 			if (!NavGrid.isOpenable(block) || !NavGrid.isOpen(block, this.npc.world.getBlockData(pos))) {
 				doors.remove();
-			} else if (this.npc.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) > DOOR_CLOSE_SQR) {
+				continue;
+			}
+
+			double dx = pos.x + 0.5 - this.npc.x;
+			double dz = pos.z + 0.5 - this.npc.z;
+			if (dx * dx + dz * dz > DOOR_CLOSE_SQR && !this.isOnUpcomingSteps(pos)) {
 				this.toggle(block, pos);
 				doors.remove();
 			}
 		}
 	}
 
+	private boolean isOnUpcomingSteps(TilePos pos) {
+		if (this.path == null) {
+			return false;
+		}
+
+		for (int ahead = 0; ahead <= 1; ahead++) {
+			NavStep step = this.path.peek(ahead);
+			if (step != null && step.x() == pos.x && step.z() == pos.z && Math.abs(step.y() - pos.y) <= 1) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	private void toggle(Block<?> block, TilePos pos) {
+		World world = this.npc.world;
 		if (block.getLogic() instanceof BlockLogicDoor door) {
-			door.onInteracted(this.npc.world, pos, null, null, 0.5, 0.5);
-		} else if (block.getLogic() instanceof BlockLogicFenceGate gate) {
-			gate.onInteracted(this.npc.world, pos, null, null, 0.5, 0.5);
+			door.onInteracted(world, pos, null, null, 0.5, 0.5);
+		} else if (block.getLogic() instanceof BlockLogicFenceGate) {
+			// Same as BlockLogicFenceGate.onInteracted, but facing the NPC: a gate opening toward its opener
+			// swings the other way, just as it does for players.
+			int data = world.getBlockData(pos);
+			if (BlockLogicFenceGate.isOpen(data)) {
+				world.setBlockDataNotify(pos, data & -5);
+			} else {
+				int facing = (MathHelper.floor(this.npc.yRot * 4.0F / 360.0F + 0.5) & 3) % 4;
+				if (BlockLogicFenceGate.getDirection(data) == (facing + 2) % 4) {
+					data = data & 240 | facing;
+				}
+
+				world.setBlockDataNotify(pos, data | 4);
+			}
+
+			world.playBlockEvent(null, pos, 1003, 0);
 		}
 	}
 
@@ -429,6 +466,11 @@ public class NpcNavigator {
 		}
 
 		return false;
+	}
+
+	/** True unless the current route only gets partway (the goal couldn't be reached within the search budget). */
+	public boolean isRouteComplete() {
+		return this.path == null || this.pending || this.path.complete;
 	}
 
 	/** Steps left on the current route, for debugging. */

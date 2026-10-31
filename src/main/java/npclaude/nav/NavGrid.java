@@ -10,6 +10,7 @@ import net.minecraft.core.block.BlockLogicDoor;
 import net.minecraft.core.block.BlockLogicFenceGate;
 import net.minecraft.core.block.Blocks;
 import net.minecraft.core.block.material.Materials;
+import net.minecraft.core.util.helper.MathHelper;
 import net.minecraft.core.world.World;
 import net.minecraft.core.world.pos.TilePos;
 import org.joml.primitives.AABBd;
@@ -33,6 +34,8 @@ public final class NavGrid {
 	/** Longest fall taken on purpose: falling damage starts beyond 3 blocks. */
 	public static final int SAFE_DROP = 3;
 	private static final double EPSILON = 1.0E-3;
+	/** Footing narrower than this (fence tops, walls) counts as precarious. */
+	private static final double NARROW_FOOTING = 0.5;
 
 	public enum Kind {
 		/** Something solid fills the space a body would need. */
@@ -55,13 +58,19 @@ public final class NavGrid {
 		public final boolean hazard;
 		/** Standing in shallow water: passable but slow. */
 		public final boolean wet;
+		/** A ladder (or vine) is here: can be climbed from this spot, even when standing at its foot. */
+		public final boolean climbable;
+		/** Standing on something narrow, like the top of a fence: possible but precarious. */
+		public final boolean narrow;
 
-		Cell(Kind kind, double feetY, boolean door, boolean hazard, boolean wet) {
+		Cell(Kind kind, double feetY, boolean door, boolean hazard, boolean wet, boolean climbable, boolean narrow) {
 			this.kind = kind;
 			this.feetY = feetY;
 			this.door = door;
 			this.hazard = hazard;
 			this.wet = wet;
+			this.climbable = climbable;
+			this.narrow = narrow;
 		}
 
 		public boolean isPassable() {
@@ -127,31 +136,90 @@ public final class NavGrid {
 		}
 
 		double floor = Double.NaN;
+		double floorWidth = 1.0;
 		for (AABBdc box : this.boxes) {
 			double top = box.maxY();
 			if (top >= y - EPSILON && top <= y + STEP_HEIGHT + EPSILON && (Double.isNaN(floor) || top > floor)) {
 				floor = top;
+				floorWidth = Math.min(box.maxX() - box.minX(), box.maxZ() - box.minZ());
 			}
 		}
 
 		double feet = Double.isNaN(floor) ? y : floor;
 		if (!this.bodyFits(feet)) {
-			return new Cell(Kind.BLOCKED, feet, door, hazard, false);
+			return new Cell(Kind.BLOCKED, feet, door, hazard, false, climbable, false);
 		}
 
 		if (!Double.isNaN(floor)) {
-			return new Cell(Kind.STAND, floor, door, hazard, water);
+			return new Cell(Kind.STAND, floor, door, hazard, water, climbable, floorWidth < NARROW_FOOTING);
 		}
 
 		if (climbable) {
-			return new Cell(Kind.CLIMB, y, door, hazard, false);
+			return new Cell(Kind.CLIMB, y, door, hazard, false, true, false);
 		}
 
 		if (water) {
-			return new Cell(Kind.SWIM, y, door, hazard, true);
+			return new Cell(Kind.SWIM, y, door, hazard, true, false, false);
 		}
 
-		return new Cell(Kind.OPEN, y, door, hazard, false);
+		return new Cell(Kind.OPEN, y, door, hazard, false, false, false);
+	}
+
+	/**
+	 * Whether a body fits with its feet at the given height, centered anywhere (not just on a block's center).
+	 * Used for squeezing diagonally between thin obstacles like fence posts.
+	 */
+	public boolean bodyFitsAt(double centerX, double centerZ, double feet) {
+		this.boxes.clear();
+		int minX = MathHelper.floor(centerX - HALF_WIDTH);
+		int maxX = MathHelper.floor(centerX + HALF_WIDTH);
+		int minZ = MathHelper.floor(centerZ - HALF_WIDTH);
+		int maxZ = MathHelper.floor(centerZ + HALF_WIDTH);
+		this.query.setMin(centerX - HALF_WIDTH, feet, centerZ - HALF_WIDTH).setMax(centerX + HALF_WIDTH, feet + BODY_HEIGHT, centerZ + HALF_WIDTH);
+		for (int bx = minX; bx <= maxX; bx++) {
+			for (int bz = minZ; bz <= maxZ; bz++) {
+				for (int by = MathHelper.floor(feet) - 1; by <= MathHelper.floor(feet + BODY_HEIGHT); by++) {
+					Block<?> block = this.block(bx, by, bz);
+					if (block != Blocks.AIR && !isOpenable(block) && !block.isClimbable(this.world, this.pos)) {
+						block.getCollisionAABBs(this.world, this.pos, this.query, this.boxes);
+					}
+				}
+			}
+		}
+
+		return this.bodyFits(feet);
+	}
+
+	/**
+	 * Is the block ahead a staircase rising away from us: its near half at most a step above our feet and its
+	 * far half another step up? Then it can be walked up (the physics steps up twice) instead of jumped.
+	 */
+	public boolean isStairAscent(int x, int y, int z, int dx, int dz, double feet) {
+		this.boxes.clear();
+		this.pos.set(x, y, z);
+		Block<?> block = this.block(x, y, z);
+		if (block == Blocks.AIR) {
+			return false;
+		}
+
+		this.query.setMin(x, y, z).setMax(x + 1.0, y + 1.0, z + 1.0);
+		block.getCollisionAABBs(this.world, this.pos, this.query, this.boxes);
+		double nearTop = y;
+		double farTop = y;
+		for (AABBdc box : this.boxes) {
+			// Split the block along the direction of travel into the half we reach first and the half behind it.
+			double start = dx != 0 ? (dx > 0 ? box.minX() - x : x + 1.0 - box.maxX()) : (dz > 0 ? box.minZ() - z : z + 1.0 - box.maxZ());
+			double end = dx != 0 ? (dx > 0 ? box.maxX() - x : x + 1.0 - box.minX()) : (dz > 0 ? box.maxZ() - z : z + 1.0 - box.minZ());
+			if (start < 0.5 - EPSILON) {
+				nearTop = Math.max(nearTop, box.maxY());
+			}
+
+			if (end > 0.5 + EPSILON) {
+				farTop = Math.max(farTop, box.maxY());
+			}
+		}
+
+		return nearTop - feet <= STEP_HEIGHT + EPSILON && farTop - nearTop <= STEP_HEIGHT + EPSILON && farTop > nearTop + EPSILON;
 	}
 
 	/** True if no collected box overlaps a body standing at the given height. */
