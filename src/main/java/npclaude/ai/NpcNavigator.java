@@ -40,7 +40,7 @@ public class NpcNavigator {
 	private static final double NARROW_ARRIVE_RADIUS_SQR = 0.12 * 0.12;
 	/** On narrow footing, ease off the walk input within this distance of the center, down to this minimum. */
 	private static final double NARROW_SLOWDOWN_DISTANCE = 0.8;
-	private static final float NARROW_MIN_INPUT = 0.15F;
+	private static final float NARROW_MIN_INPUT = 0.3F;
 	/** No progress toward the next step for this many ticks: try a jump. */
 	private static final int STUCK_JUMP_TICKS = 10;
 	/** Still none: plan again from here. */
@@ -55,8 +55,8 @@ public class NpcNavigator {
 	private static final double FLEE_DANGER_COST = 0.8;
 	/** Within this distance (squared) of a landing spot while in the air, stop pushing forward. */
 	private static final double AIR_BRAKE_RADIUS_SQR = 0.45 * 0.45;
-	/** Over narrow footing, only stop pushing when almost directly above it, so the jump isn't cut short. */
-	private static final double NARROW_AIR_BRAKE_RADIUS_SQR = 0.15 * 0.15;
+	/** Share of horizontal speed kept each tick in the air (vanilla air drag). */
+	private static final double AIR_DRAG = 0.91;
 
 	private final EntityNPC npc;
 	@Nullable
@@ -346,7 +346,16 @@ public class NpcNavigator {
 
 		double dx = step.centerX() - this.npc.x;
 		double dz = step.centerZ() - this.npc.z;
-		if (dx * dx + dz * dz < (step.narrow() ? NARROW_AIR_BRAKE_RADIUS_SQR : AIR_BRAKE_RADIUS_SQR)) {
+		double distanceSqr = dx * dx + dz * dz;
+		if (step.narrow()) {
+			// Let go of forward once momentum alone will carry the NPC to the post's center: air drag keeps
+			// about 91% of horizontal speed each tick, so it coasts roughly ten times its current speed.
+			double speed = Math.sqrt(this.npc.xd * this.npc.xd + this.npc.zd * this.npc.zd);
+			double coast = speed * AIR_DRAG / (1.0 - AIR_DRAG);
+			if (coast * coast >= distanceSqr) {
+				this.npc.stopWalking();
+			}
+		} else if (distanceSqr < AIR_BRAKE_RADIUS_SQR) {
 			this.npc.stopWalking();
 		}
 	}
@@ -377,7 +386,8 @@ public class NpcNavigator {
 		}
 
 		this.ticksWithoutProgress++;
-		if (this.ticksWithoutProgress == STUCK_JUMP_TICKS) {
+		// On fence tops a hop only knocks the NPC off; there it waits for a re-plan instead.
+		if (this.ticksWithoutProgress == STUCK_JUMP_TICKS && !step.narrow()) {
 			this.npc.setJumping(true);
 		} else if (this.ticksWithoutProgress >= STUCK_REPLAN_TICKS) {
 			NpcProfiler.recordStuck();

@@ -421,10 +421,15 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		this.gender = gender;
 	}
 
-	/** Female NPCs' hurt and death sounds are pitched up. */
+	/** Voiced like a player of the same gender. */
 	@Override
-	protected float getPitchModifier() {
-		return super.getPitchModifier() + this.gender.pitchOffset;
+	protected String getHurtSound() {
+		return this.gender.hurtSound;
+	}
+
+	@Override
+	protected String getDeathSound() {
+		return this.gender.deathSound;
 	}
 
 	public boolean isInvulnerable() {

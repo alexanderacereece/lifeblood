@@ -3,16 +3,17 @@ package npclaude.entity;
 import java.util.Locale;
 import org.jetbrains.annotations.Nullable;
 
-/** An NPC's gender. Currently it changes the pitch of its voice (hurt and death sounds). */
+/** An NPC's gender. It picks the NPC's voice from BTA's player voice sets (the same ones players choose from). */
 public enum NpcGender {
-	MALE(0.0F),
-	FEMALE(0.7F);
+	MALE("mob.player.masculine.hurt", "mob.player.masculine.death"),
+	FEMALE("mob.player.feminine.hurt", "mob.player.feminine.death");
 
-	/** Added to the sound pitch, which is normally 1.0 with a little random variation. */
-	public final float pitchOffset;
+	public final String hurtSound;
+	public final String deathSound;
 
-	NpcGender(float pitchOffset) {
-		this.pitchOffset = pitchOffset;
+	NpcGender(String hurtSound, String deathSound) {
+		this.hurtSound = hurtSound;
+		this.deathSound = deathSound;
 	}
 
 	public static NpcGender byId(int id) {
