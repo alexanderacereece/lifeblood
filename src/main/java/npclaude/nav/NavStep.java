@@ -1,10 +1,7 @@
 package npclaude.nav;
 
-/**
- * One step of a path: the block space the feet should reach, at what height, and how.
- * Narrow steps (fence tops) need a careful, centered landing.
- */
-public record NavStep(int x, int y, int z, double feetY, NavMove move, boolean door, boolean narrow) {
+/** One step of a path: the block space the feet should reach, at what height, and how. */
+public record NavStep(int x, int y, int z, double feetY, NavMove move, boolean door) {
 	public double centerX() {
 		return this.x + 0.5;
 	}

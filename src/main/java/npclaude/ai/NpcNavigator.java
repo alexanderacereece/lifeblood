@@ -36,11 +36,6 @@ public class NpcNavigator {
 	/** A chased target that has moved less than this (squared) since the route was planned doesn't need a new route. */
 	private static final double CHASE_REPLAN_DISTANCE_SQR = 1.5 * 1.5;
 	private static final double ARRIVE_RADIUS_SQR = 0.35 * 0.35;
-	/** On narrow footing the NPC must be nearly centered before it counts as arrived. */
-	private static final double NARROW_ARRIVE_RADIUS_SQR = 0.12 * 0.12;
-	/** On narrow footing, ease off the walk input within this distance of the center, down to this minimum. */
-	private static final double NARROW_SLOWDOWN_DISTANCE = 0.8;
-	private static final float NARROW_MIN_INPUT = 0.3F;
 	/** No progress toward the next step for this many ticks: try a jump. */
 	private static final int STUCK_JUMP_TICKS = 10;
 	/** Still none: plan again from here. */
@@ -53,10 +48,6 @@ public class NpcNavigator {
 	/** Fleeing routes avoid coming within this distance of attackers. */
 	private static final double FLEE_DANGER_RADIUS = 8.0;
 	private static final double FLEE_DANGER_COST = 0.8;
-	/** Within this distance (squared) of a landing spot while in the air, stop pushing forward. */
-	private static final double AIR_BRAKE_RADIUS_SQR = 0.45 * 0.45;
-	/** Share of horizontal speed kept each tick in the air (vanilla air drag). */
-	private static final double AIR_DRAG = 0.91;
 
 	private final EntityNPC npc;
 	@Nullable
@@ -257,7 +248,6 @@ public class NpcNavigator {
 
 		this.openDoorsAhead(step);
 		this.steer(step);
-		this.brakeInAir(step);
 		this.checkProgress(step);
 	}
 
@@ -268,27 +258,13 @@ public class NpcNavigator {
 		return switch (step.move()) {
 			case CLIMB -> horizontal < 0.25 && this.npc.y >= step.feetY() - 0.05;
 			case DESCEND -> this.npc.y <= step.feetY() + 0.2;
-			case DROP -> horizontal < this.arriveRadius(step) && this.npc.y < step.feetY() + 3.5;
-			default -> horizontal < this.arriveRadius(step) && Math.abs(this.npc.y - step.feetY()) < 1.1
-				&& (!step.narrow() || this.npc.onGround);
+			case DROP -> horizontal < ARRIVE_RADIUS_SQR && this.npc.y < step.feetY() + 3.5;
+			default -> horizontal < ARRIVE_RADIUS_SQR && Math.abs(this.npc.y - step.feetY()) < 1.1;
 		};
-	}
-
-	private double arriveRadius(NavStep step) {
-		return step.narrow() ? NARROW_ARRIVE_RADIUS_SQR : ARRIVE_RADIUS_SQR;
 	}
 
 	private void steer(NavStep step) {
 		boolean inWater = this.npc.isInWater();
-		if (step.narrow() && this.npc.onGround && step.move() != NavMove.JUMP_UP && step.move() != NavMove.GAP_JUMP) {
-			// Balancing on a fence top or onto one: slow down near the center instead of overshooting it.
-			double dx = step.centerX() - this.npc.x;
-			double dz = step.centerZ() - this.npc.z;
-			double distance = Math.sqrt(dx * dx + dz * dz);
-			float input = (float) Math.max(NARROW_MIN_INPUT, Math.min(1.0, distance / NARROW_SLOWDOWN_DISTANCE));
-			this.npc.steerToward(step.centerX(), step.centerZ(), input);
-			return;
-		}
 
 		switch (step.move()) {
 			case CLIMB -> {
@@ -335,31 +311,6 @@ public class NpcNavigator {
 		}
 	}
 
-	/**
-	 * Once airborne over the landing spot, let go of forward (as a player does) so momentum doesn't carry the NPC
-	 * past narrow landings like fence tops.
-	 */
-	private void brakeInAir(NavStep step) {
-		if (this.npc.onGround || this.npc.isInWater() || step.move() == NavMove.CLIMB || step.move() == NavMove.DESCEND) {
-			return;
-		}
-
-		double dx = step.centerX() - this.npc.x;
-		double dz = step.centerZ() - this.npc.z;
-		double distanceSqr = dx * dx + dz * dz;
-		if (step.narrow()) {
-			// Let go of forward once momentum alone will carry the NPC to the post's center: air drag keeps
-			// about 91% of horizontal speed each tick, so it coasts roughly ten times its current speed.
-			double speed = Math.sqrt(this.npc.xd * this.npc.xd + this.npc.zd * this.npc.zd);
-			double coast = speed * AIR_DRAG / (1.0 - AIR_DRAG);
-			if (coast * coast >= distanceSqr) {
-				this.npc.stopWalking();
-			}
-		} else if (distanceSqr < AIR_BRAKE_RADIUS_SQR) {
-			this.npc.stopWalking();
-		}
-	}
-
 	/** Lines up over the step's center without overshooting, for vertical moves. */
 	private void steerGently(NavStep step) {
 		double dx = step.centerX() - this.npc.x;
@@ -386,8 +337,7 @@ public class NpcNavigator {
 		}
 
 		this.ticksWithoutProgress++;
-		// On fence tops a hop only knocks the NPC off; there it waits for a re-plan instead.
-		if (this.ticksWithoutProgress == STUCK_JUMP_TICKS && !step.narrow()) {
+		if (this.ticksWithoutProgress == STUCK_JUMP_TICKS) {
 			this.npc.setJumping(true);
 		} else if (this.ticksWithoutProgress >= STUCK_REPLAN_TICKS) {
 			NpcProfiler.recordStuck();
