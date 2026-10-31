@@ -1,0 +1,33 @@
+{
+	"schemaVersion": 1,
+	"id": "npclaude",
+	"version": "${version}",
+	"name": "NPClaude",
+	"description": "A framework for NPCs in Better Than Adventure.",
+	"authors": [
+		"alexa"
+	],
+	"contact": {
+		"homepage": "",
+		"sources": ""
+	},
+	"icon": "icon.png",
+	"license": "CC0-1.0",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"npclaude.NPClaude"
+		]
+	},
+	"mixins": [
+		"npclaude.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=${fabricloader}",
+		"minecraft": "*",
+		"java": ">=${java}"
+	},
+	"suggests": {
+		"modmenu": ">=${modmenu}"
+	}
+}
