@@ -56,9 +56,9 @@ public class NpcNavigator {
 
 				int x = targetX + dx;
 				int z = targetZ + dz;
-				if (this.npc.world.isBlockNormalCube(x, targetY - 1, z)
-					&& !this.npc.world.isBlockNormalCube(x, targetY, z)
-					&& !this.npc.world.isBlockNormalCube(x, targetY + 1, z)) {
+				if (this.npc.world.isBlockNormalCube(new TilePos(x, targetY - 1, z))
+					&& !this.npc.world.isBlockNormalCube(new TilePos(x, targetY, z))
+					&& !this.npc.world.isBlockNormalCube(new TilePos(x, targetY + 1, z))) {
 					this.stop();
 					this.npc.teleportTo(x + 0.5, targetY, z + 0.5);
 					return true;

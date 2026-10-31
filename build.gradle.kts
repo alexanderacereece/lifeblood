@@ -87,6 +87,7 @@ val licenseFile = run {
 tasks {
 	withType<JavaCompile>().configureEach {
 		options.encoding = "UTF-8"
+		options.compilerArgs.add("-Xlint:deprecation")
 		sourceCompatibility = javaVersion.get().toString()
 		targetCompatibility = javaVersion.get().toString()
 		if (javaVersion.get() > 8) options.release = javaVersion

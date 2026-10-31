@@ -3,11 +3,20 @@ package npclaude.entity;
 import com.mojang.nbt.tags.CompoundTag;
 import java.util.Random;
 import net.minecraft.core.entity.Entity;
+import net.minecraft.core.entity.IArmorWearing;
+import net.minecraft.core.entity.IItemHolding;
 import net.minecraft.core.entity.MobPathfinder;
+import net.minecraft.core.entity.player.Player;
+import net.minecraft.core.enums.HumanArmorShape;
+import net.minecraft.core.item.ItemStack;
+import net.minecraft.core.item.Items;
 import net.minecraft.core.util.helper.DamageType;
 import net.minecraft.core.world.World;
 import npclaude.ai.NpcBrain;
 import npclaude.ai.NpcNavigator;
+import npclaude.dialogue.NpcDialogue;
+import npclaude.interaction.NpcInteractions;
+import npclaude.inventory.NpcInventory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -15,15 +24,18 @@ import org.jetbrains.annotations.Nullable;
  * A general-purpose NPC. Its look comes from a skin file, its actions from the behaviors in its {@link NpcBrain}.
  * The display name is the vanilla nickname, which BTA already draws as a name tag.
  */
-public class EntityNPC extends MobPathfinder {
+public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmorShape>, IItemHolding {
 	/** Bump when the saved format changes, and convert older data in {@link #readAdditionalSaveData}. */
 	public static final int DATA_VERSION = 1;
 	private static final String SAVE_KEY = "NPClaude";
 	private static final int DATA_SKIN = 20;
 	private static final int DATA_SKIN_MODEL = 21;
+	/** A conversation ends if the player walks further away than this. */
+	private static final float TALK_DISTANCE = 8.0F;
 
 	public final NpcBrain brain = new NpcBrain(this);
 	public final NpcNavigator navigator = new NpcNavigator(this);
+	public final NpcInventory inventory = new NpcInventory(this);
 	private boolean invulnerable = false;
 	private double homeX;
 	private double homeY;
@@ -31,6 +43,8 @@ public class EntityNPC extends MobPathfinder {
 	@Nullable
 	private Entity lookTarget;
 	private int lookTicks;
+	@Nullable
+	private Player talkingTo;
 
 	public EntityNPC(World world) {
 		super(world);
@@ -46,7 +60,18 @@ public class EntityNPC extends MobPathfinder {
 
 	@Override
 	protected void updateAI() {
-		this.brain.tick();
+		if (this.talkingTo != null && (this.talkingTo.removed || this.talkingTo.distanceTo(this) > TALK_DISTANCE)) {
+			this.talkingTo = null;
+		}
+
+		// Mid-conversation the NPC stands still and faces the player; its behaviors resume afterwards.
+		if (this.talkingTo != null) {
+			this.navigator.stop();
+			this.setLookTarget(this.talkingTo, 5);
+		} else {
+			this.brain.tick();
+		}
+
 		super.updateAI();
 		// Applied after the vanilla idle AI, which would otherwise spin the head randomly.
 		if (this.lookTarget != null && !this.hasPath()) {
@@ -73,6 +98,33 @@ public class EntityNPC extends MobPathfinder {
 		return this.random;
 	}
 
+	// Interaction
+
+	@Override
+	public boolean interact(@NotNull Player player) {
+		ItemStack held = player.inventory.getCurrentItem();
+		if (held != null && held.itemID == Items.LABEL.id) {
+			return super.interact(player);
+		}
+
+		NpcInteractions.interact(this, player);
+		return true;
+	}
+
+	/** The conversation offered to this player when they right-click the NPC. */
+	public NpcDialogue getDialogue(Player player) {
+		return NpcDialogue.placeholder();
+	}
+
+	@Nullable
+	public Player getTalkingTo() {
+		return this.talkingTo;
+	}
+
+	public void setTalkingTo(@Nullable Player player) {
+		this.talkingTo = player;
+	}
+
 	// Identity and appearance
 
 	public String getSkin() {
@@ -97,6 +149,48 @@ public class EntityNPC extends MobPathfinder {
 
 	public void setInvulnerable(boolean invulnerable) {
 		this.invulnerable = invulnerable;
+	}
+
+	// Equipment
+
+	@Nullable
+	@Override
+	public ItemStack getItemInArmorSlot(@NotNull HumanArmorShape slot) {
+		return this.inventory.getItem(NpcInventory.ARMOR_START + slot.getSlotIndex());
+	}
+
+	@Override
+	public void setItemInArmorSlot(@NotNull HumanArmorShape slot, @Nullable ItemStack item) {
+		if (slot == HumanArmorShape.HEAD || this.canItemGoInArmorSlot(slot, item)) {
+			this.inventory.setItem(NpcInventory.ARMOR_START + slot.getSlotIndex(), item);
+		}
+	}
+
+	@Override
+	public int getNumArmorSlots() {
+		return NpcInventory.ARMOR_SIZE;
+	}
+
+	@Nullable
+	@Override
+	public HumanArmorShape getArmorSlotByIndex(int index) {
+		return index >= 0 && index < HumanArmorShape.values().length ? HumanArmorShape.values()[index] : null;
+	}
+
+	@Nullable
+	@Override
+	public ItemStack getHeldItem() {
+		return this.inventory.getItem(NpcInventory.HAND_SLOT);
+	}
+
+	@Override
+	public void setHeldItem(@Nullable ItemStack item) {
+		this.inventory.setItem(NpcInventory.HAND_SLOT, item);
+	}
+
+	@Override
+	public boolean isLeftHanded() {
+		return false;
 	}
 
 	// Home: the spot that "stay" and "wander" are anchored to
@@ -137,6 +231,30 @@ public class EntityNPC extends MobPathfinder {
 		return !this.invulnerable && super.hurt(attacker, damage, type);
 	}
 
+	/** Armor reduces damage and wears down exactly as it does for players. */
+	@Override
+	protected void damageEntity(int damage, DamageType damageType) {
+		float protection = 1.0F;
+		if (damageType != null) {
+			protection -= this.getTotalProtectionAmount(damageType);
+		}
+
+		protection = Math.max(protection, 0.01F);
+		double reduced = damage * protection;
+		int newDamage = (int) (this.random.nextFloat() > 0.5F ? Math.floor(reduced) : Math.ceil(reduced));
+		if (damageType != null && damageType.shouldDamageArmor()) {
+			this.damageArmor((int) Math.ceil((damage - newDamage) / 4.0));
+		}
+
+		super.damageEntity(newDamage, damageType);
+	}
+
+	@Override
+	protected void dropDeathItems() {
+		this.inventory.dropAll();
+		super.dropDeathItems();
+	}
+
 	@Override
 	protected boolean canDespawn() {
 		return false;
@@ -159,6 +277,7 @@ public class EntityNPC extends MobPathfinder {
 		npc.putDouble("HomeY", this.homeY);
 		npc.putDouble("HomeZ", this.homeZ);
 		npc.putList("Behaviors", this.brain.save());
+		npc.putList("Inventory", this.inventory.save());
 		tag.putCompound(SAVE_KEY, npc);
 	}
 
@@ -177,6 +296,10 @@ public class EntityNPC extends MobPathfinder {
 		this.setHome(npc.getDouble("HomeX"), npc.getDouble("HomeY"), npc.getDouble("HomeZ"));
 		if (npc.containsKey("Behaviors")) {
 			this.brain.load(npc.getList("Behaviors"));
+		}
+
+		if (npc.containsKey("Inventory")) {
+			this.inventory.load(npc.getList("Inventory"));
 		}
 	}
 }

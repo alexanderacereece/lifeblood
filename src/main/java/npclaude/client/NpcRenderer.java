@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.render.entity.MobRendererBiped;
+import net.minecraft.client.render.entity.MobRendererBipedArmored;
 import net.minecraft.client.render.renderer.GLRenderer;
 import net.minecraft.core.util.collection.NamespaceID;
 import net.minecraft.core.util.helper.MathHelper;
@@ -16,12 +16,12 @@ import org.useless.dragonfly.data.entity.mojang.EntityGeometryMojangData.Cache;
 import org.useless.dragonfly.models.entity.StaticEntityModel;
 
 /**
- * Draws NPCs with the full player model (hat, jacket, sleeves and pant layers included),
- * borrowing BTA's human mob model mappings and its rendering transform.
+ * Draws NPCs with the full player model (hat, jacket, sleeves and pant layers included), plus worn armor
+ * and the held item, borrowing the player's model mappings and the human mob's rendering transform.
  */
 @Environment(EnvType.CLIENT)
-public class NpcRenderer extends MobRendererBiped<EntityNPC> {
-	private static final NamespaceID HUMAN_MODELS = NamespaceID.getPermanent("minecraft", "human");
+public class NpcRenderer extends MobRendererBipedArmored<EntityNPC> {
+	private static final NamespaceID PLAYER_MODELS = NamespaceID.fromPool("minecraft", "player");
 	private static final float PLAYER_SCALE = 0.9375F;
 
 	private final Map<String, StaticEntityModel> models = new HashMap<>();
@@ -63,7 +63,7 @@ public class NpcRenderer extends MobRendererBiped<EntityNPC> {
 	@NotNull
 	@Override
 	protected StaticEntityModel getModel(@NotNull String localId) {
-		return this.models.computeIfAbsent(localId, id -> Cache.getModelForEntity(HUMAN_MODELS, id));
+		return this.models.computeIfAbsent(localId, id -> Cache.getModelForEntity(PLAYER_MODELS, id));
 	}
 
 	@Nullable

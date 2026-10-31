@@ -25,6 +25,6 @@ public class NPClaude implements ModInitializer {
 	}
 
 	public void beforeGameStart() {
-		EntityDispatcher.getInstance().addMapping(EntityNPC.class, NamespaceID.getPermanent(MOD_ID, "npc"), EntityNPC::new);
+		EntityDispatcher.getInstance().addMapping(EntityNPC.class, NamespaceID.fromPool(MOD_ID, "npc"), EntityNPC::new);
 	}
 }
