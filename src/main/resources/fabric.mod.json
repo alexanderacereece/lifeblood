@@ -17,6 +17,9 @@
 	"entrypoints": {
 		"main": [
 			"npclaude.NPClaude"
+		],
+		"client": [
+			"npclaude.client.NPClaudeClient"
 		]
 	},
 	"mixins": [
