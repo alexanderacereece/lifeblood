@@ -296,7 +296,11 @@ Non-lethal fistfights between people who aren't hostile enough to kill each othe
 
 Rules:
 - Fists only. Weapons are put away.
-- Nobody can die (see section 7). A brawler who drops to low health yields, and the fight ends. Timid NPCs yield earlier, proud and competitive ones later.
+- Nobody can die (see section 7), and a brawler yields well before that, so an accident doesn't leave anyone at death's door. The fight ends when one brawler drops to their yield point:
+  - 10 health normally (half of the maximum 20);
+  - 15 for timid NPCs;
+  - 5 for proud or competitive NPCs.
+  If an NPC is both timid and proud, the two cancel out to 10. As a final safeguard, brawl hits can never take anyone below 1 health.
 - Bystanders react: friends of a brawler may join or break it up, extroverts gather to watch, timid NPCs keep away.
 - Afterwards, the winner and loser get memories ("beat me in a brawl", "won a fight", "lost a fight"), and the hate often cools a little. Competitive NPCs gain respect for whoever beat them.
 - The player can be challenged to brawls too, and can start one by punching an NPC who isn't hostile.
@@ -326,15 +330,25 @@ Generated homesteads start with whole families already linked.
 
 The way new couples form over time, so settlements change instead of staying frozen as generated. Any NPC can take part; the romantic quirk makes it far more likely and faster. Who an NPC can be attracted to is rolled per NPC.
 
-Stages:
-1. **Attraction.** A one-directional value next to opinion. It grows from time spent together, compatibility and gifts, and only between unattached adults with a good opinion of each other (friendly or better).
-2. **Courting.** Once attraction is high enough, the NPC starts flirting: compliments, gifts, seeking the other out in the evenings. If the feeling is mutual, they become a couple. If not, rejection leaves a heartbreak memory.
-3. **Engagement.** A couple whose opinion of each other stays high long enough gets engaged (the fiancé link), with a proposal the town can gossip about.
-4. **Marriage.** A small wedding, where friends and family gather, after which they share a home.
+Stages, each needing high opinions on both sides:
+1. **Dating.** Two unattached adults with high opinions of each other (both Friend, +50 or more) may start dating. One asks; the other accepts if their opinion is high enough, and a refusal leaves a heartbreak memory. Romantic NPCs ask sooner and more often. Couples spend evenings together and give each other gifts.
+2. **Engaged.** After a period of dating (starting point: 7 days) with opinions staying high (+70 or more), one proposes. The town can gossip about it.
+3. **Married.** After a period engaged (starting point: 5 days), a small wedding where friends and family gather. Afterwards they share a home.
 
-Things can go wrong: jealousy toward rivals, a partner who loses opinion over time, and breakups that leave heartbreak memories on both sides. Children are a later question, since they need child models and growing up.
+Things can go wrong: jealousy toward rivals, opinion dropping over time, and breakups (or calling off the engagement) when a partner's opinion falls too low. Breakups leave heartbreak memories on both sides.
 
-Whether the player can court NPCs is a separate decision for later.
+### Children
+
+Married couples with a home may have children, which keeps settlements alive across generations. (Minecraft Comes Alive does something similar; this design is our own.)
+- A child starts small and grows into an adult over a number of in-game days (starting point: 20). Children need a smaller model, likely the player model scaled down with a larger head.
+- Children inherit trait axes as a blend of both parents plus a random shift, and each parent quirk has a chance (about 30%) to pass on. Food preferences are partly inherited too.
+- Family links are set automatically, so siblings, cousins and so on follow from the graph.
+- Children are invincible by default (section 7). They don't fight; they flee and hide.
+- Children don't work real jobs, but follow parents around, play, and help with small tasks as they get older.
+
+### The player
+
+The player can do everything NPCs can, with the player making their own choices on one side: dating, getting engaged, marrying, and having children with an NPC spouse. Dialogue gets options to ask someone out, propose, and break up. NPCs with high enough opinions of the player can also ask the player. The same opinion requirements apply to the NPC side; the player is free to decide.
 
 ---
 
@@ -360,6 +374,18 @@ Three modes, replacing the current invulnerable flag:
 | Invulnerable | no | no | Debug only |
 
 An invincible NPC fights, gets hurt and flees like anyone else. Damage that would kill them instead leaves them at 1 health, knocked down for several seconds, after which they get up and recover. Enemies lose interest in a downed NPC.
+
+### Making someone invincible
+
+The player chooses who they want to keep safe: a spouse, children, friends, companions, allies. Proposal: a **guardian amulet**, a craftable item that makes any NPC invincible while it's in their inventory.
+- **Your choice, visibly.** You decide who gets one, and you can see and take it back through their inventory screen.
+- **A real cost.** The recipe should be expensive enough (gold and a diamond, for example) that you protect the people who matter, not everyone.
+- **Earned.** You can only give an amulet to an NPC who'll accept it: someone with a good opinion of you. You can't hand one to an enemy.
+- Because an invincible NPC never dies, they never drop it.
+
+Children are the exception: they're invincible by default, with no amulet needed.
+
+Open details: whether the amulet shows on the NPC's model, and whether an NPC who later turns against you keeps it.
 
 Brawls use the same rule for everyone involved: nobody can be reduced below 1 health by a brawl, and dropping low makes them yield.
 
@@ -509,15 +535,17 @@ Pairs:
 5. **First writing pass:** greetings, farewells, combat barks, low health, idle comments, all with full neutral coverage.
 6. **Brawls.**
 7. **Word book:** NPCs asking, personal and general words, spreading, the book screen.
-8. **Family graph**, then gossip and romance.
+8. **Family graph**, then gossip, then romance (NPCs and the player), then children.
 
 ## Settled
 
 - Pious NPCs follow the Cube God.
 - Sleeping NPCs do not count toward skipping the night.
 - Brawls exist, between hotheads and between NPCs who hate each other.
+- The player can date, marry and have children with NPCs, under the same rules as NPCs.
+- Children exist, grow up and are invincible by default.
 
 ## Open questions
 
-- Can the player court NPCs?
-- NPC children: models, growing up, and whether they're worth it.
+- Is the guardian amulet the right way to make NPCs invincible? Its recipe, and whether it shows on the model.
+- How long a child takes to grow up, and how children are drawn.
