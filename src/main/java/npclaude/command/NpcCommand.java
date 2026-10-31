@@ -565,7 +565,8 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 		EntityNPC npc = findNpc(c);
 		FactionRelation personal = npc.relations.get(player);
 		FactionRelation overall = NpcFactions.regard(npc, player);
-		String reason = personal != null ? "personally" : "as " + factionLabel(npc.getFaction()) + " toward someone "
+		String member = npc.getFaction() != null ? "one of the " + npc.getFaction() : "someone unaffiliated";
+		String reason = personal != null ? "personally" : "as " + member + ", toward someone "
 			+ factionLabel(FactionRegistry.get(c.getSource().getWorld()).getPlayerFaction(player.uuid));
 		return reply(c, npc.nickname + " is " + describePersonal(overall) + " (" + reason + ").");
 	}
