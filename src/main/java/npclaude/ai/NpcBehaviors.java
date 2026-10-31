@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 import npclaude.ai.behavior.FollowPlayerBehavior;
+import npclaude.ai.behavior.GoToBehavior;
 import npclaude.ai.behavior.StayBehavior;
 import npclaude.ai.behavior.WanderBehavior;
 import org.jetbrains.annotations.Nullable;
@@ -15,6 +16,7 @@ public final class NpcBehaviors {
 
 	static {
 		register(FollowPlayerBehavior.ID, FollowPlayerBehavior::new);
+		register(GoToBehavior.ID, GoToBehavior::new);
 		register(StayBehavior.ID, StayBehavior::new);
 		register(WanderBehavior.ID, WanderBehavior::new);
 	}

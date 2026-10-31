@@ -1,5 +1,6 @@
 package npclaude.combat;
 
+import java.util.List;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.Mob;
 import net.minecraft.core.util.helper.MathHelper;
@@ -74,7 +75,9 @@ public class CombatBehavior implements NpcBehavior {
 	private ThreatAssessment assess(EntityNPC npc) {
 		Mob nearest = this.assessment != null ? this.assessment.nearestHostile : null;
 		boolean stale = nearest != null && !nearest.isAlive();
-		if (this.assessment == null || stale || npc.tickCount >= this.nextAssessTick) {
+		// Each NPC re-assesses on its own offset tick, so a crowd doesn't all scan at once.
+		boolean due = (npc.tickCount + npc.id) % REASSESS_INTERVAL == 0 || npc.tickCount >= this.nextAssessTick + REASSESS_INTERVAL;
+		if (this.assessment == null || stale || due) {
 			double radius = this.engaged ? ENGAGED_SCAN_RADIUS : ThreatAssessment.SCAN_RADIUS;
 			this.assessment = ThreatAssessment.of(npc, radius, this.currentTarget);
 			this.nextAssessTick = npc.tickCount + REASSESS_INTERVAL;
@@ -173,7 +176,7 @@ public class CombatBehavior implements NpcBehavior {
 			}
 		} else if (distance < BOW_MIN_RANGE) {
 			if (repath) {
-				this.moveAwayFrom(npc, target.x, target.z, BACK_OFF_DISTANCE);
+				this.moveAwayFrom(npc, List.of(target), BACK_OFF_DISTANCE);
 			}
 		} else if (!clearShot) {
 			if (repath) {
@@ -213,36 +216,27 @@ public class CombatBehavior implements NpcBehavior {
 		}
 
 		this.repathCooldown = FLEE_REPATH_INTERVAL;
-		double cx = 0.0;
-		double cz = 0.0;
-		for (Mob hostile : threat.hostiles) {
-			cx += hostile.x;
-			cz += hostile.z;
-		}
-
-		this.moveAwayFrom(npc, cx / threat.hostiles.size(), cz / threat.hostiles.size(), FLEE_DISTANCE);
+		this.moveAwayFrom(npc, threat.hostiles, FLEE_DISTANCE);
 	}
 
 	/**
-	 * Heads directly away from a point; if that's blocked, tries angling off to either side,
-	 * and a block up or down to follow the terrain.
+	 * Plans a route away from the threats that keeps clear of them (the navigator weighs every step by how close
+	 * it passes to an attacker, so it won't run past one to get away from another). With no route at all,
+	 * runs straight away rather than stand still.
 	 */
-	private void moveAwayFrom(EntityNPC npc, double fromX, double fromZ, double distance) {
-		double awayAngle = Math.atan2(npc.z - fromZ, npc.x - fromX);
-		int y = MathHelper.floor(npc.y);
-		for (double offset : new double[]{0.0, 0.6, -0.6, 1.2, -1.2}) {
-			double angle = awayAngle + offset;
-			int x = MathHelper.floor(npc.x + Math.cos(angle) * distance);
-			int z = MathHelper.floor(npc.z + Math.sin(angle) * distance);
-			for (int dy : new int[]{0, 1, -1}) {
-				if (npc.navigator.moveTo(x, y + dy, z)) {
-					return;
-				}
-			}
+	private void moveAwayFrom(EntityNPC npc, List<? extends Entity> threats, double distance) {
+		if (npc.navigator.fleeFrom(threats, distance)) {
+			return;
 		}
 
-		// Nowhere to path to: run straight away rather than stand still.
-		npc.navigator.runDirect(awayAngle, PANIC_RUN_TICKS);
+		double cx = 0.0;
+		double cz = 0.0;
+		for (Entity threat : threats) {
+			cx += threat.x;
+			cz += threat.z;
+		}
+
+		npc.navigator.runDirect(Math.atan2(npc.z - cz / threats.size(), npc.x - cx / threats.size()), PANIC_RUN_TICKS);
 	}
 
 	@Override

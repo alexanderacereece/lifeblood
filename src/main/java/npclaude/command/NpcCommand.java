@@ -23,6 +23,7 @@ import net.minecraft.core.net.command.CommandSource;
 import net.minecraft.core.world.World;
 import npclaude.ai.NpcBehavior;
 import npclaude.ai.behavior.FollowPlayerBehavior;
+import npclaude.ai.behavior.GoToBehavior;
 import npclaude.ai.behavior.StayBehavior;
 import npclaude.ai.behavior.WanderBehavior;
 import npclaude.client.NpcSkins;
@@ -30,6 +31,7 @@ import npclaude.combat.FactionRegistry;
 import npclaude.combat.FactionRelation;
 import npclaude.entity.EntityNPC;
 import npclaude.entity.SkinModel;
+import npclaude.perf.NpcProfiler;
 import npclaude.skin.NpcSkinFiles;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3dc;
@@ -37,6 +39,8 @@ import org.joml.Vector3dc;
 /**
  * /npc summon <name> [skin|default] [faction]
  * /npc follow|stay|remove <name>
+ * /npc goto <name>          (walks to where you stand, then stays)
+ * /npc perf                 (AI and pathfinding cost over the last second)
  * /npc wander <name> [radius]
  * /npc skin <name> <skin> [auto|wide|slim]
  * /npc invulnerable <name> <true|false>
@@ -108,6 +112,17 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 					npc.brain.set(new FollowPlayerBehavior(player.uuid));
 					return reply(c, npc.nickname + " is now following you.");
 				})))
+			.then(literal("goto")
+				.then(npcArgument().executes(c -> {
+					Player player = requirePlayer(c.getSource());
+					EntityNPC npc = findNpc(c);
+					npc.brain.set(new GoToBehavior(player.x, player.bb.minY(), player.z));
+					return reply(c, npc.nickname + " is heading to you.");
+				})))
+			.then(literal("perf").executes(c -> {
+				int count = getNpcs(c.getSource().getWorld()).size();
+				return reply(c, count + " NPC(s) loaded. " + NpcProfiler.report());
+			}))
 			.then(literal("stay")
 				.then(npcArgument().executes(c -> {
 					EntityNPC npc = findNpc(c);

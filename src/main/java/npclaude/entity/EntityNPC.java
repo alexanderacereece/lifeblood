@@ -30,6 +30,7 @@ import npclaude.combat.NpcRelations;
 import npclaude.dialogue.NpcDialogue;
 import npclaude.interaction.NpcInteractions;
 import npclaude.inventory.NpcInventory;
+import npclaude.perf.NpcProfiler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.primitives.AABBd;
@@ -54,6 +55,10 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private static final int MELEE_COOLDOWN = 15;
 	private static final double MELEE_REACH = 2.5;
 	private static final int SWING_DURATION = 8;
+	/** How often (ticks) the distance-based thinking rate is recalculated. */
+	private static final int THINK_RATE_REFRESH = 20;
+	/** The forward input of a player holding the walk key; NPCs walk at exactly player speed. */
+	private static final float WALK_INPUT = 1.0F;
 
 	public final NpcBrain brain = new NpcBrain(this);
 	public final NpcNavigator navigator = new NpcNavigator(this);
@@ -77,6 +82,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private int lastAttackedTick = Integer.MIN_VALUE / 2;
 	private boolean swinging;
 	private int swingTicks;
+	private int thinkInterval;
 	/** Ticks left before the held food is eaten; 0 when not eating. */
 	private int eatTicks;
 	/** Where the item held before eating went, to switch back to it afterwards; -1 if none. */
@@ -97,6 +103,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 
 	@Override
 	protected void updateAI() {
+		long start = System.nanoTime();
 		if (this.talkingTo != null && (this.talkingTo.removed || this.talkingTo.distanceTo(this) > TALK_DISTANCE)) {
 			this.talkingTo = null;
 		}
@@ -105,7 +112,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		if (this.talkingTo != null) {
 			this.navigator.stop();
 			this.setLookTarget(this.talkingTo, 5);
-		} else {
+		} else if (this.isThinkTick()) {
 			this.brain.tick();
 		}
 
@@ -120,6 +127,23 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 				this.lookTarget = null;
 			}
 		}
+
+		NpcProfiler.recordAi(System.nanoTime() - start);
+	}
+
+	/**
+	 * NPCs far from every player decide what to do less often (their movement stays smooth every tick):
+	 * every tick within 32 blocks, every 2nd within 64, every 5th within 128, every 10th beyond.
+	 * Each NPC thinks on its own offset tick so the work is spread out.
+	 */
+	private boolean isThinkTick() {
+		if (this.tickCount % THINK_RATE_REFRESH == 0 || this.thinkInterval == 0) {
+			Player nearest = this.world.getClosestPlayerToEntity(this, -1.0);
+			double distance = nearest != null ? nearest.distanceTo(this) : Double.MAX_VALUE;
+			this.thinkInterval = distance < 32.0 ? 1 : distance < 64.0 ? 2 : distance < 128.0 ? 5 : 10;
+		}
+
+		return (this.tickCount + this.id) % this.thinkInterval == 0;
 	}
 
 	public void setLookTarget(@Nullable Entity target, int ticks) {
@@ -207,12 +231,12 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		}
 	}
 
-	/** Walks straight toward a point, turning at most 30 degrees a tick like vanilla path-following. */
+	/** Walks straight toward a point at player speed, turning at most 30 degrees a tick like vanilla path-following. */
 	public void steerToward(double x, double z) {
 		float targetYaw = (float) (Math.atan2(z - this.z, x - this.x) * 180.0 / Math.PI) - 90.0F;
 		float turn = MathHelper.wrapDegrees(targetYaw - this.yRot);
 		this.yRot += Math.max(-30.0F, Math.min(30.0F, turn));
-		this.moveForward = this.moveSpeed;
+		this.moveForward = WALK_INPUT;
 	}
 
 	public void setJumping(boolean jumping) {

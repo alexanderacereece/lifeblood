@@ -1,37 +1,71 @@
 package npclaude.ai;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import net.minecraft.core.block.Block;
-import net.minecraft.core.block.Blocks;
+import net.minecraft.core.block.BlockLogicDoor;
+import net.minecraft.core.block.BlockLogicFenceGate;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.util.helper.MathHelper;
 import net.minecraft.core.world.World;
-import net.minecraft.core.world.pathfinder.Node;
-import net.minecraft.core.world.pathfinder.Path;
 import net.minecraft.core.world.pos.TilePos;
 import npclaude.entity.EntityNPC;
-import npclaude.mixin.PathAccessor;
+import npclaude.nav.NavBudget;
+import npclaude.nav.NavGrid;
+import npclaude.nav.NavMove;
+import npclaude.nav.NavPath;
+import npclaude.nav.NavSearch;
+import npclaude.nav.NavStep;
+import npclaude.perf.NpcProfiler;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Movement for NPCs. Behaviors only ask to "go there"; how the NPC gets there lives here,
- * so this can later be swapped for a smarter navigator (doors, long trips) without touching any behavior.
+ * Movement for NPCs. Behaviors ask to go somewhere (or away from something); this plans a route with {@link NavSearch}
+ * and walks it: steering like a player holding forward, jumping up ledges and across gaps, swimming, climbing ladders,
+ * opening doors and gates on the way (and closing them behind), and recovering when knocked off course or stuck.
  *
- * It uses BTA's built-in pathfinder (about 16 blocks per search) and adds what that lacks:
- * paths through or beside hazards (cactus, fire, lava...) are refused, a stuck NPC jumps and then gives up the path
- * so its behavior can pick another, and it can run straight in a direction when no path can be found.
+ * Long trips are planned in stretches: when a search runs out of budget the NPC walks to the closest point found and
+ * plans the next stretch from there. All NPCs share a per-tick search budget, so mass replanning is spread out.
  */
 public class NpcNavigator {
-	public static final float DEFAULT_RANGE = 16.0F;
-	/** Barely moving for this many ticks while following a path counts as stuck: try jumping. */
-	private static final int STUCK_JUMP_TICKS = 8;
-	/** Stuck this long: drop the path so the behavior finds another. */
-	private static final int STUCK_GIVE_UP_TICKS = 30;
-	private static final double STUCK_MOVE_SQR = 0.03 * 0.03;
+	private static final int SEARCH_NODES = 1500;
+	private static final int FLEE_SEARCH_NODES = 1000;
+	/** Within this many steps of the end of a partial route, plan the next stretch. */
+	private static final int CONTINUE_AT_REMAINING = 3;
+	/** A chased target that has moved less than this (squared) since the route was planned doesn't need a new route. */
+	private static final double CHASE_REPLAN_DISTANCE_SQR = 1.5 * 1.5;
+	private static final double ARRIVE_RADIUS_SQR = 0.35 * 0.35;
+	/** No progress toward the next step for this many ticks: try a jump. */
+	private static final int STUCK_JUMP_TICKS = 10;
+	/** Still none: plan again from here. */
+	private static final int STUCK_REPLAN_TICKS = 30;
+	/** Further than this (squared) from the next step means the NPC was knocked off its route. */
+	private static final double OFF_ROUTE_SQR = 3.0 * 3.0;
+	private static final double DOOR_REACH_SQR = 2.5 * 2.5;
+	/** Doors are closed again once the NPC is this far (squared) past them. */
+	private static final double DOOR_CLOSE_SQR = 2.5 * 2.5;
+	/** Fleeing routes avoid coming within this distance of attackers. */
+	private static final double FLEE_DANGER_RADIUS = 8.0;
+	private static final double FLEE_DANGER_COST = 0.8;
 
 	private final EntityNPC npc;
-	private int stuckTicks;
-	private double lastX;
-	private double lastZ;
+	@Nullable
+	private NavPath path;
+	@Nullable
+	private NavSearch.Goal goal;
+	@Nullable
+	private NavSearch.CostField goalField;
+	private int goalNodes;
+	private boolean pending;
+	@Nullable
+	private Entity chaseTarget;
+	private double chaseX;
+	private double chaseY;
+	private double chaseZ;
+	private final List<TilePos> openedDoors = new ArrayList<>();
+	private double bestProgress;
+	private int ticksWithoutProgress;
 	/** Direction of a straight run (radians), and ticks left on it; 0 when not running straight. */
 	private double directAngle;
 	private int directTicks;
@@ -40,78 +74,329 @@ public class NpcNavigator {
 		this.npc = npc;
 	}
 
+	// Requests
+
+	/** Heads for a moving target. Cheap to call repeatedly: the route is only re-planned once the target has moved. */
 	public boolean moveTo(Entity target) {
-		return this.follow(this.npc.world.getPathToEntity(this.npc, target, DEFAULT_RANGE));
+		if (this.path != null && this.chaseTarget == target && target.distanceToSqr(this.chaseX, this.chaseY, this.chaseZ) < CHASE_REPLAN_DISTANCE_SQR) {
+			return true;
+		}
+
+		this.chaseTarget = target;
+		this.chaseX = target.x;
+		this.chaseY = target.y;
+		this.chaseZ = target.z;
+		return this.request(NavSearch.near(target.x, target.bb.minY(), target.z, 1.5), null, SEARCH_NODES);
 	}
 
 	public boolean moveTo(int x, int y, int z) {
-		return this.follow(this.npc.world.getEntityPathToTilePos(this.npc, new TilePos(x, y, z), DEFAULT_RANGE));
+		this.chaseTarget = null;
+		return this.request(NavSearch.near(x + 0.5, y, z + 0.5, 1.0), null, SEARCH_NODES);
 	}
 
-	private boolean follow(@Nullable Path path) {
-		if (path == null || isHazardous(this.npc.world, path)) {
-			this.npc.setPathToEntity(null);
+	/** Runs about this far away from a group of attackers, preferring routes that keep clear of them. */
+	public boolean fleeFrom(List<? extends Entity> threats, double distance) {
+		if (threats.isEmpty()) {
 			return false;
 		}
 
-		this.npc.setPathToEntity(path);
-		this.directTicks = 0;
-		this.stuckTicks = 0;
-		return true;
+		double cx = 0.0;
+		double cz = 0.0;
+		for (Entity threat : threats) {
+			cx += threat.x;
+			cz += threat.z;
+		}
+
+		cx /= threats.size();
+		cz /= threats.size();
+		double angle = Math.atan2(this.npc.z - cz, this.npc.x - cx);
+		double goalX = this.npc.x + Math.cos(angle) * distance;
+		double goalZ = this.npc.z + Math.sin(angle) * distance;
+		List<Entity> dangers = new ArrayList<>(threats);
+		NavSearch.CostField danger = (x, y, z) -> {
+			double cost = 0.0;
+			for (Entity threat : dangers) {
+				double dx = x + 0.5 - threat.x;
+				double dz = z + 0.5 - threat.z;
+				double d = Math.sqrt(dx * dx + dz * dz);
+				if (d < FLEE_DANGER_RADIUS) {
+					cost += (FLEE_DANGER_RADIUS - d) * FLEE_DANGER_COST;
+				}
+			}
+
+			return cost;
+		};
+
+		this.chaseTarget = null;
+		return this.request(NavSearch.near(goalX, this.npc.y, goalZ, 3.0), danger, FLEE_SEARCH_NODES);
 	}
 
-	/** Runs straight along a heading (radians) for a while, for when no path can be found. Stops at hazards. */
+	/** Runs straight along a heading (radians) for a while, for when no route can be found. Stops at hazards. */
 	public void runDirect(double angle, int ticks) {
-		this.npc.setPathToEntity(null);
+		this.clearRoute();
 		this.directAngle = angle;
 		this.directTicks = ticks;
-		this.stuckTicks = 0;
 	}
 
 	public void stop() {
-		this.npc.setPathToEntity(null);
+		this.clearRoute();
 		this.directTicks = 0;
 	}
 
-	public boolean isMoving() {
-		return this.npc.hasPath() || this.directTicks > 0;
+	private void clearRoute() {
+		this.path = null;
+		this.goal = null;
+		this.goalField = null;
+		this.pending = false;
+		this.chaseTarget = null;
 	}
 
-	/** Called every AI tick, after the vanilla path-following has steered the NPC. */
+	public boolean isMoving() {
+		return this.path != null || this.pending || this.directTicks > 0;
+	}
+
+	/** Plans now if the shared budget allows, otherwise next tick. Returns false only if no route exists at all. */
+	private boolean request(NavSearch.Goal goal, @Nullable NavSearch.CostField field, int nodes) {
+		this.goal = goal;
+		this.goalField = field;
+		this.goalNodes = nodes;
+		this.directTicks = 0;
+		if (NavBudget.available(this.npc.world) < NavBudget.MIN_TO_START) {
+			this.pending = true;
+			return true;
+		}
+
+		return this.plan();
+	}
+
+	private boolean plan() {
+		this.pending = false;
+		if (this.goal == null) {
+			return false;
+		}
+
+		World world = this.npc.world;
+		long start = System.nanoTime();
+		int budget = Math.min(this.goalNodes, NavBudget.available(world));
+		NavPath route = NavSearch.find(world, this.npc.x, this.npc.y, this.npc.z, this.goal, this.goalField, budget);
+		NavBudget.spend(world, NavSearch.lastExpanded);
+		NpcProfiler.recordSearch(System.nanoTime() - start, NavSearch.lastExpanded);
+		if (route != null) {
+			// The first step is where the NPC already stands; keep it as the "previous" step.
+			route.advance();
+			if (route.isDone()) {
+				route = null;
+			}
+		}
+
+		this.path = route;
+		this.resetProgress();
+		return route != null;
+	}
+
+	// Following
+
+	/** Called every tick, after the vanilla AI, to steer along the route. */
 	public void tick() {
+		if (this.pending && NavBudget.available(this.npc.world) >= NavBudget.MIN_TO_START) {
+			this.plan();
+		}
+
+		this.closeDoorsBehind();
 		if (this.directTicks > 0) {
 			this.tickDirectRun();
-		}
-
-		if (!this.isMoving()) {
-			this.stuckTicks = 0;
 			return;
 		}
 
-		double dx = this.npc.x - this.lastX;
-		double dz = this.npc.z - this.lastZ;
-		this.lastX = this.npc.x;
-		this.lastZ = this.npc.z;
-		if (dx * dx + dz * dz > STUCK_MOVE_SQR) {
-			this.stuckTicks = 0;
+		if (this.path == null) {
 			return;
 		}
 
-		this.stuckTicks++;
-		if (this.stuckTicks >= STUCK_GIVE_UP_TICKS) {
-			this.stop();
-			this.stuckTicks = 0;
-		} else if (this.stuckTicks >= STUCK_JUMP_TICKS && this.npc.horizontalCollision) {
-			// Usually caught on a block edge; a hop gets over or around it.
-			this.npc.setJumping(true);
+		NavStep step = this.path.current();
+		while (step != null && this.hasReached(step)) {
+			this.path.advance();
+			step = this.path.current();
+			this.resetProgress();
+		}
+
+		if (step == null || !this.path.complete && this.path.remaining() <= CONTINUE_AT_REMAINING) {
+			// End of a stretch on a long trip: plan the next one. Otherwise the trip is over.
+			boolean continues = !this.path.complete && this.goal != null && this.plan();
+			if (!continues && step == null) {
+				this.path = null;
+				return;
+			}
+
+			if (this.path == null) {
+				return;
+			}
+
+			step = this.path.current();
+			if (step == null) {
+				return;
+			}
+		}
+
+		this.openDoorsAhead(step);
+		this.steer(step);
+		this.checkProgress(step);
+	}
+
+	private boolean hasReached(NavStep step) {
+		double dx = step.centerX() - this.npc.x;
+		double dz = step.centerZ() - this.npc.z;
+		double horizontal = dx * dx + dz * dz;
+		return switch (step.move()) {
+			case CLIMB -> horizontal < 0.25 && this.npc.y >= step.feetY() - 0.05;
+			case DESCEND -> this.npc.y <= step.feetY() + 0.2;
+			case DROP -> horizontal < ARRIVE_RADIUS_SQR && this.npc.y < step.feetY() + 3.5;
+			default -> horizontal < ARRIVE_RADIUS_SQR && Math.abs(this.npc.y - step.feetY()) < 1.1;
+		};
+	}
+
+	private void steer(NavStep step) {
+		boolean inWater = this.npc.isInWater();
+		switch (step.move()) {
+			case CLIMB -> {
+				// On a ladder, holding jump climbs; in water it swims up.
+				this.steerGently(step);
+				this.npc.setJumping(true);
+			}
+			case DESCEND -> this.steerGently(step);
+			case JUMP_UP -> {
+				this.npc.steerToward(step.centerX(), step.centerZ());
+				double dx = step.centerX() - this.npc.x;
+				double dz = step.centerZ() - this.npc.z;
+				if ((this.npc.onGround || inWater) && dx * dx + dz * dz < 1.4 * 1.4) {
+					this.npc.setJumping(true);
+				}
+			}
+			case GAP_JUMP -> {
+				this.npc.steerToward(step.centerX(), step.centerZ());
+				NavStep from = this.path.previous();
+				if (from != null && this.npc.onGround) {
+					// Take off at the edge of the starting block.
+					double dirX = Integer.signum(step.x() - from.x());
+					double dirZ = Integer.signum(step.z() - from.z());
+					double along = (this.npc.x - from.centerX()) * dirX + (this.npc.z - from.centerZ()) * dirZ;
+					if (along > 0.3) {
+						this.npc.setJumping(true);
+					}
+				}
+			}
+			case SWIM -> {
+				this.npc.steerToward(step.centerX(), step.centerZ());
+				this.npc.setJumping(inWater && step.feetY() >= this.npc.y - 0.3);
+			}
+			default -> {
+				this.npc.steerToward(step.centerX(), step.centerZ());
+				if (inWater && step.feetY() >= this.npc.y - 0.3) {
+					this.npc.setJumping(true);
+				} else if (this.npc.onGround && this.npc.horizontalCollision && step.feetY() > this.npc.y + 0.3) {
+					this.npc.setJumping(true);
+				}
+			}
 		}
 	}
+
+	/** Lines up over the step's center without overshooting, for vertical moves. */
+	private void steerGently(NavStep step) {
+		double dx = step.centerX() - this.npc.x;
+		double dz = step.centerZ() - this.npc.z;
+		if (dx * dx + dz * dz > 0.15 * 0.15) {
+			this.npc.steerToward(step.centerX(), step.centerZ());
+		}
+	}
+
+	/** Jumps if progress stalls, then re-plans from where it is if it's still stuck or was knocked off course. */
+	private void checkProgress(NavStep step) {
+		double dx = step.centerX() - this.npc.x;
+		double dz = step.centerZ() - this.npc.z;
+		double distance = dx * dx + dz * dz + Math.abs(step.feetY() - this.npc.y);
+		if (distance > OFF_ROUTE_SQR && step.move() != NavMove.DROP) {
+			this.replanOrStop();
+			return;
+		}
+
+		if (distance < this.bestProgress - 0.01) {
+			this.bestProgress = distance;
+			this.ticksWithoutProgress = 0;
+			return;
+		}
+
+		this.ticksWithoutProgress++;
+		if (this.ticksWithoutProgress == STUCK_JUMP_TICKS) {
+			this.npc.setJumping(true);
+		} else if (this.ticksWithoutProgress >= STUCK_REPLAN_TICKS) {
+			NpcProfiler.recordStuck();
+			this.replanOrStop();
+		}
+	}
+
+	private void replanOrStop() {
+		if (this.goal == null || !this.plan()) {
+			this.path = null;
+		}
+	}
+
+	private void resetProgress() {
+		this.bestProgress = Double.MAX_VALUE;
+		this.ticksWithoutProgress = 0;
+	}
+
+	// Doors
+
+	/** Opens a closed door or gate on the next step or two once it's within reach, like a player clicking it. */
+	private void openDoorsAhead(NavStep step) {
+		for (int ahead = 0; ahead <= 1; ahead++) {
+			NavStep next = ahead == 0 ? step : this.path.peek(1);
+			if (next == null || !next.door()) {
+				continue;
+			}
+
+			for (int dy = 0; dy <= 1; dy++) {
+				TilePos pos = new TilePos(next.x(), next.y() + dy, next.z());
+				Block<?> block = this.npc.world.getBlockType(pos);
+				if (NavGrid.isOpenable(block) && !NavGrid.isOpen(block, this.npc.world.getBlockData(pos))
+					&& this.npc.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= DOOR_REACH_SQR) {
+					this.toggle(block, pos);
+					this.openedDoors.add(pos);
+					break;
+				}
+			}
+		}
+	}
+
+	/** Closes doors this NPC opened once it has walked through and away from them. */
+	private void closeDoorsBehind() {
+		Iterator<TilePos> doors = this.openedDoors.iterator();
+		while (doors.hasNext()) {
+			TilePos pos = doors.next();
+			Block<?> block = this.npc.world.getBlockType(pos);
+			if (!NavGrid.isOpenable(block) || !NavGrid.isOpen(block, this.npc.world.getBlockData(pos))) {
+				doors.remove();
+			} else if (this.npc.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) > DOOR_CLOSE_SQR) {
+				this.toggle(block, pos);
+				doors.remove();
+			}
+		}
+	}
+
+	private void toggle(Block<?> block, TilePos pos) {
+		if (block.getLogic() instanceof BlockLogicDoor door) {
+			door.onInteracted(this.npc.world, pos, null, null, 0.5, 0.5);
+		} else if (block.getLogic() instanceof BlockLogicFenceGate gate) {
+			gate.onInteracted(this.npc.world, pos, null, null, 0.5, 0.5);
+		}
+	}
+
+	// Straight runs and teleports
 
 	private void tickDirectRun() {
 		this.directTicks--;
-		double aheadX = this.npc.x + Math.cos(this.directAngle);
-		double aheadZ = this.npc.z + Math.sin(this.directAngle);
-		if (isHazardAt(this.npc.world, MathHelper.floor(aheadX), MathHelper.floor(this.npc.y), MathHelper.floor(aheadZ))) {
+		int aheadX = MathHelper.floor(this.npc.x + Math.cos(this.directAngle));
+		int aheadZ = MathHelper.floor(this.npc.z + Math.sin(this.directAngle));
+		if (NavGrid.isHazardAt(this.npc.world, aheadX, MathHelper.floor(this.npc.y), aheadZ)) {
 			this.directTicks = 0;
 			return;
 		}
@@ -125,23 +410,19 @@ public class NpcNavigator {
 	/** Teleports to an open spot 2 blocks from the target, like a tamed wolf does. */
 	public boolean teleportNear(Entity target) {
 		int targetX = MathHelper.floor(target.x);
-		int targetY = MathHelper.floor(target.bb.minY);
+		int targetY = MathHelper.floor(target.bb.minY());
 		int targetZ = MathHelper.floor(target.z);
-
+		NavGrid grid = NavGrid.of(this.npc.world);
 		for (int dx = -2; dx <= 2; dx++) {
 			for (int dz = -2; dz <= 2; dz++) {
 				if (Math.abs(dx) <= 1 && Math.abs(dz) <= 1) {
 					continue;
 				}
 
-				int x = targetX + dx;
-				int z = targetZ + dz;
-				if (this.npc.world.isBlockNormalCube(new TilePos(x, targetY - 1, z))
-					&& !this.npc.world.isBlockNormalCube(new TilePos(x, targetY, z))
-					&& !this.npc.world.isBlockNormalCube(new TilePos(x, targetY + 1, z))
-					&& !isHazardAt(this.npc.world, x, targetY, z)) {
+				NavGrid.Cell cell = grid.cell(targetX + dx, targetY, targetZ + dz);
+				if (cell.kind == NavGrid.Kind.STAND && !cell.hazard) {
 					this.stop();
-					this.npc.teleportTo(x + 0.5, targetY, z + 0.5);
+					this.npc.teleportTo(targetX + dx + 0.5, cell.feetY, targetZ + dz + 0.5);
 					return true;
 				}
 			}
@@ -150,33 +431,8 @@ public class NpcNavigator {
 		return false;
 	}
 
-	/** A path is hazardous if any step stands in, or right beside, something that hurts. */
-	private static boolean isHazardous(World world, Path path) {
-		for (Node node : ((PathAccessor) path).npclaude$getNodes()) {
-			if (isHazardAt(world, node.x, node.y, node.z)) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	/** Hurts to stand here: a hazard at feet or head height, magma underfoot, or a cactus right beside the feet. */
-	public static boolean isHazardAt(World world, int x, int y, int z) {
-		if (isHazardBlock(blockAt(world, x, y, z)) || isHazardBlock(blockAt(world, x, y + 1, z)) || blockAt(world, x, y - 1, z) == Blocks.MAGMA) {
-			return true;
-		}
-
-		return blockAt(world, x + 1, y, z) == Blocks.CACTUS || blockAt(world, x - 1, y, z) == Blocks.CACTUS
-			|| blockAt(world, x, y, z + 1) == Blocks.CACTUS || blockAt(world, x, y, z - 1) == Blocks.CACTUS;
-	}
-
-	private static Block<?> blockAt(World world, int x, int y, int z) {
-		return world.getBlockType(new TilePos(x, y, z));
-	}
-
-	private static boolean isHazardBlock(@Nullable Block<?> block) {
-		return block != null && (block == Blocks.CACTUS || block == Blocks.FIRE || block == Blocks.MAGMA || block == Blocks.COBWEB
-			|| block == Blocks.FLUID_LAVA_FLOWING || block == Blocks.FLUID_LAVA_STILL);
+	/** Steps left on the current route, for debugging. */
+	public int remainingSteps() {
+		return this.path != null ? this.path.remaining() : 0;
 	}
 }
