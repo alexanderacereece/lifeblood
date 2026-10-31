@@ -14,6 +14,7 @@ import com.mojang.brigadier.suggestion.SuggestionProvider;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import net.minecraft.core.Global;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.EntityDispatcher;
@@ -31,6 +32,7 @@ import npclaude.ai.behavior.WanderBehavior;
 import npclaude.client.NpcSkins;
 import npclaude.combat.FactionRegistry;
 import npclaude.combat.FactionRelation;
+import npclaude.combat.NpcFactions;
 import npclaude.entity.EntityNPC;
 import npclaude.entity.NpcGender;
 import npclaude.entity.SkinModel;
@@ -40,7 +42,7 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3dc;
 
 /**
- * /npc summon <name> [skin|default] [faction]
+ * /npc summon <name> [skin|default] [faction|none]
  * /npc follow|stay|remove <name>
  * /npc goto <name> [<position>|<target>]       (walks there, then stays; no target means to you)
  * /npc teleport <name> [<position>|<target>]   (like /teleport; no target means to you)
@@ -53,16 +55,21 @@ import org.joml.Vector3dc;
  * /npc invulnerable <name> <true|false>
  * /npc personality <name> bravery <0-100>
  * /npc faction list
- * /npc faction create|delete <faction>
- * /npc faction relation <faction> <faction> [ally|neutral|hostile]
- * /npc faction set <name> <faction>
- * /npc relation <name> [ally|neutral|hostile]   (how the NPC regards you)
+ * /npc faction create <faction> [ally|neutral|hostile]   (its default stance; neutral if left out)
+ * /npc faction delete <faction>
+ * /npc faction default <faction> [ally|neutral|hostile]
+ * /npc faction relation <faction> <faction> [ally|neutral|hostile|default]   (default removes the explicit relation)
+ * /npc faction set <name> <faction|none>
+ * /npc faction join <faction|none>                       (you join a faction, or leave yours)
+ * /npc relation <name> [ally|neutral|hostile|default]    (the NPC's personal feeling toward you; default removes it)
  * /npc list
  * /npc skins [reload]
  *
  * Names with spaces need quotes: /npc follow "Walter White"
  */
 public class NpcCommand implements CommandManager.CommandRegistry {
+	private static final String NONE_KEYWORD = "none";
+	private static final String DEFAULT_KEYWORD = "default";
 	private static final SuggestionProvider<CommandSource> NPC_NAMES = (c, builder) -> {
 		for (EntityNPC npc : getNpcs(c.getSource().getWorld())) {
 			builder.suggest(ArgumentTypeString.escapeIfRequired(npc.nickname));
@@ -89,6 +96,22 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 			builder.suggest(relation.id());
 		}
 
+		return builder.buildFuture();
+	};
+	private static final SuggestionProvider<CommandSource> RELATION_OR_DEFAULT_NAMES = (c, builder) -> {
+		for (FactionRelation relation : FactionRelation.values()) {
+			builder.suggest(relation.id());
+		}
+
+		builder.suggest(DEFAULT_KEYWORD);
+		return builder.buildFuture();
+	};
+	private static final SuggestionProvider<CommandSource> FACTION_OR_NONE_NAMES = (c, builder) -> {
+		for (String faction : FactionRegistry.get(c.getSource().getWorld()).all()) {
+			builder.suggest(faction);
+		}
+
+		builder.suggest(NONE_KEYWORD);
 		return builder.buildFuture();
 	};
 	private static final SuggestionProvider<CommandSource> TARGET_NAMES = (c, builder) -> {
@@ -129,8 +152,8 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 						.suggests(SKIN_NAMES)
 						.executes(c -> summon(c, ArgumentTypeString.getString(c, "skin"), null))
 						.then(argument("faction", ArgumentTypeString.word())
-							.suggests(FACTION_NAMES)
-							.executes(c -> summon(c, ArgumentTypeString.getString(c, "skin"), requireFaction(c, "faction")))))))
+							.suggests(FACTION_OR_NONE_NAMES)
+							.executes(c -> summon(c, ArgumentTypeString.getString(c, "skin"), requireFactionOrNone(c, "faction")))))))
 			.then(literal("follow")
 				.then(npcArgument().executes(c -> {
 					Player player = requirePlayer(c.getSource());
@@ -243,77 +266,75 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 			.then(literal("faction")
 				.then(literal("list").executes(NpcCommand::listFactions))
 				.then(literal("create")
-					.then(argument("faction", ArgumentTypeString.word()).executes(c -> {
-						String faction = ArgumentTypeString.getString(c, "faction").toLowerCase(Locale.ROOT);
-						if (!FactionRegistry.isValidId(faction)) {
-							throw error("Faction names may only use a-z, 0-9 and _, up to 32 characters.");
-						}
-
-						if (!FactionRegistry.get(c.getSource().getWorld()).create(faction)) {
-							throw error("The faction '" + faction + "' already exists.");
-						}
-
-						return reply(c, "Created the " + faction + ". They are neutral to everyone until you set relations.");
-					})))
+					.then(argument("faction", ArgumentTypeString.word())
+						.executes(c -> createFaction(c, FactionRelation.NEUTRAL))
+						.then(argument("stance", ArgumentTypeString.word()).suggests(RELATION_NAMES)
+							.executes(c -> createFaction(c, requireRelation(c, "stance"))))))
 				.then(literal("delete")
 					.then(argument("faction", ArgumentTypeString.word()).suggests(FACTION_NAMES).executes(c -> {
 						String faction = requireFaction(c, "faction");
-						if (!FactionRegistry.get(c.getSource().getWorld()).remove(faction)) {
-							throw error("The default faction can't be deleted.");
-						}
-
-						return reply(c, "Deleted the " + faction + ". Their members are now unaligned.");
+						FactionRegistry.get(c.getSource().getWorld()).remove(faction);
+						return reply(c, "Deleted the " + faction + ". Their players are unaffiliated; their NPCs still stand together.");
 					})))
+				.then(literal("default")
+					.then(argument("faction", ArgumentTypeString.word()).suggests(FACTION_NAMES)
+						.executes(c -> {
+							String faction = requireFaction(c, "faction");
+							FactionRelation stance = FactionRegistry.get(c.getSource().getWorld()).getDefault(faction);
+							return reply(c, "The " + faction + " are " + describe(stance) + " toward anyone without an explicit relation.");
+						})
+						.then(argument("stance", ArgumentTypeString.word()).suggests(RELATION_NAMES).executes(c -> {
+							String faction = requireFaction(c, "faction");
+							FactionRelation stance = requireRelation(c, "stance");
+							FactionRegistry.get(c.getSource().getWorld()).setDefault(faction, stance);
+							return reply(c, "The " + faction + " are now " + describe(stance) + " toward anyone without an explicit relation.");
+						}))))
 				.then(literal("relation")
 					.then(argument("a", ArgumentTypeString.word()).suggests(FACTION_NAMES)
 						.then(argument("b", ArgumentTypeString.word()).suggests(FACTION_NAMES)
-							.executes(c -> {
-								String a = requireFaction(c, "a");
-								String b = requireFaction(c, "b");
-								FactionRelation relation = FactionRegistry.get(c.getSource().getWorld()).getRelation(a, b);
-								return reply(c, "The " + a + " and the " + b + " are " + describe(relation) + ".");
-							})
-							.then(argument("relation", ArgumentTypeString.word()).suggests(RELATION_NAMES).executes(c -> {
+							.executes(NpcCommand::showFactionRelation)
+							.then(argument("relation", ArgumentTypeString.word()).suggests(RELATION_OR_DEFAULT_NAMES).executes(c -> {
 								String a = requireFaction(c, "a");
 								String b = requireFaction(c, "b");
 								if (a.equals(b)) {
 									throw error("A faction is always allied with itself.");
 								}
 
-								String relationName = ArgumentTypeString.getString(c, "relation");
-								FactionRelation relation = FactionRelation.byName(relationName);
+								FactionRelation relation = requireRelationOrDefault(c, "relation");
+								FactionRegistry.get(c.getSource().getWorld()).setExplicit(a, b, relation);
 								if (relation == null) {
-									throw error("Unknown relation '" + relationName + "'. Use ally, neutral or hostile.");
+									return reply(c, "The " + a + " and the " + b + " now treat each other by their default stances.");
 								}
 
-								FactionRegistry.get(c.getSource().getWorld()).setRelation(a, b, relation);
 								return reply(c, "The " + a + " and the " + b + " are now " + describe(relation) + ".");
 							})))))
 				.then(literal("set")
 					.then(npcArgument()
-						.then(argument("faction", ArgumentTypeString.word()).suggests(FACTION_NAMES).executes(c -> {
+						.then(argument("faction", ArgumentTypeString.word()).suggests(FACTION_OR_NONE_NAMES).executes(c -> {
 							EntityNPC npc = findNpc(c);
-							String faction = requireFaction(c, "faction");
+							String faction = requireFactionOrNone(c, "faction");
 							npc.setFaction(faction);
-							return reply(c, npc.nickname + " has joined the " + faction + ".");
-						})))))
+							return reply(c, faction != null ? npc.nickname + " has joined the " + faction + "." : npc.nickname + " is now unaffiliated.");
+						}))))
+				.then(literal("join")
+					.then(argument("faction", ArgumentTypeString.word()).suggests(FACTION_OR_NONE_NAMES).executes(c -> {
+						Player player = requirePlayer(c.getSource());
+						String faction = requireFactionOrNone(c, "faction");
+						FactionRegistry.get(c.getSource().getWorld()).setPlayerFaction(player.uuid, faction);
+						return reply(c, faction != null ? "You have joined the " + faction + "." : "You are now unaffiliated.");
+					}))))
 			.then(literal("relation")
 				.then(npcArgument()
-					.executes(c -> {
+					.executes(NpcCommand::showPersonalRelation)
+					.then(argument("relation", ArgumentTypeString.word()).suggests(RELATION_OR_DEFAULT_NAMES).executes(c -> {
 						Player player = requirePlayer(c.getSource());
 						EntityNPC npc = findNpc(c);
-						return reply(c, npc.nickname + " is " + describePersonal(npc.relations.get(player)) + ".");
-					})
-					.then(argument("relation", ArgumentTypeString.word()).suggests(RELATION_NAMES).executes(c -> {
-						Player player = requirePlayer(c.getSource());
-						EntityNPC npc = findNpc(c);
-						String relationName = ArgumentTypeString.getString(c, "relation");
-						FactionRelation relation = FactionRelation.byName(relationName);
+						FactionRelation relation = requireRelationOrDefault(c, "relation");
+						npc.relations.set(player, relation);
 						if (relation == null) {
-							throw error("Unknown relation '" + relationName + "'. Use ally, neutral or hostile.");
+							return reply(c, npc.nickname + " now sees you as its faction does: " + describePersonal(NpcFactions.regard(npc, player)) + ".");
 						}
 
-						npc.relations.set(player, relation);
 						return reply(c, npc.nickname + " is now " + describePersonal(relation) + ".");
 					}))))
 			.then(literal("remove")
@@ -381,7 +402,7 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 			skinInfo += ", which is not in " + NpcSkinFiles.FOLDER_NAME + " yet";
 		}
 
-		return reply(c, "Summoned " + name + " of the " + npc.getFaction() + " (" + skinInfo + ").");
+		return reply(c, "Summoned " + name + ", " + factionLabel(npc.getFaction()) + " (" + skinInfo + ").");
 	}
 
 	private static double[] position(CommandContext<CommandSource> c) throws CommandSyntaxException {
@@ -470,7 +491,7 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 			String skin = npc.getSkin().isEmpty() ? "default" : npc.getSkin();
 			c.getSource().sendMessage(String.format(Locale.ROOT, "- %s (%s): %s, skin %s, health %d, %s style, faction %s, at %d %d %d%s",
 				npc.nickname, npc.getGender().displayName().toLowerCase(Locale.ROOT), doing, skin, npc.getHealth(),
-				npc.getCombatStyle().displayName().toLowerCase(Locale.ROOT), npc.getFaction(),
+				npc.getCombatStyle().displayName().toLowerCase(Locale.ROOT), npc.getFaction() != null ? npc.getFaction() : "none",
 				(int) Math.floor(npc.x), (int) Math.floor(npc.y), (int) Math.floor(npc.z),
 				npc.isInvulnerable() ? ", invulnerable" : ""));
 		}
@@ -485,22 +506,72 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 
 	private static int listFactions(CommandContext<CommandSource> c) {
 		FactionRegistry registry = FactionRegistry.get(c.getSource().getWorld());
-		List<String> factions = new ArrayList<>(registry.all());
 		c.getSource().sendMessage("Factions in this world:");
-		for (String faction : factions) {
-			List<String> relations = new ArrayList<>();
-			for (String other : factions) {
-				FactionRelation relation = registry.getRelation(faction, other);
-				if (!other.equals(faction) && relation != FactionRelation.NEUTRAL) {
-					relations.add(relation.id() + " to " + other);
-				}
+		for (String faction : registry.all()) {
+			List<String> details = new ArrayList<>();
+			details.add(describe(registry.getDefault(faction)) + " by default");
+			for (Map.Entry<String, FactionRelation> relation : registry.explicitRelationsOf(faction).entrySet()) {
+				details.add(describe(relation.getValue()) + " with " + relation.getKey());
 			}
 
-			String suffix = relations.isEmpty() ? "neutral to all" : String.join(", ", relations);
-			c.getSource().sendMessage("- " + faction + (faction.equals(FactionRegistry.DEFAULT) ? " (default)" : "") + ": " + suffix);
+			int players = registry.countPlayers(faction);
+			if (players > 0) {
+				details.add(players + " player(s)");
+			}
+
+			c.getSource().sendMessage("- " + faction + ": " + String.join(", ", details));
 		}
 
-		return factions.size();
+		Player player = c.getSource().getSender();
+		if (player != null) {
+			c.getSource().sendMessage("You are " + factionLabel(registry.getPlayerFaction(player.uuid)) + ".");
+		}
+
+		return registry.all().size();
+	}
+
+	private static int createFaction(CommandContext<CommandSource> c, FactionRelation stance) throws CommandSyntaxException {
+		String faction = ArgumentTypeString.getString(c, "faction").toLowerCase(Locale.ROOT);
+		if (!FactionRegistry.isValidId(faction) || faction.equals(NONE_KEYWORD)) {
+			throw error("Faction names may only use a-z, 0-9 and _, up to 32 characters, and can't be 'none'.");
+		}
+
+		if (!FactionRegistry.get(c.getSource().getWorld()).create(faction, stance)) {
+			throw error("The faction '" + faction + "' already exists.");
+		}
+
+		return reply(c, "Created the " + faction + ", " + describe(stance) + " toward anyone without an explicit relation.");
+	}
+
+	private static int showFactionRelation(CommandContext<CommandSource> c) throws CommandSyntaxException {
+		String a = requireFaction(c, "a");
+		String b = requireFaction(c, "b");
+		FactionRegistry registry = FactionRegistry.get(c.getSource().getWorld());
+		FactionRelation explicit = registry.getExplicit(a, b);
+		if (a.equals(b)) {
+			return reply(c, "A faction is always allied with itself.");
+		}
+
+		if (explicit != null) {
+			return reply(c, "The " + a + " and the " + b + " are " + describe(explicit) + ".");
+		}
+
+		return reply(c, "No explicit relation: the " + a + " are " + describe(registry.regard(a, b)) + " toward the " + b
+			+ ", who are " + describe(registry.regard(b, a)) + " toward them (their default stances).");
+	}
+
+	private static int showPersonalRelation(CommandContext<CommandSource> c) throws CommandSyntaxException {
+		Player player = requirePlayer(c.getSource());
+		EntityNPC npc = findNpc(c);
+		FactionRelation personal = npc.relations.get(player);
+		FactionRelation overall = NpcFactions.regard(npc, player);
+		String reason = personal != null ? "personally" : "as " + factionLabel(npc.getFaction()) + " toward someone "
+			+ factionLabel(FactionRegistry.get(c.getSource().getWorld()).getPlayerFaction(player.uuid));
+		return reply(c, npc.nickname + " is " + describePersonal(overall) + " (" + reason + ").");
+	}
+
+	private static String factionLabel(@Nullable String faction) {
+		return faction != null ? "of the " + faction : "unaffiliated";
 	}
 
 	private static String describePersonal(FactionRelation relation) {
@@ -513,7 +584,7 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 
 	private static String describe(FactionRelation relation) {
 		return switch (relation) {
-			case ALLY -> "allies";
+			case ALLY -> "allied";
 			case NEUTRAL -> "neutral";
 			case HOSTILE -> "hostile";
 		};
@@ -527,6 +598,28 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 		}
 
 		return faction;
+	}
+
+	/** A faction name, or null for "none" (unaffiliated). */
+	@Nullable
+	private static String requireFactionOrNone(CommandContext<CommandSource> c, String argument) throws CommandSyntaxException {
+		return ArgumentTypeString.getString(c, argument).equalsIgnoreCase(NONE_KEYWORD) ? null : requireFaction(c, argument);
+	}
+
+	private static FactionRelation requireRelation(CommandContext<CommandSource> c, String argument) throws CommandSyntaxException {
+		String name = ArgumentTypeString.getString(c, argument);
+		FactionRelation relation = FactionRelation.byName(name);
+		if (relation == null) {
+			throw error("Unknown relation '" + name + "'. Use ally, neutral or hostile.");
+		}
+
+		return relation;
+	}
+
+	/** A relation, or null for "default" (remove the explicit setting). */
+	@Nullable
+	private static FactionRelation requireRelationOrDefault(CommandContext<CommandSource> c, String argument) throws CommandSyntaxException {
+		return ArgumentTypeString.getString(c, argument).equalsIgnoreCase(DEFAULT_KEYWORD) ? null : requireRelation(c, argument);
 	}
 
 	private static int listSkins(CommandContext<CommandSource> c) {

@@ -15,6 +15,7 @@ import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.util.collection.NamespaceID;
 import net.minecraft.core.util.helper.MathHelper;
 import npclaude.combat.FactionRelation;
+import npclaude.combat.NpcFactions;
 import npclaude.entity.EntityNPC;
 import npclaude.util.Geometry;
 import org.jetbrains.annotations.NotNull;
@@ -85,7 +86,7 @@ public class NpcRenderer extends MobRendererBipedArmored<EntityNPC> {
 	protected void renderSpecials(@NotNull TessellatorGeneral tessellator, @NotNull EntityNPC entity, double x, double y, double z) {
 		super.renderSpecials(tessellator, entity, x, y, z);
 		Player viewer = Minecraft.getMinecraft().thePlayer;
-		if (viewer != null && entity.isAlive() && entity.relations.get(viewer) != FactionRelation.HOSTILE && isLookingAt(viewer, entity)) {
+		if (viewer != null && entity.isAlive() && NpcFactions.regard(entity, viewer) != FactionRelation.HOSTILE && isLookingAt(viewer, entity)) {
 			this.renderHealthBar(tessellator, entity, x, y, z);
 		}
 	}

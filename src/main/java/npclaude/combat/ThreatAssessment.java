@@ -119,20 +119,12 @@ public final class ThreatAssessment {
 	}
 
 	/**
-	 * How the NPC regards a person: other NPCs through faction relations, players through its personal relations.
+	 * How the NPC regards a person (another NPC or a player): personal relation, then factions.
 	 * Monsters and animals have no relation and are judged separately.
 	 */
 	@Nullable
 	public static FactionRelation relationTo(EntityNPC npc, Mob mob) {
-		if (mob instanceof EntityNPC other) {
-			return NpcFactions.relation(npc, other);
-		}
-
-		if (mob instanceof Player player) {
-			return npc.relations.get(player);
-		}
-
-		return null;
+		return mob instanceof EntityNPC || mob instanceof Player ? NpcFactions.regard(npc, mob) : null;
 	}
 
 	/**

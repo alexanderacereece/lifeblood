@@ -76,7 +76,9 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private int lookTicks;
 	@Nullable
 	private Player talkingTo;
-	private String faction = NpcFactions.DEFAULT;
+	/** Null when unaffiliated. */
+	@Nullable
+	private String faction;
 	private NpcGender gender = NpcGender.MALE;
 	private FollowDistance followDistance = FollowDistance.SHORT;
 	private CombatStyle combatStyle = CombatStyle.AUTO;
@@ -284,16 +286,14 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 
 	// Combat
 
+	/** The faction this NPC belongs to, or null if unaffiliated. */
+	@Nullable
 	public String getFaction() {
 		return this.faction;
 	}
 
-	public void setFaction(String faction) {
+	public void setFaction(@Nullable String faction) {
 		this.faction = faction;
-	}
-
-	public boolean isAlliedWith(EntityNPC other) {
-		return NpcFactions.areAllies(this, other);
 	}
 
 	/** The style chosen for this NPC; AUTO means it decides from its equipment. */
@@ -572,7 +572,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		npc.putByte("SkinModel", (byte) this.getSkinModel().ordinal());
 		npc.putBoolean("Invulnerable", this.invulnerable);
 		npc.putCompound("Personality", this.personality.save());
-		npc.putString("Faction", this.faction);
+		npc.putString("Faction", this.faction != null ? this.faction : "");
 		npc.putByte("Gender", (byte) this.gender.ordinal());
 		npc.putByte("FollowDistance", (byte) this.followDistance.ordinal());
 		npc.putByte("CombatStyle", (byte) this.combatStyle.ordinal());
@@ -604,7 +604,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 			this.personality.setBravery(npc.getFloat("Bravery"));
 		}
 
-		this.faction = NpcFactions.normalize(npc.getStringOrDefault("Faction", NpcFactions.DEFAULT));
+		this.faction = NpcFactions.normalize(npc.getStringOrDefault("Faction", ""));
 		this.gender = NpcGender.byId(npc.getByte("Gender"));
 		this.followDistance = FollowDistance.byId(npc.getByte("FollowDistance"));
 		this.combatStyle = CombatStyle.byId(npc.getByte("CombatStyle"));
