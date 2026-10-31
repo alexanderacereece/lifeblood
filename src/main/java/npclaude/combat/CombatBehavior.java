@@ -55,8 +55,16 @@ public class CombatBehavior implements NpcBehavior {
 	private int repathCooldown;
 	private int sidestepSign = 1;
 
+	/** Courage while recovering from being downed: low enough to run from almost anything. */
+	private static final double RECOVERING_COURAGE = 0.1;
+
 	/** Courage threshold: bravery 0 runs from anything but easy fights, bravery 1 stands against about 3 to 1. */
 	public static double courageOf(EntityNPC npc) {
+		if (npc.isRecovering()) {
+			// Fresh from near death: in no shape to fight anything.
+			return RECOVERING_COURAGE;
+		}
+
 		return 0.5 + npc.personality.getBravery() * 2.5;
 	}
 

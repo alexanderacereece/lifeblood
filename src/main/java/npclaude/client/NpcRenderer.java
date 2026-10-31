@@ -33,6 +33,7 @@ import org.useless.dragonfly.models.entity.StaticEntityModel;
 public class NpcRenderer extends MobRendererBipedArmored<EntityNPC> {
 	private static final NamespaceID PLAYER_MODELS = NamespaceID.fromPool("minecraft", "player");
 	private static final float PLAYER_SCALE = 0.9375F;
+	private static final float LYING_LIFT = 0.125F;
 	private static final double HEALTH_BAR_RANGE = 16.0;
 	/** Bar size in name-tag pixels; the name tag sits 0.8 above the head, the bar just above it. */
 	private static final float HEALTH_BAR_WIDTH = 40.0F;
@@ -47,12 +48,14 @@ public class NpcRenderer extends MobRendererBipedArmored<EntityNPC> {
 
 	@Override
 	protected void preRenderTransform(@NotNull EntityNPC entity, double x, double y, double z, float yaw, float partialTick) {
-		GLRenderer.modelM4f().translate((float) x, (float) y, (float) z);
+		// Lying down, the body is lifted by half its thickness so it rests on the ground instead of in it.
+		float fall = entity.getFallAmount(partialTick);
+		GLRenderer.modelM4f().translate((float) x, (float) y + fall * LYING_LIFT, (float) z);
 		GLRenderer.modelM4f().rotateY(-this.getBodyYaw(entity, partialTick));
 		GLRenderer.modelM4f().scale(0.062539086F, 0.062539086F, -0.062539086F);
 		GLRenderer.modelM4f().scale(PLAYER_SCALE, PLAYER_SCALE, PLAYER_SCALE);
-		if (entity.isDowned()) {
-			GLRenderer.modelM4f().rotateZ(Math.toRadians(this.getMaxDeathRotation(entity)));
+		if (fall > 0.0F) {
+			GLRenderer.modelM4f().rotateX(Math.toRadians((entity.isDownedOnFront() ? -90.0F : 90.0F) * fall));
 		} else if (entity.deathTime > 0) {
 			float rotationProgress = (entity.deathTime + partialTick - 1.0F) / 20.0F * 1.6F;
 			rotationProgress = Math.min(MathHelper.sqrt_float(rotationProgress), 1.0F);

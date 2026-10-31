@@ -23,6 +23,7 @@ import net.minecraft.core.world.World;
 import npclaude.ai.NpcBrain;
 import npclaude.ai.NpcNavigator;
 import npclaude.ai.behavior.FollowPlayerBehavior;
+import npclaude.ai.behavior.RecoverBehavior;
 import npclaude.combat.CombatBehavior;
 import npclaude.combat.CombatStyle;
 import npclaude.combat.MonsterContact;
@@ -63,6 +64,12 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private static final float WALK_INPUT = 1.0F;
 	/** How long an invincible NPC stays down after a blow that would have killed them. */
 	private static final int DOWNED_DURATION = 100;
+	/** How long falling over (and getting back up) takes, in ticks. */
+	private static final int FALL_TICKS = 8;
+	/** After being downed, the NPC goes home and stays out of trouble this long (5 minutes). */
+	private static final int RECOVERY_DURATION = 6000;
+	private static final byte DOWNED_ON_BACK = 1;
+	private static final byte DOWNED_ON_FRONT = 2;
 
 	public final NpcBrain brain = new NpcBrain(this);
 	public final NpcNavigator navigator = new NpcNavigator(this);
@@ -73,6 +80,13 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private HealthMode healthMode = HealthMode.MORTAL;
 	/** Ticks left lying down after a would-be killing blow; 0 when standing. */
 	private int downedTicks;
+	/** Ticks left recovering at home after being downed; 0 when recovered. */
+	private int recoveringTicks;
+	/** How far through falling over the NPC is, 0 (standing) to FALL_TICKS (lying); for drawing. */
+	private int fallProgress;
+	private int prevFallProgress;
+	/** Which way the NPC last fell, remembered so getting up plays the same way in reverse. */
+	private boolean fellOnFront;
 	private double homeX;
 	private double homeY;
 	private double homeZ;
@@ -102,6 +116,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		super(world);
 		this.doRandomWalk = false;
 		this.brain.addInstinct(new CombatBehavior());
+		this.brain.addInstinct(new RecoverBehavior());
 	}
 
 	@Override
@@ -165,6 +180,16 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	@Override
 	public void tick() {
 		super.tick();
+		this.prevFallProgress = this.fallProgress;
+		if (this.isDowned()) {
+			this.fellOnFront = this.entityData.getByte(DATA_DOWNED) == DOWNED_ON_FRONT;
+		}
+
+		this.fallProgress = this.isDowned() ? Math.min(this.fallProgress + 1, FALL_TICKS) : Math.max(this.fallProgress - 1, 0);
+		if (this.recoveringTicks > 0 && !this.isDowned()) {
+			this.recoveringTicks--;
+		}
+
 		if (this.swinging && ++this.swingTicks >= SWING_DURATION) {
 			this.swinging = false;
 			this.swingTicks = 0;
@@ -407,9 +432,13 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		this.followDistance = followDistance;
 	}
 
-	/** The player this NPC is following, if it's following someone who is here. */
+	/** The player this NPC is following, if it's following someone who is here (not while recovering at home). */
 	@Nullable
 	public Player getLeader() {
+		if (this.isRecovering()) {
+			return null;
+		}
+
 		FollowPlayerBehavior follow = this.brain.findBehavior(FollowPlayerBehavior.class);
 		return follow != null ? follow.getPlayer(this) : null;
 	}
@@ -441,6 +470,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		this.healthMode = healthMode;
 		if (healthMode == HealthMode.MORTAL && this.isDowned()) {
 			this.getUp();
+			this.stopRecovering();
 		}
 	}
 
@@ -451,13 +481,45 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		return this.entityData.getByte(DATA_DOWNED) != 0;
 	}
 
+	/** True if the NPC fell (or is falling, or getting up) face down rather than on its back. */
+	public boolean isDownedOnFront() {
+		return this.fellOnFront;
+	}
+
+	/** How far over the NPC has fallen: 0 standing, 1 lying flat, smoothly in between. */
+	public float getFallAmount(float partialTick) {
+		float progress = (this.prevFallProgress + (this.fallProgress - this.prevFallProgress) * partialTick) / FALL_TICKS;
+		// Slow to tip, fast to land, like falling over.
+		return progress * progress;
+	}
+
+	/** True for a while after being downed: the NPC goes home, follows no one and avoids fights. */
+	public boolean isRecovering() {
+		return this.recoveringTicks > 0;
+	}
+
+	public void stopRecovering() {
+		this.recoveringTicks = 0;
+	}
+
+	/** Debug: full health, back on its feet, and done recovering. */
+	public void healFully() {
+		this.setHealthRaw(this.getMaxHealth());
+		if (this.isDowned()) {
+			this.getUp();
+		}
+
+		this.stopRecovering();
+	}
+
 	/**
 	 * Instead of dying, the NPC drops to the ground for a few seconds. Lying there, it counts as out of the fight:
 	 * enemies lose interest (it reports itself as not alive), and it can't be hurt further or act.
 	 */
 	private void knockDown() {
 		this.downedTicks = DOWNED_DURATION;
-		this.entityData.set(DATA_DOWNED, (byte) 1);
+		this.recoveringTicks = RECOVERY_DURATION;
+		this.entityData.set(DATA_DOWNED, this.random.nextBoolean() ? DOWNED_ON_BACK : DOWNED_ON_FRONT);
 		this.talkingTo = null;
 		this.navigator.stop();
 		this.eatTicks = 0;
@@ -640,6 +702,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		npc.putByte("SkinModel", (byte) this.getSkinModel().ordinal());
 		npc.putString("HealthMode", this.healthMode.name());
 		npc.putInt("DownedTicks", this.downedTicks);
+		npc.putInt("RecoveringTicks", this.recoveringTicks);
 		npc.putCompound("Personality", this.personality.save());
 		npc.putString("Faction", this.faction != null ? this.faction : "");
 		npc.putByte("Gender", (byte) this.gender.ordinal());
@@ -669,7 +732,9 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		// Saves from before health modes only had an invulnerable flag.
 		this.healthMode = mode != null ? mode : npc.getBoolean("Invulnerable") ? HealthMode.INVULNERABLE : HealthMode.MORTAL;
 		this.downedTicks = npc.getIntegerOrDefault("DownedTicks", 0);
-		this.entityData.set(DATA_DOWNED, (byte) (this.downedTicks > 0 ? 1 : 0));
+		this.recoveringTicks = npc.getIntegerOrDefault("RecoveringTicks", 0);
+		this.entityData.set(DATA_DOWNED, this.downedTicks > 0 ? DOWNED_ON_BACK : 0);
+		this.fallProgress = this.prevFallProgress = this.downedTicks > 0 ? FALL_TICKS : 0;
 		if (npc.containsKey("Personality")) {
 			this.personality.load(npc.getCompound("Personality"));
 		} else if (npc.containsKey("Bravery")) {

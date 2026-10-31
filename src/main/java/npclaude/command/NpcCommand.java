@@ -49,6 +49,7 @@ import org.joml.Vector3dc;
  *   A target is another NPC's name, a player's name, or @s for yourself.
  * /npc tpto <name>                           (teleports you to the NPC)
  * /npc gender <name> [male|female]
+ * /npc heal <name>         (full health, back on its feet, done recovering)
  * /npc perf                 (AI and pathfinding cost over the last second)
  * /npc wander <name> [radius]
  * /npc skin <name> <skin> [auto|wide|slim]
@@ -220,6 +221,12 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 						npc.setGender(gender);
 						return reply(c, npc.nickname + " is now " + gender.displayName().toLowerCase(Locale.ROOT) + ".");
 					}))))
+			.then(literal("heal")
+				.then(npcArgument().executes(c -> {
+					EntityNPC npc = findNpc(c);
+					npc.healFully();
+					return reply(c, npc.nickname + " is fully healed.");
+				})))
 			.then(literal("perf").executes(c -> {
 				int count = getNpcs(c.getSource().getWorld()).size();
 				return reply(c, count + " NPC(s) loaded. " + NpcProfiler.report());
