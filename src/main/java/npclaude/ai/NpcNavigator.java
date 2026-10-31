@@ -483,7 +483,8 @@ public class NpcNavigator {
 		this.directTicks--;
 		int aheadX = MathHelper.floor(this.npc.x + Math.cos(this.directAngle));
 		int aheadZ = MathHelper.floor(this.npc.z + Math.sin(this.directAngle));
-		if (NavGrid.isHazardAt(this.npc.world, aheadX, MathHelper.floor(this.npc.y), aheadZ)) {
+		int feetY = MathHelper.floor(this.npc.y + 0.01);
+		if (NavGrid.isHazardAt(this.npc.world, aheadX, feetY, aheadZ) || this.isDeadlyDrop(aheadX, feetY, aheadZ)) {
 			this.directTicks = 0;
 			return;
 		}
@@ -492,6 +493,23 @@ public class NpcNavigator {
 		if (this.npc.horizontalCollision) {
 			this.npc.setJumping(true);
 		}
+	}
+
+	/** Would walking into this space mean falling further than is safe (more than 3 blocks)? */
+	private boolean isDeadlyDrop(int x, int y, int z) {
+		NavGrid grid = NavGrid.of(this.npc.world);
+		if (grid.cell(x, y, z).kind != NavGrid.Kind.OPEN) {
+			return false;
+		}
+
+		for (int depth = 1; depth <= NavGrid.SAFE_DROP; depth++) {
+			NavGrid.Cell below = grid.cell(x, y - depth, z);
+			if (below.kind != NavGrid.Kind.OPEN) {
+				return below.hazard;
+			}
+		}
+
+		return true;
 	}
 
 	/** Teleports to an open spot 2 blocks from the target, like a tamed wolf does. */
