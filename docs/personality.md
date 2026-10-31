@@ -11,6 +11,7 @@ An NPC's character is built from layers, each simple on its own:
 | Mood | A temporary shift from recent events | Yes, constantly |
 | Memories | Things that happened, each with an opinion effect | Yes, they fade |
 | Family | Parent, spouse and fiancé links; other kin derived | Rarely |
+| Food preferences | A like value for every food | No |
 | Speech style | Surface voice: greetings, filler, tics, catchphrase | No |
 | Word book | Words the player taught, spreading between NPCs | Yes |
 
@@ -143,10 +144,10 @@ Discrete traits. Most come in opposing pairs, where most NPCs sit in the unmarke
 
 ### Singles
 
-- **Romantic:** interested in courtship, comments on couples, hits harder when rejected or heartbroken. Opens up the romance path in the family system.
+- **Romantic:** falls for people faster and more often, courts more actively, comments on couples, hit harder by rejection and heartbreak. Anyone can take part in romance (section 5); this quirk makes it much more likely.
 - **Loyal:** much slower to sour on friends, family and faction. Defends them in fights even when timid. Being betrayed hits them extra hard.
-- **Glutton:** talks about food constantly, eats more often, loves food gifts. Their favorite food shows up in many lines.
-- **Pious:** devout to some faith (to be decided with worldbuilding), swears by it, keeps a routine. Dislikes crude people and liars.
+- **Glutton:** talks about food constantly, eats more often, food preferences matter twice as much to them (section 6).
+- **Pious:** devout follower of the Cube God, a lighthearted in-world faith ("Thank the Cube God!", "Cube God help us"). Swears by it, keeps a routine. Dislikes crude people and liars.
 - **Curious:** asks questions, wanders to look at things, interested in your travels and items. Gets along with chatterboxes.
 - **Jealous:** resents friends spending time with others, envies others' wealth and partners. Opinion penalties toward rivals for the same person.
 - **Sentimental:** good memories last longer (×1.5), remembers anniversaries and old favors, brings up the past.
@@ -197,7 +198,9 @@ Starting catalog:
 | Saved my life | +30 | +10 | 60 days | 3 |
 | Fought beside me | +8 | | 10 days | 5 |
 | Gave me a gift | +5 | +3 | 5 days | 5 |
-| Gave me my favorite food | +10 | +5 | 8 days | 3 |
+| Gave me food I like | +4 to +10, by preference | +2 to +5 | 8 days | 3 |
+| Gave me food I hate | -3 | -2 | 3 days | 3 |
+| Beat me in a brawl | -5 (+3 if competitive) | -5 | 10 days | 3 |
 | Had a nice chat | +3 | +2 | 2 days | 5 |
 | Taught me a word | +2 | | 3 days | 5 |
 | Insulted me | -8 | -3 | 4 days | 5 |
@@ -210,7 +213,9 @@ Starting catalog:
 | Killed family | -70 | -30 | 200 days | 3 |
 | Killed my spouse or child | -100 | -40 | 400 days | 3 |
 
-Mood-only memories (no opinion effect): ate a good meal, slept in a bed, slept outside, got rained on, saw a death, family member died, got married, won a fight, lost a fight.
+Mood-only memories (no opinion effect): ate food I like or hate (scaled by preference), slept in a bed, slept outside, got rained on, saw a death, family member died, got married, won a fight, lost a fight.
+
+**Detecting "saved my life"** needs careful balancing. Starting rule: the NPC was in combat below 30% health, someone else killed or drove off the attacker (or healed them), and the NPC survived the next 10 seconds. Only whoever did the most damage to the attackers gets the memory. To be tuned in playtesting so ordinary teamwork doesn't count.
 
 ### Standing factors
 
@@ -283,6 +288,19 @@ Combat: opinion overrides the faction only at the extremes.
 
 The existing `/npc relation` command stays as a debug override, implemented as a strong permanent memory.
 
+### Brawls
+
+Non-lethal fistfights between people who aren't hostile enough to kill each other: usually members of the same faction, or neutral factions. A brawl can start when:
+- a hothead's irritation boils over (an insult, being hit, a lie found out);
+- two NPCs hate each other (both at -40 or less) and run into each other, even if neither is a hothead. Rarer, and more likely the lower their opinions.
+
+Rules:
+- Fists only. Weapons are put away.
+- Nobody can die (see section 7). A brawler who drops to low health yields, and the fight ends. Timid NPCs yield earlier, proud and competitive ones later.
+- Bystanders react: friends of a brawler may join or break it up, extroverts gather to watch, timid NPCs keep away.
+- Afterwards, the winner and loser get memories ("beat me in a brawl", "won a fight", "lost a fight"), and the hate often cools a little. Competitive NPCs gain respect for whoever beat them.
+- The player can be challenged to brawls too, and can start one by punching an NPC who isn't hostile.
+
 ### Gossip (later)
 
 When two friendly NPCs talk, they may share a memory about a third person, at reduced strength (about 30%, full for gullible listeners, weaker for paranoid and detached ones). Liars may share invented ones. This is how a reputation spreads through a town without reaching strangers 1000 blocks away.
@@ -302,11 +320,52 @@ Only direct links are stored: **parent**, **spouse** and **fiancé**. Everything
 - cousins are children of aunts and uncles;
 - in-laws come through a spouse.
 
-Romance (later): romantic NPCs and compatible opinions lead from friends to courtship, fiancé, then spouse. Generated homesteads start with whole families already linked.
+Generated homesteads start with whole families already linked.
+
+### Romance
+
+The way new couples form over time, so settlements change instead of staying frozen as generated. Any NPC can take part; the romantic quirk makes it far more likely and faster. Who an NPC can be attracted to is rolled per NPC.
+
+Stages:
+1. **Attraction.** A one-directional value next to opinion. It grows from time spent together, compatibility and gifts, and only between unattached adults with a good opinion of each other (friendly or better).
+2. **Courting.** Once attraction is high enough, the NPC starts flirting: compliments, gifts, seeking the other out in the evenings. If the feeling is mutual, they become a couple. If not, rejection leaves a heartbreak memory.
+3. **Engagement.** A couple whose opinion of each other stays high long enough gets engaged (the fiancé link), with a proposal the town can gossip about.
+4. **Marriage.** A small wedding, where friends and family gather, after which they share a home.
+
+Things can go wrong: jealousy toward rivals, a partner who loses opinion over time, and breakups that leave heartbreak memories on both sides. Children are a later question, since they need child models and growing up.
+
+Whether the player can court NPCs is a separate decision for later.
 
 ---
 
-## 6. Speech
+## 6. Food preferences
+
+Instead of one favorite food, every NPC has a like value from -1.0 to +1.0 for every food in the game.
+- Values are derived from the NPC's random seed and the food's id, so foods added by other mods get preferences automatically and nothing needs storing until it changes.
+- `[favorite_food]` is the food they like most, and `[hated_food]` the one they like least. Lines can also ask for any liked or disliked food.
+- Preferences drive memories and mood: eating or being given food they like is good, food they hate is bad.
+- When choosing what to eat, NPCs prefer foods they like (the same rules as the player for actually eating).
+- Gluttons feel their preferences twice as strongly.
+
+---
+
+## 7. Health modes
+
+Three modes, replacing the current invulnerable flag:
+
+| Mode | Takes damage | Can die | Use |
+|---|---|---|---|
+| Mortal | yes | yes | The default |
+| Invincible | yes | no | Important characters, like Skyrim's essential NPCs |
+| Invulnerable | no | no | Debug only |
+
+An invincible NPC fights, gets hurt and flees like anyone else. Damage that would kill them instead leaves them at 1 health, knocked down for several seconds, after which they get up and recover. Enemies lose interest in a downed NPC.
+
+Brawls use the same rule for everyone involved: nobody can be reduced below 1 health by a brawl, and dropping low makes them yield.
+
+---
+
+## 8. Speech
 
 ### Facts and rules
 
@@ -356,9 +415,15 @@ Speech appears in chat as `<Name> line` within a hearing radius (about 24 blocks
 
 ---
 
-## 7. Word book
+## 9. Word book
 
-The player can teach NPCs words through dialogue ("Let me teach you a word."). Each word has a **category** that says exactly what it is, which keeps sentences coherent:
+NPCs occasionally ask the player for a new word, in conversation or as a chat message when you're nearby ("What would you call something you'd eat for breakfast?"). Friendlier, curious and chatty NPCs ask more often. The player can answer or decline.
+
+After learning a word, the NPC asks whether it's **just for them** or **something anyone could say**:
+- **Just for them:** a personal word, like their own catchphrase or their nickname for you. It never spreads.
+- **Anyone:** a general word. It spreads through conversations between NPCs who are at least friendly, so it travels through a town but not to strangers far away.
+
+Each word has a **category** that says exactly what it is, which keeps sentences coherent:
 
 | Category | Forms asked for | Example use |
 |---|---|---|
@@ -371,15 +436,16 @@ The player can teach NPCs words through dialogue ("Let me teach you a word."). E
 | Farewell | text | Used as their goodbye |
 | Nickname for you | text | Used instead of your name |
 | Describing word | text | "That's [describe]." |
+| Activity | as a doing-word phrase ("rock skipping") | "Been [activity] lately?" |
 
 - **No fading.** Words stay until the player deletes them.
-- **Spreading.** When NPCs who are at least friendly talk, they may pick up each other's words. Words travel only through real conversations, so they stay local.
-- **The word book screen** lists every taught word: category, who you taught it to, how many NPCs know it. Words can be edited or deleted, and deleting removes them from everyone.
+- **No editing.** A word can only be deleted, never changed.
+- **The word book screen** lists every taught word: category, personal or general, who you taught it to, and how many NPCs know it. Deleting a word removes it from everyone.
 - **Per NPC**, a dialogue option ("What words do you know?") lists that NPC's words and where they picked each one up.
 
 ---
 
-## 8. Archetype labels
+## 10. Archetype labels
 
 A label for flavor and the inspect screen, taken from an NPC's most distinctive traits. Strong axes count by their strength; quirks count as 0.7.
 
@@ -434,17 +500,24 @@ Pairs:
 
 ---
 
-## 9. Implementation order
+## 11. Implementation order
 
-1. **Traits and quirks:** data, generation with the blacklist, NBT saving, commands to view and set them. Courage replaces bravery.
-2. **Memories, mood and opinions:** the memory catalog, standing factors, compatibility, and opinion replacing the personal relation in combat.
-3. **Speech engine:** facts, rules, grammar, agreement, anti-repetition, speech style, chat output. Lines live in data files, editable without rebuilding.
-4. **First writing pass:** greetings, farewells, combat barks, low health, idle comments, all with full neutral coverage.
-5. **Word book:** teaching, spreading, the book screen.
-6. **Family graph**, then gossip and romance.
+1. **Health modes:** mortal, invincible, invulnerable. Small, and brawls need it.
+2. **Traits, quirks and food preferences:** data, generation with the blacklist, NBT saving, commands to view and set them. Courage replaces bravery.
+3. **Memories, mood and opinions:** the memory catalog, standing factors, compatibility, and opinion replacing the personal relation in combat.
+4. **Speech engine:** facts, rules, grammar, agreement, anti-repetition, speech style, chat output. Lines live in data files, editable without rebuilding.
+5. **First writing pass:** greetings, farewells, combat barks, low health, idle comments, all with full neutral coverage.
+6. **Brawls.**
+7. **Word book:** NPCs asking, personal and general words, spreading, the book screen.
+8. **Family graph**, then gossip and romance.
+
+## Settled
+
+- Pious NPCs follow the Cube God.
+- Sleeping NPCs do not count toward skipping the night.
+- Brawls exist, between hotheads and between NPCs who hate each other.
 
 ## Open questions
 
-- What faith do pious NPCs follow? Depends on worldbuilding.
-- Do NPCs count toward skipping the night when sleeping?
-- Should brawls (non-lethal fights) exist, so hotheads in the same faction fight without killing each other?
+- Can the player court NPCs?
+- NPC children: models, growing up, and whether they're worth it.
