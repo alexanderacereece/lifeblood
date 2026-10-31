@@ -107,8 +107,9 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		}
 
 		super.updateAI();
+		this.navigator.tick();
 		// Applied after the vanilla idle AI, which would otherwise spin the head randomly.
-		if (this.lookTarget != null && !this.hasPath()) {
+		if (this.lookTarget != null && !this.navigator.isMoving()) {
 			if (this.lookTicks-- > 0 && !this.lookTarget.removed) {
 				this.lookAt(this.lookTarget, 10.0F, this.getLookingTilt());
 				this.randomYawVelocity = 0.0F;
@@ -201,6 +202,18 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 			this.inventory.swapWithHand(this.eatReturnSlot);
 			this.eatReturnSlot = -1;
 		}
+	}
+
+	/** Walks straight toward a point, turning at most 30 degrees a tick like vanilla path-following. */
+	public void steerToward(double x, double z) {
+		float targetYaw = (float) (Math.atan2(z - this.z, x - this.x) * 180.0 / Math.PI) - 90.0F;
+		float turn = MathHelper.wrapDegrees(targetYaw - this.yRot);
+		this.yRot += Math.max(-30.0F, Math.min(30.0F, turn));
+		this.moveForward = this.moveSpeed;
+	}
+
+	public void setJumping(boolean jumping) {
+		this.isJumping = jumping;
 	}
 
 	public void teleportTo(double x, double y, double z) {

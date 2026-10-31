@@ -5,6 +5,7 @@ import net.minecraft.core.entity.Mob;
 import net.minecraft.core.util.helper.MathHelper;
 import npclaude.ai.NpcBehavior;
 import npclaude.entity.EntityNPC;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Fight or flight. Built into every NPC as an instinct, so it overrides follow/stay/wander while danger lasts.
@@ -20,8 +21,13 @@ public class CombatBehavior implements NpcBehavior {
 	private static final int REASSESS_INTERVAL = 10;
 	private static final int REPATH_INTERVAL = 10;
 	private static final int FLEE_REPATH_INTERVAL = 20;
-	/** While running, pursuers further away than the usual scan radius are still kept in mind. */
-	private static final double FLEE_SCAN_RADIUS = 20.0;
+	/**
+	 * Once in a fight (fighting or fleeing), hostiles are tracked out to this distance instead of the usual scan radius:
+	 * runners keep pursuers in mind, and fighters keep chasing a target that retreats.
+	 */
+	private static final double ENGAGED_SCAN_RADIUS = 20.0;
+	/** Ticks of straight running when no escape path can be found. */
+	private static final int PANIC_RUN_TICKS = 20;
 	private static final double MELEE_RANGE = 2.2;
 	private static final double FLEE_DISTANCE = 10.0;
 	/** Once running, keep running until danger drops this far below courage, so the NPC doesn't flip-flop. */
@@ -38,6 +44,9 @@ public class CombatBehavior implements NpcBehavior {
 
 	private ThreatAssessment assessment;
 	private int nextAssessTick;
+	private boolean engaged;
+	@Nullable
+	private Mob currentTarget;
 	private boolean fleeing;
 	private int repathCooldown;
 	private int sidestepSign = 1;
@@ -66,7 +75,8 @@ public class CombatBehavior implements NpcBehavior {
 		Mob nearest = this.assessment != null ? this.assessment.nearestHostile : null;
 		boolean stale = nearest != null && !nearest.isAlive();
 		if (this.assessment == null || stale || npc.tickCount >= this.nextAssessTick) {
-			this.assessment = ThreatAssessment.of(npc, this.fleeing ? FLEE_SCAN_RADIUS : ThreatAssessment.SCAN_RADIUS);
+			double radius = this.engaged ? ENGAGED_SCAN_RADIUS : ThreatAssessment.SCAN_RADIUS;
+			this.assessment = ThreatAssessment.of(npc, radius, this.currentTarget);
 			this.nextAssessTick = npc.tickCount + REASSESS_INTERVAL;
 		}
 
@@ -75,6 +85,7 @@ public class CombatBehavior implements NpcBehavior {
 
 	@Override
 	public void start(EntityNPC npc) {
+		this.engaged = true;
 		this.fleeing = false;
 		this.repathCooldown = 0;
 	}
@@ -86,6 +97,8 @@ public class CombatBehavior implements NpcBehavior {
 		if (target == null) {
 			return;
 		}
+
+		this.currentTarget = target;
 
 		double courage = courageOf(npc);
 		double danger = threat.danger();
@@ -227,11 +240,16 @@ public class CombatBehavior implements NpcBehavior {
 				}
 			}
 		}
+
+		// Nowhere to path to: run straight away rather than stand still.
+		npc.navigator.runDirect(awayAngle, PANIC_RUN_TICKS);
 	}
 
 	@Override
 	public void stop(EntityNPC npc) {
 		npc.navigator.stop();
+		this.engaged = false;
+		this.currentTarget = null;
 		this.fleeing = false;
 	}
 

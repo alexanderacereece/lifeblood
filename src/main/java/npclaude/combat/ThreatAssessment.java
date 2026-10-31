@@ -59,11 +59,14 @@ public final class ThreatAssessment {
 	}
 
 	public static ThreatAssessment of(EntityNPC npc) {
-		return of(npc, SCAN_RADIUS);
+		return of(npc, SCAN_RADIUS, null);
 	}
 
-	/** A wider radius keeps pursuers in mind while running, so the NPC doesn't turn back just because they fell behind. */
-	public static ThreatAssessment of(EntityNPC npc, double radius) {
+	/**
+	 * A wider radius keeps a fight going once it has started. The engaged target (the one the NPC was last fighting)
+	 * stays hostile even if it breaks line of sight for a moment.
+	 */
+	public static ThreatAssessment of(EntityNPC npc, double radius, @Nullable Mob engaged) {
 		ThreatAssessment result = new ThreatAssessment();
 		AABBd area = new AABBd(npc.x, npc.y, npc.z, npc.x, npc.y, npc.z);
 		MathHelper.aabbGrow(area, radius, 4.0, radius, area);
@@ -80,7 +83,7 @@ public final class ThreatAssessment {
 
 		double nearestDistance = Double.MAX_VALUE;
 		for (Entity entity : nearby) {
-			if (!(entity instanceof Mob mob) || !isHostile(npc, mob, result.allies)) {
+			if (!(entity instanceof Mob mob) || !(mob == engaged && mob.isAlive() || isHostile(npc, mob, result.allies))) {
 				continue;
 			}
 
@@ -107,7 +110,14 @@ public final class ThreatAssessment {
 		}
 
 		if (mob instanceof EntityNPC other) {
-			return NpcFactions.areEnemies(npc, other) && (npc.canEntityBeSeen(other) || other == npc.getLastAttacker());
+			FactionRelation relation = NpcFactions.relation(npc, other);
+			if (relation == FactionRelation.ALLY) {
+				return false;
+			}
+
+			// Neutral NPCs are left alone unless they start something.
+			boolean grudge = other == npc.getLastAttacker() && npc.ticksSinceAttacked() < GRUDGE_TICKS;
+			return grudge || relation == FactionRelation.HOSTILE && npc.canEntityBeSeen(other);
 		}
 
 		if (mob == npc.getLastAttacker() && npc.ticksSinceAttacked() < GRUDGE_TICKS) {

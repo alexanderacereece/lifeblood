@@ -10,7 +10,8 @@
     "MobMonsterMixin",
     "MobScorpionMixin",
     "MobSlimeMixin",
-    "MobSpiderMixin"
+    "MobSpiderMixin",
+    "PathAccessor"
   ],
   "client": [
     "HudComponentCrosshairMixin"

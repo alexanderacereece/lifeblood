@@ -26,20 +26,25 @@ import npclaude.ai.behavior.FollowPlayerBehavior;
 import npclaude.ai.behavior.StayBehavior;
 import npclaude.ai.behavior.WanderBehavior;
 import npclaude.client.NpcSkins;
-import npclaude.combat.NpcFactions;
+import npclaude.combat.FactionRegistry;
+import npclaude.combat.FactionRelation;
 import npclaude.entity.EntityNPC;
 import npclaude.entity.SkinModel;
 import npclaude.skin.NpcSkinFiles;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3dc;
 
 /**
- * /npc summon <name> [skin]
+ * /npc summon <name> [skin|default] [faction]
  * /npc follow|stay|remove <name>
  * /npc wander <name> [radius]
  * /npc skin <name> <skin> [auto|wide|slim]
  * /npc invulnerable <name> <true|false>
  * /npc personality <name> bravery <0-100>
- * /npc faction <name> <faction>
+ * /npc faction list
+ * /npc faction create|delete <faction>
+ * /npc faction relation <faction> <faction> [ally|neutral|hostile]
+ * /npc faction set <name> <faction>
  * /npc list
  * /npc skins [reload]
  *
@@ -61,8 +66,15 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 		return builder.buildFuture();
 	};
 	private static final SuggestionProvider<CommandSource> FACTION_NAMES = (c, builder) -> {
-		for (String faction : NpcFactions.ALL) {
+		for (String faction : FactionRegistry.get(c.getSource().getWorld()).all()) {
 			builder.suggest(faction);
+		}
+
+		return builder.buildFuture();
+	};
+	private static final SuggestionProvider<CommandSource> RELATION_NAMES = (c, builder) -> {
+		for (FactionRelation relation : FactionRelation.values()) {
+			builder.suggest(relation.id());
 		}
 
 		return builder.buildFuture();
@@ -81,10 +93,13 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 			.requires(CommandSource::hasAdmin)
 			.then(literal("summon")
 				.then(argument("name", ArgumentTypeString.string())
-					.executes(c -> summon(c, null))
+					.executes(c -> summon(c, null, null))
 					.then(argument("skin", ArgumentTypeString.word())
 						.suggests(SKIN_NAMES)
-						.executes(c -> summon(c, ArgumentTypeString.getString(c, "skin"))))))
+						.executes(c -> summon(c, ArgumentTypeString.getString(c, "skin"), null))
+						.then(argument("faction", ArgumentTypeString.word())
+							.suggests(FACTION_NAMES)
+							.executes(c -> summon(c, ArgumentTypeString.getString(c, "skin"), requireFaction(c, "faction")))))))
 			.then(literal("follow")
 				.then(npcArgument().executes(c -> {
 					Player player = requirePlayer(c.getSource());
@@ -139,19 +154,62 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 							return reply(c, npc.nickname + "'s bravery is now " + value + ".");
 						})))))
 			.then(literal("faction")
-				.then(npcArgument()
-					.then(argument("faction", ArgumentTypeString.word())
-						.suggests(FACTION_NAMES)
-						.executes(c -> {
-							EntityNPC npc = findNpc(c);
-							String faction = ArgumentTypeString.getString(c, "faction").toLowerCase(Locale.ROOT);
-							if (!NpcFactions.isKnown(faction)) {
-								throw error("Unknown faction '" + faction + "'. Factions: " + String.join(", ", NpcFactions.ALL));
-							}
+				.then(literal("list").executes(NpcCommand::listFactions))
+				.then(literal("create")
+					.then(argument("faction", ArgumentTypeString.word()).executes(c -> {
+						String faction = ArgumentTypeString.getString(c, "faction").toLowerCase(Locale.ROOT);
+						if (!FactionRegistry.isValidId(faction)) {
+							throw error("Faction names may only use a-z, 0-9 and _, up to 32 characters.");
+						}
 
+						if (!FactionRegistry.get(c.getSource().getWorld()).create(faction)) {
+							throw error("The faction '" + faction + "' already exists.");
+						}
+
+						return reply(c, "Created the " + faction + ". They are neutral to everyone until you set relations.");
+					})))
+				.then(literal("delete")
+					.then(argument("faction", ArgumentTypeString.word()).suggests(FACTION_NAMES).executes(c -> {
+						String faction = requireFaction(c, "faction");
+						if (!FactionRegistry.get(c.getSource().getWorld()).remove(faction)) {
+							throw error("The default faction can't be deleted.");
+						}
+
+						return reply(c, "Deleted the " + faction + ". Their members are now unaligned.");
+					})))
+				.then(literal("relation")
+					.then(argument("a", ArgumentTypeString.word()).suggests(FACTION_NAMES)
+						.then(argument("b", ArgumentTypeString.word()).suggests(FACTION_NAMES)
+							.executes(c -> {
+								String a = requireFaction(c, "a");
+								String b = requireFaction(c, "b");
+								FactionRelation relation = FactionRegistry.get(c.getSource().getWorld()).getRelation(a, b);
+								return reply(c, "The " + a + " and the " + b + " are " + describe(relation) + ".");
+							})
+							.then(argument("relation", ArgumentTypeString.word()).suggests(RELATION_NAMES).executes(c -> {
+								String a = requireFaction(c, "a");
+								String b = requireFaction(c, "b");
+								if (a.equals(b)) {
+									throw error("A faction is always allied with itself.");
+								}
+
+								String relationName = ArgumentTypeString.getString(c, "relation");
+								FactionRelation relation = FactionRelation.byName(relationName);
+								if (relation == null) {
+									throw error("Unknown relation '" + relationName + "'. Use ally, neutral or hostile.");
+								}
+
+								FactionRegistry.get(c.getSource().getWorld()).setRelation(a, b, relation);
+								return reply(c, "The " + a + " and the " + b + " are now " + describe(relation) + ".");
+							})))))
+				.then(literal("set")
+					.then(npcArgument()
+						.then(argument("faction", ArgumentTypeString.word()).suggests(FACTION_NAMES).executes(c -> {
+							EntityNPC npc = findNpc(c);
+							String faction = requireFaction(c, "faction");
 							npc.setFaction(faction);
 							return reply(c, npc.nickname + " has joined the " + faction + ".");
-						}))))
+						})))))
 			.then(literal("remove")
 				.then(npcArgument().executes(c -> {
 					EntityNPC npc = findNpc(c);
@@ -170,7 +228,8 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 				}))));
 	}
 
-	private static int summon(CommandContext<CommandSource> c, String skin) throws CommandSyntaxException {
+	/** skin: null picks a skin matching the name if one exists; "default" means no skin. faction: null means the default. */
+	private static int summon(CommandContext<CommandSource> c, @Nullable String skin, @Nullable String faction) throws CommandSyntaxException {
 		CommandSource source = c.getSource();
 		Player player = requirePlayer(source);
 		Vector3dc pos = source.getCoordinates(false);
@@ -187,6 +246,8 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 		if (skin == null) {
 			String fromName = name.toLowerCase(Locale.ROOT).replace(' ', '_');
 			skin = NpcSkinFiles.exists(fromName) ? fromName : "";
+		} else if (skin.equalsIgnoreCase("default")) {
+			skin = "";
 		}
 
 		World world = source.getWorld();
@@ -198,6 +259,10 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 		npc.moveTo(pos.x(), pos.y() - player.heightOffset, pos.z(), player.yRot, 0.0F);
 		npc.setNickname(name);
 		npc.setSkin(skin);
+		if (faction != null) {
+			npc.setFaction(faction);
+		}
+
 		npc.setHomeHere();
 		npc.brain.set(new StayBehavior());
 		npc.spawnInit();
@@ -208,7 +273,7 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 			skinInfo += ", which is not in " + NpcSkinFiles.FOLDER_NAME + " yet";
 		}
 
-		return reply(c, "Summoned " + name + " (" + skinInfo + ").");
+		return reply(c, "Summoned " + name + " of the " + npc.getFaction() + " (" + skinInfo + ").");
 	}
 
 	private static int wander(CommandContext<CommandSource> c, int radius) throws CommandSyntaxException {
@@ -254,6 +319,44 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 	private static int showPersonality(CommandContext<CommandSource> c) throws CommandSyntaxException {
 		EntityNPC npc = findNpc(c);
 		return reply(c, npc.nickname + "'s personality: bravery " + Math.round(npc.personality.getBravery() * 100));
+	}
+
+	private static int listFactions(CommandContext<CommandSource> c) {
+		FactionRegistry registry = FactionRegistry.get(c.getSource().getWorld());
+		List<String> factions = new ArrayList<>(registry.all());
+		c.getSource().sendMessage("Factions in this world:");
+		for (String faction : factions) {
+			List<String> relations = new ArrayList<>();
+			for (String other : factions) {
+				FactionRelation relation = registry.getRelation(faction, other);
+				if (!other.equals(faction) && relation != FactionRelation.NEUTRAL) {
+					relations.add(relation.id() + " to " + other);
+				}
+			}
+
+			String suffix = relations.isEmpty() ? "neutral to all" : String.join(", ", relations);
+			c.getSource().sendMessage("- " + faction + (faction.equals(FactionRegistry.DEFAULT) ? " (default)" : "") + ": " + suffix);
+		}
+
+		return factions.size();
+	}
+
+	private static String describe(FactionRelation relation) {
+		return switch (relation) {
+			case ALLY -> "allies";
+			case NEUTRAL -> "neutral";
+			case HOSTILE -> "hostile";
+		};
+	}
+
+	private static String requireFaction(CommandContext<CommandSource> c, String argument) throws CommandSyntaxException {
+		String faction = ArgumentTypeString.getString(c, argument).toLowerCase(Locale.ROOT);
+		FactionRegistry registry = FactionRegistry.get(c.getSource().getWorld());
+		if (!registry.exists(faction)) {
+			throw error("Unknown faction '" + faction + "'. Factions: " + String.join(", ", registry.all()));
+		}
+
+		return faction;
 	}
 
 	private static int listSkins(CommandContext<CommandSource> c) {
