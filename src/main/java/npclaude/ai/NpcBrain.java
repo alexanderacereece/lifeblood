@@ -14,10 +14,16 @@ import org.jetbrains.annotations.Nullable;
 /**
  * Picks which behavior an NPC runs each tick: the highest-priority one that can run.
  * Switching stops the old behavior and starts the new one.
+ *
+ * Instincts (e.g. combat) are built into every NPC: they are never replaced or saved.
+ * Behaviors are the NPC's current orders (follow, stay, wander...), set by commands and saved.
  */
 public class NpcBrain {
 	private final EntityNPC npc;
+	private final List<NpcBehavior> instincts = new ArrayList<>();
 	private final List<NpcBehavior> behaviors = new ArrayList<>();
+	/** Instincts and behaviors together, highest priority first. */
+	private final List<NpcBehavior> candidates = new ArrayList<>();
 	@Nullable
 	private NpcBehavior active;
 
@@ -25,18 +31,32 @@ public class NpcBrain {
 		this.npc = npc;
 	}
 
-	public void add(NpcBehavior behavior) {
-		this.behaviors.add(behavior);
-		this.behaviors.sort(Comparator.comparingInt(NpcBehavior::getPriority).reversed());
+	public void addInstinct(NpcBehavior instinct) {
+		this.instincts.add(instinct);
+		this.rebuildCandidates();
 	}
 
+	public void add(NpcBehavior behavior) {
+		this.behaviors.add(behavior);
+		this.rebuildCandidates();
+	}
+
+	/** Removes all behaviors (instincts stay). */
 	public void clear() {
-		if (this.active != null) {
+		if (this.active != null && this.behaviors.contains(this.active)) {
 			this.active.stop(this.npc);
 			this.active = null;
 		}
 
 		this.behaviors.clear();
+		this.rebuildCandidates();
+	}
+
+	private void rebuildCandidates() {
+		this.candidates.clear();
+		this.candidates.addAll(this.instincts);
+		this.candidates.addAll(this.behaviors);
+		this.candidates.sort(Comparator.comparingInt(NpcBehavior::getPriority).reversed());
 	}
 
 	/** Replaces every behavior with the given ones. */
@@ -58,7 +78,7 @@ public class NpcBrain {
 
 	public void tick() {
 		NpcBehavior next = null;
-		for (NpcBehavior behavior : this.behaviors) {
+		for (NpcBehavior behavior : this.candidates) {
 			boolean runnable = behavior == this.active ? behavior.shouldContinue(this.npc) : behavior.canStart(this.npc);
 			if (runnable) {
 				next = behavior;

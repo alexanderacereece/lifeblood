@@ -37,6 +37,7 @@ import org.joml.Vector3dc;
  * /npc wander <name> [radius]
  * /npc skin <name> <skin> [auto|wide|slim]
  * /npc invulnerable <name> <true|false>
+ * /npc bravery <name> <0-100>
  * /npc list
  * /npc skins [reload]
  *
@@ -117,6 +118,14 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 						boolean value = ArgumentTypeBool.getBool(c, "value");
 						npc.setInvulnerable(value);
 						return reply(c, npc.nickname + (value ? " is now invulnerable." : " can now be hurt."));
+					}))))
+			.then(literal("bravery")
+				.then(npcArgument()
+					.then(argument("value", ArgumentTypeInteger.integer(0, 100)).executes(c -> {
+						EntityNPC npc = findNpc(c);
+						int value = c.getArgument("value", Integer.class);
+						npc.setBravery(value / 100.0F);
+						return reply(c, npc.nickname + "'s bravery is now " + value + ".");
 					}))))
 			.then(literal("remove")
 				.then(npcArgument().executes(c -> {
@@ -208,8 +217,9 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 			NpcBehavior active = npc.brain.getActive();
 			String doing = active != null ? active.describe() : "idle";
 			String skin = npc.getSkin().isEmpty() ? "default" : npc.getSkin();
-			c.getSource().sendMessage(String.format(Locale.ROOT, "- %s: %s, skin %s, at %d %d %d%s",
-				npc.nickname, doing, skin, (int) Math.floor(npc.x), (int) Math.floor(npc.y), (int) Math.floor(npc.z),
+			c.getSource().sendMessage(String.format(Locale.ROOT, "- %s: %s, skin %s, bravery %d, health %d, at %d %d %d%s",
+				npc.nickname, doing, skin, Math.round(npc.getBravery() * 100), npc.getHealth(),
+				(int) Math.floor(npc.x), (int) Math.floor(npc.y), (int) Math.floor(npc.z),
 				npc.isInvulnerable() ? ", invulnerable" : ""));
 		}
 

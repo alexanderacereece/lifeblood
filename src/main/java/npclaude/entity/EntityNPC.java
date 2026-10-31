@@ -7,6 +7,7 @@ import net.minecraft.core.entity.IArmorWearing;
 import net.minecraft.core.entity.IItemHolding;
 import net.minecraft.core.entity.MobPathfinder;
 import net.minecraft.core.entity.player.Player;
+import net.minecraft.core.entity.projectile.Projectile;
 import net.minecraft.core.enums.HumanArmorShape;
 import net.minecraft.core.item.ItemStack;
 import net.minecraft.core.item.Items;
@@ -14,6 +15,7 @@ import net.minecraft.core.util.helper.DamageType;
 import net.minecraft.core.world.World;
 import npclaude.ai.NpcBrain;
 import npclaude.ai.NpcNavigator;
+import npclaude.combat.CombatBehavior;
 import npclaude.dialogue.NpcDialogue;
 import npclaude.interaction.NpcInteractions;
 import npclaude.inventory.NpcInventory;
@@ -32,6 +34,13 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private static final int DATA_SKIN_MODEL = 21;
 	/** A conversation ends if the player walks further away than this. */
 	private static final float TALK_DISTANCE = 8.0F;
+	public static final float DEFAULT_BRAVERY = 0.5F;
+	private static final float WALK_SPEED = 0.1F;
+	private static final float RUN_SPEED = 0.14F;
+	/** Ticks between melee hits; players can click faster, monsters wait 20. */
+	private static final int MELEE_COOLDOWN = 15;
+	private static final double MELEE_REACH = 2.5;
+	private static final int SWING_DURATION = 8;
 
 	public final NpcBrain brain = new NpcBrain(this);
 	public final NpcNavigator navigator = new NpcNavigator(this);
@@ -45,10 +54,18 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private int lookTicks;
 	@Nullable
 	private Player talkingTo;
+	/** 0 = flees from any fair fight, 1 = stands its ground against about 3 to 1. */
+	private float bravery = DEFAULT_BRAVERY;
+	@Nullable
+	private Entity lastAttacker;
+	private int lastAttackedTick = Integer.MIN_VALUE / 2;
+	private boolean swinging;
+	private int swingTicks;
 
 	public EntityNPC(World world) {
 		super(world);
 		this.doRandomWalk = false;
+		this.brain.addInstinct(new CombatBehavior());
 	}
 
 	@Override
@@ -89,6 +106,17 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		this.lookTicks = ticks;
 	}
 
+	@Override
+	public void tick() {
+		super.tick();
+		if (this.swinging && ++this.swingTicks >= SWING_DURATION) {
+			this.swinging = false;
+			this.swingTicks = 0;
+		}
+
+		this.swingProgress = this.swingTicks / (float) SWING_DURATION;
+	}
+
 	public void teleportTo(double x, double y, double z) {
 		this.moveTo(x, y, z, this.yRot, this.xRot);
 		this.fallDistance = 0.0F;
@@ -123,6 +151,56 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 
 	public void setTalkingTo(@Nullable Player player) {
 		this.talkingTo = player;
+	}
+
+	// Combat
+
+	public float getBravery() {
+		return this.bravery;
+	}
+
+	public void setBravery(float bravery) {
+		this.bravery = Math.max(0.0F, Math.min(1.0F, bravery));
+	}
+
+	@Nullable
+	public Entity getLastAttacker() {
+		return this.lastAttacker;
+	}
+
+	public int ticksSinceAttacked() {
+		return this.tickCount - this.lastAttackedTick;
+	}
+
+	public void setRunning(boolean running) {
+		this.speed = running ? RUN_SPEED : WALK_SPEED;
+	}
+
+	public void swingArm() {
+		this.swinging = true;
+		this.swingTicks = 0;
+	}
+
+	/** Hits the target with the held item, like a player's attack, if it's in reach and the cooldown is over. */
+	public boolean tryMeleeAttack(Entity target) {
+		if (this.attackTime > 0 || target.distanceToSqr(this) > MELEE_REACH * MELEE_REACH
+			|| target.bb.maxY <= this.bb.minY || target.bb.minY >= this.bb.maxY) {
+			return false;
+		}
+
+		this.attackTime = MELEE_COOLDOWN;
+		this.swingArm();
+		ItemStack weapon = this.getHeldItem();
+		int damage = weapon != null ? weapon.getDamageVsEntity(target) : 1;
+		boolean hit = target.hurt(this, damage, DamageType.COMBAT);
+		if (hit && weapon != null && weapon.isItemStackDamageable()) {
+			weapon.damageItem(1, this);
+			if (weapon.stackSize <= 0) {
+				this.setHeldItem(null);
+			}
+		}
+
+		return hit;
 	}
 
 	// Identity and appearance
@@ -228,7 +306,19 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 
 	@Override
 	public boolean hurt(Entity attacker, int damage, DamageType type) {
-		return !this.invulnerable && super.hurt(attacker, damage, type);
+		if (this.invulnerable || !super.hurt(attacker, damage, type)) {
+			return false;
+		}
+
+		// Being hurt breaks off any conversation, and the NPC remembers who did it (the archer, not the arrow).
+		this.talkingTo = null;
+		Entity source = attacker instanceof Projectile projectile && projectile.owner != null ? projectile.owner : attacker;
+		if (source != null && source != this) {
+			this.lastAttacker = source;
+			this.lastAttackedTick = this.tickCount;
+		}
+
+		return true;
 	}
 
 	/** Armor reduces damage and wears down exactly as it does for players. */
@@ -273,6 +363,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		npc.putString("Skin", this.getSkin());
 		npc.putByte("SkinModel", (byte) this.getSkinModel().ordinal());
 		npc.putBoolean("Invulnerable", this.invulnerable);
+		npc.putFloat("Bravery", this.bravery);
 		npc.putDouble("HomeX", this.homeX);
 		npc.putDouble("HomeY", this.homeY);
 		npc.putDouble("HomeZ", this.homeZ);
@@ -293,6 +384,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		this.setSkin(npc.getString("Skin"));
 		this.setSkinModel(SkinModel.byId(npc.getByte("SkinModel")));
 		this.invulnerable = npc.getBoolean("Invulnerable");
+		this.setBravery(npc.getFloatOrDefault("Bravery", DEFAULT_BRAVERY));
 		this.setHome(npc.getDouble("HomeX"), npc.getDouble("HomeY"), npc.getDouble("HomeZ"));
 		if (npc.containsKey("Behaviors")) {
 			this.brain.load(npc.getList("Behaviors"));
