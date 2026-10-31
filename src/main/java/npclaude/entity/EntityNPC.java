@@ -87,6 +87,9 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private int prevFallProgress;
 	/** Which way the NPC last fell, remembered so getting up plays the same way in reverse. */
 	private boolean fellOnFront;
+	/** Whatever is hurting the NPC right now (during {@link #hurt}), so a knockdown can fall away from it. */
+	@Nullable
+	private Entity incomingDamageSource;
 	private double homeX;
 	private double homeY;
 	private double homeZ;
@@ -519,12 +522,38 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private void knockDown() {
 		this.downedTicks = DOWNED_DURATION;
 		this.recoveringTicks = RECOVERY_DURATION;
-		this.entityData.set(DATA_DOWNED, this.random.nextBoolean() ? DOWNED_ON_BACK : DOWNED_ON_FRONT);
+		this.entityData.set(DATA_DOWNED, this.isPushedForward(this.incomingDamageSource) ? DOWNED_ON_FRONT : DOWNED_ON_BACK);
 		this.talkingTo = null;
 		this.navigator.stop();
 		this.eatTicks = 0;
 		this.eatReturnSlot = -1;
 		this.remainingFireTicks = 0;
+	}
+
+	/**
+	 * Whether a blow from this source pushes the NPC forward (so it falls on its face) rather than backward.
+	 * A projectile pushes along its flight, anything else away from where it stands. Without a source
+	 * (lava, falling, drowning) it's a coin toss.
+	 */
+	private boolean isPushedForward(@Nullable Entity source) {
+		double pushX = 0.0;
+		double pushZ = 0.0;
+		if (source instanceof Projectile) {
+			pushX = source.xd;
+			pushZ = source.zd;
+		}
+
+		if (source != null && pushX * pushX + pushZ * pushZ < 1.0E-4) {
+			pushX = this.x - source.x;
+			pushZ = this.z - source.z;
+		}
+
+		if (pushX * pushX + pushZ * pushZ < 1.0E-4) {
+			return this.random.nextBoolean();
+		}
+
+		double yaw = Math.toRadians(this.yRot);
+		return pushX * -Math.sin(yaw) + pushZ * Math.cos(yaw) > 0.0;
 	}
 
 	/** Back on its feet with whatever health it has left. If it went down somewhere deadly, it wakes up back home. */
@@ -633,7 +662,19 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 
 	@Override
 	public boolean hurt(Entity attacker, int damage, DamageType type) {
-		if (this.healthMode == HealthMode.INVULNERABLE || this.isDowned() || !super.hurt(attacker, damage, type)) {
+		if (this.healthMode == HealthMode.INVULNERABLE || this.isDowned()) {
+			return false;
+		}
+
+		this.incomingDamageSource = attacker;
+		boolean hurt;
+		try {
+			hurt = super.hurt(attacker, damage, type);
+		} finally {
+			this.incomingDamageSource = null;
+		}
+
+		if (!hurt) {
 			return false;
 		}
 
