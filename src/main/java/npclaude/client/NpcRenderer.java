@@ -51,7 +51,9 @@ public class NpcRenderer extends MobRendererBipedArmored<EntityNPC> {
 		GLRenderer.modelM4f().rotateY(-this.getBodyYaw(entity, partialTick));
 		GLRenderer.modelM4f().scale(0.062539086F, 0.062539086F, -0.062539086F);
 		GLRenderer.modelM4f().scale(PLAYER_SCALE, PLAYER_SCALE, PLAYER_SCALE);
-		if (entity.deathTime > 0) {
+		if (entity.isDowned()) {
+			GLRenderer.modelM4f().rotateZ(Math.toRadians(this.getMaxDeathRotation(entity)));
+		} else if (entity.deathTime > 0) {
 			float rotationProgress = (entity.deathTime + partialTick - 1.0F) / 20.0F * 1.6F;
 			rotationProgress = Math.min(MathHelper.sqrt_float(rotationProgress), 1.0F);
 			GLRenderer.modelM4f().rotateZ(Math.toRadians(rotationProgress * this.getMaxDeathRotation(entity)));
@@ -86,7 +88,7 @@ public class NpcRenderer extends MobRendererBipedArmored<EntityNPC> {
 	protected void renderSpecials(@NotNull TessellatorGeneral tessellator, @NotNull EntityNPC entity, double x, double y, double z) {
 		super.renderSpecials(tessellator, entity, x, y, z);
 		Player viewer = Minecraft.getMinecraft().thePlayer;
-		if (viewer != null && entity.isAlive() && NpcFactions.regard(entity, viewer) != FactionRelation.HOSTILE && isLookingAt(viewer, entity)) {
+		if (viewer != null && !entity.removed && entity.getHealth() > 0 && NpcFactions.regard(entity, viewer) != FactionRelation.HOSTILE && isLookingAt(viewer, entity)) {
 			this.renderHealthBar(tessellator, entity, x, y, z);
 		}
 	}

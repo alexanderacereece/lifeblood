@@ -2,7 +2,6 @@ package npclaude.command;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.ArgumentType;
-import com.mojang.brigadier.arguments.ArgumentTypeBool;
 import com.mojang.brigadier.arguments.ArgumentTypeInteger;
 import com.mojang.brigadier.arguments.ArgumentTypeString;
 import com.mojang.brigadier.builder.ArgumentBuilderLiteral;
@@ -34,6 +33,7 @@ import npclaude.combat.FactionRegistry;
 import npclaude.combat.FactionRelation;
 import npclaude.combat.NpcFactions;
 import npclaude.entity.EntityNPC;
+import npclaude.entity.HealthMode;
 import npclaude.entity.NpcGender;
 import npclaude.entity.SkinModel;
 import npclaude.perf.NpcProfiler;
@@ -52,7 +52,7 @@ import org.joml.Vector3dc;
  * /npc perf                 (AI and pathfinding cost over the last second)
  * /npc wander <name> [radius]
  * /npc skin <name> <skin> [auto|wide|slim]
- * /npc invulnerable <name> <true|false>
+ * /npc mortality <name> [mortal|invincible|invulnerable]   (invincible: hurt, but knocked down instead of killed)
  * /npc personality <name> bravery <0-100>
  * /npc faction list
  * /npc faction create <faction> [ally|neutral|hostile]   (its default stance; neutral if left out)
@@ -129,6 +129,13 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 	private static final SuggestionProvider<CommandSource> GENDER_NAMES = (c, builder) -> {
 		for (NpcGender gender : NpcGender.values()) {
 			builder.suggest(gender.name().toLowerCase(Locale.ROOT));
+		}
+
+		return builder.buildFuture();
+	};
+	private static final SuggestionProvider<CommandSource> HEALTH_MODES = (c, builder) -> {
+		for (HealthMode mode : HealthMode.values()) {
+			builder.suggest(mode.displayName());
 		}
 
 		return builder.buildFuture();
@@ -245,13 +252,22 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 
 								return setSkin(c, model);
 							})))))
-			.then(literal("invulnerable")
+			.then(literal("mortality")
 				.then(npcArgument()
-					.then(argument("value", ArgumentTypeBool.bool()).executes(c -> {
+					.executes(c -> {
 						EntityNPC npc = findNpc(c);
-						boolean value = ArgumentTypeBool.getBool(c, "value");
-						npc.setInvulnerable(value);
-						return reply(c, npc.nickname + (value ? " is now invulnerable." : " can now be hurt."));
+						return reply(c, npc.nickname + " is " + npc.getHealthMode().displayName() + ".");
+					})
+					.then(argument("mode", ArgumentTypeString.word()).suggests(HEALTH_MODES).executes(c -> {
+						EntityNPC npc = findNpc(c);
+						String name = ArgumentTypeString.getString(c, "mode");
+						HealthMode mode = HealthMode.byName(name);
+						if (mode == null) {
+							throw error("Unknown mode '" + name + "'. Use mortal, invincible or invulnerable.");
+						}
+
+						npc.setHealthMode(mode);
+						return reply(c, npc.nickname + " is now " + mode.displayName() + ".");
 					}))))
 			.then(literal("personality")
 				.then(npcArgument()
@@ -493,7 +509,7 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 				npc.nickname, npc.getGender().displayName().toLowerCase(Locale.ROOT), doing, skin, npc.getHealth(),
 				npc.getCombatStyle().displayName().toLowerCase(Locale.ROOT), npc.getFaction() != null ? npc.getFaction() : "none",
 				(int) Math.floor(npc.x), (int) Math.floor(npc.y), (int) Math.floor(npc.z),
-				npc.isInvulnerable() ? ", invulnerable" : ""));
+				npc.getHealthMode() != HealthMode.MORTAL ? ", " + npc.getHealthMode().displayName() : ""));
 		}
 
 		return npcs.size();

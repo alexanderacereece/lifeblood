@@ -46,6 +46,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private static final String SAVE_KEY = "NPClaude";
 	private static final int DATA_SKIN = 20;
 	private static final int DATA_SKIN_MODEL = 21;
+	private static final int DATA_DOWNED = 22;
 	/** A conversation ends if the player walks further away than this. */
 	private static final float TALK_DISTANCE = 8.0F;
 	/** How often the NPC checks whether it should eat, in ticks. */
@@ -60,6 +61,8 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private static final int THINK_RATE_REFRESH = 20;
 	/** The forward input of a player holding the walk key; NPCs walk at exactly player speed. */
 	private static final float WALK_INPUT = 1.0F;
+	/** How long an invincible NPC stays down after a blow that would have killed them. */
+	private static final int DOWNED_DURATION = 100;
 
 	public final NpcBrain brain = new NpcBrain(this);
 	public final NpcNavigator navigator = new NpcNavigator(this);
@@ -67,7 +70,9 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	public final NpcPersonality personality = new NpcPersonality();
 	/** Personal standing with individual players, separate from faction relations. */
 	public final NpcRelations relations = new NpcRelations();
-	private boolean invulnerable = false;
+	private HealthMode healthMode = HealthMode.MORTAL;
+	/** Ticks left lying down after a would-be killing blow; 0 when standing. */
+	private int downedTicks;
 	private double homeX;
 	private double homeY;
 	private double homeZ;
@@ -104,6 +109,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		super.defineSynchedData();
 		this.entityData.define(DATA_SKIN, "", String.class);
 		this.entityData.define(DATA_SKIN_MODEL, (byte) SkinModel.AUTO.ordinal(), Byte.class);
+		this.entityData.define(DATA_DOWNED, (byte) 0, Byte.class);
 	}
 
 	@Override
@@ -170,6 +176,10 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	/** Player-equivalent upkeep: regenerating on Peaceful, being hurt by slimes on contact, and eating when injured. */
 	@Override
 	public void onLivingUpdate() {
+		if (this.downedTicks > 0 && --this.downedTicks == 0) {
+			this.getUp();
+		}
+
 		if (this.world.getDifficulty() == Difficulty.PEACEFUL && this.getHealth() < this.getMaxHealth() && this.tickCount % 20 * 12 == 0) {
 			this.heal(1);
 		}
@@ -423,12 +433,65 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		return this.gender.deathSound;
 	}
 
-	public boolean isInvulnerable() {
-		return this.invulnerable;
+	public HealthMode getHealthMode() {
+		return this.healthMode;
 	}
 
-	public void setInvulnerable(boolean invulnerable) {
-		this.invulnerable = invulnerable;
+	public void setHealthMode(HealthMode healthMode) {
+		this.healthMode = healthMode;
+		if (healthMode == HealthMode.MORTAL && this.isDowned()) {
+			this.getUp();
+		}
+	}
+
+	// Being knocked down (invincible NPCs)
+
+	/** True while lying down after a blow that would have killed this invincible NPC. */
+	public boolean isDowned() {
+		return this.entityData.getByte(DATA_DOWNED) != 0;
+	}
+
+	/**
+	 * Instead of dying, the NPC drops to the ground for a few seconds. Lying there, it counts as out of the fight:
+	 * enemies lose interest (it reports itself as not alive), and it can't be hurt further or act.
+	 */
+	private void knockDown() {
+		this.downedTicks = DOWNED_DURATION;
+		this.entityData.set(DATA_DOWNED, (byte) 1);
+		this.talkingTo = null;
+		this.navigator.stop();
+		this.eatTicks = 0;
+		this.eatReturnSlot = -1;
+		this.remainingFireTicks = 0;
+	}
+
+	/** Back on its feet with whatever health it has left. If it went down somewhere deadly, it wakes up back home. */
+	private void getUp() {
+		this.downedTicks = 0;
+		this.entityData.set(DATA_DOWNED, (byte) 0);
+		if (this.isInLava() || this.isInWall() || this.isUnderAcidOrWater() || this.y < 0.0) {
+			this.teleportTo(this.homeX, this.homeY, this.homeZ);
+		}
+	}
+
+	@Override
+	public boolean isAlive() {
+		return super.isAlive() && !this.isDowned();
+	}
+
+	@Override
+	protected boolean isMovementBlocked() {
+		return super.isMovementBlocked() || this.isDowned();
+	}
+
+	/** Falling out of the world can't kill an invincible NPC either: it's brought home. */
+	@Override
+	public void outOfWorld() {
+		if (this.healthMode == HealthMode.MORTAL) {
+			super.outOfWorld();
+		} else {
+			this.teleportTo(this.homeX, this.homeY, this.homeZ);
+		}
 	}
 
 	// Equipment
@@ -508,7 +571,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 
 	@Override
 	public boolean hurt(Entity attacker, int damage, DamageType type) {
-		if (this.invulnerable || !super.hurt(attacker, damage, type)) {
+		if (this.healthMode == HealthMode.INVULNERABLE || this.isDowned() || !super.hurt(attacker, damage, type)) {
 			return false;
 		}
 
@@ -536,6 +599,11 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		int newDamage = (int) (this.random.nextFloat() > 0.5F ? Math.floor(reduced) : Math.ceil(reduced));
 		if (damageType != null && damageType.shouldDamageArmor()) {
 			this.damageArmor((int) Math.ceil((damage - newDamage) / 4.0));
+		}
+
+		if (this.healthMode == HealthMode.INVINCIBLE && newDamage >= this.getHealth()) {
+			newDamage = this.getHealth() - 1;
+			this.knockDown();
 		}
 
 		super.damageEntity(newDamage, damageType);
@@ -570,7 +638,8 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		npc.putInt("DataVersion", DATA_VERSION);
 		npc.putString("Skin", this.getSkin());
 		npc.putByte("SkinModel", (byte) this.getSkinModel().ordinal());
-		npc.putBoolean("Invulnerable", this.invulnerable);
+		npc.putString("HealthMode", this.healthMode.name());
+		npc.putInt("DownedTicks", this.downedTicks);
 		npc.putCompound("Personality", this.personality.save());
 		npc.putString("Faction", this.faction != null ? this.faction : "");
 		npc.putByte("Gender", (byte) this.gender.ordinal());
@@ -596,7 +665,11 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		CompoundTag npc = tag.getCompound(SAVE_KEY);
 		this.setSkin(npc.getString("Skin"));
 		this.setSkinModel(SkinModel.byId(npc.getByte("SkinModel")));
-		this.invulnerable = npc.getBoolean("Invulnerable");
+		HealthMode mode = HealthMode.byName(npc.getStringOrDefault("HealthMode", ""));
+		// Saves from before health modes only had an invulnerable flag.
+		this.healthMode = mode != null ? mode : npc.getBoolean("Invulnerable") ? HealthMode.INVULNERABLE : HealthMode.MORTAL;
+		this.downedTicks = npc.getIntegerOrDefault("DownedTicks", 0);
+		this.entityData.set(DATA_DOWNED, (byte) (this.downedTicks > 0 ? 1 : 0));
 		if (npc.containsKey("Personality")) {
 			this.personality.load(npc.getCompound("Personality"));
 		} else if (npc.containsKey("Bravery")) {

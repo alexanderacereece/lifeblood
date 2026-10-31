@@ -22,6 +22,7 @@ import net.minecraft.core.item.ItemStack;
 import net.minecraft.core.util.helper.DamageType;
 import net.minecraft.core.util.helper.MathHelper;
 import npclaude.entity.EntityNPC;
+import npclaude.entity.HealthMode;
 import org.jetbrains.annotations.Nullable;
 import org.joml.primitives.AABBd;
 
@@ -194,7 +195,7 @@ public final class ThreatAssessment {
 	 * an iron sword makes it about 1.5, and full iron armor adds roughly half again.
 	 */
 	public static double strengthOf(Mob fighter) {
-		if (fighter instanceof EntityNPC npc && npc.isInvulnerable()) {
+		if (fighter instanceof EntityNPC npc && npc.getHealthMode() == HealthMode.INVULNERABLE) {
 			return 100.0;
 		}
 
