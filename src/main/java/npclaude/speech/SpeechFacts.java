@@ -1,6 +1,7 @@
 package npclaude.speech;
 
 import java.util.Locale;
+import java.util.UUID;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.item.Item;
@@ -11,6 +12,8 @@ import npclaude.combat.FactionRegistry;
 import npclaude.combat.FactionRelation;
 import npclaude.combat.NpcFactions;
 import npclaude.entity.EntityNPC;
+import npclaude.family.FamilyRegistry;
+import npclaude.family.Kinship;
 import npclaude.personality.Surroundings;
 import npclaude.personality.Tastes;
 import npclaude.social.Opinions;
@@ -26,8 +29,9 @@ import org.jetbrains.annotations.Nullable;
  * it's coming down on them), outside, season (spring/summer/fall/winter), biome (desert, tundra...), with
  * weather_like, season_like and biome_like (love/like/meh/dislike/hate), mood (awful/bad/okay/good/great),
  * health (fine/hurt/low), faction and enemy_faction (with has_faction/has_enemy = yes/no), recovering, address,
- * catchphrase, surprising_thing (yes if their favorite thing is one most people wouldn't care for).
- * Words: favorite_food, hated_food, favorite_thing, hated_thing, weather_word, biome_word, season_word,
+ * catchphrase, relationship (single/dating/engaged/married/widowed), listener_kin (what the listener is to them,
+ * or none), surprising_thing (yes if their favorite thing is one most people wouldn't care for).
+ * Words: partner, favorite_food, hated_food, favorite_thing, hated_thing, weather_word, biome_word, season_word,
  * favorite_weather, hated_weather, favorite_biome, hated_biome, favorite_season, hated_season, and whatever the
  * event adds (food, item...).
  */
@@ -51,6 +55,7 @@ public final class SpeechFacts {
 			context.fact("leader", listener == npc.getLeader() ? "yes" : "no");
 		}
 
+		addFamily(npc, listener, context);
 		context.fact("time", timeOfDay(npc));
 		addSurroundings(npc, context);
 		context.fact("mood", moodLabel(mood));
@@ -109,6 +114,26 @@ public final class SpeechFacts {
 		}
 
 		return context;
+	}
+
+	/**
+	 * relationship (single/dating/engaged/married/widowed) with the partner's name as [partner], and listener_kin:
+	 * what the listener is to the speaker (spouse, partner, fiance, parent, child, sibling, cousin...) or "none".
+	 */
+	private static void addFamily(EntityNPC npc, @Nullable Entity listener, SpeechContext context) {
+		FamilyRegistry family = FamilyRegistry.get(npc.world);
+		FamilyRegistry.Partnership partnership = family.partnershipOf(npc.getUuid());
+		FamilyRegistry.Person self = family.find(npc.getUuid());
+		if (partnership != null) {
+			context.fact("relationship", partnership.stage.name().toLowerCase(Locale.ROOT));
+			context.word("partner", Word.name(family.nameOf(partnership.other(npc.getUuid()))));
+		} else {
+			context.fact("relationship", self != null && self.lateSpouse != null ? "widowed" : "single");
+		}
+
+		UUID listenerId = listener != null ? Opinions.idOf(listener) : null;
+		Kinship kin = listenerId != null ? Kinship.of(family, npc.getUuid(), listenerId) : null;
+		context.fact("listener_kin", kin != null ? kin.id() : "none");
 	}
 
 	/** What the weather, biome and season are, and how the NPC feels about each. */

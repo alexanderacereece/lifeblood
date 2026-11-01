@@ -2,6 +2,7 @@ package npclaude.social;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.Mob;
 import net.minecraft.core.entity.animal.AmbientCreature;
@@ -15,6 +16,8 @@ import npclaude.combat.CombatBehavior;
 import npclaude.combat.FactionRelation;
 import npclaude.combat.NpcFactions;
 import npclaude.entity.EntityNPC;
+import npclaude.family.FamilyRegistry;
+import npclaude.family.Kinship;
 import npclaude.personality.Quirk;
 import npclaude.speech.Word;
 import org.jetbrains.annotations.Nullable;
@@ -44,6 +47,8 @@ public final class SocialEvents {
 			stopFollowingDeadLeader(player);
 		}
 
+		mournFamily(victim, killedBy instanceof Projectile projectile && projectile.owner != null ? projectile.owner : killedBy);
+
 		Entity killer = killedBy instanceof Projectile projectile && projectile.owner != null ? projectile.owner : killedBy;
 		boolean person = isPerson(victim);
 		AABBd area = MathHelper.aabbGrow(victim.bb, WITNESS_RANGE, 8.0, WITNESS_RANGE, new AABBd());
@@ -61,6 +66,40 @@ public final class SocialEvents {
 			} else if (isAnimal(victim) && killer != null && killer != npc && isPerson(killer) && npc.canEntityBeSeen(victim)) {
 				onAnimalKilled(npc, victim, killer);
 			}
+		}
+	}
+
+	/**
+	 * Word of a death reaches the family wherever they are: relatives grieve (most for a spouse, child or parent)
+	 * and remember who did it. An NPC's death is also recorded, ending any partnership.
+	 */
+	private static void mournFamily(Mob victim, @Nullable Entity killer) {
+		UUID id = Opinions.idOf(victim);
+		if (id == null) {
+			return;
+		}
+
+		FamilyRegistry family = FamilyRegistry.get(victim.world);
+		for (Entity entity : victim.world.entities) {
+			if (!(entity instanceof EntityNPC npc) || npc == victim || !npc.isAlive()) {
+				continue;
+			}
+
+			Kinship kin = Kinship.of(family, npc.getUuid(), id);
+			if (kin == null || kin == Kinship.LATE_SPOUSE) {
+				continue;
+			}
+
+			boolean closest = kin == Kinship.SPOUSE || kin == Kinship.CHILD || kin == Kinship.FIANCE;
+			float closeness = closest || kin == Kinship.PARENT ? 1.0F : kin == Kinship.SIBLING || kin == Kinship.PARTNER ? 0.8F : 0.4F;
+			npc.remember(MemoryType.FAMILY_DIED, null, closeness);
+			if (killer != null && killer != npc && isPerson(killer)) {
+				npc.remember(closest ? MemoryType.KILLED_MY_SPOUSE_OR_CHILD : MemoryType.KILLED_FAMILY, killer, closest ? 1.0F : closeness);
+			}
+		}
+
+		if (victim instanceof EntityNPC) {
+			family.died(id);
 		}
 	}
 

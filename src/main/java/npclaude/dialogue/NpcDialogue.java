@@ -2,11 +2,15 @@ package npclaude.dialogue;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.player.Player;
 import npclaude.combat.CombatStyle;
 import npclaude.entity.EntityNPC;
 import npclaude.entity.FollowDistance;
+import npclaude.family.FamilyRegistry;
+import npclaude.family.Kinship;
+import npclaude.family.Romance;
 import npclaude.item.NpcItems;
 import npclaude.social.MemoryType;
 import npclaude.social.Opinions;
@@ -32,10 +36,11 @@ public record NpcDialogue(String line, List<DialogueOption> options) {
 	}
 
 	public static NpcDialogue main(EntityNPC npc, Player player) {
-		return main(npc, player, say(npc, player, "dialogue_open", "..."));
+		NpcDialogue request = RomanceDialogue.request(npc, player);
+		return request != null ? request : main(npc, player, say(npc, player, "dialogue_open", "..."));
 	}
 
-	private static NpcDialogue main(EntityNPC npc, Player player, String line) {
+	static NpcDialogue main(EntityNPC npc, Player player, String line) {
 		List<DialogueOption> options = new ArrayList<>();
 		options.add(new DialogueOption("How are you?", session -> {
 			if (!SocialLimits.tryChat(npc, player)) {
@@ -55,6 +60,11 @@ public record NpcDialogue(String line, List<DialogueOption> options) {
 
 				session.show(main(npc, player, NpcGifts.give(npc, player)));
 			}));
+		}
+
+		DialogueOption romance = RomanceDialogue.mainOption(npc, player);
+		if (romance != null) {
+			options.add(romance);
 		}
 
 		options.add(new DialogueOption("Can I ask you something?", session -> session.show(questions(npc, player, say(npc, player,
@@ -99,6 +109,7 @@ public record NpcDialogue(String line, List<DialogueOption> options) {
 			session.openProfile();
 		}));
 		options.add(new DialogueOption("What do you think of...", session -> session.show(askAbout(npc, player))));
+		options.add(new DialogueOption("Tell me about your family.", session -> session.show(questions(npc, player, RomanceDialogue.describeFamily(npc, player)))));
 		options.add(new DialogueOption("That's all.", session -> session.show(main(npc, player, say(npc, player, "never_mind", "All right.")))));
 		return new NpcDialogue(line, options);
 	}
@@ -135,7 +146,15 @@ public record NpcDialogue(String line, List<DialogueOption> options) {
 		String line = npc.voice.line("opinion_of", player, context -> context.word("other", Word.name(Opinions.nameOf(other)))
 			.fact("about", label.id())
 			.fact("other_type", other instanceof Player ? "player" : "npc"));
-		return line != null ? line : "I don't really know " + Opinions.nameOf(other) + ".";
+		line = line != null ? line : "I don't really know " + Opinions.nameOf(other) + ".";
+		// Family comes first: "Tom's my brother. Ugh."
+		UUID id = Opinions.idOf(other);
+		Kinship kin = id != null ? Kinship.of(FamilyRegistry.get(npc.world), npc.getUuid(), id) : null;
+		if (kin != null) {
+			line = Opinions.nameOf(other) + "'s my " + kin.label(Romance.genderOf(other)) + ". " + line;
+		}
+
+		return line;
 	}
 
 	/** Inventory, follow distance and combat style: only for people the NPC trusts. */
@@ -167,7 +186,7 @@ public record NpcDialogue(String line, List<DialogueOption> options) {
 		return new NpcDialogue(line, options);
 	}
 
-	private static String say(EntityNPC npc, Player player, String symbol, String fallback) {
+	static String say(EntityNPC npc, Player player, String symbol, String fallback) {
 		return orDefault(npc.voice.line(symbol, player, null), fallback);
 	}
 

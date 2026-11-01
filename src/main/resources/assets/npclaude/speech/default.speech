@@ -7,11 +7,13 @@
 #
 # Facts: name, listener, listener_type (player/npc), opinion (enemy/disliked/neutral/friendly/friend/close_friend),
 # relation (ally/neutral/hostile: how they'd treat the listener in a fight),
+# relationship (single/dating/engaged/married/widowed), listener_kin (what the listener is to them: spouse, fiance,
+# partner, parent, child, sibling, grandparent, grandchild, aunt_uncle, niece_nephew, cousin, ..._in_law, or none),
 # leader (yes/no), time (morning/day/evening/night), weather (clear/rain/snow/storm/fog/blood_rain), wet (yes when
 # it's coming down on them), outside, season (spring/summer/fall/winter), biome (plains, desert, tundra...),
 # weather_like/season_like/biome_like (love/like/meh/dislike/hate), mood (awful/bad/okay/good/great),
 # health (fine/hurt/low), recovering (yes/no), has_faction, has_enemy, address, catchphrase.
-# Words: favorite_food, hated_food, favorite_thing, hated_thing, weather_word, biome_word, season_word,
+# Words: partner, favorite_food, hated_food, favorite_thing, hated_thing, weather_word, biome_word, season_word,
 # favorite_weather, hated_weather, favorite_biome, hated_biome, favorite_season, hated_season, faction,
 # enemy_faction, and per event: enemy, food, item.
 # Gifts add kind (food/valuable/junk/gross/material/tool/weapon/armor/flower/plant/curio/music/decor/dangerous/
@@ -119,6 +121,13 @@ Good grief!                  {proper}
 [hello_named] [smalltalk_short] {w=0.6}
 [hello_named] Still in one piece, I see. {opinion=friend}
 [listener]! There you are.   {opinion=close_friend, w=2}
+There you are, love.         {listener_kin=spouse, w=6}
+Hello, dear.                 {listener_kin=spouse, polite, w=5}
+Oh! It's you. Hi.            {listener_kin=partner, introvert, w=6}
+Hey, you.                    {listener_kin=partner, w=5}
+There's my favorite person.  {listener_kin=partner, romantic, w=6}
+Hello, future spouse! Too much? Too much. {listener_kin=fiance, lighthearted, w=4}
+Hello, soon-to-be.           {listener_kin=fiance, w=5}
 Oh, it's you. Good.          {opinion=friend}
 ...                          {opinion=disliked}
 Oh. It's you.                {opinion=disliked}
@@ -264,6 +273,23 @@ Be gentle with the animals, would you? {animal_lover}
 People who hurt animals... I don't trust them. {animal_lover, serious}
 If I could, I'd live in [favorite_biome.the]. I love the smell of it. {w=0.3}
 I've had a rough time lately. {mood=bad}
+[partner] and I are doing well, thanks for asking. Well, you didn't ask. {relationship=married, w=1.5}
+Married life suits me.       {relationship=married, optimist, w=1.5}
+Married life is... an adjustment. {relationship=married, pessimist, w=1.5}
+I can't stop thinking about [partner]. {relationship=dating, romantic, w=3}
+[partner] and I have been seeing each other. Don't tell anyone. {relationship=dating, w=1.5}
+I'm getting married! Did you hear? {relationship=engaged, w=2.5}
+Wedding plans. So many wedding plans. {relationship=engaged, hardworking, w=2}
+I still set two plates out, some nights. {relationship=widowed, sentimental, w=2}
+I miss them every day.       {relationship=widowed, w=1}
+It's lonely, some nights.    {relationship=widowed, w=1.5}
+Being single's fine. Really. {relationship=single, pessimist, w=0.5}
+I'd like to meet someone special one day. {relationship=single, romantic, w=2}
+You and me, [listener]. Always. {listener_kin=spouse, w=4}
+I love you, you know.        {listener_kin=spouse, romantic, w=4}
+I love you, you know.        {listener_kin=partner, romantic, w=3}
+I was hoping you'd come by.  {listener_kin=partner, w=3}
+Can't wait to marry you.     {listener_kin=fiance, w=4}
 Not great. Let's leave it there. {mood=awful}
 I feel wonderful today!      {mood=great}
 Life's good.                 {mood=good}
@@ -1224,4 +1250,196 @@ I couldn't save them...      {sentimental, w=2}
 I should have been faster.   {competitive, w=2}
 Whoever did this will pay.   {vengeful, w=2}
 I'm going home. I can't do this alone. {timid, w=2}
+
+# ---------------------------------------------------------------------------------------------------------------
+# Romance between NPCs, said aloud. [listener] is the other NPC.
+
+== ask_out ==
+[listener], would you... maybe go out with me?
+[listener]. I like you. A lot. Want to go out sometime?
+So, [listener]. You and me. What do you think?
+I've been meaning to ask you something, [listener]...
+[listener]! Be mine?         {romantic, w=3}
+I'll be blunt: date me, [listener]. {rude, w=3}
+I'll be blunt: date me, [listener]. {honest, w=2}
+
+== ask_out_yes ==
+Yes! I'd love to.
+I was hoping you'd ask.
+Took you long enough.        {rude, w=3}
+Oh! I... yes. Yes.           {introvert, w=3}
+Finally!                     {romantic, w=3}
+
+== ask_out_no ==
+I'm sorry. I don't feel that way.
+Oh... I'm flattered, but no.
+You're sweet. But no.        {polite, w=3}
+No. Absolutely not.          {rude, w=3}
+Let's just be friends, okay? {forgiving, w=2}
+
+== propose ==
+[listener]... will you marry me?
+I've been thinking. Let's get married, [listener].
+[listener], I want to spend the rest of my life with you.
+Marry me, [listener]. Please. {romantic, w=3}
+So. Marriage. You and me. Yes? {taciturn, w=3}
+
+== accept_proposal ==
+Yes! A thousand times, yes!
+Yes. Of course, yes.
+I thought you'd never ask!   {romantic, w=3}
+...Yes.                      {taciturn, w=3}
+
+== wedding ==
+We're married! We're actually married!
+Husband and wife. Or... you know what I mean. Married!
+Cube God bless this marriage! {pious, w=4}
+Best day of my life.         {sentimental, w=3}
+I do. I really do.           {romantic, w=3}
+
+== wedding_guest ==
+Congratulations!
+To the happy couple!
+Oh, I love weddings!         {romantic, w=3}
+Is there cake? There's always cake. {glutton, w=4}
+I give it a year.            {pessimist, w=3}
+I give it a year.            {rude, w=2}
+*sniff* I always cry at weddings. {sentimental, w=4}
+Cube God bless you both.     {pious, w=3}
+Who's next, I wonder?        {nosy, w=3}
+
+== break_up ==
+I can't do this anymore, [listener]. It's over.
+We're done, [listener].
+I'm sorry, [listener]. I don't love you anymore.
+It's over. Don't follow me.  {rude, w=3}
+I think we both know this isn't working. {serious, w=3}
+Goodbye, [listener].         {taciturn, w=3}
+
+# ---------------------------------------------------------------------------------------------------------------
+# Romance with the player, in conversation
+
+== want_to_talk ==
+[listener], can we talk later? Just... come find me.
+Hey, [listener]. Come talk to me when you have a minute.
+There's something I want to ask you, [listener].
+[listener]! I need to ask you something. In private. {romantic, w=2}
+
+== ask_player_out ==
+Can I ask you something? Would you... maybe go out with me?
+I've been thinking about you a lot, [listener]. Will you go out with me?
+I'm just going to say it. I like you. Do you want to go out sometime?
+I like you, [listener]. As more than a friend. Would you be mine? {romantic, w=3}
+So. You and me. How about it? {lighthearted, w=3}
+I'm bad at this. Will you... date me? {introvert, w=3}
+I'm bad at this. Will you... date me? {timid, w=3}
+
+== propose_to_player ==
+[listener]... I've never been surer of anything. Will you marry me?
+I want to spend the rest of my life with you. Marry me?
+Will you marry me, [listener]?
+Marry me, [listener]. Please say yes. {romantic, w=3}
+I had a whole speech. I forgot it. Will you marry me? {lighthearted, w=3}
+The Cube God brought us together. Will you marry me? {pious, w=3}
+
+== player_said_yes ==
+Really? Oh, that's wonderful!
+You mean it? I'm so happy!
+Yes! I mean, good. That's good. Yes.  {introvert, w=3}
+I knew it!                   {proud, w=3}
+This is the best day ever!   {extrovert, w=3}
+
+== player_accepted_proposal ==
+We're getting married! We're actually getting married!
+You said yes! You said yes!
+I'm the luckiest person alive.
+Cube God be praised!         {pious, w=3}
+
+== player_said_no ==
+Oh. I see.
+I... understand. Sorry I asked.
+Right. Forget I said anything.
+Oh. Well. That's that, then. {pessimist, w=3}
+Your loss.                   {proud, w=4}
+Your loss.                   {rude, w=3}
+I'll get over it. Probably.  {lighthearted, w=3}
+
+== player_wants_time ==
+Take your time. I'll be here.
+Of course. Think it over.
+Don't take too long, all right? {rude, w=3}
+I'll wait. I'm good at waiting. {zen, w=3}
+
+== ask_out_taken ==
+I'm seeing [partner], actually.
+Sorry. I'm with [partner].
+I'm with [partner]. You know that. {rude, w=3}
+Oh! I'm flattered, but [partner] wouldn't like that. {polite, w=3}
+
+== ask_out_you_are_taken ==
+Aren't you with [partner]?
+What would [partner] say?
+Don't you already have [partner]? {rude, w=3}
+I'm not getting in between you and [partner]. {honest, w=3}
+Oh, I'm telling [partner] about this. {nosy, w=4}
+
+== ask_out_not_yet ==
+I like you, but... not like that. Not yet, anyway.
+Let's get to know each other better first.
+You're sweet. Ask me again some other time?
+Ha! Buy me a few more gifts first. {greedy, w=3}
+Ha! Nice try.                {lighthearted, w=3}
+No.                          {opinion=neutral, rude, w=3}
+
+== about_us ==
+Yes, love?
+What is it?
+Us? What about us?
+Is everything all right?     {timid, w=3}
+Uh oh. That sounds serious.  {lighthearted, w=3}
+
+== proposal_too_soon ==
+It's... a little soon, isn't it?
+Slow down! We've only just started seeing each other.
+Ask me again when we've been together a while.
+I love that you asked. But not yet. {romantic, w=3}
+
+== proposal_yes ==
+Yes! Of course, yes!
+Yes. Yes, yes, yes!
+I'd be honored.              {proper, w=3}
+I thought you'd never ask!   {romantic, w=3}
+
+== wedding_too_soon ==
+Soon. Let's not rush it.
+We've only just gotten engaged. Let's enjoy it a little.
+Not yet. I want it to be perfect. {proud, w=3}
+
+== wedding_day ==
+I can't believe it. We're married!
+Married. To you. I'm so happy.
+This is the best day of my life.
+Cube God bless us both.      {pious, w=3}
+Til death do us part. Well, maybe not death, but you know. {lighthearted, w=3}
+
+== break_up_heard ==
+...I see.
+What? Why?
+I thought... never mind what I thought.
+Fine. Go, then.              {rude, w=3}
+I'll remember this.          {vengeful, w=3}
+I hope you find what you're looking for. {forgiving, w=3}
+*sniff* Okay.                {sentimental, w=3}
+
+== divorce_heard ==
+A divorce? After everything?
+...If that's what you want.
+I never want to see you again. {vengeful, w=3}
+I hope you're happy.         {rude, w=3}
+
+== no_family ==
+No family to speak of. Just me.
+It's just me, I'm afraid.
+Never had much family. That's fine.
+Family? Haven't found mine yet. {romantic, w=3}
 

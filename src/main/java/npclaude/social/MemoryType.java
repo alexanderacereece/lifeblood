@@ -24,6 +24,9 @@ public enum MemoryType {
 	GAVE_ME_JUNK("gave me junk", -3, -2, 3, 3),
 	/** Given a guardian amulet: someone wants them kept safe. */
 	GAVE_ME_AN_AMULET("gave me a guardian amulet", 25, 8, 60, 1),
+	/** Asked out and turned down. Stings, mostly. */
+	TURNED_ME_DOWN("turned me down", -5, -8, 5, 2, true),
+	BROKE_UP_WITH_ME("broke up with me", -20, -20, 20, 2),
 	HAD_A_NICE_CHAT("had a nice chat", 2, 2, 3, 10, false, 1.0F),
 	TAUGHT_ME_A_WORD("taught me a word", 2, 0, 3, 5),
 	INSULTED_ME("insulted me", -8, -3, 4, 5, true),
@@ -60,6 +63,9 @@ public enum MemoryType {
 	SAW_A_DEATH("saw a death", 0, -6, 2, 3),
 	A_FRIEND_DIED("a friend died", 0, -20, 10, 3),
 	FAMILY_DIED("family died", 0, -30, 20, 3),
+	STARTED_DATING("started dating", 0, 10, 5, 1),
+	GOT_ENGAGED("got engaged", 0, 15, 7, 1),
+	WENT_TO_A_WEDDING("went to a wedding", 0, 6, 2, 2),
 	GOT_MARRIED("got married", 0, 30, 10, 1),
 	WON_A_FIGHT("won a fight", 0, 4, 1, 3),
 	LOST_A_FIGHT("lost a fight", 0, -5, 1, 3),

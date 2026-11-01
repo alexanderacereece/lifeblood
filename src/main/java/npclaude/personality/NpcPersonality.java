@@ -27,6 +27,8 @@ public class NpcPersonality {
 	private final Map<TraitAxis, Float> axes = new EnumMap<>(TraitAxis.class);
 	private final Set<Quirk> quirks = EnumSet.noneOf(Quirk.class);
 	public final Tastes tastes = new Tastes(this);
+	/** Who it can fall for. */
+	public Attraction attraction = Attraction.OPPOSITE;
 
 	public NpcPersonality() {
 		for (TraitAxis axis : TraitAxis.values()) {
@@ -96,6 +98,7 @@ public class NpcPersonality {
 		}
 
 		this.tastes.reroll(random);
+		this.attraction = Attraction.roll(random);
 	}
 
 	private static int rollQuirkCount(Random random) {
@@ -125,6 +128,7 @@ public class NpcPersonality {
 		tag.putCompound("Axes", axisTag);
 		tag.putString("Quirks", String.join(",", quirkIds));
 		tag.putCompound("Tastes", this.tastes.save());
+		tag.putString("Attraction", this.attraction.id());
 		return tag;
 	}
 
@@ -152,6 +156,11 @@ public class NpcPersonality {
 			if (quirk != null) {
 				this.addQuirk(quirk);
 			}
+		}
+
+		Attraction attraction = Attraction.byName(tag.getStringOrDefault("Attraction", ""));
+		if (attraction != null) {
+			this.attraction = attraction;
 		}
 
 		if (tag.containsKey("Tastes")) {

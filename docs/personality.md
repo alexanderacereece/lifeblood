@@ -340,14 +340,20 @@ Generated homesteads start with whole families already linked.
 
 ### Romance
 
-The way new couples form over time, so settlements change instead of staying frozen as generated. Any NPC can take part; the romantic quirk makes it far more likely and faster. Who an NPC can be attracted to is rolled per NPC.
+The way new couples form over time, so settlements change instead of staying frozen as generated. Any NPC can take part; the romantic quirk makes it far more likely and faster. Who an NPC can be attracted to is rolled per NPC: the opposite gender (80%), the same (10%) or both (10%). Players don't set a gender, so anyone can fall for a player. Blood relatives never date.
 
-Stages, each needing high opinions on both sides:
-1. **Dating.** Two unattached adults with high opinions of each other (both Friend, +50 or more) may start dating. One asks; the other accepts if their opinion is high enough, and a refusal leaves a heartbreak memory. Romantic NPCs ask sooner and more often. Couples spend evenings together and give each other gifts.
-2. **Engaged.** After a period of dating (starting point: 7 days) with opinions staying high (+70 or more), one proposes. The town can gossip about it.
-3. **Married.** After a period engaged (starting point: 5 days), a small wedding where friends and family gather. Afterwards they share a home.
+Stages, each needing high opinions on both sides (for the player, only the NPC's side counts; the player decides for themself):
+1. **Dating** at 70 or more. One asks; the other accepts if their opinion is high enough and they're attracted, and a refusal leaves a "turned me down" memory. NPCs check about once a minute, romantics three times as often.
+2. **Engaged** after 7 days of dating with both at 80 or more.
+3. **Married** after 5 days engaged, still at 80 or more. A wedding: everyone nearby gets a "went to a wedding" memory and some cheer.
 
-Things can go wrong: jealousy toward rivals, opinion dropping over time, and breakups (or calling off the engagement) when a partner's opinion falls too low. Breakups leave heartbreak memories on both sides.
+With the gift and chat pacing (section 4), that puts dating about two weeks into a friendship and a wedding a few weeks in.
+
+A partner whose opinion falls under 30 (dating) or 10 (engaged or married) breaks it off, leaving a "broke up with me" memory. A partner's death leaves the other widowed; they remember their late husband or wife.
+
+Partners and family warm opinions as a standing factor: spouse +30, fiancé +25, partner +20, parent or child +20, sibling +15, grandparent or grandchild +12, aunt, uncle, niece or nephew +8, cousin +6, in-laws +5. When someone dies, every relative grieves (most for a spouse, child or parent) and remembers who killed them, wherever they are.
+
+Family is stored at world level (`npclaude_family`), so relatives who are far away, unloaded or dead still count.
 
 ### Children
 
@@ -359,6 +365,8 @@ Married couples with a home may have children, which keeps settlements alive acr
 - Children don't work real jobs, but follow parents around, play, and help with small tasks as they get older.
 
 ### The player
+
+In conversation: "Would you go out with me?" (once they're at least a friend), and once together, "About us..." to propose, set the wedding, or break up, call it off or divorce. NPCs who want to ask the player out (or propose) say they'd like to talk; the next conversation opens with the question and Yes / No / Can I think about it. "Can I ask you something?" includes "Tell me about your family", and asking what they think of a relative starts with how they're related.
 
 The player can do everything NPCs can, with the player making their own choices on one side: dating, getting engaged, marrying, and having children with an NPC spouse. Dialogue gets options to ask someone out, propose, and break up. NPCs with high enough opinions of the player can also ask the player. The same opinion requirements apply to the NPC side; the player is free to decide.
 

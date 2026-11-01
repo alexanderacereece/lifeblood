@@ -42,6 +42,7 @@ import npclaude.combat.MonsterContact;
 import npclaude.combat.NpcFactions;
 import npclaude.combat.NpcRelations;
 import npclaude.dialogue.NpcDialogue;
+import npclaude.family.Romance;
 import npclaude.interaction.NpcInteractions;
 import npclaude.inventory.NpcInventory;
 import npclaude.perf.NpcProfiler;
@@ -110,6 +111,8 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private static final int FOLLOW_CHECK_INTERVAL = 100;
 	/** A follower whose opinion of its leader sinks this low leaves. */
 	private static final float QUIT_FOLLOWING_OPINION = -15.0F;
+	/** How often the NPC tends its love life: a relationship to keep up, or someone to ask out (1 minute). */
+	private static final int ROMANCE_INTERVAL = 1200;
 	/** How often the NPC considers picking a fight with someone it can't stand (10 seconds). */
 	private static final int BRAWL_CHECK_INTERVAL = 200;
 	/** Hitting someone this soon after a brawl with them ended is a cheap shot, and starts a real fight (30 seconds). */
@@ -157,6 +160,11 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private int lastRefusalTick = -REFUSAL_COOLDOWN;
 	/** Whether it's been given a look from parts yet this session, if it needed one. */
 	private boolean appearanceChecked;
+	/** Something it wants to ask a player next time they talk (out on a date, or to marry), and which player. */
+	@Nullable
+	private Romance.Request romanceRequest;
+	@Nullable
+	private UUID romanceRequestPlayer;
 	/** The in-game day each player last gave it a gift, for the one-gift-a-day limit. */
 	private final Map<UUID, Long> lastGiftDays = new HashMap<>();
 	/** The fistfight it's in, if any. Not saved: a brawl doesn't survive leaving the world. */
@@ -370,6 +378,10 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 			this.considerBrawl();
 		}
 
+		if (offset % ROMANCE_INTERVAL == 0) {
+			Romance.tick(this);
+		}
+
 		if (offset % SURROUNDINGS_MOOD_INTERVAL == 0) {
 			this.feelSurroundings();
 		}
@@ -445,6 +457,22 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 
 	public UUID getUuid() {
 		return this.uuid;
+	}
+
+	@Nullable
+	public Romance.Request getRomanceRequest() {
+		return this.romanceRequest;
+	}
+
+	/** What it wants to ask this player, if anything. */
+	@Nullable
+	public Romance.Request getRomanceRequest(Player player) {
+		return this.romanceRequest != null && player.uuid.equals(this.romanceRequestPlayer) ? this.romanceRequest : null;
+	}
+
+	public void setRomanceRequest(@Nullable Romance.Request request, @Nullable Player player) {
+		this.romanceRequest = request;
+		this.romanceRequestPlayer = player != null ? player.uuid : null;
 	}
 
 	/** The in-game day this player last gave it a gift; -1 if never. */

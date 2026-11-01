@@ -99,6 +99,12 @@ public class NpcVoice {
 		return this.style.apply(line, this.npc.getRandom());
 	}
 
+	/** A line for this event, or the fallback if nothing fits. */
+	public String lineOr(String event, @Nullable Entity listener, String fallback, @Nullable Consumer<SpeechContext> extras) {
+		String line = this.line(event, listener, extras);
+		return line != null ? line : fallback;
+	}
+
 	/**
 	 * Says a line aloud for this event, if the NPC isn't talking too much. Important lines (being downed,
 	 * a friend dying) skip the NPC's own cooldown; taciturn NPCs keep most other reactions to themselves.

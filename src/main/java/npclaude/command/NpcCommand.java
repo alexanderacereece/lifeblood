@@ -33,6 +33,10 @@ import npclaude.ai.behavior.GoToBehavior;
 import npclaude.ai.behavior.StayBehavior;
 import npclaude.ai.behavior.WanderBehavior;
 import npclaude.appearance.Appearance;
+import npclaude.family.FamilyRegistry;
+import npclaude.family.Kinship;
+import npclaude.family.Romance;
+import npclaude.personality.Attraction;
 import npclaude.appearance.AppearanceLayer;
 import npclaude.appearance.PartCatalog;
 import npclaude.client.AppearanceTextures;
@@ -98,6 +102,11 @@ import org.joml.Vector3dc;
  * /npc speech reload                          (reads the speech files again)
  * /npc limits [on|off]                        (debug: the one-gift-a-day and three-chats-a-minute limits)
  * /npc list
+ * /npc family <name>                           (its partner and relatives)
+ * /npc family <name> parent|child <target>     (records that the target is its parent, or its child)
+ * /npc family <name> unlink <target>           (removes a parent/child link between them)
+ * /npc couple <name> <target> dating|engaged|married|none   (debug: sets their relationship, clock starting now)
+ * /npc attraction <name> [opposite|same|both]  (who it can fall for)
  * /npc look <name>                             (the parts and colors its look is built from)
  * /npc look <name> randomize                   (a new random look from the parts available)
  * /npc look <name> <layer> <part|none> [palette]   (e.g. hair bob auburn)
@@ -574,6 +583,55 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 					return reply(c, "Removed " + npc.nickname + ".");
 				})))
 			.then(literal("list").executes(NpcCommand::list))
+			.then(literal("family")
+				.then(npcArgument()
+					.executes(NpcCommand::showFamily)
+					.then(literal("parent")
+						.then(argument("target", ArgumentTypeString.string()).suggests(TARGET_NAMES).executes(c -> linkParent(c, true))))
+					.then(literal("child")
+						.then(argument("target", ArgumentTypeString.string()).suggests(TARGET_NAMES).executes(c -> linkParent(c, false))))
+					.then(literal("unlink")
+						.then(argument("target", ArgumentTypeString.string()).suggests(TARGET_NAMES).executes(c -> {
+							EntityNPC npc = findNpc(c);
+							Entity target = findTarget(c);
+							UUID id = requireId(target);
+							FamilyRegistry family = FamilyRegistry.get(npc.world);
+							family.removeParent(npc.getUuid(), id);
+							family.removeParent(id, npc.getUuid());
+							return reply(c, npc.nickname + " and " + nameOf(target) + " are no longer parent and child.");
+						})))))
+			.then(literal("couple")
+				.then(npcArgument()
+					.then(argument("target", ArgumentTypeString.string()).suggests(TARGET_NAMES)
+						.then(argument("stage", ArgumentTypeString.word()).suggests((c, builder) -> {
+							for (String stage : new String[] {"dating", "engaged", "married", "none"}) {
+								builder.suggest(stage);
+							}
+
+							return builder.buildFuture();
+						}).executes(NpcCommand::setCouple)))))
+			.then(literal("attraction")
+				.then(npcArgument()
+					.executes(c -> {
+						EntityNPC npc = findNpc(c);
+						return reply(c, npc.nickname + " is attracted to: " + npc.personality.attraction.id() + " (relative to its gender).");
+					})
+					.then(argument("attraction", ArgumentTypeString.word()).suggests((c, builder) -> {
+						for (Attraction attraction : Attraction.values()) {
+							builder.suggest(attraction.id());
+						}
+
+						return builder.buildFuture();
+					}).executes(c -> {
+						EntityNPC npc = findNpc(c);
+						Attraction attraction = Attraction.byName(ArgumentTypeString.getString(c, "attraction"));
+						if (attraction == null) {
+							throw error("Use opposite, same or both.");
+						}
+
+						npc.personality.attraction = attraction;
+						return reply(c, npc.nickname + " is now attracted to: " + attraction.id() + ".");
+					}))))
 			.then(literal("look")
 				.then(npcArgument()
 					.executes(NpcCommand::describeLook)
@@ -615,6 +673,103 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 
 					return reply(c, "NPC skins will be reloaded from " + NpcSkinFiles.getDirectory());
 				}))));
+	}
+
+	private static int showFamily(CommandContext<CommandSource> c) throws CommandSyntaxException {
+		EntityNPC npc = findNpc(c);
+		Romance.register(npc);
+		FamilyRegistry family = FamilyRegistry.get(npc.world);
+		FamilyRegistry.Partnership partnership = family.partnershipOf(npc.getUuid());
+		if (partnership != null) {
+			reply(c, String.format(Locale.ROOT, "%s is %s %s (%.1f days).", npc.nickname, switch (partnership.stage) {
+				case DATING -> "dating";
+				case ENGAGED -> "engaged to";
+				case MARRIED -> "married to";
+			}, family.nameOf(partnership.other(npc.getUuid())), Romance.daysTogether(partnership, npc.world.getWorldTime())));
+		}
+
+		boolean any = partnership != null;
+		for (UUID relative : Kinship.relativesOf(family, npc.getUuid())) {
+			Kinship kin = Kinship.of(family, npc.getUuid(), relative);
+			FamilyRegistry.Person person = family.find(relative);
+			if (kin == null || person == null || kin == Kinship.SPOUSE || kin == Kinship.FIANCE || kin == Kinship.PARTNER) {
+				continue;
+			}
+
+			reply(c, "- " + kin.label(person.gender) + ": " + person.name + (person.alive ? "" : " (dead)"));
+			any = true;
+		}
+
+		if (!any) {
+			reply(c, npc.nickname + " has no family yet.");
+		}
+
+		return 1;
+	}
+
+	/** /npc family <npc> parent|child <target>: records who is whose parent. */
+	private static int linkParent(CommandContext<CommandSource> c, boolean targetIsParent) throws CommandSyntaxException {
+		EntityNPC npc = findNpc(c);
+		Entity target = findTarget(c);
+		UUID id = requireId(target);
+		Romance.register(npc);
+		registerPerson(target);
+		FamilyRegistry family = FamilyRegistry.get(npc.world);
+		UUID child = targetIsParent ? npc.getUuid() : id;
+		UUID parent = targetIsParent ? id : npc.getUuid();
+		if (!family.addParent(child, parent)) {
+			throw error("Couldn't link them: already linked, the same person, or the child already has two parents.");
+		}
+
+		return reply(c, family.nameOf(parent) + " is now " + family.nameOf(child) + "'s parent.");
+	}
+
+	private static int setCouple(CommandContext<CommandSource> c) throws CommandSyntaxException {
+		EntityNPC npc = findNpc(c);
+		Entity target = findTarget(c);
+		UUID id = requireId(target);
+		String stage = ArgumentTypeString.getString(c, "stage").toLowerCase(Locale.ROOT);
+		Romance.register(npc);
+		registerPerson(target);
+		FamilyRegistry family = FamilyRegistry.get(npc.world);
+		long now = npc.world.getWorldTime();
+		if (stage.equals("none")) {
+			family.breakUp(npc.getUuid());
+			return reply(c, npc.nickname + " is single now.");
+		}
+
+		FamilyRegistry.Stage next = switch (stage) {
+			case "dating" -> FamilyRegistry.Stage.DATING;
+			case "engaged" -> FamilyRegistry.Stage.ENGAGED;
+			case "married" -> FamilyRegistry.Stage.MARRIED;
+			default -> throw error("Use dating, engaged, married or none.");
+		};
+		UUID current = family.partnerOf(npc.getUuid());
+		if (current == null || !current.equals(id)) {
+			family.breakUp(npc.getUuid());
+			family.breakUp(id);
+			family.startDating(npc.getUuid(), id, now);
+		}
+
+		family.setStage(npc.getUuid(), next, now);
+		return reply(c, npc.nickname + " and " + nameOf(target) + " are now " + stage + ".");
+	}
+
+	private static void registerPerson(Entity entity) {
+		if (entity instanceof EntityNPC other) {
+			Romance.register(other);
+		} else if (entity instanceof Player player) {
+			Romance.register(player);
+		}
+	}
+
+	private static UUID requireId(Entity entity) throws CommandSyntaxException {
+		UUID id = Opinions.idOf(entity);
+		if (id == null) {
+			throw error("That's not a person.");
+		}
+
+		return id;
 	}
 
 	private static int describeLook(CommandContext<CommandSource> c) throws CommandSyntaxException {
