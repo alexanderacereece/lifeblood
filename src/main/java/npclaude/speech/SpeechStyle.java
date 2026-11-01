@@ -15,7 +15,7 @@ import npclaude.personality.TraitAxis;
  * The choices themselves come from the style_* symbols in the speech files.
  */
 public class SpeechStyle {
-	private static final Pattern ING = Pattern.compile("\\b([A-Za-z]{3,})ing\\b");
+	private static final Pattern ING = Pattern.compile("\\b([A-Za-z]{3,})ing\\b'?");
 	private static final Set<String> KEEP_ING = Set.of("str", "spr", "th", "br", "k", "r", "s", "w", "sw", "st", "cl", "fl", "sl");
 	private static final float CATCHPHRASE_CHANCE = 0.6F;
 	private static final float FILLER_CHANCE = 0.35F;
@@ -65,6 +65,7 @@ public class SpeechStyle {
 			StringBuilder builder = new StringBuilder();
 			while (matcher.find()) {
 				String stem = matcher.group(1);
+				// The match swallows a following apostrophe, so "everything's" becomes "everythin's", not "everythin''s".
 				matcher.appendReplacement(builder, KEEP_ING.contains(stem.toLowerCase()) ? matcher.group() : stem + "in'");
 			}
 

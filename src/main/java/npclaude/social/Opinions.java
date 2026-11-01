@@ -20,6 +20,8 @@ import org.jetbrains.annotations.Nullable;
 public final class Opinions {
 	/** At or above this, the NPC treats the person as an ally whatever the factions say. */
 	public static final float ALLY_THRESHOLD = 60.0F;
+	/** The start of the "friend" label: trusted with practical matters. */
+	public static final float FRIEND_THRESHOLD = 50.0F;
 	public static final float HOSTILE_THRESHOLD = -60.0F;
 	public static final float HOTHEAD_HOSTILE_THRESHOLD = -45.0F;
 	public static final float ZEN_HOSTILE_THRESHOLD = -80.0F;
@@ -53,7 +55,7 @@ public final class Opinions {
 				return DISLIKED;
 			} else if (opinion < 20.0F) {
 				return NEUTRAL;
-			} else if (opinion < 50.0F) {
+			} else if (opinion < FRIEND_THRESHOLD) {
 				return FRIENDLY;
 			} else if (opinion < 80.0F) {
 				return FRIEND;

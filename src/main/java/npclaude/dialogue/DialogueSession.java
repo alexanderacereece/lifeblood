@@ -17,5 +17,8 @@ public interface DialogueSession {
 
 	void openInventory();
 
+	/** Shows the NPC's profile: personality, tastes and mood, laid out. */
+	void openProfile();
+
 	void close();
 }

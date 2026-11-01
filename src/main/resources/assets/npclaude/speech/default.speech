@@ -6,6 +6,7 @@
 # picked more often when they fit, so every symbol keeps plain lines as a fallback.
 #
 # Facts: name, listener, listener_type (player/npc), opinion (enemy/disliked/neutral/friendly/friend/close_friend),
+# relation (ally/neutral/hostile: how they'd treat the listener in a fight),
 # leader (yes/no), time (morning/day/evening/night), weather (clear/rain/snow/storm/fog/blood_rain), wet (yes when
 # it's coming down on them), outside, season (spring/summer/fall/winter), biome (plains, desert, tundra...),
 # weather_like/season_like/biome_like (love/like/meh/dislike/hate), mood (awful/bad/okay/good/great),
@@ -562,6 +563,10 @@ I've been waiting for this.  {vengeful}
 Not again...                 {lazy}
 To arms!                     {proper, brave}
 Get 'em!                     {crude}
+Come here, you bastard!      {crude+, brave}
+Oh, hell.                    {crude, timid}
+Right. Somebody's getting hurt. {hothead}
+You want a fight? You've got one, damn it! {hothead, crude}
 
 == flee ==
 Run!
@@ -572,6 +577,8 @@ Help!                        {timid}
 Cube God save me!            {pious}
 Every one for themselves!    {!polite}
 Retreat! Retreat!            {proper}
+Oh, hell no!                 {crude}
+Screw this!                  {crude+}
 I can't do this!             {timid, pessimist}
 Run! Don't look back!        {polite}
 
@@ -586,6 +593,8 @@ I don't want to die here!    {timid}
 This is it, isn't it?        {pessimist}
 Somebody help!               {!brave}
 Cube God, not yet...         {pious}
+Damn it, that hurt!          {crude}
+Bloody hell...               {crude+}
 
 == victory ==
 Got it!
@@ -611,6 +620,8 @@ That's going on my list, [listener]. {vengeful}
 I'll forget that, just this once. {forgiving}
 Was that really necessary?   {proper}
 Oi! Knock it off!            {crude}
+What the hell, [listener]?   {crude}
+Do that again. I dare you.   {hothead, w=2}
 
 # ---------------------------------------------------------------------------------------------------------------
 # Being downed, getting up, and rescue
@@ -625,6 +636,7 @@ Cube God...                  {pious}
 Tell my [favorite_food] I loved [favorite_food.it]... {glutton, lighthearted, w=2}
 I'll... get you... for this... {vengeful}
 Help...                      {timid}
+Ah, damn...                  {crude}
 
 == get_up ==
 I'm... I'm all right.
@@ -757,4 +769,195 @@ Wide open country.           {biome=plains}
 Wide open country.           {biome=grasslands}
 Flowers everywhere.          {biome=meadow, w=2}
 Oh, the colors.              {biome=seasonal_forest, w=2}
+
+# ---------------------------------------------------------------------------------------------------------------
+# Trying to talk to them mid-fight, or when they're out to get you. fighting_you=yes when you're who they're
+# fighting; in_combat=no means they're hostile but not fighting yet (say, you're in creative).
+
+== busy_fighting ==
+Not now!
+Kind of busy here!
+Can't talk!
+Later!
+Not now, [listener]! Help me!  {relation=ally, w=3}
+Grab a weapon, [listener]!   {relation=ally, w=3}
+Talk later, fight now!       {relation=ally, brave, w=3}
+I'm a little busy not dying!  {relation=ally, lighthearted, w=3}
+Can't you see I'm fighting?! {rude, w=2}
+Not now, damn it!            {crude, w=3}
+Are you serious right now?   {lighthearted, w=2}
+Pardon me, I'm rather occupied. {proper, polite, w=3}
+Help! Please!                {timid, w=3}
+Run! Why are you standing there?! {timid, relation=ally, w=3}
+Cube God, give me strength! {pious, w=2}
+You want to talk? Talk to my fist! {fighting_you=yes, hothead, w=4}
+Talk? Ha! Not a chance. {fighting_you=yes, w=4}
+Oh, NOW you want to chat? {fighting_you=yes, lighthearted, w=4}
+I've got nothing to say to you. {fighting_you=yes, w=4}
+Nice try. Die.               {fighting_you=yes, rude, w=4}
+Go to hell!                  {fighting_you=yes, crude, w=5}
+Nothing personal. Well. A little personal. {fighting_you=yes, has_faction=yes, w=3}
+For the [faction]!           {fighting_you=yes, has_faction=yes, brave, w=3}
+The [faction] don't talk to your kind. {relation=hostile, has_faction=yes, w=4}
+I don't talk to your kind.   {relation=hostile, w=3}
+Get away from me.            {relation=hostile, w=3}
+Get lost before I change my mind. {relation=hostile, in_combat=no, w=4}
+You're lucky I'm in a good mood. {relation=hostile, in_combat=no, mood=great, w=4}
+Back off.                    {relation=hostile, in_combat=no, w=3}
+Piss off.                    {relation=hostile, crude, w=5}
+I know what you did.         {relation=hostile, opinion=enemy, vengeful, w=5}
+
+# ---------------------------------------------------------------------------------------------------------------
+# The conversation menu
+
+== about_me ==
+Me? Not much to tell.
+What do you want to know?
+Oh! Where do I start?        {extrovert, w=2}
+Me? Why?                     {paranoid, w=2}
+I'm not very interesting.    {humble, w=2}
+Finally, someone asks.       {proud, w=2}
+Ugh. Fine.                   {rude}
+Hm.                          {taciturn, w=2}
+That's a big question.       {serious}
+I'm an open book. A short one. {lighthearted}
+
+== ask_about_who ==
+Who?
+Who do you mean?
+About who?
+Ooh. Who?                    {nosy, w=3}
+Gossip? I'm listening.       {nosy, w=2}
+I don't talk about people behind their backs. {honest, w=2}
+Careful what you ask, [listener]. {paranoid}
+
+== opinion_of_you ==
+You? You're all right.       {opinion=neutral}
+I don't really know you yet. {opinion=neutral}
+Honestly? Haven't made my mind up. {opinion=neutral, honest}
+I like you, [listener].      {opinion=friendly}
+You're good people.          {opinion=friendly}
+You're a friend. A real one. {opinion=friend}
+I'd trust you with my life.  {opinion=close_friend}
+You're the best friend I've got, [listener]. {opinion=close_friend, w=2}
+Honestly? Not much.          {opinion=disliked}
+You really want to know? No. {opinion=disliked, rude}
+I'd rather not say.          {opinion=disliked, polite}
+I can't stand you.           {opinion=enemy}
+Get out of my sight.         {opinion=enemy, rude}
+You know exactly what I think of you. {opinion=enemy, vengeful}
+I think you're wonderful. Don't let it go to your head. {opinion=close_friend, lighthearted}
+Do you really need me to say it? {opinion=friend, introvert}
+
+== opinion_of ==
+[other]? Don't know much about them.     {about=neutral}
+[other]? They're all right.              {about=neutral}
+[other]? Haven't made up my mind.        {about=neutral}
+[other]? Never really talked.            {about=neutral, introvert}
+[other]? Nice enough.                    {about=friendly}
+[other]'s good company.                  {about=friendly}
+[other]? I like them.                    {about=friendly}
+[other]? A good friend.                  {about=friend}
+[other] and I go way back. Well. Back.   {about=friend, lighthearted}
+I'd do anything for [other].             {about=close_friend}
+[other]? My best friend. Don't tell them I said that. {about=close_friend}
+[other]? Ugh.                            {about=disliked}
+Don't get me started on [other].         {about=disliked}
+[other] and I don't get along.           {about=disliked, polite}
+[other] is a waste of good air.          {about=disliked, rude}
+[other]? I'd rather not say.             {about=disliked, polite}
+[other] can go to hell.                  {about=enemy, crude, w=2}
+If I never see [other] again, it'll be too soon. {about=enemy}
+I'll get [other] one day. You'll see.    {about=enemy, vengeful}
+[other]? Don't trust them. Don't trust anyone. {paranoid, w=0.5}
+Oh, I have SO much to tell you about [other]. {nosy, about=neutral}
+Oh, I have SO much to tell you about [other]. {nosy, about=disliked}
+Why, what have you heard about [other]? {nosy, w=0.7}
+[other] is my friend. That's all you need to know. {loyal, about=friend}
+
+== never_mind ==
+Oh. All right.
+Never mind, then.
+Hm. Okay.
+Make up your mind.           {rude}
+Of course.                   {polite}
+
+== follow_accept ==
+Lead the way.
+Sure, I'll come.
+Right behind you.
+Let's go!                    {extrovert}
+Adventure! Finally!          {curious, w=2}
+For you? Of course.          {opinion=friend}
+For you, [listener], anywhere. {opinion=close_friend}
+I'll watch your back.        {brave}
+I'll... try to keep up.      {timid}
+Fine, but you're carrying the heavy stuff. {lazy, w=2}
+Can't let you go alone.      {loyal, w=2}
+The Cube God guide our steps. {pious}
+Ha! Let's see what's out there. {lighthearted}
+If we must.                  {pessimist}
+
+== follow_refuse ==
+I don't think so.
+No, thank you.
+I'd rather stay here.
+I hardly know you.           {opinion=neutral}
+Why would I go anywhere with you? {opinion=disliked, w=2}
+Not a chance.                {opinion=disliked, rude, w=2}
+Not with you. Never with you. {opinion=enemy, w=2}
+Sorry, I'm a homebody.       {introvert}
+And walk all that way? No.   {lazy, w=2}
+I've got work to do here.    {hardworking, w=2}
+Ask me again when I know you better. {polite, opinion=neutral}
+How do I know you won't lead me into a trap? {paranoid, w=2}
+I'm in no shape to go anywhere. {recovering=yes, w=5}
+Hell no.                     {crude, opinion=disliked}
+Maybe some other time.       {polite}
+
+== follow_stop ==
+All right. I'll head home.
+Fair enough. Be safe.
+Oh. Okay.
+Aw. That was fun.            {extrovert}
+Finally. My feet are killing me. {lazy, w=2}
+Back to work, then.          {hardworking}
+Call me if you need me, [listener]. {opinion=friend}
+Fine. Don't miss me too much. {lighthearted}
+Was it something I said?     {sentimental}
+
+== follow_quit ==
+You know what? I'm done following you.
+I've had enough of you, [listener]. I'm going home.
+That's it. Find someone else to follow.
+I'm not following you anywhere anymore.
+Go on without me. Far without me.     {rude}
+I'm sorry, [listener]. I can't do this anymore. {polite}
+To hell with this. I'm out.           {crude, w=2}
+I'll remember this, [listener].       {vengeful}
+I thought we were friends.            {sentimental, w=2}
+
+== practical_open ==
+What do you need?
+Business, then.
+Sure. What is it?
+Go on.
+At your service.             {polite, proper}
+Make it quick.               {rude}
+Practical stuff. My favorite. {hardworking}
+Ugh, practical stuff.        {lazy}
+
+== farewell ==
+Bye.
+See you around.
+Take care.
+Later.
+Farewell, [listener].        {proper}
+Stay safe out there, [listener]. {polite}
+Cube God keep you.           {pious, w=2}
+Don't let the monsters bite. {lighthearted}
+Finally.                     {opinion=disliked, rude}
+Hm.                          {taciturn}
+Already? Aw.                 {extrovert}
+See you, [address].
 

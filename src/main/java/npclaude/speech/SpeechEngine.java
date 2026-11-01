@@ -23,6 +23,13 @@ public final class SpeechEngine {
 	private static final float RECENT_PENALTY = 0.1F;
 	/** A line counts as recent for this long (world ticks): about five minutes. */
 	private static final long RECENT_TICKS = 6000L;
+	/**
+	 * Topics (a favorite or hated something) are words like [favorite_thing]. Once one comes up, lines about it are
+	 * much less likely for half a day, so an NPC doesn't keep going on about the same thing.
+	 */
+	private static final Pattern TOPIC = Pattern.compile("\\[((?:favorite|hated)_[a-z_]+)");
+	private static final float TOPIC_PENALTY = 0.05F;
+	private static final long TOPIC_TICKS = 12000L;
 
 	private SpeechEngine() {
 	}
@@ -67,6 +74,11 @@ public final class SpeechEngine {
 			try {
 				String text = expandText(line.text(), context, used, now, random, depth);
 				used.put(line.source(), now);
+				Matcher topics = TOPIC.matcher(line.text());
+				while (topics.find()) {
+					used.put("@" + topics.group(1), now);
+				}
+
 				return text;
 			} catch (Missing missing) {
 				candidates.remove(line);
@@ -85,6 +97,14 @@ public final class SpeechEngine {
 			Long last = used.get(line.source());
 			if (last != null && now - last < RECENT_TICKS) {
 				weight *= RECENT_PENALTY;
+			}
+
+			Matcher topics = TOPIC.matcher(line.text());
+			while (topics.find()) {
+				Long mentioned = used.get("@" + topics.group(1));
+				if (mentioned != null && now - mentioned < TOPIC_TICKS) {
+					weight *= TOPIC_PENALTY;
+				}
 			}
 
 			weights[i] = weight;

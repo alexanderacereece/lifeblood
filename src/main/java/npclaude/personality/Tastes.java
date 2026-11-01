@@ -282,7 +282,7 @@ public class Tastes {
 		float bestScore = Float.NEGATIVE_INFINITY;
 		float sign = loved ? 1.0F : -1.0F;
 		for (Item item : Item.itemsList) {
-			if (item == null || !ItemDefaults.of(item).giftable() || ItemDefaults.of(item).is(TasteCategory.FOOD)) {
+			if (item == null || !isTalkingPoint(ItemDefaults.of(item))) {
 				continue;
 			}
 
@@ -299,6 +299,16 @@ public class Tastes {
 		}
 
 		return best;
+	}
+
+	/**
+	 * Whether an item is the sort of thing someone would call a favorite: not food (that has its own favorite), and
+	 * not one of the hundreds of plain building blocks and odds and ends, or everyone's favorite would be a granite
+	 * brick slab.
+	 */
+	private static boolean isTalkingPoint(ItemDefaults.Default defaults) {
+		return defaults.giftable() && !defaults.is(TasteCategory.FOOD) && defaults.main() != TasteCategory.BLOCK
+			&& defaults.main() != TasteCategory.ITEM && defaults.main() != TasteCategory.MATERIAL;
 	}
 
 	// Noise

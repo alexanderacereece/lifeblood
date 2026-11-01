@@ -884,7 +884,12 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 			reason = "as " + member + ", toward someone " + factionLabel(FactionRegistry.get(c.getSource().getWorld()).getPlayerFaction(player.uuid));
 		}
 
-		return reply(c, npc.nickname + " is " + describePersonal(overall) + " (" + reason + ").");
+		reply(c, npc.nickname + " is " + describePersonal(overall) + " (" + reason + ").");
+		if (overall == FactionRelation.HOSTILE && !player.getGamemode().hasHostileMobs()) {
+			reply(c, "You're in a game mode monsters ignore, so " + npc.nickname + " won't attack you either.");
+		}
+
+		return 1;
 	}
 
 	private static int showOpinion(CommandContext<CommandSource> c, Entity target) throws CommandSyntaxException {

@@ -176,6 +176,11 @@ public final class ItemDefaults {
 		} else if (Tastes.isFood(item)) {
 			base = 0.1F;
 			main = TasteCategory.FOOD;
+		} else if (name.startsWith("slab_") || name.startsWith("stairs_") || name.startsWith("brick_") || name.startsWith("pressure_plate")
+			|| name.startsWith("button_") || name.startsWith("trapdoor_") || name.startsWith("fence_")) {
+			// Building parts, even fancy ones: a gold brick slab is a block first.
+			base = name.contains("diamond") || name.contains("gold") ? 0.3F : 0.0F;
+			main = TasteCategory.BLOCK;
 		} else if (name.contains("diamond")) {
 			base = 0.75F;
 			main = TasteCategory.VALUABLE;

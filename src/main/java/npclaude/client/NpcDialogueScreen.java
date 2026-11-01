@@ -209,6 +209,11 @@ public class NpcDialogueScreen extends Screen implements DialogueSession {
 	}
 
 	@Override
+	public void openProfile() {
+		this.mc.displayScreen(new NpcProfileScreen(this, this.npc, this.player));
+	}
+
+	@Override
 	public void close() {
 		this.mc.displayScreen(null);
 	}

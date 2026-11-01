@@ -26,6 +26,7 @@ import npclaude.ai.NpcBrain;
 import npclaude.ai.NpcNavigator;
 import npclaude.ai.behavior.FollowPlayerBehavior;
 import npclaude.ai.behavior.RecoverBehavior;
+import npclaude.ai.behavior.WanderBehavior;
 import npclaude.combat.CombatBehavior;
 import npclaude.combat.CombatStyle;
 import npclaude.combat.FactionRelation;
@@ -40,6 +41,7 @@ import npclaude.personality.Surroundings;
 import npclaude.personality.Tastes;
 import npclaude.personality.NpcPersonality;
 import npclaude.personality.Quirk;
+import npclaude.personality.TraitAxis;
 import npclaude.social.MemoryType;
 import npclaude.social.NpcMemories;
 import npclaude.social.Opinions;
@@ -90,6 +92,12 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private static final int SURROUNDINGS_CHECK_INTERVAL = 40;
 	/** How often the weather and the place it's in affect its mood (30 seconds). */
 	private static final int SURROUNDINGS_MOOD_INTERVAL = 600;
+	/** How often a follower checks whether it still wants to follow (5 seconds). */
+	private static final int FOLLOW_CHECK_INTERVAL = 100;
+	/** A follower whose opinion of its leader sinks this low leaves. */
+	private static final float QUIT_FOLLOWING_OPINION = -15.0F;
+	/** At least this long between "not now, I'm fighting" lines when clicked mid-fight (1.5 seconds). */
+	private static final int REFUSAL_COOLDOWN = 30;
 	/** At least this long between remarks about a new biome, so walking along a border doesn't set it off (2 minutes). */
 	private static final int BIOME_REMARK_COOLDOWN = 2400;
 	private static final int MEMORY_PRUNE_INTERVAL = 1200;
@@ -120,6 +128,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private String pendingRemark;
 	private int pendingRemarkTick;
 	private int lastBiomeRemarkTick = -BIOME_REMARK_COOLDOWN;
+	private int lastRefusalTick = -REFUSAL_COOLDOWN;
 	private HealthMode healthMode = HealthMode.MORTAL;
 	/** Ticks left lying down after a would-be killing blow; 0 when standing. */
 	private int downedTicks;
@@ -295,6 +304,10 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		int offset = this.tickCount + this.id;
 		if (offset % SURROUNDINGS_CHECK_INTERVAL == 0) {
 			this.noticeSurroundings();
+		}
+
+		if (offset % FOLLOW_CHECK_INTERVAL == 0) {
+			this.reconsiderFollowing();
 		}
 
 		if (offset % SURROUNDINGS_MOOD_INTERVAL == 0) {
@@ -528,6 +541,20 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 			return super.interact(player);
 		}
 
+		// No chatting mid-fight, or with someone it means to fight: it says so instead.
+		CombatBehavior combat = this.brain.getActive() instanceof CombatBehavior active ? active : null;
+		boolean hostile = NpcFactions.regard(this, player) == FactionRelation.HOSTILE;
+		if (combat != null || hostile) {
+			if (this.tickCount - this.lastRefusalTick >= REFUSAL_COOLDOWN) {
+				this.lastRefusalTick = this.tickCount;
+				boolean fightingYou = combat != null && combat.getCurrentTarget() == player;
+				this.voice.bark("busy_fighting", player, context -> context.fact("fighting_you", fightingYou ? "yes" : "no")
+					.fact("in_combat", combat != null ? "yes" : "no"), true);
+			}
+
+			return true;
+		}
+
 		NpcInteractions.interact(this, player);
 		return true;
 	}
@@ -668,6 +695,55 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 
 		FollowPlayerBehavior follow = this.brain.findBehavior(FollowPlayerBehavior.class);
 		return follow != null ? follow.getPlayer(this) : null;
+	}
+
+	/**
+	 * Whether it would come along if this player asked: always for allies (its own faction, or a close friend),
+	 * never for enemies or while recovering, otherwise if it likes them enough. Outgoing and loyal NPCs need less
+	 * convincing, lazy ones more.
+	 */
+	public boolean willFollow(Player player) {
+		if (this.isRecovering()) {
+			return false;
+		}
+
+		FactionRelation relation = NpcFactions.regard(this, player);
+		if (relation != FactionRelation.NEUTRAL) {
+			return relation == FactionRelation.ALLY;
+		}
+
+		float threshold = 25.0F - 10.0F * this.personality.get(TraitAxis.SOCIABILITY) - 10.0F * this.personality.get(TraitAxis.WORK_ETHIC)
+			- (this.personality.has(Quirk.LOYAL) ? 5.0F : 0.0F);
+		return Opinions.of(this, player) >= Math.max(10.0F, Math.min(45.0F, threshold));
+	}
+
+	/** Whether it lets this player see its things and tell it how to fight: its leader, an ally, or a good friend. */
+	public boolean trusts(Player player) {
+		return this.getLeader() == player || NpcFactions.regard(this, player) == FactionRelation.ALLY
+			|| Opinions.of(this, player) >= Opinions.FRIEND_THRESHOLD;
+	}
+
+	public void startFollowing(Player player) {
+		this.brain.set(new FollowPlayerBehavior(player.uuid));
+	}
+
+	/** Goes back to wandering around home. */
+	public void stopFollowing() {
+		this.brain.set(new WanderBehavior());
+	}
+
+	/** A follower that's fallen out with its leader says so and leaves. */
+	private void reconsiderFollowing() {
+		Player leader = this.getLeader();
+		if (leader == null) {
+			return;
+		}
+
+		FactionRelation relation = NpcFactions.regard(this, leader);
+		if (relation != FactionRelation.ALLY && (relation == FactionRelation.HOSTILE || Opinions.of(this, leader) <= QUIT_FOLLOWING_OPINION)) {
+			this.voice.bark("follow_quit", leader, null, true);
+			this.stopFollowing();
+		}
 	}
 
 	public NpcGender getGender() {

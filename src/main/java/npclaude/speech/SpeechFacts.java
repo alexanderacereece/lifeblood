@@ -1,5 +1,6 @@
 package npclaude.speech;
 
+import java.util.Locale;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.item.Item;
@@ -8,6 +9,7 @@ import net.minecraft.core.world.pos.TilePos;
 import net.minecraft.core.world.weather.Weather;
 import npclaude.combat.FactionRegistry;
 import npclaude.combat.FactionRelation;
+import npclaude.combat.NpcFactions;
 import npclaude.entity.EntityNPC;
 import npclaude.personality.Surroundings;
 import npclaude.personality.Tastes;
@@ -19,7 +21,7 @@ import org.jetbrains.annotations.Nullable;
  * weather, the speaker's mood and health, faction, tastes and voice. Speech files test these as conditions
  * ({time=night}) and fill them in ([listener], [favorite_food.a]).
  *
- * Facts: name, listener, listener_type (player/npc), opinion (enemy ... close_friend), leader (yes if the listener is
+ * Facts: name, listener, listener_type (player/npc), opinion (enemy ... close_friend), relation (ally/neutral/hostile), leader (yes if the listener is
  * who they follow), time (morning/day/evening/night), weather (clear/rain/snow/storm/fog/blood_rain), wet (yes if
  * it's coming down on them), outside, season (spring/summer/fall/winter), biome (desert, tundra...), with
  * weather_like, season_like and biome_like (love/like/meh/dislike/hate), mood (awful/bad/okay/good/great),
@@ -43,6 +45,7 @@ public final class SpeechFacts {
 			context.fact("listener_type", listener instanceof Player ? "player" : "npc");
 			if (listener instanceof Player || listener instanceof EntityNPC) {
 				context.fact("opinion", Opinions.Label.of(Opinions.of(npc, listener)).id());
+				context.fact("relation", NpcFactions.regard(npc, listener).name().toLowerCase(Locale.ROOT));
 			}
 
 			context.fact("leader", listener == npc.getLeader() ? "yes" : "no");

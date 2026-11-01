@@ -116,8 +116,20 @@ public class NpcInventory implements Container {
 		return -1;
 	}
 
-	/** Puts a whole stack into the first empty pack slot; returns false (and changes nothing) if the pack is full. */
+	/**
+	 * Puts a stack into the pack: onto a matching stack with room for all of it, else into the first empty slot.
+	 * Returns false (and changes nothing) if it doesn't fit.
+	 */
 	public boolean addToPack(ItemStack stack) {
+		for (int i = 0; i < PACK_SIZE; i++) {
+			ItemStack existing = this.items[PACK_START + i];
+			if (existing != null && existing.canStackWith(stack)
+				&& existing.stackSize + stack.stackSize <= Math.min(existing.getMaxStackSize(), this.getMaxStackSize())) {
+				existing.stackSize += stack.stackSize;
+				return true;
+			}
+		}
+
 		for (int i = 0; i < PACK_SIZE; i++) {
 			if (this.items[PACK_START + i] == null) {
 				this.items[PACK_START + i] = stack;

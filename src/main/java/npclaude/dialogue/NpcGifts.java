@@ -28,14 +28,20 @@ public final class NpcGifts {
 			return "...";
 		}
 
-		if (!npc.inventory.addToPack(held)) {
+		ItemStack gift = held.copy();
+		gift.stackSize = 1;
+		if (!npc.inventory.addToPack(gift)) {
 			String line = npc.voice.line("gift_full", player, null);
 			return line != null ? line : "I've got no room for that.";
 		}
 
-		for (int slot = 0; slot < player.inventory.mainInventory.length; slot++) {
-			if (player.inventory.mainInventory[slot] == held) {
-				player.inventory.mainInventory[slot] = null;
+		// Only one of the stack changes hands.
+		held.stackSize--;
+		if (held.stackSize <= 0) {
+			for (int slot = 0; slot < player.inventory.mainInventory.length; slot++) {
+				if (player.inventory.mainInventory[slot] == held) {
+					player.inventory.mainInventory[slot] = null;
+				}
 			}
 		}
 
@@ -60,7 +66,7 @@ public final class NpcGifts {
 			npc.remember(MemoryType.GAVE_ME_A_GIFT, player, 0.4F + Math.max(0.0F, like));
 		}
 
-		Word word = food ? Word.ofFood(held.getItem()) : Word.ofItem(held);
+		Word word = food ? Word.ofFood(held.getItem()) : Word.ofItem(gift);
 		String line = npc.voice.line("gift", player, context -> context.word("item", word).fact("kind", defaults.main().id())
 			.fact("taste", EntityNPC.tasteOf(like)).fact("rude_gift", rude ? "yes" : "no")
 			.fact("surprising", Math.abs(like - defaults.base()) >= 0.6F ? "yes" : "no"));
