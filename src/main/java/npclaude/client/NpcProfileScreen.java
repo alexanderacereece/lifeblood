@@ -11,6 +11,7 @@ import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.item.Item;
 import net.minecraft.core.item.ItemStack;
 import npclaude.entity.EntityNPC;
+import npclaude.entity.NpcGender;
 import npclaude.personality.NpcPersonality;
 import npclaude.personality.Quirk;
 import npclaude.personality.Surroundings;
@@ -82,8 +83,11 @@ public class NpcProfileScreen extends Screen {
 			subtitle.add("one of the " + this.npc.getFaction());
 		}
 
+		subtitle.add(this.npc.getGender() == NpcGender.FEMALE ? "female" : "male");
+		subtitle.add(this.npc.getAgeYears() + (this.npc.getAgeYears() == 1 ? " year old" : " years old"));
+		subtitle.add(this.npc.isBirthday() ? "birthday today!" : "born " + this.npc.getBirthday());
 		subtitle.add("feeling " + SpeechFacts.moodLabel(mood));
-		this.drawStringShadow(this.fontRenderer, String.join(" · ", subtitle), x + PADDING, y + PADDING + LINE + 2, DIM_COLOR);
+		this.drawStringShadow(this.fontRenderer, this.fit(String.join(" · ", subtitle), w - PADDING * 2), x + PADDING, y + PADDING + LINE + 2, DIM_COLOR);
 
 		int top = y + PADDING + LINE * 2 + 10;
 		int left = x + PADDING;

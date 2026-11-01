@@ -1,5 +1,6 @@
 package npclaude.interaction;
 
+import java.util.function.Consumer;
 import net.minecraft.core.entity.player.Player;
 import npclaude.entity.EntityNPC;
 
@@ -15,6 +16,8 @@ public final class NpcInteractions {
 
 	private static Handler handler = (npc, player) -> {
 	};
+	private static Consumer<Player> wordBookHandler = player -> {
+	};
 
 	private NpcInteractions() {
 	}
@@ -25,5 +28,14 @@ public final class NpcInteractions {
 
 	public static void interact(EntityNPC npc, Player player) {
 		handler.interact(npc, player);
+	}
+
+	/** The client opens the word book screen (from the word book item). */
+	public static void setWordBookHandler(Consumer<Player> handler) {
+		wordBookHandler = handler;
+	}
+
+	public static void openWordBook(Player player) {
+		wordBookHandler.accept(player);
 	}
 }

@@ -23,6 +23,7 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Math;
 import org.joml.Vector3dc;
 import org.useless.dragonfly.data.entity.mojang.EntityGeometryMojangData.Cache;
+import org.useless.dragonfly.models.entity.BoneTransform;
 import org.useless.dragonfly.models.entity.StaticEntityModel;
 
 /**
@@ -33,6 +34,10 @@ import org.useless.dragonfly.models.entity.StaticEntityModel;
 public class NpcRenderer extends MobRendererBipedArmored<EntityNPC> {
 	private static final NamespaceID PLAYER_MODELS = NamespaceID.fromPool("minecraft", "player");
 	private static final float PLAYER_SCALE = 0.9375F;
+	/** A newborn's head, as a share of an adult's. */
+	private static final float CHILD_HEAD_START = 0.75F;
+	/** How grown up a child is when its head reaches full size. */
+	private static final float CHILD_HEAD_FULL_AT = 0.5F;
 	private static final float LYING_LIFT = 0.125F;
 	private static final double HEALTH_BAR_RANGE = 16.0;
 	/** Bar size in name-tag pixels; the name tag sits 0.8 above the head, the bar just above it. */
@@ -64,6 +69,27 @@ public class NpcRenderer extends MobRendererBipedArmored<EntityNPC> {
 			rotationProgress = Math.min(MathHelper.sqrt_float(rotationProgress), 1.0F);
 			GLRenderer.modelM4f().rotateZ(Math.toRadians(rotationProgress * this.getMaxDeathRotation(entity)));
 		}
+	}
+
+	/**
+	 * Children's heads are bigger for their size: the head starts at three quarters of an adult's (while the body is
+	 * half) and reaches full size halfway to adulthood, so little ones have little-one proportions.
+	 */
+	@Nullable
+	@Override
+	protected StaticEntityModel setupAnimations(@NotNull EntityNPC entity, @Nullable StaticEntityModel model, float partialTick, int layer) {
+		StaticEntityModel posed = super.setupAnimations(entity, model, partialTick, layer);
+		if (posed != null && entity.isChild()) {
+			float growth = entity.getGrowth();
+			float head = CHILD_HEAD_START + (1.0F - CHILD_HEAD_START) * Math.min(1.0F, growth / CHILD_HEAD_FULL_AT);
+			float relative = head / entity.getSizeScale();
+			BoneTransform transform = posed.getTransform("head");
+			transform.scaleX *= relative;
+			transform.scaleY *= relative;
+			transform.scaleZ *= relative;
+		}
+
+		return posed;
 	}
 
 	@Override

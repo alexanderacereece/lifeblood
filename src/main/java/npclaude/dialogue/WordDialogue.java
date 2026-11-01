@@ -15,22 +15,24 @@ import npclaude.words.WordCategory;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * NPCs asking the player for words: now and then a conversation opens with "What would you call something you'd
- * eat for breakfast?". The player types a word (and its plural, for nouns), then says whether it's just for this
+ * NPCs asking the player for words: now and then, chatting with an NPC ("How are you?") turns into "What would
+ * you call a food you'd eat for breakfast?". It counts as one of the five chats a minute. The player types a word (and its plural, for nouns), then says whether it's just for this
  * NPC or something anyone could say. See docs/personality.md, section 9.
  *
- * An NPC that likes you at least a little (20+) asks at most once a day, about a quarter of the time you talk
- * (more if curious or a chatterbox, less if taciturn), until it knows 15 words. With /npc limits off it asks every
- * time, for testing.
+ * An NPC that likes you at least a little (20+) asks at most once a day, about a quarter of the times you chat
+ * (more if curious or a chatterbox, less if taciturn), until it knows 15 words. With /npc limits off it asks half
+ * the time, any day, for testing.
  */
 public final class WordDialogue {
 	private static final float ASK_CHANCE = 0.25F;
 	private static final int MAX_WORDS_PER_NPC = 15;
+	/** How many of its words an NPC lists when asked. */
+	private static final int LISTED_WORDS = 6;
 
 	private WordDialogue() {
 	}
 
-	/** The conversation, opening with a question for a word, if the NPC feels like asking now. */
+	/** A chat that turns into asking for a word, if the NPC feels like asking now. */
 	@Nullable
 	static NpcDialogue maybeAsk(EntityNPC npc, Player player) {
 		if (npc.isChild() && npc.getRandom().nextFloat() < 0.5F || Opinions.of(npc, player) < 20.0F) {
@@ -41,7 +43,8 @@ public final class WordDialogue {
 		long today = npc.world.getWorldTime() / Memory.TICKS_PER_DAY;
 		float chance = ASK_CHANCE * (npc.personality.has(Quirk.CURIOUS) || npc.personality.has(Quirk.CHATTERBOX) ? 2.0F : 1.0F)
 			* (npc.personality.has(Quirk.TACITURN) ? 0.5F : 1.0F);
-		if (SocialLimits.isEnabled() && (book.lastAsked(npc.getUuid(), player.uuid) == today || npc.getRandom().nextFloat() >= chance)
+		boolean limited = SocialLimits.isEnabled();
+		if (limited && book.lastAsked(npc.getUuid(), player.uuid) == today || npc.getRandom().nextFloat() >= (limited ? chance : 0.5F)
 			|| book.knownBy(npc.getUuid()).size() >= MAX_WORDS_PER_NPC) {
 			return null;
 		}
@@ -64,8 +67,9 @@ public final class WordDialogue {
 		String prompt = category.prompts.get(npc.getRandom().nextInt(category.prompts.size()));
 		String line = npc.voice.lineOr("ask_word", player, prompt, context -> context.fact("word_prompt", prompt));
 		List<DialogueOption> options = new ArrayList<>();
-		options.add(new DialogueOption("Let me think... (type a word)", session -> session.askForText(prompt, "", null,
-			text -> afterSingular(npc, player, category, clean(text), session),
+		options.add(new DialogueOption("Let me think... (type a word)", session -> session.askForText(
+			new TextRequest(prompt, category.hint, category.prefix, "", null),
+			text -> afterSingular(npc, player, category, category.noun ? withoutArticle(clean(text)) : clean(text), session),
 			null,
 			() -> session.show(NpcDialogue.main(npc, player, NpcDialogue.say(npc, player, "never_mind", "Oh. All right."))))));
 		options.add(new DialogueOption("I don't know, sorry.", session -> session.show(NpcDialogue.main(npc, player,
@@ -87,8 +91,11 @@ public final class WordDialogue {
 			return;
 		}
 
-		session.askForText("And if there's more than one " + singular + "?", Word.plural(singular), category.canBeMass ? "Can't count it" : null,
-			plural -> afterWord(npc, player, category, new Word(singular, clean(plural).isEmpty() ? Word.plural(singular) : clean(plural), Word.Kind.ONE), session),
+		String hint = category.canBeMass ? "Or \"Uncountable\" if you'd say \"some " + singular + "\", like bread." : "";
+		session.askForText(new TextRequest("And if there's more than one " + singular + "?", hint, "two", Word.plural(singular),
+				category.canBeMass ? "Uncountable" : null),
+			plural -> afterWord(npc, player, category, new Word(singular, withoutArticle(clean(plural)).isEmpty() ? Word.plural(singular)
+				: withoutArticle(clean(plural)), Word.Kind.ONE), session),
 			() -> afterWord(npc, player, category, Word.mass(singular), session),
 			() -> session.show(NpcDialogue.main(npc, player, NpcDialogue.say(npc, player, "never_mind", "Oh. All right."))));
 	}
@@ -115,6 +122,11 @@ public final class WordDialogue {
 		session.show(NpcDialogue.main(npc, player, line));
 	}
 
+	/** "a squidbug" is just "squidbug": lines add their own "a", "the" or "some". */
+	private static String withoutArticle(String text) {
+		return text.replaceFirst("(?i)^(a|an|the|some|one|two)\\s+", "").strip();
+	}
+
 	/** Words go into speech, so anything the speech files treat as syntax is taken out. */
 	private static String clean(String text) {
 		return text.replaceAll("[\\[\\]{}@;=]", "").strip();
@@ -127,14 +139,17 @@ public final class WordDialogue {
 			return NpcDialogue.say(npc, player, "no_words", "I don't know any special words. Teach me one sometime?");
 		}
 
+		// The newest few; the word book has the rest.
+		words.sort((a, b) -> Integer.compare(b.id, a.id));
+		int more = Math.max(0, words.size() - LISTED_WORDS);
 		List<String> parts = new ArrayList<>();
-		for (WordBook.TaughtWord word : words) {
+		for (WordBook.TaughtWord word : words.subList(0, Math.min(LISTED_WORDS, words.size()))) {
 			String from = word.knownBy.get(npc.getUuid());
 			String source = word.teacher.equals(player.uuid) && from.equals(player.username) ? "you taught me" : "from " + from;
 			parts.add("'" + word.word.singular() + "' (" + source + ")");
 		}
 
-		return "I know " + (parts.size() == 1 ? parts.get(0) : String.join(", ", parts.subList(0, parts.size() - 1)) + " and "
-			+ parts.get(parts.size() - 1)) + ".";
+		String list = parts.size() == 1 ? parts.get(0) : String.join(", ", parts.subList(0, parts.size() - 1)) + " and " + parts.get(parts.size() - 1);
+		return more > 0 ? "Lately I've learned " + list + ". And " + more + " more, if you check your word book." : "I know " + list + ".";
 	}
 }

@@ -11,6 +11,7 @@ import net.minecraft.core.sound.SoundCategory;
 import npclaude.dialogue.DialogueOption;
 import npclaude.dialogue.DialogueSession;
 import npclaude.dialogue.NpcDialogue;
+import npclaude.dialogue.TextRequest;
 import npclaude.entity.EntityNPC;
 import org.jetbrains.annotations.Nullable;
 
@@ -216,9 +217,8 @@ public class NpcDialogueScreen extends Screen implements DialogueSession {
 	}
 
 	@Override
-	public void askForText(String question, String initial, @Nullable String extraLabel, Consumer<String> onDone, @Nullable Runnable onExtra,
-		Runnable onCancel) {
-		this.mc.displayScreen(new TextEntryScreen(this, question, initial, extraLabel, onDone, onExtra, onCancel));
+	public void askForText(TextRequest request, Consumer<String> onDone, @Nullable Runnable onExtra, Runnable onCancel) {
+		this.mc.displayScreen(new TextEntryScreen(this, request, onDone, onExtra, onCancel));
 	}
 
 	@Override

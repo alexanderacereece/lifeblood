@@ -7,14 +7,15 @@
 #
 # Facts: name, listener, listener_type (player/npc), opinion (enemy/disliked/neutral/friendly/friend/close_friend),
 # relation (ally/neutral/hostile: how they'd treat the listener in a fight),
-# age (child/adult), relationship (single/dating/engaged/married/widowed), listener_kin (what the listener is to them: spouse, fiance,
+# age (child/adult), birthday (yes on their birthday), relationship (single/dating/engaged/married/widowed), listener_kin (what the listener is to them: spouse, fiance,
 # partner, parent, child, sibling, grandparent, grandchild, aunt_uncle, niece_nephew, cousin, ..._in_law, or none),
 # leader (yes/no), time (morning/day/evening/night), weather (clear/rain/snow/storm/fog/blood_rain), wet (yes when
 # it's coming down on them), outside, season (spring/summer/fall/winter), biome (plains, desert, tundra...),
 # weather_like/season_like/biome_like (love/like/meh/dislike/hate), mood (awful/bad/okay/good/great),
 # health (fine/hurt/low), recovering (yes/no), has_faction, has_enemy, address, catchphrase.
 # Words: taught_food, taught_animal, taught_thing, taught_place, taught_exclamation, taught_greeting,
-# taught_farewell, taught_describe, taught_activity (words players taught them), partner, favorite_food, hated_food, favorite_thing, hated_thing, weather_word, biome_word, season_word,
+# taught_farewell, taught_describe, taught_activity, taught_angry, taught_happy, taught_sad, taught_scared (words
+# players taught them), partner, favorite_food, hated_food, favorite_thing, hated_thing, weather_word, biome_word, season_word,
 # favorite_weather, hated_weather, favorite_biome, hated_biome, favorite_season, hated_season, faction,
 # enemy_faction, and per event: enemy, food, item.
 # Gifts add kind (food/valuable/junk/gross/material/tool/weapon/armor/flower/plant/curio/music/decor/dangerous/
@@ -121,6 +122,9 @@ Good grief!                  {proper}
 # Greetings: a player walks up.
 
 == greet ==
+It's my birthday today!      {birthday=yes, w=8}
+[hello] Guess whose birthday it is? Mine! {birthday=yes, extrovert, w=8}
+Oh! Hi. It's, um... my birthday. {birthday=yes, introvert, w=8}
 [hello_named]
 [hello_named] [smalltalk_short] {w=0.6}
 [hello_named] Still in one piece, I see. {opinion=friend}
@@ -202,6 +206,11 @@ Oh, thank the Cube. A break.  {lazy, pious}
 Oh, thank goodness. A break.  {lazy}
 
 == smalltalk ==
+Another year older. Feels about the same. {birthday=yes, w=6}
+It's my birthday! Did you get me anything? {birthday=yes, greedy, w=10}
+It's my birthday! Did you get me anything? {birthday=yes, lighthearted, w=6}
+Birthdays make me think about all the years gone by. {birthday=yes, sentimental, w=10}
+Another year closer to the end. Happy birthday to me. {birthday=yes, pessimist, w=10}
 Not much to say, really.
 Same as always.
 Keeping busy.                {hardworking}
@@ -355,6 +364,12 @@ Do you ever think about settling down? {romantic}
 # Gifts
 
 == gift ==
+[taught_happy]! [item.cap]!      {taste=love, w=6}
+[taught_angry]. [item.cap]?     {rude_gift=yes, w=8}
+On my birthday, too! Thank you! {birthday=yes, taste=love, w=12}
+On my birthday, too! Thank you! {birthday=yes, taste=like, w=12}
+A birthday present? You remembered! {birthday=yes, w=8}
+On my birthday? Really?          {birthday=yes, rude_gift=yes, w=14}
 Thanks.
 Oh, for me? Thank you.       {polite}
 Huh. Thanks, I guess.        {!polite}
@@ -632,6 +647,8 @@ Right. Somebody's getting hurt. {hothead}
 You want a fight? You've got one, damn it! {hothead, crude}
 
 == flee ==
+[taught_scared]! Run!          {w=4}
+[taught_scared]!               {w=3}
 Run!
 I'm out of here!
 Nope! Nope!                  {lighthearted}
@@ -646,6 +663,7 @@ I can't do this!             {timid, pessimist}
 Run! Don't look back!        {polite}
 
 == low_health ==
+[taught_scared]! I'm hurt!    {w=4}
 I'm hurt!
 I'm hurt bad!
 Can't take much more of this!
@@ -660,6 +678,8 @@ Damn it, that hurt!          {crude}
 Bloody hell...               {crude+}
 
 == victory ==
+[taught_happy]!               {w=3}
+[taught_happy]! Got it!       {w=3}
 Got it!
 Down it goes.
 Ha! Next!                    {brave}
@@ -673,6 +693,8 @@ That's one for me.           {competitive}
 Keep up, [address].          {competitive, rude}
 
 == hit_by_friend ==
+[taught_angry]! Watch it!     {w=4}
+[taught_angry], [listener]!    {w=3}
 Hey! Watch it!
 Ow! What was that for?
 Careful!
@@ -690,6 +712,7 @@ Do that again. I dare you.   {hothead, w=2}
 # Being downed, getting up, and rescue
 
 == downed ==
+[taught_sad]...               {w=3}
 Agh!
 Ugh...
 I'm down!
@@ -724,6 +747,7 @@ I'm in your debt.            {proper}
 You're a lifesaver, literally. {lighthearted}
 
 == grief ==
+[taught_sad]... [victim]...   {w=3}
 No... [victim]...
 [victim]! No!
 Not [victim]...
@@ -924,7 +948,7 @@ You? You're all right.       {opinion=neutral}
 I don't really know you yet. {opinion=neutral}
 Honestly? Haven't made my mind up. {opinion=neutral, honest}
 I like you, [listener].      {opinion=friendly}
-You're good people.          {opinion=friendly}
+I enjoy having you around.   {opinion=friendly}
 You're a friend. A real one. {opinion=friend}
 I'd trust you with my life.  {opinion=close_friend}
 You're the best friend I've got, [listener]. {opinion=close_friend, w=2}
@@ -1138,6 +1162,7 @@ Nooo... little [animal]...   {animal_lover, sentimental, w=10}
 # Brawls: fistfights nobody dies in. [listener] is the other brawler (or, for brawl_watch, a friend in the fight).
 
 == brawl_challenge ==
+[taught_angry]! That's it, [listener]. Fists up. {w=3}
 That's it. You and me, right now.
 I've had it with you, [listener]. Put 'em up.
 Come on then, [listener]! Fists!
@@ -1151,6 +1176,7 @@ You. Me. No weapons. Let's go. {proper, w=2}
 I don't like you, [listener]. Never have. {honest, w=2}
 
 == brawl_accept ==
+[taught_angry]! You're going to regret that! {w=4}
 Oh, it's like that? Fine!
 You want a fight? You've got one!
 Big mistake, [listener].
@@ -1326,6 +1352,7 @@ I thought you'd never ask!   {romantic, w=3}
 ...Yes.                      {taciturn, w=3}
 
 == wedding ==
+[taught_happy]! We're married! {w=4}
 We're married! We're actually married!
 Husband and wife. Or... you know what I mean. Married!
 Cube God bless this marriage! {pious, w=4}
@@ -1378,6 +1405,7 @@ I had a whole speech. I forgot it. Will you marry me? {lighthearted, w=3}
 The Cube God brought us together. Will you marry me? {pious, w=3}
 
 == player_said_yes ==
+[taught_happy]! Really?        {w=4}
 Really? Oh, that's wonderful!
 You mean it? I'm so happy!
 Yes! I mean, good. That's good. Yes.  {introvert, w=3}
@@ -1391,6 +1419,7 @@ I'm the luckiest person alive.
 Cube God be praised!         {pious, w=3}
 
 == player_said_no ==
+[taught_sad]. Okay.            {w=4}
 Oh. I see.
 I... understand. Sorry I asked.
 Right. Forget I said anything.
@@ -1458,6 +1487,7 @@ Cube God bless us both.      {pious, w=3}
 Til death do us part. Well, maybe not death, but you know. {lighthearted, w=3}
 
 == break_up_heard ==
+[taught_sad]... fine.          {w=3}
 ...I see.
 What? Why?
 I thought... never mind what I thought.
@@ -1532,4 +1562,20 @@ Fine. [word.cap]. Can I go now?      {rude, w=2}
 I don't know any special words. Teach me one sometime?
 Words? Just the usual ones.
 Nothing fancy. Teach me something!   {curious, w=3}
+
+# ---------------------------------------------------------------------------------------------------------------
+# Birthdays: said once, on the day, to whoever's around.
+
+== birthday ==
+It's my birthday today!
+Guess what? It's my birthday!
+Another year older!
+Happy birthday to me!
+Happy birthday to me! ...Anyone? No? {pessimist, w=3}
+Cube God, thank you for another year. {pious, w=3}
+Birthday cake! Is there birthday cake? {glutton, w=4}
+I'm not getting older. I'm getting better. {proud, w=3}
+It's my birthday. Please don't make a fuss. {introvert, w=3}
+It's my birthday! Everybody, it's my birthday! {extrovert, w=3}
+I'm a whole year bigger! {age=child, w=8}
 

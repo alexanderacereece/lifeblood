@@ -33,7 +33,11 @@ public enum Quirk {
 	JEALOUS,
 	SENTIMENTAL,
 	COMPETITIVE,
-	ANIMAL_LOVER;
+	ANIMAL_LOVER,
+	// Orientation: most NPCs are attracted to the opposite gender; these two say otherwise. They don't count toward
+	// the quirk limit and aren't inherited.
+	GAY,
+	BISEXUAL;
 
 	/** The other side of this quirk's pair, or null for a quirk without one. */
 	@Nullable
@@ -48,6 +52,7 @@ public enum Quirk {
 		pair(NOSY, DETACHED);
 		pair(PROUD, HUMBLE);
 		pair(EARLY_BIRD, NIGHT_OWL);
+		pair(GAY, BISEXUAL);
 	}
 
 	private static void pair(Quirk a, Quirk b) {
@@ -66,6 +71,11 @@ public enum Quirk {
 	 */
 	public boolean conflictsWith(Quirk other) {
 		return this.opposite == other;
+	}
+
+	/** Gay and bisexual: who they fall for, rolled on their own rather than as one of the quirks. */
+	public boolean isOrientation() {
+		return this == GAY || this == BISEXUAL;
 	}
 
 	public String id() {
@@ -104,6 +114,8 @@ public enum Quirk {
 			case SENTIMENTAL -> "holds on to memories";
 			case COMPETITIVE -> "has to win";
 			case ANIMAL_LOVER -> "has a soft spot for animals";
+			case GAY -> "attracted to the same gender";
+			case BISEXUAL -> "attracted to any gender";
 		};
 	}
 

@@ -16,9 +16,18 @@ public class NPClaudeClient implements ClientModInitializer {
 		ClientEvents.ENTITY_RENDERER_RELOAD.listen(Key.of(NPClaude.MOD_ID),
 			dispatcher -> dispatcher.assignRenderer(EntityNPC.class, new NpcRenderer()));
 
-		// The amulet's icon: assets/npclaude/textures/item/guardian_amulet.png.
+		// Item icons: assets/npclaude/textures/item/<name>.png.
 		ClientEvents.ITEM_MODEL_RELOAD.listen(Key.of(NPClaude.MOD_ID),
-			dispatcher -> dispatcher.addDispatch(new ItemModelStandard(NpcItems.guardianAmulet, true)));
+			dispatcher -> {
+				dispatcher.addDispatch(new ItemModelStandard(NpcItems.guardianAmulet, true));
+				dispatcher.addDispatch(new ItemModelStandard(NpcItems.wordBook, true));
+			});
+		NpcInteractions.setWordBookHandler(player -> {
+			Minecraft mc = Minecraft.getMinecraft();
+			if (player == mc.thePlayer) {
+				mc.displayScreen(new WordBookScreen(player));
+			}
+		});
 
 		NpcInteractions.setHandler((npc, player) -> {
 			Minecraft mc = Minecraft.getMinecraft();

@@ -220,7 +220,7 @@ Mood-only memories (no opinion effect): ate food I like or hate (scaled by prefe
 
 ### Pacing
 
-Gifts are limited to one per NPC per in-game day, and chats to three per real-world minute (the guardian amulet doesn't count as a gift here). Both count for more because of it, and repeats add up steadily instead of halving:
+Gifts are limited to one per NPC per in-game day, and chats to five per real-world minute (the guardian amulet doesn't count as a gift here). Both count for more because of it, and repeats add up steadily instead of halving:
 - a gift is worth up to about +11 depending on how much they like it, lasting two weeks, up to 14 at once;
 - a chat is worth +2, lasting three days, up to 10 at once.
 
@@ -340,7 +340,7 @@ Generated homesteads start with whole families already linked.
 
 ### Romance
 
-The way new couples form over time, so settlements change instead of staying frozen as generated. Any NPC can take part; the romantic quirk makes it far more likely and faster. Who an NPC can be attracted to is rolled per NPC: the opposite gender (80%), the same (10%) or both (10%). Players don't set a gender, so anyone can fall for a player. Blood relatives never date.
+The way new couples form over time, so settlements change instead of staying frozen as generated. Any NPC can take part; the romantic quirk makes it far more likely and faster. Who an NPC can be attracted to: the opposite gender by default, or the same with the **gay** quirk (10%) or any with the **bisexual** quirk (10%). These show on the profile like other quirks, don't count toward the three-quirk limit, and aren't inherited. Players don't set a gender, so anyone can fall for a player. Blood relatives never date.
 
 Stages, each needing high opinions on both sides (for the player, only the NPC's side counts; the player decides for themself):
 1. **Dating** at 70 or more. One asks; the other accepts if their opinion is high enough and they're attracted, and a refusal leaves a "turned me down" memory. NPCs check about once a minute, romantics three times as often.
@@ -360,11 +360,16 @@ Family is stored at world level (`npclaude_family`), so relatives who are far aw
 Married couples have children, which keeps settlements alive across generations. (Minecraft Comes Alive does something similar; this design is our own.)
 - A married couple at 80+ opinion, near each other, has about one child every ten in-game days, up to four, and not until the youngest is five days old. An NPC married to the player has children the same way.
 - A child is born beside its NPC parent, with a name from `assets/npclaude/names.txt`, its parents' faction and home, and family links set, so siblings, cousins and so on follow from the graph.
-- It starts at half size and grows to full size over 20 in-game days (`/npc grow` shows or sets it).
+- It starts at half size and grows to full size over 18 in-game years (1008 days in a world with 56-day years; a future game setting). `/npc grow` shows or sets it. Its head starts at three quarters of an adult's and is full size halfway to adulthood, for child proportions.
+- A child stays near a parent who's around, NPC or player, catching up when they walk off.
 - Children inherit trait axes as a blend of both parents plus a random shift, and each parent quirk has a 30% chance to pass on (sometimes they get one of their own). Tastes are their own.
 - Looks: skin tone, hair color and eye color from one parent or the other, often a parent's hairstyle, eyes or mouth, and no facial hair. A young man may grow a beard on coming of age.
 - Children are invincible (section 7). They don't fight, brawl or date: they run from danger.
-- Not yet: following parents around, playing, and helping with small tasks as they get older.
+- Not yet: playing, and helping with small tasks as they get older.
+
+### Ages and birthdays
+
+Everyone has a birth date. Adults from before ages existed are given one between 18 and 60 years ago; children's come from their birth. The profile shows their age and birthday ("born Summer 5"), following the world's own calendar of seasons. On their birthday an NPC is in a good mood, says so, and any gift counts double.
 
 ### The player
 
@@ -483,7 +488,7 @@ Speech appears in chat as `<Name> line` within a hearing radius (about 24 blocks
 
 ## 9. Word book
 
-NPCs occasionally ask the player for a new word, in conversation or as a chat message when you're nearby ("What would you call something you'd eat for breakfast?"). Friendlier, curious and chatty NPCs ask more often. The player can answer or decline.
+NPCs occasionally ask the player for a new word: sometimes a chat ("How are you?") turns into "What would you call a food you'd eat for breakfast?", counting as one of the five chats a minute. Friendlier, curious and chatty NPCs ask more often. The player can answer or decline. The text box says what kind of word fits, with an example, and shows the words that come before it ("a(n) ___", "Welcome to ___", "I love ___"), and leading "a", "an", "the" or "some" are dropped from what's typed, so lines never say "a a squidbug".
 
 After learning a word, the NPC asks whether it's **just for them** or **something anyone could say**:
 - **Just for them:** a personal word, like their own catchphrase or their nickname for you. It never spreads.
@@ -497,7 +502,8 @@ Each word has a **category** that says exactly what it is, which keeps sentences
 | Animal | singular and plural | "Saw [animal.a] by the river." |
 | Thing | singular and plural | "Lost my [thing] again." |
 | Place | name | "Ever been to [place]?" |
-| Exclamation | text | "[exclaim]! Did you see that?" |
+| Surprised | text | "[exclaim]! Did you see that?" |
+| Angry, happy, sad, scared | text | said when they're mad, delighted, grieving or frightened |
 | Greeting | text | Used as their hello |
 | Farewell | text | Used as their goodbye |
 | Nickname for you | text | Used instead of your name |
@@ -509,8 +515,8 @@ Each word has a **category** that says exactly what it is, which keeps sentences
 - **In speech,** each NPC uses one known word per category in a line, as `[taught_food]`, `[taught_greeting]` and so on. A nickname you taught replaces your name about half the time.
 - **No fading.** Words stay until the player deletes them.
 - **No editing.** A word can only be deleted, never changed.
-- **The word book screen** lists every taught word: category, personal or general, who you taught it to, and how many NPCs know it. Deleting a word removes it from everyone. For now this is `/npc words` and `/npc words delete <id>`; the screen is still to come.
-- **Per NPC**, a dialogue option ("What words do you know?") lists that NPC's words and where they picked each one up.
+- **The word book screen** lists every taught word: category, personal or general, who you taught it to, and how many NPCs know it. Deleting a word removes it from everyone. The **Word Book** item (a book and a feather) opens it; `/npc words` and `/npc words delete <id>` do the same by command.
+- **Per NPC**, a dialogue option ("What words do you know?") lists that NPC's six newest words and where they picked each one up; the word book has the rest.
 
 ---
 

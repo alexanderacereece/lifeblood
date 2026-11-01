@@ -58,6 +58,8 @@ public final class NpcGifts {
 			return line != null ? line : "For me? I... thank you.";
 		}
 
+		// A gift on their birthday means more.
+		float birthday = npc.isBirthday() ? 2.0F : 1.0F;
 		ItemDefaults.Default defaults = ItemDefaults.of(held.getItem());
 		boolean food = Tastes.isFood(held.getItem());
 		float like = npc.personality.tastes.like(held.getItem());
@@ -65,18 +67,18 @@ public final class NpcGifts {
 		if (food) {
 			float taste = Math.min(1.0F, Math.abs(like) * (npc.personality.has(Quirk.GLUTTON) ? 2.0F : 1.0F));
 			if (like >= 0.2F) {
-				npc.remember(MemoryType.GAVE_ME_FOOD_I_LIKE, player, taste);
+				npc.remember(MemoryType.GAVE_ME_FOOD_I_LIKE, player, taste * birthday);
 			} else if (like <= -0.2F) {
 				npc.remember(MemoryType.GAVE_ME_FOOD_I_HATE, player, taste);
 			} else {
-				npc.remember(MemoryType.GAVE_ME_A_GIFT, player, 0.5F);
+				npc.remember(MemoryType.GAVE_ME_A_GIFT, player, 0.5F * birthday);
 			}
 		} else if (rude) {
 			npc.remember(MemoryType.INSULTED_ME, player, -like * 0.6F);
 		} else if (like <= -0.2F) {
 			npc.remember(MemoryType.GAVE_ME_JUNK, player, -like);
 		} else {
-			npc.remember(MemoryType.GAVE_ME_A_GIFT, player, 0.4F + Math.max(0.0F, like));
+			npc.remember(MemoryType.GAVE_ME_A_GIFT, player, (0.4F + Math.max(0.0F, like)) * birthday);
 		}
 
 		// Their reaction to their very favorite (or most hated) gives it away.

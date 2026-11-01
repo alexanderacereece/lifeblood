@@ -67,7 +67,7 @@ public final class Romance {
 		}
 
 		Kinship kin = Kinship.of(FamilyRegistry.get(npc.world), npc.getUuid(), id);
-		return (kin == null || !kin.blood) && npc.personality.attraction.allows(npc.getGender(), genderOf(other));
+		return (kin == null || !kin.blood) && npc.personality.attraction().allows(npc.getGender(), genderOf(other));
 	}
 
 	public static float daysTogether(FamilyRegistry.Partnership partnership, long now) {

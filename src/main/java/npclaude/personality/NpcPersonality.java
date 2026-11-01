@@ -28,8 +28,6 @@ public class NpcPersonality {
 	private final Map<TraitAxis, Float> axes = new EnumMap<>(TraitAxis.class);
 	private final Set<Quirk> quirks = EnumSet.noneOf(Quirk.class);
 	public final Tastes tastes = new Tastes(this);
-	/** Who it can fall for. */
-	public Attraction attraction = Attraction.OPPOSITE;
 
 	public NpcPersonality() {
 		for (TraitAxis axis : TraitAxis.values()) {
@@ -59,7 +57,7 @@ public class NpcPersonality {
 
 	/** Whether this quirk could be added: not already there, not clashing with one there, and room left. */
 	public boolean canAdd(Quirk quirk) {
-		if (this.quirks.contains(quirk) || this.quirks.size() >= MAX_QUIRKS) {
+		if (this.quirks.contains(quirk) || !quirk.isOrientation() && this.countedQuirks() >= MAX_QUIRKS) {
 			return false;
 		}
 
@@ -70,6 +68,23 @@ public class NpcPersonality {
 		}
 
 		return true;
+	}
+
+	/** Quirks that count toward the limit (orientation doesn't). */
+	private int countedQuirks() {
+		int count = 0;
+		for (Quirk quirk : this.quirks) {
+			if (!quirk.isOrientation()) {
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+	/** Who it can fall for, from its orientation quirk (the opposite gender if it has none). */
+	public Attraction attraction() {
+		return this.has(Quirk.GAY) ? Attraction.SAME : this.has(Quirk.BISEXUAL) ? Attraction.BOTH : Attraction.OPPOSITE;
 	}
 
 	public boolean addQuirk(Quirk quirk) {
@@ -88,7 +103,7 @@ public class NpcPersonality {
 
 		this.quirks.clear();
 		int count = rollQuirkCount(random);
-		List<Quirk> pool = new ArrayList<>(List.of(Quirk.values()));
+		List<Quirk> pool = quirkPool();
 		Collections.shuffle(pool, random);
 		for (Quirk quirk : pool) {
 			if (this.quirks.size() >= count) {
@@ -99,7 +114,24 @@ public class NpcPersonality {
 		}
 
 		this.tastes.reroll(random);
-		this.attraction = Attraction.roll(random);
+		this.rollOrientation(random);
+	}
+
+	/** Every quirk that's rolled as a quirk (orientation is rolled separately). */
+	private static List<Quirk> quirkPool() {
+		List<Quirk> pool = new ArrayList<>(List.of(Quirk.values()));
+		pool.removeIf(Quirk::isOrientation);
+		return pool;
+	}
+
+	/** 10% gay, 10% bisexual. */
+	private void rollOrientation(Random random) {
+		this.quirks.remove(Quirk.GAY);
+		this.quirks.remove(Quirk.BISEXUAL);
+		Attraction attraction = Attraction.roll(random);
+		if (attraction != Attraction.OPPOSITE) {
+			this.quirks.add(attraction == Attraction.SAME ? Quirk.GAY : Quirk.BISEXUAL);
+		}
 	}
 
 	private static int rollQuirkCount(Random random) {
@@ -129,7 +161,6 @@ public class NpcPersonality {
 		tag.putCompound("Axes", axisTag);
 		tag.putString("Quirks", String.join(",", quirkIds));
 		tag.putCompound("Tastes", this.tastes.save());
-		tag.putString("Attraction", this.attraction.id());
 		return tag;
 	}
 
@@ -159,9 +190,12 @@ public class NpcPersonality {
 			}
 		}
 
+		// Saves from when orientation was stored on its own.
 		Attraction attraction = Attraction.byName(tag.getStringOrDefault("Attraction", ""));
-		if (attraction != null) {
-			this.attraction = attraction;
+		if (attraction == Attraction.SAME) {
+			this.addQuirk(Quirk.GAY);
+		} else if (attraction == Attraction.BOTH) {
+			this.addQuirk(Quirk.BISEXUAL);
 		}
 
 		if (tag.containsKey("Tastes")) {
@@ -183,12 +217,13 @@ public class NpcPersonality {
 			this.set(axis, parents + (float) random.nextGaussian() * (second != null ? 0.3F : 0.45F));
 		}
 
-		this.quirks.clear();
+		this.quirks.removeIf(quirk -> !quirk.isOrientation());
 		List<Quirk> inherited = new ArrayList<>(first.getQuirks());
 		if (second != null) {
 			inherited.addAll(second.getQuirks());
 		}
 
+		inherited.removeIf(Quirk::isOrientation);
 		Collections.shuffle(inherited, random);
 		for (Quirk quirk : inherited) {
 			if (random.nextFloat() < 0.3F) {
@@ -197,7 +232,7 @@ public class NpcPersonality {
 		}
 
 		if (this.quirks.isEmpty() || random.nextFloat() < 0.25F) {
-			List<Quirk> pool = new ArrayList<>(List.of(Quirk.values()));
+			List<Quirk> pool = quirkPool();
 			Collections.shuffle(pool, random);
 			for (Quirk quirk : pool) {
 				if (this.addQuirk(quirk)) {

@@ -23,8 +23,7 @@ public interface DialogueSession {
 	 * Asks the player to type something. Done passes the text on; the extra button (if labeled) and Cancel call their
 	 * own callbacks. The conversation shows again before any callback runs.
 	 */
-	void askForText(String question, String initial, @Nullable String extraLabel, Consumer<String> onDone, @Nullable Runnable onExtra,
-		Runnable onCancel);
+	void askForText(TextRequest request, Consumer<String> onDone, @Nullable Runnable onExtra, Runnable onCancel);
 
 	/** Shows the NPC's profile: personality, tastes and mood, laid out. */
 	void openProfile();

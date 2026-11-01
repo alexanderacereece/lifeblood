@@ -18,8 +18,10 @@ import turniplabs.halplibe.util.dependency.Key;
  */
 public final class NpcItems {
 	private static final int GUARDIAN_AMULET_ID = 25000;
+	private static final int WORD_BOOK_ID = 25001;
 
 	public static Item guardianAmulet;
+	public static Item wordBook;
 
 	private NpcItems() {
 	}
@@ -36,7 +38,10 @@ public final class NpcItems {
 		guardianAmulet = new ItemBuilder(NPClaude.MOD_ID).setStackSize(1)
 			.setCreativeInventoryPlacement(new CreativeInventoryPlacement.Category(CreativeInventoryCategory.MISCELLANEOUS))
 			.build(new Item("guardian_amulet", NPClaude.MOD_ID + ":item/guardian_amulet", GUARDIAN_AMULET_ID));
-		NPClaude.LOGGER.info("Registered the guardian amulet.");
+		wordBook = new ItemBuilder(NPClaude.MOD_ID).setStackSize(1)
+			.setCreativeInventoryPlacement(new CreativeInventoryPlacement.Category(CreativeInventoryCategory.MISCELLANEOUS))
+			.build(new ItemWordBook("word_book", NPClaude.MOD_ID + ":item/word_book", WORD_BOOK_ID));
+		NPClaude.LOGGER.info("Registered the guardian amulet and the word book.");
 	}
 
 	/** A block of gold set in gold, on a string. */
@@ -47,6 +52,11 @@ public final class NpcItems {
 			.addInput('G', Items.INGOT_GOLD)
 			.addInput('B', Blocks.BLOCK_GOLD)
 			.create("guardian_amulet", new ItemStack(guardianAmulet));
+		// A book and a feather to write with.
+		RecipeBuilder.Shapeless(NPClaude.MOD_ID)
+			.addInput(Items.BOOK)
+			.addInput(Items.FEATHER_CHICKEN)
+			.create("word_book", new ItemStack(wordBook));
 	}
 
 	public static boolean isGuardianAmulet(ItemStack stack) {

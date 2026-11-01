@@ -39,7 +39,6 @@ import npclaude.words.WordBook;
 import npclaude.family.FamilyRegistry;
 import npclaude.family.Kinship;
 import npclaude.family.Romance;
-import npclaude.personality.Attraction;
 import npclaude.appearance.AppearanceLayer;
 import npclaude.appearance.PartCatalog;
 import npclaude.client.AppearanceTextures;
@@ -103,13 +102,12 @@ import org.joml.Vector3dc;
  * /npc forget <name> [<target>]               (debug: wipes its memories, or only those about someone)
  * /npc say <name> <symbol>                    (debug: says a line from the speech files aloud)
  * /npc speech reload                          (reads the speech files again)
- * /npc limits [on|off]                        (debug: the one-gift-a-day and three-chats-a-minute limits)
+ * /npc limits [on|off]                        (debug: the one-gift-a-day and five-chats-a-minute limits)
  * /npc list
  * /npc family <name>                           (its partner and relatives)
  * /npc family <name> parent|child <target>     (records that the target is its parent, or its child)
  * /npc family <name> unlink <target>           (removes a parent/child link between them)
  * /npc couple <name> <target> dating|engaged|married|none   (debug: sets their relationship, clock starting now)
- * /npc attraction <name> [opposite|same|both]  (who it can fall for)
  * /npc words                                   (every word players have taught, with ids)
  * /npc words delete <id>                       (removes a word from everyone who knows it)
  * /npc baby <name>                             (debug: it and its partner have a child now)
@@ -575,7 +573,7 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 				.executes(c -> reply(c, "Gift and chat limits are " + (SocialLimits.isEnabled() ? "on" : "off") + "."))
 				.then(literal("on").executes(c -> {
 					SocialLimits.setEnabled(true);
-					return reply(c, "Gift and chat limits are on: one gift per NPC a day, three chats a minute.");
+					return reply(c, "Gift and chat limits are on: one gift per NPC a day, five chats a minute.");
 				}))
 				.then(literal("off").executes(c -> {
 					SocialLimits.setEnabled(false);
@@ -674,28 +672,6 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 						}
 
 						return reply(c, npc.nickname + " is now " + Math.round(npc.getGrowth() * 100) + "% grown.");
-					}))))
-			.then(literal("attraction")
-				.then(npcArgument()
-					.executes(c -> {
-						EntityNPC npc = findNpc(c);
-						return reply(c, npc.nickname + " is attracted to: " + npc.personality.attraction.id() + " (relative to its gender).");
-					})
-					.then(argument("attraction", ArgumentTypeString.word()).suggests((c, builder) -> {
-						for (Attraction attraction : Attraction.values()) {
-							builder.suggest(attraction.id());
-						}
-
-						return builder.buildFuture();
-					}).executes(c -> {
-						EntityNPC npc = findNpc(c);
-						Attraction attraction = Attraction.byName(ArgumentTypeString.getString(c, "attraction"));
-						if (attraction == null) {
-							throw error("Use opposite, same or both.");
-						}
-
-						npc.personality.attraction = attraction;
-						return reply(c, npc.nickname + " is now attracted to: " + attraction.id() + ".");
 					}))))
 			.then(literal("look")
 				.then(npcArgument()

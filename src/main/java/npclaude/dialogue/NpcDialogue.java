@@ -41,8 +41,7 @@ public record NpcDialogue(String line, List<DialogueOption> options) {
 			return request;
 		}
 
-		NpcDialogue word = WordDialogue.maybeAsk(npc, player);
-		return word != null ? word : main(npc, player, say(npc, player, "dialogue_open", "..."));
+		return main(npc, player, say(npc, player, "dialogue_open", "..."));
 	}
 
 	static NpcDialogue main(EntityNPC npc, Player player, String line) {
@@ -54,7 +53,9 @@ public record NpcDialogue(String line, List<DialogueOption> options) {
 			}
 
 			npc.remember(MemoryType.HAD_A_NICE_CHAT, player, 1.0F);
-			session.show(main(npc, player, say(npc, player, "smalltalk", "Fine.")));
+			// Sometimes the chat turns into asking for a new word.
+			NpcDialogue word = WordDialogue.maybeAsk(npc, player);
+			session.show(word != null ? word : main(npc, player, say(npc, player, "smalltalk", "Fine.")));
 		}));
 		if (player.inventory.getCurrentItem() != null) {
 			options.add(new DialogueOption("Here, take this.", session -> {

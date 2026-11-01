@@ -33,6 +33,7 @@ import npclaude.appearance.PartCatalog;
 import npclaude.ai.NpcNavigator;
 import npclaude.ai.behavior.FollowPlayerBehavior;
 import npclaude.ai.behavior.RecoverBehavior;
+import npclaude.ai.behavior.StayNearParentBehavior;
 import npclaude.ai.behavior.WanderBehavior;
 import npclaude.combat.BrawlBehavior;
 import npclaude.combat.CombatBehavior;
@@ -42,6 +43,7 @@ import npclaude.combat.MonsterContact;
 import npclaude.combat.NpcFactions;
 import npclaude.combat.NpcRelations;
 import npclaude.dialogue.NpcDialogue;
+import npclaude.family.Calendar;
 import npclaude.family.Children;
 import npclaude.family.Romance;
 import npclaude.interaction.NpcInteractions;
@@ -81,9 +83,13 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private static final int DATA_APPEARANCE = 23;
 	/** How grown up it is, 0 (newborn) to 100 (adult). */
 	private static final int DATA_GROWTH = 24;
-	/** Children grow into adults over this many in-game days. */
-	public static final float DAYS_TO_GROW_UP = 20.0F;
+	/** How often it checks its age: growing up, and whether it's its birthday (10 seconds). */
 	private static final int GROWTH_CHECK_INTERVAL = 200;
+	/** A birth time not decided yet (an NPC from before ages, or a brand new one). */
+	private static final long UNKNOWN_BIRTH = Long.MIN_VALUE;
+	/** Adults without a known birth get an age in this range. */
+	private static final int MIN_ADULT_AGE = 18;
+	private static final int MAX_ADULT_AGE = 60;
 	private static final float ADULT_WIDTH = 0.6F;
 	private static final float ADULT_HEIGHT = 1.825F;
 	/** A conversation ends if the player walks further away than this. */
@@ -169,8 +175,10 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private int lastRefusalTick = -REFUSAL_COOLDOWN;
 	/** Whether it's been given a look from parts yet this session, if it needed one. */
 	private boolean appearanceChecked;
-	/** When it was born (world time), while it's growing up; -1 once it's an adult (or if it never was a child). */
-	private long birthTime = -1L;
+	/** When it was born (world time; long before the world began, for most adults). */
+	private long birthTime = UNKNOWN_BIRTH;
+	/** The last year it celebrated its birthday, so it happens once a year. */
+	private long lastBirthdayYear = Long.MIN_VALUE;
 	/** The size its hitbox was last set for, so it's only resized when growth changes. */
 	private int sizedForGrowth = -1;
 	/** Something it wants to ask a player next time they talk (out on a date, or to marry), and which player. */
@@ -220,7 +228,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	@Nullable
 	private String faction;
 	private NpcGender gender = NpcGender.MALE;
-	private FollowDistance followDistance = FollowDistance.SHORT;
+	private FollowDistance followDistance = FollowDistance.MEDIUM;
 	private CombatStyle combatStyle = CombatStyle.AUTO;
 	@Nullable
 	private Entity lastAttacker;
@@ -239,6 +247,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		this.brain.addInstinct(new CombatBehavior());
 		this.brain.addInstinct(new BrawlBehavior());
 		this.brain.addInstinct(new RecoverBehavior());
+		this.brain.addInstinct(new StayNearParentBehavior());
 		// Every NPC starts as someone; loading a saved NPC replaces this with who it was.
 		this.personality.randomize(this.random);
 	}
@@ -361,8 +370,13 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 
 	/** Speaking up, confirming rescues, and noticing the weather and where it is. */
 	private void socialUpdate() {
-		if (this.birthTime >= 0 && (this.tickCount + this.id) % GROWTH_CHECK_INTERVAL == 0) {
-			this.grow();
+		if ((this.tickCount + this.id) % GROWTH_CHECK_INTERVAL == 0) {
+			this.ensureBirth();
+			if (this.isChild()) {
+				this.grow();
+			}
+
+			this.checkBirthday();
 		}
 
 		if (!this.appearanceChecked) {
@@ -909,11 +923,54 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		return this.entityData.getByte(DATA_GROWTH) < 100;
 	}
 
-	/** Makes it a child of this growth (0 newborn, 1 adult), counting its birth back from now to match. */
+	/** Makes it this grown (0 newborn, 1 adult of 18), counting its birth back from now to match. */
 	public void setGrowth(float growth) {
 		growth = Math.max(0.0F, Math.min(1.0F, growth));
 		this.entityData.set(DATA_GROWTH, (byte) Math.round(growth * 100.0F));
-		this.birthTime = growth >= 1.0F ? -1L : this.world.getWorldTime() - (long) (growth * DAYS_TO_GROW_UP * Memory.TICKS_PER_DAY);
+		this.birthTime = this.world.getWorldTime() - (long) (growth * Calendar.growUpTicks(this.world));
+	}
+
+	/** Gives an NPC with no birth date one: an adult between 18 and 60, or a child as grown as it was saved. */
+	private void ensureBirth() {
+		if (this.birthTime != UNKNOWN_BIRTH) {
+			return;
+		}
+
+		if (this.isChild()) {
+			this.setGrowth(this.getGrowth());
+			return;
+		}
+
+		int years = MIN_ADULT_AGE + this.random.nextInt(MAX_ADULT_AGE - MIN_ADULT_AGE + 1);
+		long ticks = years * Calendar.ticksPerYear(this.world) + (long) (this.random.nextFloat() * Calendar.ticksPerYear(this.world));
+		this.birthTime = this.world.getWorldTime() - ticks;
+	}
+
+	/** Its age in whole years. */
+	public int getAgeYears() {
+		this.ensureBirth();
+		return Calendar.ageInYears(this.world, this.birthTime, this.world.getWorldTime());
+	}
+
+	/** Its birthday, like "Summer 5". */
+	public String getBirthday() {
+		this.ensureBirth();
+		return Calendar.describeDate(this.world, this.birthTime);
+	}
+
+	public boolean isBirthday() {
+		this.ensureBirth();
+		return Calendar.dayOfYear(this.world, this.birthTime) == Calendar.dayOfYear(this.world, this.world.getWorldTime());
+	}
+
+	/** Once a year, on the day: a good mood, and it tells whoever's around. */
+	private void checkBirthday() {
+		long year = Calendar.year(this.world, this.world.getWorldTime());
+		if (this.isBirthday() && year != this.lastBirthdayYear) {
+			this.lastBirthdayYear = year;
+			this.remember(MemoryType.MY_BIRTHDAY, null, 1.0F);
+			this.voice.bark("birthday", null, null, false);
+		}
 	}
 
 	/** How big it's drawn and how big its hitbox is: half size as a newborn, full as an adult. */
@@ -923,7 +980,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 
 	/** Grows a little older; on becoming an adult, it says so (and men may grow a beard). */
 	private void grow() {
-		float growth = (this.world.getWorldTime() - this.birthTime) / (DAYS_TO_GROW_UP * Memory.TICKS_PER_DAY);
+		float growth = (this.world.getWorldTime() - this.birthTime) / (float) Calendar.growUpTicks(this.world);
 		if (growth >= 1.0F) {
 			this.setGrowth(1.0F);
 			Children.cameOfAge(this);
@@ -1493,7 +1550,8 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		npc.putInt("DataVersion", DATA_VERSION);
 		npc.putString("Skin", this.getSkin());
 		npc.putString("Appearance", this.getAppearance());
-		npc.putLong("Born", this.birthTime);
+		npc.putLong("BirthTime", this.birthTime);
+		npc.putLong("LastBirthday", this.lastBirthdayYear);
 		npc.putByte("Growth", this.entityData.getByte(DATA_GROWTH));
 		npc.putByte("SkinModel", (byte) this.getSkinModel().ordinal());
 		npc.putString("HealthMode", this.healthMode.name());
@@ -1533,7 +1591,10 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		CompoundTag npc = tag.getCompound(SAVE_KEY);
 		this.setSkin(npc.getString("Skin"));
 		this.entityData.set(DATA_APPEARANCE, npc.getStringOrDefault("Appearance", ""));
-		this.birthTime = npc.getLongOrDefault("Born", -1L);
+		// Saves from before ages had "Born" only for children (who grew up in 20 days then); their saved growth is
+		// kept and their birth worked out from it.
+		this.birthTime = npc.getLongOrDefault("BirthTime", UNKNOWN_BIRTH);
+		this.lastBirthdayYear = npc.getLongOrDefault("LastBirthday", Long.MIN_VALUE);
 		this.entityData.set(DATA_GROWTH, npc.containsKey("Growth") ? npc.getByte("Growth") : (byte) 100);
 		this.setSkinModel(SkinModel.byId(npc.getByte("SkinModel")));
 		HealthMode mode = HealthMode.byName(npc.getStringOrDefault("HealthMode", ""));
