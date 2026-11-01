@@ -143,6 +143,11 @@ public class NpcRenderer extends MobRendererBipedArmored<EntityNPC> {
 
 	@Nullable
 	private NpcSkins.LoadedSkin getSkin(EntityNPC entity) {
-		return NpcSkins.get(this.renderDispatcher.textureManager, entity.getSkin(), entity.getSkinModel());
+		// A skin file, if one is set, wins; otherwise the look built from appearance parts.
+		if (!entity.getSkin().isEmpty()) {
+			return NpcSkins.get(this.renderDispatcher.textureManager, entity.getSkin(), entity.getSkinModel());
+		}
+
+		return AppearanceTextures.get(this.renderDispatcher.textureManager, entity.getAppearance(), entity.getSkinModel());
 	}
 }

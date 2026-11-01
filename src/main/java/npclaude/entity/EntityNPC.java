@@ -28,6 +28,8 @@ import net.minecraft.core.util.helper.MathHelper;
 import net.minecraft.core.world.World;
 import net.minecraft.core.world.pos.TilePos;
 import npclaude.ai.NpcBrain;
+import npclaude.appearance.Appearance;
+import npclaude.appearance.PartCatalog;
 import npclaude.ai.NpcNavigator;
 import npclaude.ai.behavior.FollowPlayerBehavior;
 import npclaude.ai.behavior.RecoverBehavior;
@@ -72,6 +74,8 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private static final int DATA_SKIN = 20;
 	private static final int DATA_SKIN_MODEL = 21;
 	private static final int DATA_DOWNED = 22;
+	/** The NPC's look built from parts (see Appearance), as an encoded string; empty for none. */
+	private static final int DATA_APPEARANCE = 23;
 	/** A conversation ends if the player walks further away than this. */
 	private static final float TALK_DISTANCE = 8.0F;
 	/** How often the NPC checks whether it should eat, in ticks. */
@@ -151,6 +155,8 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private int pendingRemarkTick;
 	private int lastBiomeRemarkTick = -BIOME_REMARK_COOLDOWN;
 	private int lastRefusalTick = -REFUSAL_COOLDOWN;
+	/** Whether it's been given a look from parts yet this session, if it needed one. */
+	private boolean appearanceChecked;
 	/** The in-game day each player last gave it a gift, for the one-gift-a-day limit. */
 	private final Map<UUID, Long> lastGiftDays = new HashMap<>();
 	/** The fistfight it's in, if any. Not saved: a brawl doesn't survive leaving the world. */
@@ -222,6 +228,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		this.entityData.define(DATA_SKIN, "", String.class);
 		this.entityData.define(DATA_SKIN_MODEL, (byte) SkinModel.AUTO.ordinal(), Byte.class);
 		this.entityData.define(DATA_DOWNED, (byte) 0, Byte.class);
+		this.entityData.define(DATA_APPEARANCE, "", String.class);
 	}
 
 	@Override
@@ -331,6 +338,11 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 
 	/** Speaking up, confirming rescues, and noticing the weather and where it is. */
 	private void socialUpdate() {
+		if (!this.appearanceChecked) {
+			this.appearanceChecked = true;
+			this.rollAppearanceIfNeeded();
+		}
+
 		this.voice.tick();
 		if (this.rescuer != null && this.tickCount - this.rescueTick >= RESCUE_CONFIRM_TICKS) {
 			Entity saviour = this.rescuer;
@@ -837,6 +849,25 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 
 	public void setSkin(String skin) {
 		this.entityData.set(DATA_SKIN, skin);
+	}
+
+	/** The look built from appearance parts, encoded; shown when the NPC has no skin file set. */
+	public String getAppearance() {
+		return this.entityData.getString(DATA_APPEARANCE);
+	}
+
+	public void setAppearance(Appearance appearance) {
+		this.entityData.set(DATA_APPEARANCE, appearance.encode());
+	}
+
+	/**
+	 * Gives an NPC with no skin file and no look yet a random one from the parts available (if there are any).
+	 * Runs once after spawning or loading, so NPCs from before parts existed get a look once parts are added.
+	 */
+	public void rollAppearanceIfNeeded() {
+		if (this.getSkin().isEmpty() && this.getAppearance().isEmpty()) {
+			this.setAppearance(Appearance.random(PartCatalog.get(), this.gender, this.random));
+		}
 	}
 
 	public SkinModel getSkinModel() {
@@ -1368,6 +1399,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		CompoundTag npc = new CompoundTag();
 		npc.putInt("DataVersion", DATA_VERSION);
 		npc.putString("Skin", this.getSkin());
+		npc.putString("Appearance", this.getAppearance());
 		npc.putByte("SkinModel", (byte) this.getSkinModel().ordinal());
 		npc.putString("HealthMode", this.healthMode.name());
 		npc.putInt("DownedTicks", this.downedTicks);
@@ -1405,6 +1437,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 
 		CompoundTag npc = tag.getCompound(SAVE_KEY);
 		this.setSkin(npc.getString("Skin"));
+		this.entityData.set(DATA_APPEARANCE, npc.getStringOrDefault("Appearance", ""));
 		this.setSkinModel(SkinModel.byId(npc.getByte("SkinModel")));
 		HealthMode mode = HealthMode.byName(npc.getStringOrDefault("HealthMode", ""));
 		// Saves from before health modes only had an invulnerable flag.

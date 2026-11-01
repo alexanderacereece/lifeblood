@@ -10,6 +10,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -31,6 +32,10 @@ import npclaude.ai.behavior.FollowPlayerBehavior;
 import npclaude.ai.behavior.GoToBehavior;
 import npclaude.ai.behavior.StayBehavior;
 import npclaude.ai.behavior.WanderBehavior;
+import npclaude.appearance.Appearance;
+import npclaude.appearance.AppearanceLayer;
+import npclaude.appearance.PartCatalog;
+import npclaude.client.AppearanceTextures;
 import npclaude.client.NpcSkins;
 import npclaude.combat.FactionRegistry;
 import npclaude.combat.FactionRelation;
@@ -93,6 +98,10 @@ import org.joml.Vector3dc;
  * /npc speech reload                          (reads the speech files again)
  * /npc limits [on|off]                        (debug: the one-gift-a-day and three-chats-a-minute limits)
  * /npc list
+ * /npc look <name>                             (the parts and colors its look is built from)
+ * /npc look <name> randomize                   (a new random look from the parts available)
+ * /npc look <name> <layer> <part|none> [palette]   (e.g. hair bob auburn)
+ * /npc parts [reload]                          (lists appearance parts and palettes, or reads them again)
  * /npc skins [reload]
  *
  * Names with spaces need quotes: /npc follow "Walter White"
@@ -173,6 +182,34 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 	private static final SuggestionProvider<CommandSource> QUIRK_NAMES = (c, builder) -> {
 		for (Quirk quirk : Quirk.values()) {
 			builder.suggest(quirk.id());
+		}
+
+		return builder.buildFuture();
+	};
+	private static final SuggestionProvider<CommandSource> LAYER_NAMES = (c, builder) -> {
+		for (AppearanceLayer layer : AppearanceLayer.values()) {
+			builder.suggest(layer.id());
+		}
+
+		return builder.buildFuture();
+	};
+	private static final SuggestionProvider<CommandSource> PART_NAMES = (c, builder) -> {
+		AppearanceLayer layer = AppearanceLayer.byName(ArgumentTypeString.getString(c, "layer"));
+		builder.suggest("none");
+		if (layer != null) {
+			for (String part : PartCatalog.get().allParts(layer)) {
+				builder.suggest(part);
+			}
+		}
+
+		return builder.buildFuture();
+	};
+	private static final SuggestionProvider<CommandSource> PALETTE_NAMES = (c, builder) -> {
+		AppearanceLayer layer = AppearanceLayer.byName(ArgumentTypeString.getString(c, "layer"));
+		if (layer != null && layer.paletteGroup != null) {
+			for (String palette : PartCatalog.get().paletteNames(layer.paletteGroup)) {
+				builder.suggest(palette);
+			}
 		}
 
 		return builder.buildFuture();
@@ -537,6 +574,38 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 					return reply(c, "Removed " + npc.nickname + ".");
 				})))
 			.then(literal("list").executes(NpcCommand::list))
+			.then(literal("look")
+				.then(npcArgument()
+					.executes(NpcCommand::describeLook)
+					.then(literal("randomize").executes(c -> {
+						EntityNPC npc = findNpc(c);
+						npc.setAppearance(Appearance.random(PartCatalog.get(), npc.getGender(), npc.getRandom()));
+						if (npc.getAppearance().isEmpty()) {
+							throw error("There are no base parts yet. Put some in " + new File(PartCatalog.getDirectory(), "base"));
+						}
+
+						reply(c, npc.nickname + " has a new look.");
+						if (!npc.getSkin().isEmpty()) {
+							reply(c, "It has a skin file set, which shows instead. /npc skin " + npc.nickname + " default to use the look.");
+						}
+
+						return 1;
+					}))
+					.then(argument("layer", ArgumentTypeString.word()).suggests(LAYER_NAMES)
+						.then(argument("part", ArgumentTypeString.word()).suggests(PART_NAMES)
+							.executes(c -> setLook(c, ""))
+							.then(argument("palette", ArgumentTypeString.word()).suggests(PALETTE_NAMES)
+								.executes(c -> setLook(c, ArgumentTypeString.getString(c, "palette"))))))))
+			.then(literal("parts")
+				.executes(NpcCommand::listParts)
+				.then(literal("reload").executes(c -> {
+					PartCatalog catalog = PartCatalog.reload();
+					if (!Global.isServer) {
+						AppearanceTextures.reload();
+					}
+
+					return reply(c, "Loaded " + catalog.partCount() + " parts and " + catalog.paletteCount() + " palettes.");
+				})))
 			.then(literal("skins")
 				.executes(NpcCommand::listSkins)
 				.then(literal("reload").executes(c -> {
@@ -546,6 +615,70 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 
 					return reply(c, "NPC skins will be reloaded from " + NpcSkinFiles.getDirectory());
 				}))));
+	}
+
+	private static int describeLook(CommandContext<CommandSource> c) throws CommandSyntaxException {
+		EntityNPC npc = findNpc(c);
+		Appearance appearance = Appearance.decode(npc.getAppearance());
+		if (appearance.isEmpty()) {
+			return reply(c, npc.nickname + " has no look built from parts" + (npc.getSkin().isEmpty() ? "." : " (it uses the skin '" + npc.getSkin() + "')."));
+		}
+
+		reply(c, npc.nickname + "'s look" + (npc.getSkin().isEmpty() ? ":" : " (hidden by the skin '" + npc.getSkin() + "'):"));
+		for (Map.Entry<AppearanceLayer, Appearance.Choice> entry : appearance.choices().entrySet()) {
+			Appearance.Choice choice = entry.getValue();
+			reply(c, "- " + entry.getKey().id() + ": " + choice.part() + (choice.palette().isEmpty() ? "" : " (" + choice.palette() + ")"));
+		}
+
+		return 1;
+	}
+
+	/** /npc look <npc> <layer> <part|none> [palette]: hair and facial hair keep sharing a color. */
+	private static int setLook(CommandContext<CommandSource> c, String palette) throws CommandSyntaxException {
+		EntityNPC npc = findNpc(c);
+		AppearanceLayer layer = AppearanceLayer.byName(ArgumentTypeString.getString(c, "layer"));
+		if (layer == null) {
+			throw error("Unknown layer. Layers: base, eyes, mouth, facial_hair, bottom, top, hair, accessory.");
+		}
+
+		String part = ArgumentTypeString.getString(c, "part").toLowerCase(Locale.ROOT);
+		PartCatalog catalog = PartCatalog.get();
+		Appearance appearance = Appearance.decode(npc.getAppearance());
+		if (part.equals("none")) {
+			npc.setAppearance(appearance.with(layer, null, ""));
+			return reply(c, npc.nickname + " has nothing on the " + layer.id() + " layer now.");
+		}
+
+		if (catalog.part(layer, part) == null) {
+			throw error("No " + layer.id() + " part called '" + part + "'.");
+		}
+
+		if (palette.isEmpty()) {
+			Appearance.Choice current = appearance.get(layer);
+			palette = current != null ? current.palette() : "";
+		}
+
+		if (!palette.isEmpty() && (layer.paletteGroup == null || catalog.palette(layer.paletteGroup, palette) == null)) {
+			throw error(layer.paletteGroup == null ? "The " + layer.id() + " layer isn't recolored." : "No " + layer.paletteGroup + " palette called '" + palette + "'.");
+		}
+
+		npc.setAppearance(appearance.with(layer, part, palette));
+		return reply(c, npc.nickname + " now has " + part + (palette.isEmpty() ? "" : " (" + palette + ")") + " on the " + layer.id() + " layer.");
+	}
+
+	private static int listParts(CommandContext<CommandSource> c) {
+		PartCatalog catalog = PartCatalog.get();
+		reply(c, "Appearance parts (from the mod and " + PartCatalog.getDirectory() + "):");
+		for (AppearanceLayer layer : AppearanceLayer.values()) {
+			List<String> parts = catalog.allParts(layer);
+			reply(c, "- " + layer.id() + ": " + (parts.isEmpty() ? "none yet" : String.join(", ", parts)));
+		}
+
+		for (Map.Entry<String, Map<String, int[]>> group : catalog.palettes().entrySet()) {
+			reply(c, "- " + group.getKey() + " palettes: " + String.join(", ", group.getValue().keySet()));
+		}
+
+		return 1;
 	}
 
 	/** skin: null picks a skin matching the name if one exists; "default" means no skin. faction: null means the default. */
@@ -580,7 +713,15 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 		npc.setNickname(name);
 		npc.setSkin(skin);
 		// A first guess, changeable with /npc gender: slim-armed skins are usually female characters.
-		npc.setGender(NpcSkinFiles.isSlim(skin) ? NpcGender.FEMALE : NpcGender.MALE);
+		// A first guess, changeable with /npc gender: slim-armed skins are usually female characters. Without a skin
+		// the NPC is built from appearance parts, and either is equally likely.
+		if (skin.isEmpty()) {
+			npc.setGender(npc.getRandom().nextBoolean() ? NpcGender.FEMALE : NpcGender.MALE);
+		} else {
+			npc.setGender(NpcSkinFiles.isSlim(skin) ? NpcGender.FEMALE : NpcGender.MALE);
+		}
+
+		npc.rollAppearanceIfNeeded();
 		if (faction != null) {
 			npc.setFaction(faction);
 		}

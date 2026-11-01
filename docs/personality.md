@@ -604,7 +604,16 @@ Children inherit body traits: skin tone blended from both parents, hair and eye 
 
 ### The art
 
-Layers live in a resource folder with a small data file describing each one (its slot, what tints it, which arm width), so adding a hairstyle means adding a PNG and a line of data. I can generate simple placeholder layers to get the system working; better art can replace them at any time.
+Parts live in two places with the same layout: bundled with the mod (`assets/npclaude/parts/`) and in the game folder's `npc_parts/`, which can be added to without rebuilding (`/npc parts reload` picks up changes). Game-folder files win over bundled ones with the same name.
+
+- `<layer>/<name>.png`: a 64x64 skin-format part anyone can roll. Layer folders: `base`, `eyes`, `mouth`, `facial_hair`, `bottom`, `top`, `hair`, `accessory` (drawn in that order).
+- `<layer>/male/<name>.png`, `<layer>/female/<name>.png`: parts only rolled for that gender (a command can still put them on anyone).
+- `<name>_slim.png` beside `<name>.png`: the slim-armed version. The base part's arm width decides which one an NPC wears.
+- `palettes.txt`: `[skin]`, `[hair]`, `[eyes]`, `[dye]` groups of `name: #c1 #c2 #c3 #c4 #c5` lines, darkest to lightest. The mod ships defaults (8 skin tones, 12 hair colors, 8 eye colors, the 16 dye colors); a game-folder file adds to or overrides them.
+
+Whether a part is recolorable isn't declared anywhere: any of the five grays in it get recolored, and everything else is drawn as is.
+
+Random looks: every NPC without a skin file gets one from the parts available, rolled once (NPCs from before any parts existed get one when parts are added). Hair is almost always present (92% for men, 99% for women), facial hair 35% for men, an accessory 15%. Hair and facial hair share a color. A skin file set with `/npc skin` still wins over the look.
 
 ## 12. Implementation order
 
