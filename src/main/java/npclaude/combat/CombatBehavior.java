@@ -7,6 +7,7 @@ import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.util.helper.MathHelper;
 import npclaude.ai.NpcBehavior;
 import npclaude.entity.EntityNPC;
+import npclaude.personality.TraitAxis;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -58,14 +59,15 @@ public class CombatBehavior implements NpcBehavior {
 	/** Courage while recovering from being downed: low enough to run from almost anything. */
 	private static final double RECOVERING_COURAGE = 0.1;
 
-	/** Courage threshold: bravery 0 runs from anything but easy fights, bravery 1 stands against about 3 to 1. */
+	/** Courage threshold: fully timid runs from anything but easy fights, fully brave stands against about 3 to 1. */
 	public static double courageOf(EntityNPC npc) {
 		if (npc.isRecovering()) {
 			// Fresh from near death: in no shape to fight anything.
 			return RECOVERING_COURAGE;
 		}
 
-		return 0.5 + npc.personality.getBravery() * 2.5;
+		double bravery = (npc.personality.get(TraitAxis.COURAGE) + 1.0) / 2.0;
+		return 0.5 + bravery * 2.5;
 	}
 
 	@Override

@@ -18,6 +18,9 @@ import net.minecraft.core.Global;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.EntityDispatcher;
 import net.minecraft.core.entity.player.Player;
+import net.minecraft.core.item.Item;
+import net.minecraft.core.item.ItemFood;
+import net.minecraft.core.item.ItemStack;
 import net.minecraft.core.net.command.CommandManager;
 import net.minecraft.core.net.command.CommandSource;
 import net.minecraft.core.net.command.arguments.ArgumentTypeVector3d;
@@ -37,6 +40,10 @@ import npclaude.entity.HealthMode;
 import npclaude.entity.NpcGender;
 import npclaude.entity.SkinModel;
 import npclaude.perf.NpcProfiler;
+import npclaude.personality.NpcPersonality;
+import npclaude.personality.Quirk;
+import npclaude.personality.TraitAxis;
+import npclaude.personality.TraitTier;
 import npclaude.skin.NpcSkinFiles;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3dc;
@@ -54,7 +61,12 @@ import org.joml.Vector3dc;
  * /npc wander <name> [radius]
  * /npc skin <name> <skin> [auto|wide|slim]
  * /npc mortality <name> [mortal|invincible|invulnerable]   (invincible: hurt, but knocked down instead of killed)
- * /npc personality <name> bravery <0-100>
+ * /npc personality <name>                     (trait axes, quirks, favorite and hated food)
+ * /npc personality <name> <axis> <-100..100>   (e.g. courage 80; - is the left pole, + the right)
+ * /npc personality <name> randomize            (a whole new personality)
+ * /npc quirk <name> add|remove <quirk>
+ * /npc food <name>                             (what they like most and least, and what they think of what you hold)
+ * /npc food <name> <-100..100>                 (sets how much they like the food you're holding)
  * /npc faction list
  * /npc faction create <faction> [ally|neutral|hostile]   (its default stance; neutral if left out)
  * /npc faction delete <faction>
@@ -130,6 +142,20 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 	private static final SuggestionProvider<CommandSource> GENDER_NAMES = (c, builder) -> {
 		for (NpcGender gender : NpcGender.values()) {
 			builder.suggest(gender.name().toLowerCase(Locale.ROOT));
+		}
+
+		return builder.buildFuture();
+	};
+	private static final SuggestionProvider<CommandSource> AXIS_NAMES = (c, builder) -> {
+		for (TraitAxis axis : TraitAxis.values()) {
+			builder.suggest(axis.id());
+		}
+
+		return builder.buildFuture();
+	};
+	private static final SuggestionProvider<CommandSource> QUIRK_NAMES = (c, builder) -> {
+		for (Quirk quirk : Quirk.values()) {
+			builder.suggest(quirk.id());
 		}
 
 		return builder.buildFuture();
@@ -279,13 +305,62 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 			.then(literal("personality")
 				.then(npcArgument()
 					.executes(NpcCommand::showPersonality)
-					.then(literal("bravery")
-						.then(argument("value", ArgumentTypeInteger.integer(0, 100)).executes(c -> {
+					.then(literal("randomize").executes(c -> {
+						EntityNPC npc = findNpc(c);
+						npc.personality.randomize(npc.getRandom());
+						reply(c, npc.nickname + " is someone new.");
+						return showPersonality(c);
+					}))
+					.then(argument("axis", ArgumentTypeString.word()).suggests(AXIS_NAMES)
+						.then(argument("value", ArgumentTypeInteger.integer(-100, 100)).executes(c -> {
 							EntityNPC npc = findNpc(c);
+							String name = ArgumentTypeString.getString(c, "axis");
+							TraitAxis axis = TraitAxis.byName(name);
+							if (axis == null) {
+								throw error("Unknown trait '" + name + "'.");
+							}
+
 							int value = c.getArgument("value", Integer.class);
-							npc.personality.setBravery(value / 100.0F);
-							return reply(c, npc.nickname + "'s bravery is now " + value + ".");
+							npc.personality.set(axis, value / 100.0F);
+							return reply(c, npc.nickname + "'s " + axis.displayName() + " is now " + describeAxis(npc.personality, axis) + ".");
 						})))))
+			.then(literal("quirk")
+				.then(npcArgument()
+					.then(literal("add")
+						.then(argument("quirk", ArgumentTypeString.word()).suggests(QUIRK_NAMES).executes(c -> {
+							EntityNPC npc = findNpc(c);
+							Quirk quirk = requireQuirk(c);
+							if (npc.personality.has(quirk)) {
+								throw error(npc.nickname + " is already " + quirk.displayName() + ".");
+							}
+
+							if (!npc.personality.addQuirk(quirk)) {
+								throw error(npc.personality.getQuirks().size() >= NpcPersonality.MAX_QUIRKS
+									? npc.nickname + " already has " + NpcPersonality.MAX_QUIRKS + " quirks."
+									: quirk.displayName() + " clashes with " + quirk.getOpposite().displayName() + ".");
+							}
+
+							return reply(c, npc.nickname + " is now " + quirk.displayName() + ".");
+						})))
+					.then(literal("remove")
+						.then(argument("quirk", ArgumentTypeString.word()).suggests(QUIRK_NAMES).executes(c -> {
+							EntityNPC npc = findNpc(c);
+							Quirk quirk = requireQuirk(c);
+							if (!npc.personality.removeQuirk(quirk)) {
+								throw error(npc.nickname + " isn't " + quirk.displayName() + ".");
+							}
+
+							return reply(c, npc.nickname + " is no longer " + quirk.displayName() + ".");
+						})))))
+			.then(literal("food")
+				.then(npcArgument()
+					.executes(NpcCommand::showFood)
+					.then(argument("like", ArgumentTypeInteger.integer(-100, 100)).executes(c -> {
+						EntityNPC npc = findNpc(c);
+						Item food = requireHeldFood(c);
+						npc.personality.food.set(food, c.getArgument("like", Integer.class) / 100.0F);
+						return reply(c, npc.nickname + " now " + describeLike(npc.personality.food.like(food)) + " " + foodName(food) + ".");
+					}))))
 			.then(literal("faction")
 				.then(literal("list").executes(NpcCommand::listFactions))
 				.then(literal("create")
@@ -524,7 +599,97 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 
 	private static int showPersonality(CommandContext<CommandSource> c) throws CommandSyntaxException {
 		EntityNPC npc = findNpc(c);
-		return reply(c, npc.nickname + "'s personality: bravery " + Math.round(npc.personality.getBravery() * 100));
+		NpcPersonality personality = npc.personality;
+		reply(c, npc.nickname + "'s personality:");
+		for (TraitAxis axis : TraitAxis.values()) {
+			reply(c, String.format(Locale.ROOT, "- %s (%s / %s): %s", axis.displayName(), axis.negative, axis.positive,
+				describeAxis(personality, axis)));
+		}
+
+		List<String> quirks = new ArrayList<>();
+		for (Quirk quirk : personality.getQuirks()) {
+			quirks.add(quirk.displayName());
+		}
+
+		reply(c, "- quirks: " + (quirks.isEmpty() ? "none" : String.join(", ", quirks)));
+		Item favorite = personality.food.favorite();
+		Item hated = personality.food.hated();
+		if (favorite != null && hated != null) {
+			reply(c, "- favorite food: " + foodName(favorite) + "; hates " + foodName(hated));
+		}
+
+		return 1;
+	}
+
+	/** E.g. "72, strongly brave", "-40, a little timid" or "5, neither". */
+	private static String describeAxis(NpcPersonality personality, TraitAxis axis) {
+		float value = personality.get(axis);
+		String pole = axis.poleOf(value);
+		String amount = pole == null ? "neither" : (personality.tier(axis) == TraitTier.STRONG ? "strongly " : "a little ") + pole;
+		return Math.round(value * 100) + ", " + amount;
+	}
+
+	private static int showFood(CommandContext<CommandSource> c) throws CommandSyntaxException {
+		EntityNPC npc = findNpc(c);
+		List<Item> ranked = npc.personality.food.ranked();
+		int shown = Math.min(3, ranked.size() / 2);
+		List<String> liked = new ArrayList<>();
+		List<String> disliked = new ArrayList<>();
+		for (int i = 0; i < shown; i++) {
+			liked.add(foodSummary(npc, ranked.get(i)));
+			disliked.add(foodSummary(npc, ranked.get(ranked.size() - 1 - i)));
+		}
+
+		reply(c, npc.nickname + " likes " + String.join(", ", liked) + ".");
+		reply(c, npc.nickname + " dislikes " + String.join(", ", disliked) + ".");
+		Player player = c.getSource().getSender();
+		ItemStack held = player != null ? player.inventory.getCurrentItem() : null;
+		if (held != null && held.getItem() instanceof ItemFood) {
+			reply(c, npc.nickname + " " + describeLike(npc.personality.food.like(held.getItem())) + " " + foodName(held.getItem()) + ".");
+		}
+
+		return 1;
+	}
+
+	private static String foodSummary(EntityNPC npc, Item food) {
+		return foodName(food) + " (" + Math.round(npc.personality.food.like(food) * 100) + ")";
+	}
+
+	private static String describeLike(float like) {
+		if (like >= 0.6F) {
+			return "loves";
+		} else if (like >= 0.2F) {
+			return "likes";
+		} else if (like > -0.2F) {
+			return "doesn't mind";
+		} else if (like > -0.6F) {
+			return "dislikes";
+		}
+
+		return "hates";
+	}
+
+	private static String foodName(Item food) {
+		return new ItemStack(food).getDisplayName().toLowerCase(Locale.ROOT);
+	}
+
+	private static Quirk requireQuirk(CommandContext<CommandSource> c) throws CommandSyntaxException {
+		String name = ArgumentTypeString.getString(c, "quirk");
+		Quirk quirk = Quirk.byName(name);
+		if (quirk == null) {
+			throw error("Unknown quirk '" + name + "'.");
+		}
+
+		return quirk;
+	}
+
+	private static Item requireHeldFood(CommandContext<CommandSource> c) throws CommandSyntaxException {
+		ItemStack held = requirePlayer(c.getSource()).inventory.getCurrentItem();
+		if (held == null || !(held.getItem() instanceof ItemFood)) {
+			throw error("Hold the food you want to set a taste for.");
+		}
+
+		return held.getItem();
 	}
 
 	private static int listFactions(CommandContext<CommandSource> c) {

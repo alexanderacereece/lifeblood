@@ -33,6 +33,7 @@ import npclaude.dialogue.NpcDialogue;
 import npclaude.interaction.NpcInteractions;
 import npclaude.inventory.NpcInventory;
 import npclaude.perf.NpcProfiler;
+import npclaude.personality.NpcPersonality;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.primitives.AABBd;
@@ -120,6 +121,8 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		this.doRandomWalk = false;
 		this.brain.addInstinct(new CombatBehavior());
 		this.brain.addInstinct(new RecoverBehavior());
+		// Every NPC starts as someone; loading a saved NPC replaces this with who it was.
+		this.personality.randomize(this.random);
 	}
 
 	@Override
@@ -246,7 +249,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 			return;
 		}
 
-		int slot = this.inventory.findSlot(stack -> stack.getItem() instanceof ItemFood);
+		int slot = this.findFavoriteFood();
 		if (slot < 0) {
 			return;
 		}
@@ -254,6 +257,24 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		this.inventory.swapWithHand(slot);
 		this.eatReturnSlot = slot == NpcInventory.HAND_SLOT ? -1 : slot;
 		this.eatTicks = EAT_HOLD_TICKS;
+	}
+
+	/** The slot holding the carried food this NPC likes most, or -1 if it has none. */
+	private int findFavoriteFood() {
+		int best = -1;
+		float bestLike = Float.NEGATIVE_INFINITY;
+		for (int slot = 0; slot < this.inventory.getContainerSize(); slot++) {
+			ItemStack stack = this.inventory.getItem(slot);
+			if (stack != null && stack.getItem() instanceof ItemFood) {
+				float like = this.personality.food.like(stack.getItem());
+				if (like > bestLike) {
+					best = slot;
+					bestLike = like;
+				}
+			}
+		}
+
+		return best;
 	}
 
 	/** Eats one of the held food (soup leaves its bowl behind), then switches back to what was held before. */
@@ -780,7 +801,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 			this.personality.load(npc.getCompound("Personality"));
 		} else if (npc.containsKey("Bravery")) {
 			// Version 1 stored bravery directly.
-			this.personality.setBravery(npc.getFloat("Bravery"));
+			this.personality.setFromBravery(npc.getFloat("Bravery"));
 		}
 
 		this.faction = NpcFactions.normalize(npc.getStringOrDefault("Faction", ""));
