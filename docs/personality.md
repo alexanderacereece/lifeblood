@@ -218,6 +218,14 @@ Mood-only memories (no opinion effect): ate food I like or hate (scaled by prefe
 
 **Detecting "saved my life"** needs careful balancing. Starting rule: the NPC was in combat below 30% health, someone else killed or drove off the attacker (or healed them), and the NPC survived the next 10 seconds. Only whoever did the most damage to the attackers gets the memory. To be tuned in playtesting so ordinary teamwork doesn't count.
 
+### Pacing
+
+Gifts are limited to one per NPC per in-game day, and chats to three per real-world minute (the guardian amulet doesn't count as a gift here). Both count for more because of it, and repeats add up steadily instead of halving:
+- a gift is worth up to about +11 depending on how much they like it, lasting two weeks, up to 14 at once;
+- a chat is worth +2, lasting three days, up to 10 at once.
+
+Checkpoints: a daily liked gift plus some chatting makes most NPCs friends (50) in about three days, and close friends (80+) in about two weeks, which is where romance should become possible. `/npc limits off` lifts both limits for playtesting.
+
 ### Standing factors
 
 Computed live, never stored:

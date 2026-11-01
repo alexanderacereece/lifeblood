@@ -21,9 +21,6 @@ import org.jetbrains.annotations.Nullable;
  * proud ones feel slights twice as hard, and loyal ones go easy on friends.
  */
 public class NpcMemories {
-	/** Each repeat of the same memory about the same person counts this much of the one before. */
-	private static final float STACK_FALLOFF = 0.5F;
-
 	private final List<Memory> memories = new ArrayList<>();
 
 	/**
@@ -164,7 +161,7 @@ public class NpcMemories {
 		return result;
 	}
 
-	/** Sums repeats of one memory, newest strongest, each repeat counting half the one before. */
+	/** Sums repeats of one memory, newest strongest, each repeat counting a share (the type's falloff) of the one before. */
 	private static float stacked(List<Memory> group, long now, boolean opinion) {
 		group.sort(Comparator.comparingLong(Memory::created).reversed());
 		float total = 0.0F;
@@ -172,7 +169,7 @@ public class NpcMemories {
 		for (Memory memory : group) {
 			int base = opinion ? memory.type().opinion : memory.type().mood;
 			total += base * memory.scale() * memory.strength(now) * weight;
-			weight *= STACK_FALLOFF;
+			weight *= memory.type().falloff;
 		}
 
 		return total;

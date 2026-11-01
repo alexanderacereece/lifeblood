@@ -34,6 +34,7 @@ public class NpcDialogueScreen extends Screen implements DialogueSession {
 	private static final int CHOICE_HOVER_COLOR = 0xC0302A1E;
 	private static final int NAME_COLOR = 0xFFFFE080;
 	private static final int TEXT_COLOR = 0xFFFFFFFF;
+	private static final int NARRATION_COLOR = 0xFFA8A8B8;
 	private static final int CHOICE_TEXT_COLOR = 0xFFE0E0E0;
 	private static final int CHOICE_HOVER_TEXT_COLOR = 0xFFFFE080;
 
@@ -41,6 +42,7 @@ public class NpcDialogueScreen extends Screen implements DialogueSession {
 	private final Player player;
 	private NpcDialogue dialogue;
 	private String npcLine;
+	private int lineColor = TEXT_COLOR;
 
 	// Layout, recomputed in init() and whenever the line or options change.
 	private final List<String> wrappedLine = new ArrayList<>();
@@ -68,7 +70,10 @@ public class NpcDialogueScreen extends Screen implements DialogueSession {
 	private void layout() {
 		this.boxWidth = Math.min(this.width - MARGIN * 2, BOX_MAX_WIDTH);
 		this.wrappedLine.clear();
-		this.fontRenderer.splitCharsIntoLines("\"" + this.npcLine + "\"", this.boxWidth - PADDING * 2, this.wrappedLine);
+		boolean narration = !this.npcLine.isEmpty() && this.npcLine.charAt(0) == NpcDialogue.NARRATION;
+		String shown = narration ? this.npcLine.substring(1) : "\"" + this.npcLine + "\"";
+		this.fontRenderer.splitCharsIntoLines(shown, this.boxWidth - PADDING * 2, this.wrappedLine);
+		this.lineColor = narration ? NARRATION_COLOR : TEXT_COLOR;
 		int lines = Math.max(this.wrappedLine.size(), BOX_MIN_LINES);
 		this.boxHeight = PADDING * 2 + LINE_HEIGHT + 4 + lines * LINE_HEIGHT;
 		this.boxX = (this.width - this.boxWidth) / 2;
@@ -96,7 +101,7 @@ public class NpcDialogueScreen extends Screen implements DialogueSession {
 		this.drawStringShadow(this.fontRenderer, this.npc.nickname, this.boxX + PADDING, this.boxY + PADDING, NAME_COLOR);
 		int lineY = this.boxY + PADDING + LINE_HEIGHT + 4;
 		for (String line : this.wrappedLine) {
-			this.drawStringShadow(this.fontRenderer, line, this.boxX + PADDING, lineY, TEXT_COLOR);
+			this.drawStringShadow(this.fontRenderer, line, this.boxX + PADDING, lineY, this.lineColor);
 			lineY += LINE_HEIGHT;
 		}
 

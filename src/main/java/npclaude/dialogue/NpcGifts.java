@@ -37,6 +37,10 @@ public final class NpcGifts {
 			return line != null ? line : "I already have one. But thank you.";
 		}
 
+		if (!amulet) {
+			SocialLimits.recordGift(npc, player);
+		}
+
 		// Only one of the stack changes hands, and it's theirs now: gifts don't go into their inventory, so they
 		// can't be taken back out of it. (The amulet goes into its own locked slot.)
 		held.stackSize--;

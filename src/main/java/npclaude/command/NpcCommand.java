@@ -35,6 +35,7 @@ import npclaude.client.NpcSkins;
 import npclaude.combat.FactionRegistry;
 import npclaude.combat.FactionRelation;
 import npclaude.combat.NpcFactions;
+import npclaude.dialogue.SocialLimits;
 import npclaude.entity.EntityNPC;
 import npclaude.entity.HealthMode;
 import npclaude.entity.NpcGender;
@@ -90,6 +91,7 @@ import org.joml.Vector3dc;
  * /npc forget <name> [<target>]               (debug: wipes its memories, or only those about someone)
  * /npc say <name> <symbol>                    (debug: says a line from the speech files aloud)
  * /npc speech reload                          (reads the speech files again)
+ * /npc limits [on|off]                        (debug: the one-gift-a-day and three-chats-a-minute limits)
  * /npc list
  * /npc skins [reload]
  *
@@ -516,6 +518,16 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 						npc.voice.sayAloud(line);
 						return 1;
 					}))))
+			.then(literal("limits")
+				.executes(c -> reply(c, "Gift and chat limits are " + (SocialLimits.isEnabled() ? "on" : "off") + "."))
+				.then(literal("on").executes(c -> {
+					SocialLimits.setEnabled(true);
+					return reply(c, "Gift and chat limits are on: one gift per NPC a day, three chats a minute.");
+				}))
+				.then(literal("off").executes(c -> {
+					SocialLimits.setEnabled(false);
+					return reply(c, "Gift and chat limits are off (until you turn them back on or restart).");
+				})))
 			.then(literal("speech")
 				.then(literal("reload").executes(c -> reply(c, "Loaded " + SpeechLibrary.reload() + " speech lines."))))
 			.then(literal("remove")

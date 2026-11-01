@@ -43,9 +43,9 @@ public class SpeechStyle {
 	public void roll(EntityNPC npc, Random random) {
 		SpeechContext context = new SpeechContext(npc, null, 0.0F);
 		long now = npc.world.getWorldTime();
-		this.address = orEmpty(SpeechEngine.speak("style_address", context, new HashMap<>(), now, random)).toLowerCase();
+		this.address = SpeechEngine.fixPronounI(orEmpty(SpeechEngine.speak("style_address", context, new HashMap<>(), now, random)).toLowerCase());
 		this.catchphrase = random.nextFloat() < CATCHPHRASE_CHANCE ? orEmpty(SpeechEngine.speak("style_catchphrase", context, new HashMap<>(), now, random)) : "";
-		this.filler = random.nextFloat() < FILLER_CHANCE ? orEmpty(SpeechEngine.speak("style_filler", context, new HashMap<>(), now, random)).toLowerCase() : "";
+		this.filler = random.nextFloat() < FILLER_CHANCE ? SpeechEngine.fixPronounI(orEmpty(SpeechEngine.speak("style_filler", context, new HashMap<>(), now, random)).toLowerCase()) : "";
 		float crude = Math.max(0.0F, -npc.personality.get(TraitAxis.SPEECH));
 		float shy = Math.max(0.0F, -npc.personality.get(TraitAxis.SOCIABILITY)) + Math.max(0.0F, -npc.personality.get(TraitAxis.COURAGE));
 		this.dropsGs = random.nextFloat() < 0.1F + 0.6F * crude;
@@ -81,7 +81,8 @@ public class SpeechStyle {
 			result = result + "..";
 		}
 
-		return result;
+		// Fillers saved before "I" was kept capitalized still come out right.
+		return SpeechEngine.fixPronounI(result);
 	}
 
 	public CompoundTag save() {

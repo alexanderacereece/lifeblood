@@ -7,6 +7,7 @@ import net.minecraft.core.entity.player.Player;
 import npclaude.combat.CombatStyle;
 import npclaude.entity.EntityNPC;
 import npclaude.entity.FollowDistance;
+import npclaude.item.NpcItems;
 import npclaude.social.MemoryType;
 import npclaude.social.Opinions;
 import npclaude.speech.Word;
@@ -22,6 +23,13 @@ public record NpcDialogue(String line, List<DialogueOption> options) {
 	/** People they'll offer an opinion on: everyone within this distance, plus every player in the world. */
 	private static final double ASK_ABOUT_RANGE = 32.0;
 	private static final int MAX_PEOPLE = 7;
+	/** Marks a line as narration rather than speech: shown without quotes. */
+	public static final char NARRATION = '';
+
+	/** Text for the dialogue box that isn't the NPC talking, like "That's probably enough for today." */
+	public static String narration(String text) {
+		return NARRATION + text;
+	}
 
 	public static NpcDialogue main(EntityNPC npc, Player player) {
 		return main(npc, player, say(npc, player, "dialogue_open", "..."));
@@ -30,11 +38,23 @@ public record NpcDialogue(String line, List<DialogueOption> options) {
 	private static NpcDialogue main(EntityNPC npc, Player player, String line) {
 		List<DialogueOption> options = new ArrayList<>();
 		options.add(new DialogueOption("How are you?", session -> {
+			if (!SocialLimits.tryChat(npc, player)) {
+				session.show(main(npc, player, narration(npc.nickname + " seems talked out for the moment.")));
+				return;
+			}
+
 			npc.remember(MemoryType.HAD_A_NICE_CHAT, player, 1.0F);
 			session.show(main(npc, player, say(npc, player, "smalltalk", "Fine.")));
 		}));
 		if (player.inventory.getCurrentItem() != null) {
-			options.add(new DialogueOption("Here, take this.", session -> session.show(main(npc, player, NpcGifts.give(npc, player)))));
+			options.add(new DialogueOption("Here, take this.", session -> {
+				if (SocialLimits.giftedToday(npc, player) && !NpcItems.isGuardianAmulet(player.inventory.getCurrentItem())) {
+					session.show(main(npc, player, narration("You've already given " + npc.nickname + " something today. That's probably enough for now.")));
+					return;
+				}
+
+				session.show(main(npc, player, NpcGifts.give(npc, player)));
+			}));
 		}
 
 		options.add(new DialogueOption("Can I ask you something?", session -> session.show(questions(npc, player, say(npc, player,

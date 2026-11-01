@@ -16,6 +16,7 @@ import org.jetbrains.annotations.Nullable;
  */
 public final class SpeechEngine {
 	private static final Pattern TOKEN = Pattern.compile("\\[([a-z_0-9]+)((?:\\.[a-z]+)*)]");
+	private static final Pattern LONE_I = Pattern.compile("(?<![\\p{L}'])i(?=[\\s'.,!?;:]|$)");
 	private static final int MAX_DEPTH = 8;
 	private static final int MAX_TRIES = 6;
 	/** Each satisfied condition makes a line this many times more likely. */
@@ -167,7 +168,12 @@ public final class SpeechEngine {
 	/** Collapses spacing left by empty parts, fixes spaces before punctuation, and capitalizes the start. */
 	static String tidy(String text) {
 		String result = text.replaceAll("\\s+", " ").replaceAll(" ([,.!?;:])", "$1").replaceAll("^[ ,]+", "").strip();
-		return capitalize(result);
+		return capitalize(fixPronounI(result));
+	}
+
+	/** "i" on its own ("i reckon", "i'm") is always "I", however a style or word lowercased it. */
+	public static String fixPronounI(String text) {
+		return LONE_I.matcher(text).replaceAll("I");
 	}
 
 	static String capitalize(String text) {

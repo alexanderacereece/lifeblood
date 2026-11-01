@@ -5,22 +5,26 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * Kinds of things an NPC remembers. Each has an effect on its opinion of the person involved, an effect on its mood,
- * how long it lasts (in-game days), and how many times it stacks (each repeat counts half as much as the last).
+ * how long it lasts (in-game days), how many times it stacks, and how much each repeat counts compared to the one
+ * before (half, by default; friendship-building memories add up more steadily).
  * See docs/personality.md, section 4.
  */
 public enum MemoryType {
 	// About a person
 	SAVED_MY_LIFE("saved my life", 30, 10, 60, 3),
 	FOUGHT_BESIDE_ME("fought beside me", 8, 0, 10, 5),
-	GAVE_ME_A_GIFT("gave me a gift", 5, 3, 5, 5),
+	// Gifts (one a day) and chats (three a minute) are the steady way to make friends: a daily gift they like plus
+	// some chatting makes most NPCs friends (50) in about three days, and close friends (80+) in about two weeks.
+	/** Scaled by how much the NPC likes the gift. */
+	GAVE_ME_A_GIFT("gave me a gift", 8, 3, 14, 14, false, 0.9F),
 	/** Scaled by how much the NPC likes the food. */
-	GAVE_ME_FOOD_I_LIKE("gave me food I like", 10, 5, 8, 3),
+	GAVE_ME_FOOD_I_LIKE("gave me food I like", 12, 5, 14, 14, false, 0.9F),
 	GAVE_ME_FOOD_I_HATE("gave me food I hate", -3, -2, 3, 3),
 	/** Something the NPC doesn't like; truly rude gifts (dirt) count as an insult instead. */
 	GAVE_ME_JUNK("gave me junk", -3, -2, 3, 3),
 	/** Given a guardian amulet: someone wants them kept safe. */
 	GAVE_ME_AN_AMULET("gave me a guardian amulet", 25, 8, 60, 1),
-	HAD_A_NICE_CHAT("had a nice chat", 3, 2, 2, 5),
+	HAD_A_NICE_CHAT("had a nice chat", 2, 2, 3, 10, false, 1.0F),
 	TAUGHT_ME_A_WORD("taught me a word", 2, 0, 3, 5),
 	INSULTED_ME("insulted me", -8, -3, 4, 5, true),
 	HIT_ME("hit me", -12, -5, 3, 5),
@@ -68,12 +72,19 @@ public enum MemoryType {
 	public final int stackLimit;
 	/** Hurts pride: proud NPCs feel it twice as much. */
 	public final boolean pride;
+	/** Each repeat about the same person counts this much of the one before. */
+	public final float falloff;
 
 	MemoryType(String description, int opinion, int mood, float days, int stackLimit) {
 		this(description, opinion, mood, days, stackLimit, false);
 	}
 
 	MemoryType(String description, int opinion, int mood, float days, int stackLimit, boolean pride) {
+		this(description, opinion, mood, days, stackLimit, pride, 0.5F);
+	}
+
+	MemoryType(String description, int opinion, int mood, float days, int stackLimit, boolean pride, float falloff) {
+		this.falloff = falloff;
 		this.description = description;
 		this.opinion = opinion;
 		this.mood = mood;

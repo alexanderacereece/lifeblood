@@ -110,6 +110,8 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private static final int BRAWL_CHECK_INTERVAL = 200;
 	/** Hitting someone this soon after a brawl with them ended is a cheap shot, and starts a real fight (30 seconds). */
 	private static final int CHEAP_SHOT_TICKS = 600;
+	/** Hits in the first second after a brawl are ignored, so a punch already on its way doesn't escalate it. */
+	private static final int BRAWL_GRACE_TICKS = 20;
 	/** Within this long of a first punch, a second one from a friend starts a brawl (5 seconds). */
 	private static final int SECOND_PUNCH_TICKS = 100;
 	/** How often a follower looks at what its leader is up to (2 seconds). */
@@ -149,6 +151,8 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private int pendingRemarkTick;
 	private int lastBiomeRemarkTick = -BIOME_REMARK_COOLDOWN;
 	private int lastRefusalTick = -REFUSAL_COOLDOWN;
+	/** The in-game day each player last gave it a gift, for the one-gift-a-day limit. */
+	private final Map<UUID, Long> lastGiftDays = new HashMap<>();
 	/** The fistfight it's in, if any. Not saved: a brawl doesn't survive leaving the world. */
 	@Nullable
 	private Brawl brawl;
@@ -429,6 +433,15 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 
 	public UUID getUuid() {
 		return this.uuid;
+	}
+
+	/** The in-game day this player last gave it a gift; -1 if never. */
+	public long getLastGiftDay(UUID player) {
+		return this.lastGiftDays.getOrDefault(player, -1L);
+	}
+
+	public void setLastGiftDay(UUID player, long day) {
+		this.lastGiftDays.put(player, day);
 	}
 
 	/**
@@ -1210,6 +1223,12 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		boolean armed = attacker instanceof Projectile || isArmed(source);
 		boolean brawlHit = false;
 		boolean friendlyPunch = false;
+		// A punch landing in the moment right after a brawl ends is a swing already thrown: it doesn't count.
+		if (this.brawl == null && source != null && source == this.lastBrawlOpponent
+			&& this.tickCount - this.lastBrawlEndTick < BRAWL_GRACE_TICKS) {
+			return false;
+		}
+
 		// Hitting it again once a brawl is over isn't part of the brawl: that's a real attack.
 		boolean cheapShot = this.brawl == null && source != null && source == this.lastBrawlOpponent
 			&& this.tickCount - this.lastBrawlEndTick < CHEAP_SHOT_TICKS;
@@ -1367,6 +1386,12 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		npc.putString("Uuid", this.uuid.toString());
 		npc.putList("Memories", this.memories.save());
 		npc.putCompound("Voice", this.voice.save());
+		CompoundTag giftTag = new CompoundTag();
+		for (Map.Entry<UUID, Long> entry : this.lastGiftDays.entrySet()) {
+			giftTag.putLong(entry.getKey().toString(), entry.getValue());
+		}
+
+		npc.putCompound("GiftDays", giftTag);
 		tag.putCompound(SAVE_KEY, npc);
 	}
 
@@ -1422,6 +1447,17 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 
 		if (npc.containsKey("Memories")) {
 			this.memories.load(npc.getList("Memories"));
+		}
+
+		this.lastGiftDays.clear();
+		if (npc.containsKey("GiftDays")) {
+			CompoundTag giftTag = npc.getCompound("GiftDays");
+			for (String key : giftTag.getValue().keySet()) {
+				try {
+					this.lastGiftDays.put(UUID.fromString(key), giftTag.getLong(key));
+				} catch (IllegalArgumentException ignored) {
+				}
+			}
 		}
 
 		if (npc.containsKey("Voice")) {
