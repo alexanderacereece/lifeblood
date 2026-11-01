@@ -5,12 +5,13 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * The layers an NPC's look is built from, in drawing order (later layers draw over earlier ones). Each recolorable
- * layer names the palette group its colors come from; hair and facial hair share one hair color.
+ * layer names the palette group its colors come from. The mouth always takes the base's skin color and facial hair
+ * the hair's color, so they match.
  */
 public enum AppearanceLayer {
 	BASE("skin"),
 	EYES("eyes"),
-	MOUTH(null),
+	MOUTH("skin"),
 	FACIAL_HAIR("hair"),
 	BOTTOM("dye"),
 	TOP("dye"),
@@ -23,6 +24,16 @@ public enum AppearanceLayer {
 
 	AppearanceLayer(@Nullable String paletteGroup) {
 		this.paletteGroup = paletteGroup;
+	}
+
+	/** The layer whose palette this one uses instead of its own, if any: the mouth uses the skin's, a beard the hair's. */
+	@Nullable
+	public AppearanceLayer paletteFrom() {
+		return switch (this) {
+			case MOUTH -> BASE;
+			case FACIAL_HAIR -> HAIR;
+			default -> null;
+		};
 	}
 
 	/** Its folder name: "facial_hair". */

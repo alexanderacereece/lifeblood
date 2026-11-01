@@ -360,7 +360,7 @@ Family is stored at world level (`npclaude_family`), so relatives who are far aw
 Married couples have children, which keeps settlements alive across generations. (Minecraft Comes Alive does something similar; this design is our own.)
 - A married couple at 80+ opinion, near each other, has about one child every ten in-game days, up to four, and not until the youngest is five days old. An NPC married to the player has children the same way.
 - A child is born beside its NPC parent, with a name from `assets/npclaude/names.txt`, its parents' faction and home, and family links set, so siblings, cousins and so on follow from the graph.
-- It starts at half size and grows to full size over 18 in-game years (1008 days in a world with 56-day years; a future game setting). `/npc grow` shows or sets it. Its head starts at three quarters of an adult's and is full size halfway to adulthood, for child proportions.
+- It starts at half size and grows to full size over 18 in-game years (1008 days in a world with 56-day years; a future game setting). `/npc grow` shows or sets it. Its head grows from three quarters of an adult's to full size over the same years, for child proportions.
 - A child stays near a parent who's around, NPC or player, catching up when they walk off.
 - Children inherit trait axes as a blend of both parents plus a random shift, and each parent quirk has a 30% chance to pass on (sometimes they get one of their own). Tastes are their own.
 - Looks: skin tone, hair color and eye color from one parent or the other, often a parent's hairstyle, eyes or mouth, and no facial hair. A young man may grow a beard on coming of age.
@@ -605,7 +605,7 @@ Each layer is a 64x64 skin-format PNG. Fixed layers are drawn in full color and 
 |---|---|---|---|
 | Base | yes | skin tone | the body, in wide and slim arm versions |
 | Eyes | yes (iris only) | eye color | several eye shapes; whites and pupils stay as drawn |
-| Mouth | no | | mouths and expressions |
+| Mouth | yes (the skin's palette) | skin tone | mouths and expressions; lips and shading in the grays |
 | Facial hair | yes | hair color | beards, moustaches |
 | Hair | yes | hair color | styles, using the outer layer for volume |
 | Tops | either | dye color, if recolorable | shirts, tunics, dresses, aprons |
@@ -635,7 +635,7 @@ Parts live in two places with the same layout: bundled with the mod (`assets/npc
 - `<name>_slim.png` beside `<name>.png`: the slim-armed version. The base part's arm width decides which one an NPC wears.
 - `palettes.txt`: `[skin]`, `[hair]`, `[eyes]`, `[dye]` groups of `name: #c1 #c2 #c3 #c4 #c5` lines, darkest to lightest. The mod ships defaults (8 skin tones, 12 hair colors, 8 eye colors, the 16 dye colors); a game-folder file adds to or overrides them.
 
-Whether a part is recolorable isn't declared anywhere: any of the five grays in it get recolored, and everything else is drawn as is.
+Whether a part is recolorable isn't declared anywhere: any of the five grays in it get recolored, and everything else is drawn as is. The mouth is recolored with the base's skin palette and facial hair with the hair's, so they always match. Old-style 64x32 parts work too: they're upgraded like old skins (left limbs mirrored from the right, and a completely filled hat area cleared).
 
 Random looks: every NPC without a skin file gets one from the parts available, rolled once (NPCs from before any parts existed get one when parts are added). Hair is almost always present (92% for men, 99% for women), facial hair 35% for men, an accessory 15%. Hair and facial hair share a color. A skin file set with `/npc skin` still wins over the look.
 

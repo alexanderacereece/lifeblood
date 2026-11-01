@@ -38,8 +38,6 @@ public class NpcRenderer extends MobRendererBipedArmored<EntityNPC> {
 	private static final float PLAYER_SCALE = 0.9375F;
 	/** A newborn's head, as a share of an adult's. */
 	private static final float CHILD_HEAD_START = 0.75F;
-	/** How grown up a child is when its head reaches full size. */
-	private static final float CHILD_HEAD_FULL_AT = 0.5F;
 	/** Where the head turns and scales from (the neck), in model pixels, per the player model. */
 	private static final float HEAD_PIVOT_Y = 24.0F;
 	private static final float LYING_LIFT = 0.125F;
@@ -76,8 +74,8 @@ public class NpcRenderer extends MobRendererBipedArmored<EntityNPC> {
 	}
 
 	/**
-	 * Children's heads are bigger for their size: the head starts at three quarters of an adult's (while the body is
-	 * half) and reaches full size halfway to adulthood, so little ones have little-one proportions.
+	 * Children's heads are bigger for their size: the body grows from half an adult's size to full, while the head
+	 * grows from three quarters to full over the same years, so little ones have little-one proportions.
 	 */
 	@Nullable
 	@Override
@@ -85,7 +83,7 @@ public class NpcRenderer extends MobRendererBipedArmored<EntityNPC> {
 		StaticEntityModel posed = super.setupAnimations(entity, model, partialTick, layer);
 		if (posed != null && entity.isChild()) {
 			float growth = entity.getGrowth();
-			float head = CHILD_HEAD_START + (1.0F - CHILD_HEAD_START) * Math.min(1.0F, growth / CHILD_HEAD_FULL_AT);
+			float head = CHILD_HEAD_START + (1.0F - CHILD_HEAD_START) * growth;
 			float relative = head / entity.getSizeScale();
 			BoneTransform transform = posed.getTransform("head");
 			transform.scaleX *= relative;

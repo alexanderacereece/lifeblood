@@ -1,5 +1,6 @@
 package npclaude.client;
 
+import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
@@ -89,7 +90,9 @@ public final class AppearanceTextures {
 				continue;
 			}
 
-			int[] palette = layer.paletteGroup != null && !choice.palette().isEmpty() ? catalog.palette(layer.paletteGroup, choice.palette()) : null;
+			// The mouth takes the skin's color and a beard the hair's (falling back to their own if that layer is empty).
+			Appearance.Choice source = layer.paletteFrom() != null && appearance.get(layer.paletteFrom()) != null ? appearance.get(layer.paletteFrom()) : choice;
+			int[] palette = layer.paletteGroup != null && !source.palette().isEmpty() ? catalog.palette(layer.paletteGroup, source.palette()) : null;
 			drawOver(result, image, palette);
 		}
 
@@ -99,8 +102,7 @@ public final class AppearanceTextures {
 
 	/** Alpha-blends a part over the image so far, swapping the five grays for the palette's colors first. */
 	private static void drawOver(BufferedImage target, BufferedImage part, @Nullable int[] palette) {
-		int height = Math.min(64, part.getHeight());
-		for (int y = 0; y < height; y++) {
+		for (int y = 0; y < 64; y++) {
 			for (int x = 0; x < 64; x++) {
 				int argb = part.getRGB(x, y);
 				int alpha = argb >>> 24;
@@ -137,6 +139,46 @@ public final class AppearanceTextures {
 		return outAlpha << 24 | r << 16 | g << 8 | b;
 	}
 
+	/**
+	 * Turns an old-style 64x32 part into the 64x64 layout, the way the game upgrades old skins: the left arm and leg
+	 * are mirrored copies of the right ones. A hat area that's completely filled in (as on a solid base) is cleared,
+	 * as old skins' hats were, so it doesn't become a box around the head.
+	 */
+	private static BufferedImage upgradeLegacy(BufferedImage old) {
+		BufferedImage image = new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB);
+		Graphics graphics = image.getGraphics();
+		graphics.drawImage(old, 0, 0, null);
+		int[][] copies = {
+			{24, 48, 20, 52, 4, 16, 8, 20}, {28, 48, 24, 52, 8, 16, 12, 20}, {20, 52, 16, 64, 8, 20, 12, 32}, {24, 52, 20, 64, 4, 20, 8, 32},
+			{28, 52, 24, 64, 0, 20, 4, 32}, {32, 52, 28, 64, 12, 20, 16, 32}, {40, 48, 36, 52, 44, 16, 48, 20}, {44, 48, 40, 52, 48, 16, 52, 20},
+			{36, 52, 32, 64, 48, 20, 52, 32}, {40, 52, 36, 64, 44, 20, 48, 32}, {44, 52, 40, 64, 40, 20, 44, 32}, {48, 52, 44, 64, 52, 20, 56, 32}
+		};
+		for (int[] c : copies) {
+			graphics.drawImage(old, c[0], c[1], c[2], c[3], c[4], c[5], c[6], c[7], null);
+		}
+
+		graphics.dispose();
+		boolean hatFilled = true;
+		for (int y = 0; y < 16 && hatFilled; y++) {
+			for (int x = 32; x < 64; x++) {
+				if ((image.getRGB(x, y) >>> 24) < 255) {
+					hatFilled = false;
+					break;
+				}
+			}
+		}
+
+		if (hatFilled) {
+			for (int y = 0; y < 16; y++) {
+				for (int x = 32; x < 64; x++) {
+					image.setRGB(x, y, 0);
+				}
+			}
+		}
+
+		return image;
+	}
+
 	@Nullable
 	private static BufferedImage read(@Nullable PartCatalog.Source source) {
 		if (source == null) {
@@ -152,8 +194,10 @@ public final class AppearanceTextures {
 		try (InputStream stream = source.open()) {
 			image = ImageIO.read(stream);
 			if (image != null && (image.getWidth() != 64 || image.getHeight() != 64 && image.getHeight() != 32)) {
-				NPClaude.LOGGER.warn("Appearance part {} must be a 64x64 PNG", source);
+				NPClaude.LOGGER.warn("Appearance part {} must be a 64x64 (or old-style 64x32) PNG", source);
 				image = null;
+			} else if (image != null && image.getHeight() == 32) {
+				image = upgradeLegacy(image);
 			}
 		} catch (IOException e) {
 			NPClaude.LOGGER.warn("Could not read appearance part {}", source, e);
