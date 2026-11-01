@@ -3,13 +3,21 @@ package npclaude.dialogue;
 import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.item.ItemStack;
 import npclaude.entity.EntityNPC;
-import npclaude.personality.FoodPreferences;
+import npclaude.personality.ItemDefaults;
 import npclaude.personality.Quirk;
+import npclaude.personality.TasteCategory;
+import npclaude.personality.Tastes;
 import npclaude.social.MemoryType;
 import npclaude.speech.Word;
 
-/** Giving an NPC whatever the player is holding: it goes into the NPC's inventory, and the NPC remembers it. */
+/**
+ * Giving an NPC whatever the player is holding: it goes into the NPC's inventory, and the NPC remembers it,
+ * fondly or not depending on how it feels about the item. Handing someone dirt is an insult.
+ */
 public final class NpcGifts {
+	/** Below this, a gift of junk or something gross is taken as an insult rather than a dud. */
+	private static final float INSULT_LIKE = -0.55F;
+
 	private NpcGifts() {
 	}
 
@@ -31,20 +39,31 @@ public final class NpcGifts {
 			}
 		}
 
-		boolean food = FoodPreferences.isFood(held.getItem());
-		float like = food ? npc.personality.food.like(held.getItem()) : 0.0F;
-		float taste = Math.min(1.0F, Math.abs(like) * (npc.personality.has(Quirk.GLUTTON) ? 2.0F : 1.0F));
-		if (food && like >= 0.2F) {
-			npc.remember(MemoryType.GAVE_ME_FOOD_I_LIKE, player, taste);
-		} else if (food && like <= -0.2F) {
-			npc.remember(MemoryType.GAVE_ME_FOOD_I_HATE, player, taste);
+		ItemDefaults.Default defaults = ItemDefaults.of(held.getItem());
+		boolean food = Tastes.isFood(held.getItem());
+		float like = npc.personality.tastes.like(held.getItem());
+		boolean rude = (defaults.is(TasteCategory.JUNK) || defaults.is(TasteCategory.GROSS)) && like <= INSULT_LIKE;
+		if (food) {
+			float taste = Math.min(1.0F, Math.abs(like) * (npc.personality.has(Quirk.GLUTTON) ? 2.0F : 1.0F));
+			if (like >= 0.2F) {
+				npc.remember(MemoryType.GAVE_ME_FOOD_I_LIKE, player, taste);
+			} else if (like <= -0.2F) {
+				npc.remember(MemoryType.GAVE_ME_FOOD_I_HATE, player, taste);
+			} else {
+				npc.remember(MemoryType.GAVE_ME_A_GIFT, player, 0.5F);
+			}
+		} else if (rude) {
+			npc.remember(MemoryType.INSULTED_ME, player, -like * 0.6F);
+		} else if (like <= -0.2F) {
+			npc.remember(MemoryType.GAVE_ME_JUNK, player, -like);
 		} else {
-			npc.remember(MemoryType.GAVE_ME_A_GIFT, player, food ? 0.5F : 1.0F);
+			npc.remember(MemoryType.GAVE_ME_A_GIFT, player, 0.4F + Math.max(0.0F, like));
 		}
 
 		Word word = food ? Word.ofFood(held.getItem()) : Word.ofItem(held);
-		String line = npc.voice.line("gift", player, context -> context.word("item", word).fact("kind", food ? "food" : "item")
-			.fact("taste", EntityNPC.tasteOf(like)));
+		String line = npc.voice.line("gift", player, context -> context.word("item", word).fact("kind", defaults.main().id())
+			.fact("taste", EntityNPC.tasteOf(like)).fact("rude_gift", rude ? "yes" : "no")
+			.fact("surprising", Math.abs(like - defaults.base()) >= 0.6F ? "yes" : "no"));
 		return line != null ? line : "Thanks.";
 	}
 }

@@ -6,9 +6,16 @@
 # picked more often when they fit, so every symbol keeps plain lines as a fallback.
 #
 # Facts: name, listener, listener_type (player/npc), opinion (enemy/disliked/neutral/friendly/friend/close_friend),
-# leader (yes/no), time (morning/day/evening/night), weather (rain/clear), mood (awful/bad/okay/good/great),
+# leader (yes/no), time (morning/day/evening/night), weather (clear/rain/snow/storm/fog/blood_rain), wet (yes when
+# it's coming down on them), outside, season (spring/summer/fall/winter), biome (plains, desert, tundra...),
+# weather_like/season_like/biome_like (love/like/meh/dislike/hate), mood (awful/bad/okay/good/great),
 # health (fine/hurt/low), recovering (yes/no), has_faction, has_enemy, address, catchphrase.
-# Words: favorite_food, hated_food, faction, enemy_faction, and per event: enemy, food, item.
+# Words: favorite_food, hated_food, favorite_thing, hated_thing, weather_word, biome_word, season_word,
+# favorite_weather, hated_weather, favorite_biome, hated_biome, favorite_season, hated_season, faction,
+# enemy_faction, and per event: enemy, food, item.
+# Gifts add kind (food/valuable/junk/gross/material/tool/weapon/armor/flower/plant/curio/music/decor/dangerous/
+# comfort/fun/block/item), taste, rude_gift (yes for dirt and the like) and surprising (yes when they feel very
+# differently about it than most people would).
 # Word modifiers: .a .the .s .it .is .this .cap
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -123,6 +130,16 @@ Mm.                          {taciturn, w=2}
 [hello] Lovely weather for ducks. {weather=rain, lighthearted}
 [hello] Miserable weather.   {weather=rain, pessimist}
 [hello] Some rain, huh?      {weather=rain}
+[hello] Isn't this rain wonderful? {weather=rain, weather_like=love}
+[hello] Get inside, it's pouring. {weather=rain, weather_like=hate, outside=yes}
+[hello] Some storm, huh?     {weather=storm}
+[hello] Hear that thunder?   {weather=storm, weather_like=love}
+Oh, thank goodness, company. This storm... {weather=storm, timid}
+[hello] Snow!                {weather=snow, weather_like=love}
+[hello] Cold enough for you? {weather=snow, lighthearted}
+[hello] Can't see a thing in this fog. {weather=fog}
+[hello] Lovely day, isn't it? {weather=clear, weather_like=love, time=day}
+[hello] Don't look at the sky. Just don't. {weather=blood_rain}
 Oh, hey. Didn't see you there. {timid}
 [hello] Need something?      {polite}
 [hello] Make it quick.       {rude}
@@ -133,6 +150,12 @@ Oh good, an excuse to stop working. {lazy, lighthearted}
 How's it going?
 Keep safe out there.
 Nice day.                    {weather=clear, time=day}
+Nice day, if you like that sort of thing. {weather=clear, time=day, weather_like=dislike}
+Lovely rain.                 {weather=rain, weather_like=love}
+Wet one.                     {weather=rain}
+Wild weather.                {weather=storm}
+Cold out.                    {weather=snow}
+Foggy.                       {weather=fog}
 Rough day.                   {mood=bad}
 What a day!                  {mood=great}
 
@@ -174,8 +197,10 @@ What's out there, past the hills? {curious, w=2}
 Seen anything strange on your travels? {curious}
 The Cube God watches over us all. {pious, w=2}
 Say your prayers to the Cube God tonight. {pious, time=evening}
-I won a race once. Did I tell you? {competitive}
-Bet I could beat you in a race. {competitive, lighthearted}
+I've been keeping score, you know. I'm winning. {competitive}
+Whatever you're good at, I'm probably better. No offense. {competitive, lighthearted}
+Someone here thinks they work harder than me. They're wrong. {competitive, hardworking}
+I don't lose. I occasionally fail to win. {competitive, proud}
 I don't like to brag, but I'm the best around here. {proud}
 Oh, I'm nobody special.      {humble}
 Everything's going to be fine. I can feel it. {optimist}
@@ -183,7 +208,56 @@ Something bad is coming. I can feel it. {pessimist}
 Honestly? Could be worse.    {pessimist}
 Isn't it a fine day?         {optimist, weather=clear, time=day}
 This rain is getting into my bones. {weather=rain, pessimist}
-I like the rain, honestly.   {weather=rain, optimist}
+I like the rain, honestly.   {weather=rain, weather_like=like}
+I love the rain. Everything smells new. {weather=rain, weather_like=love, w=2}
+I could stand out in this rain all day. {weather=rain, weather_like=love, lighthearted}
+I hate the rain. Everything's damp. Me especially. {weather=rain, weather_like=hate, w=2}
+This rain had better stop soon. {weather=rain, weather_like=dislike}
+I love a good storm. Makes you feel alive. {weather=storm, weather_like=love, w=2}
+I'm not scared of storms. I just don't like them. At all. {weather=storm, weather_like=hate, timid, w=2}
+Storms make me nervous.      {weather=storm, weather_like=dislike}
+The Cube God is angry today. {weather=storm, pious}
+Snow makes everything quiet. I like that. {weather=snow, weather_like=love, introvert}
+I love the snow!             {weather=snow, weather_like=love}
+Snow. Cold, wet, and everywhere. {weather=snow, weather_like=hate}
+Fog like this, anything could be out there. {weather=fog, paranoid, w=2}
+I like the fog. Nobody bothers you. {weather=fog, weather_like=love}
+Can't see my own hands in this fog. {weather=fog, weather_like=dislike}
+Red rain. That's an omen if ever I saw one. {weather=blood_rain, pious, w=2}
+Is the rain... red? Why is the rain red? {weather=blood_rain}
+Blood from the sky. Wonderful. Just wonderful. {weather=blood_rain, pessimist}
+Honestly, I think the red rain is kind of pretty. {weather=blood_rain, weather_like=like}
+Not a cloud in the sky. Perfect. {weather=clear, weather_like=love, time=day}
+Too bright out. I miss the clouds. {weather=clear, weather_like=hate, time=day}
+My favorite weather? [favorite_weather.s.cap]. No contest. {w=0.6}
+Give me [favorite_weather.s] any day. {w=0.6}
+I can't stand [hated_weather.s].  {w=0.5}
+I love [season_word]. Best time of the year. {season_like=love, w=1.5}
+[season_word.cap] again. I'll live. {season_like=dislike}
+I can't wait for [favorite_season]. {!season_like=love, w=0.6}
+Every [season_word] I tell myself I'll get used to it. I never do. {season_like=hate}
+[season_word.cap] is for harvests. And eating them. {season=fall, glutton}
+Spring makes everyone fall in love. Have you noticed? {season=spring, romantic}
+Fall always makes me think of the old days. {season=fall, sentimental}
+Winter nights are the best nights. So long. {season=winter, night_owl}
+Long summer days. More time to work. {season=summer, hardworking}
+Summer means naps in the shade. {season=summer, lazy}
+I love it out here in [biome_word.the]. {biome_like=love, w=1.5}
+[biome_word.the.cap] suits me. {biome_like=like}
+I'll never get used to [biome_word.the]. {biome_like=hate}
+Some days I wish I lived somewhere other than [biome_word.the]. {biome_like=dislike}
+If I could live anywhere, it'd be [favorite_biome.the]. {w=0.6}
+You'll never catch me in [hated_biome.the]. Never. {w=0.5}
+Have you ever been to [favorite_biome.the]? You should. {extrovert, w=0.5}
+I've always wanted to see [hated_biome.the]. Just to know. {curious, w=0.6}
+I've got a thing for [favorite_thing.s], you know. {w=0.8}
+If you ever find [favorite_thing.a], think of me. {w=0.7}
+I love [favorite_thing.s]. Don't ask me why. {w=0.6}
+Nobody believes me, but I love [favorite_thing.s]. {surprising_thing=yes}
+Don't ever give me [hated_thing]. I mean it. {w=0.6}
+Want to know what I hate? [hated_thing.cap]. {w=0.5}
+I could look at [favorite_thing.s] all day. {curious}
+A person can never have too many [favorite_thing.s]. {greedy}
 I've had a rough time lately. {mood=bad}
 Not great. Let's leave it there. {mood=awful}
 I feel wonderful today!      {mood=great}
@@ -224,26 +298,120 @@ Fine. I'll take it.          {rude}
 You shouldn't have. Really.  {humble}
 About time someone noticed me. {proud}
 [item.cap]! Thank you!       {extrovert}
-I'll put [item.it] to good use. {hardworking}
 Is this a trick?             {paranoid}
 What do you want for [item.it]? {greedy}
-Free? I'll take [item.it].   {greedy}
 Oh, I'll pass [item.it] on to someone who needs [item.it] more. {generous}
-[item.cap]! I love [item.it]! {kind=food, taste=love, w=4}
-My favorite! How did you know? {kind=food, taste=love, w=3}
-[item.cap]! You're a saint, [listener]. {kind=food, taste=love, glutton, w=4}
-Ooh, [item.a]. Thanks!       {kind=food, taste=like, w=3}
-Mm, [item]. Nice.            {kind=food, taste=like, w=2}
-Oh. [item.cap]. Thanks.      {kind=food, taste=meh, w=2}
-[item.cap]. Food is food.    {kind=food, taste=meh, w=2}
-Ugh, [item]. ...Thanks.      {kind=food, taste=dislike, polite, w=3}
-I don't really like [item], but thanks. {kind=food, taste=dislike, w=3}
-[item.cap]? Seriously?       {kind=food, taste=hate, w=3}
-I can't stand [item]. Keep [item.it]. {kind=food, taste=hate, rude, w=3}
-Oh. [item.cap]. How... thoughtful. {kind=food, taste=hate, polite, w=3}
 Thank you, [listener]. Truly. {opinion=friend, polite}
 Aw, [listener]. You're the best. {opinion=close_friend}
 Hm. Trying to buy my good opinion? {opinion=disliked}
+
+# How much they like it, whatever it is
+[item.cap]! I love [item.it]! {taste=love, w=4}
+For me? [item.cap]? Oh, [listener]... {taste=love, w=3}
+You remembered! Well. You must have. {taste=love, w=2}
+Now this is a gift.          {taste=love, w=2}
+Oh, you've made my day.      {taste=love, polite, w=3}
+Ha! Brilliant!               {taste=love, lighthearted, w=3}
+Ooh, [item.a]. Thanks!       {taste=like, w=3}
+Oh, nice. [item.cap].        {taste=like, w=3}
+I can use [item.it]. Thanks. {taste=like, hardworking, w=3}
+Oh. [item.cap]. Thanks.      {taste=meh, w=3}
+Hm. [item.cap]. All right.   {taste=meh, w=3}
+I'll find a use for [item.it]. Probably. {taste=meh, w=2}
+Ugh, [item]. ...Thanks.      {taste=dislike, polite, w=3}
+I don't really like [item], but thanks. {taste=dislike, w=3}
+What am I supposed to do with [item.this]? {taste=dislike, w=3}
+[item.cap]? Seriously?       {taste=hate, w=3}
+Oh. [item.cap]. How... thoughtful. {taste=hate, polite, w=3}
+Keep [item.it]. Actually no, you already gave [item.it] to me. Great. {taste=hate, lighthearted, w=3}
+I hate [item]. You couldn't have known. ...Could you? {taste=hate, paranoid, w=4}
+
+# Rude gifts: dirt, cobblestone, slime
+[item.cap]? You're giving me [item]? {rude_gift=yes, w=6}
+Is this a joke? Am I a joke to you? {rude_gift=yes, w=6}
+[item.cap]. Wow. Thanks for nothing. {rude_gift=yes, rude, w=8}
+I know when I'm being insulted, [listener]. {rude_gift=yes, proud, w=8}
+Oh. [item.cap]. That's... that's fine. It's fine. {rude_gift=yes, polite, w=8}
+Oh. [item.cap]. That's... that's fine. It's fine. {rude_gift=yes, timid, w=8}
+I'll remember this.          {rude_gift=yes, vengeful, w=8}
+Ha, very funny. Hand it here, I'll throw it at you later. {rude_gift=yes, lighthearted, w=8}
+The Cube God made [item], so I won't complain. Much. {rude_gift=yes, pious, w=8}
+Did you dig this up out of my own yard? {rude_gift=yes, kind=junk, w=6}
+It's slimy. Why is it slimy? {rude_gift=yes, kind=gross, w=6}
+Ugh! Get it away from me!    {rude_gift=yes, kind=gross, proper, w=8}
+
+# Oddballs: they feel very differently about this than most would
+[item.cap]! Finally, someone who gets me. {surprising=yes, taste=love, w=8}
+People think I'm odd for liking [item], but I don't care. {surprising=yes, taste=love, w=8}
+Ooh, [item]! Don't tell anyone I said that. {surprising=yes, taste=like, w=6}
+I know everyone loves [item]. I don't. Sorry. {surprising=yes, taste=dislike, w=8}
+[item.cap]? Everyone loves [item]. I'm not everyone. {surprising=yes, taste=hate, w=8}
+Honestly? [item.cap] doesn't do much for me. {surprising=yes, taste=meh, w=6}
+[item.cap]! Oh, I've always wanted some! {surprising=yes, taste=love, kind=junk, w=10}
+You know, most people would be insulted. I think it's nice. {surprising=yes, kind=junk, w=8}
+
+# Food
+[item.cap]! I love [item.it]! {kind=food, taste=love, w=4}
+My favorite! How did you know? {kind=food, taste=love, w=3}
+[item.cap]! You're a saint, [listener]. {kind=food, taste=love, glutton, w=4}
+I was just thinking about [item]! {kind=food, taste=love, glutton, w=3}
+Mm, [item]. Nice.            {kind=food, taste=like, w=2}
+[item.cap]. Food is food.    {kind=food, taste=meh, w=2}
+I can't stand [item]. Keep [item.it]. {kind=food, taste=hate, rude, w=3}
+
+# Valuables
+Is this... real? It's real! {kind=valuable, taste=love, w=4}
+[item.cap]! Oh, I'm keeping [item.it] somewhere safe. {kind=valuable, taste=love, w=4}
+Mine. All mine. Thank you. {kind=valuable, greedy, w=6}
+This is worth a fortune, you know. Are you sure? {kind=valuable, honest, w=5}
+This is too much. I can't. ...I will, but I can't. {kind=valuable, humble, w=6}
+Shiny. I'll admit, it's shiny. {kind=valuable, taste=meh, w=4}
+I'll give [item.it] to someone who cares about that sort of thing. {kind=valuable, generous, w=5}
+At last, something worthy of me. {kind=valuable, proud, w=6}
+
+# Materials, tools, weapons, armor
+Good, sturdy stuff. I'll put [item.it] to use. {kind=material, hardworking, w=4}
+Materials. That means work. Wonderful. {kind=material, lazy, w=4}
+[item.cap]. Practical. I like practical. {kind=material, taste=like, w=3}
+A proper tool! Now we're talking. {kind=tool, hardworking, w=5}
+A tool. Are you trying to tell me something? {kind=tool, lazy, w=5}
+I'll get some real work done with [item.this]. {kind=tool, taste=like, w=3}
+Ha! Let them come now.        {kind=weapon, brave, w=5}
+A weapon? I'd rather not need one. {kind=weapon, timid, w=5}
+I know exactly who I'll use this on. {kind=weapon, vengeful, w=5}
+Keep your blade, I'd rather talk things out. {kind=weapon, forgiving, taste=dislike, w=5}
+Armor! I feel safer already. {kind=armor, timid, w=5}
+How do I look? Don't answer that. {kind=armor, lighthearted, w=4}
+This'll keep me in one piece. Thanks. {kind=armor, taste=like, w=3}
+Now they'll never get me.     {kind=armor, paranoid, w=6}
+
+# Flowers and plants
+Flowers? For me? Oh, [listener]... {kind=flower, romantic, w=6}
+Flowers. I'm going to press one and keep it forever. {kind=flower, sentimental, w=6}
+Ooh, pretty!                  {kind=flower, taste=like, w=3}
+What am I, a garden?          {kind=flower, taste=dislike, w=4}
+A flower. Huh. Thanks, I suppose. {kind=flower, crude, w=4}
+I'll plant [item.it] somewhere nice. {kind=plant, taste=like, w=4}
+I'll plant [item.it]. Eventually. {kind=plant, lazy, w=4}
+
+# Curios, music, decor and the rest
+Ooh! What does [item.it] do? Never mind, I'll find out. {kind=curio, curious, w=6}
+How fascinating.              {kind=curio, taste=like, w=3}
+Huh. Clever little thing.     {kind=curio, w=2}
+Music! Oh, I love music.      {kind=music, taste=love, w=4}
+Ha! We're having a party now. {kind=music, extrovert, w=5}
+I don't really dance. Or listen. Thanks, though. {kind=music, taste=dislike, w=4}
+This'll look lovely in my home. {kind=decor, taste=like, w=4}
+How elegant.                  {kind=decor, proper, w=5}
+Where am I supposed to put [item.this]? {kind=decor, taste=dislike, w=4}
+Is that going to explode?     {kind=dangerous, w=3}
+Get that away from me!        {kind=dangerous, timid, w=6}
+Oh, this'll be fun.           {kind=dangerous, brave, w=4}
+Oh, this is going to end badly. For someone. {kind=dangerous, hothead, w=6}
+Somewhere to rest! Bless you. {kind=comfort, lazy, w=6}
+A bed? I don't have time to sleep. {kind=comfort, hardworking, w=5}
+Ha! I love [item]!            {kind=fun, lighthearted, w=5}
+What is this, a toy?          {kind=fun, serious, w=5}
 
 == gift_full ==
 My hands are full.
@@ -279,8 +447,31 @@ Too early.                   {time=morning, lazy}
 Too early.                   {time=morning, night_owl, w=2}
 Getting dark.                {time=evening}
 Rain, rain, rain.            {weather=rain}
-I'm soaked through.          {weather=rain, pessimist}
-Smell that rain!             {weather=rain, optimist}
+I'm soaked through.          {weather=rain, wet=yes, pessimist}
+I'm soaked through.          {weather=rain, wet=yes, weather_like=hate}
+Smell that rain!             {weather=rain, weather_like=like}
+Ahh. Rain.                   {weather=rain, weather_like=love, wet=yes, w=2}
+Listen to that rain on the roof. {weather=rain, outside=no, weather_like=love}
+Glad I'm under a roof.       {weather=rain, outside=no, weather_like=dislike}
+That thunder's getting closer. {weather=storm, timid}
+Come on, lightning! Is that all you've got? {weather=storm, brave, lighthearted}
+What a storm!                {weather=storm, weather_like=love}
+I hope this storm passes soon. {weather=storm, weather_like=dislike}
+Brr.                         {weather=snow, weather_like=dislike}
+I wonder how much snow we'll get. {weather=snow, weather_like=like}
+Something's moving in that fog. {weather=fog, paranoid}
+I can't see where I'm going. {weather=fog}
+The sky is bleeding. That can't be good. {weather=blood_rain}
+What a day. Look at that sky. {weather=clear, weather_like=love, time=day}
+I miss [favorite_weather.s].  {!weather_like=love, w=0.5}
+Ah, [season_word].           {season_like=love}
+[season_word.cap]...         {season_like=hate}
+Another day in [biome_word.the]. {biome_like=meh}
+Home sweet [biome_word].     {biome_like=love}
+Nothing out here but [biome_word]. {biome_like=hate}
+I wonder where I could find [favorite_thing.a]. {w=0.5}
+I should get myself [favorite_thing.a] one of these days. {w=0.4}
+Could use a few more [favorite_thing.s]. {greedy, w=0.6}
 Could use a nap.             {lazy, w=2}
 There's always something to do. {hardworking}
 Nothing ever goes right.     {pessimist}
@@ -291,7 +482,8 @@ Life is serious business.    {serious}
 Did you hear what happened? No? Me neither. {nosy}
 I wonder who's sweet on who around here. {nosy, romantic}
 I'm the best at what I do. Just so you know. {proud}
-Bet I could do that faster.  {competitive}
+I got more done today than anyone. I checked. {competitive}
+Second place is just first loser. {competitive, rude}
 Ow. Still hurts.             {recovering=yes, w=3}
 I nearly didn't make it back there. {recovering=yes, w=2}
 Keep an eye out for the [enemy_faction]. {has_enemy=yes}
@@ -312,9 +504,15 @@ Hey, [listener].
 Psst, [listener]. Come here. {nosy}
 [listener]. Nice weather, huh? {weather=clear}
 [listener]. Wet one today.   {weather=rain}
+[listener]! Isn't this rain wonderful? {weather=rain, weather_like=love}
+[listener]. Some storm, eh?  {weather=storm}
+[listener], do you like [season_word]? I love [season_word]. {season_like=love}
+[listener], have you ever been to [favorite_biome.the]? {w=0.5}
+[listener], you haven't seen [favorite_thing.a] anywhere, have you? {w=0.5}
 [listener], you look tired.  {polite}
 You still owe me, [listener]. {greedy}
-[listener]! Race you to the trees! {competitive, lighthearted}
+[listener]. Heard you've been bragging. Care to back it up? {competitive}
+[listener]! Whoever gets the most done today buys dinner. {competitive, lighthearted}
 Morning, [listener]. Praise the Cube. {pious, time=morning}
 [listener]. Seen anything odd lately? {paranoid}
 [listener]! I was just thinking about you. {romantic, opinion=friend}
@@ -341,6 +539,8 @@ You're always welcome, [listener]. {opinion=friend}
 Get lost, [listener].        {opinion=disliked, rude}
 Hm. If you say so.           {opinion=disliked}
 Mmh. Food. Yes.              {glutton}
+Better than this weather.    {weather_like=hate}
+Same as the weather. Lovely. {weather_like=love}
 
 # ---------------------------------------------------------------------------------------------------------------
 # Combat barks. [enemy] is who or what they're fighting.
@@ -357,7 +557,7 @@ Why is it always me?         {timid, pessimist}
 Watch out, [enemy.a]!        {!brave}
 Cube God, guide my arm!      {pious, brave}
 You picked the wrong fight!  {proud}
-Let's see who's faster!      {competitive}
+Watch and learn.             {competitive}
 I've been waiting for this.  {vengeful}
 Not again...                 {lazy}
 To arms!                     {proper, brave}
@@ -397,7 +597,8 @@ That'll teach you.           {vengeful}
 Rest in peace, [enemy].      {forgiving}
 The Cube God provides.       {pious}
 One less [enemy] in the world. {serious}
-Did you see that? Did you?   {competitive}
+That's one for me.           {competitive}
+Keep up, [address].          {competitive, rude}
 
 == hit_by_friend ==
 Hey! Watch it!
@@ -472,3 +673,88 @@ Bleh.                        {taste=hate}
 Food, glorious food!         {glutton, w=2}
 Thank the Cube God for [food]. {pious}
 Om nom nom.                  {lighthearted}
+
+# ---------------------------------------------------------------------------------------------------------------
+# The world around them: said when the weather turns, the season changes, or they walk into a new biome.
+
+== weather_change ==
+Weather's turning.
+Here we go.
+Looks like [weather_word].   {!weather=clear, w=0.5}
+Rain! Finally!               {weather=rain, weather_like=love, w=3}
+Ooh, rain.                   {weather=rain, weather_like=like, w=2}
+Here comes the rain.         {weather=rain}
+Great. Rain.                 {weather=rain, weather_like=dislike, w=2}
+Oh no. Not rain. Anything but rain. {weather=rain, weather_like=hate, w=3}
+Better find a roof.          {weather=rain, outside=yes}
+Storm's coming!              {weather=storm, w=2}
+Storm's coming. Lovely.      {weather=storm, weather_like=love, w=3}
+Storm's coming... I'm going inside. {weather=storm, weather_like=dislike, w=3}
+Is that thunder? I don't like thunder. {weather=storm, timid, w=3}
+Ha! Let it pour!             {weather=storm, brave, w=2}
+The Cube God's in a mood.    {weather=storm, pious, w=2}
+Snow!                        {weather=snow, weather_like=like, w=2}
+Snow! Oh, I love the snow!   {weather=snow, weather_like=love, w=3}
+Snow. Of course it's snow.   {weather=snow, weather_like=dislike, w=2}
+Brr. Here comes the cold.    {weather=snow}
+Fog's rolling in.            {weather=fog, w=2}
+Fog. Stay close, everyone.   {weather=fog, paranoid, w=3}
+Ooh, fog. Spooky.            {weather=fog, lighthearted, w=2}
+Is that... is the rain red?  {weather=blood_rain, w=3}
+Cube God preserve us. The sky is bleeding. {weather=blood_rain, pious, w=4}
+I knew it. I knew something bad was coming. {weather=blood_rain, pessimist, w=4}
+Ha! The sky's gone mad.      {weather=blood_rain, brave, lighthearted, w=3}
+Sun's out!                   {weather=clear, w=2}
+Finally, some sun.           {weather=clear, weather_like=like, w=2}
+Sun's out! Oh, that's better. {weather=clear, weather_like=love, w=3}
+Clearing up. Shame.          {weather=clear, weather_like=dislike, w=3}
+And it's over. Shame.        {weather=clear, weather_like=hate, w=3}
+Back to work, then.          {weather=clear, hardworking}
+Mm.                          {taciturn, w=2}
+
+== season_change ==
+[season_word.cap] already?
+Feels like [season_word].
+[season_word.cap]! My favorite time of year! {season_like=love, w=3}
+Ah, [season_word]. Good.     {season_like=like, w=2}
+Here comes [season_word]. Wonderful. {season_like=dislike, w=2}
+Not [season_word]. Anything but [season_word]. {season_like=hate, w=3}
+Spring. Everything's waking up. {season=spring, w=2}
+Spring is in the air. And so is love. {season=spring, romantic, w=3}
+Summer's here. Time to sweat. {season=summer}
+Long days, short nights. Hm. {season=summer, night_owl, w=2}
+Leaves are turning.          {season=fall, w=2}
+Harvest time! You know what that means. Pie. {season=fall, glutton, w=3}
+Fall again. Where does the time go? {season=fall, sentimental, w=3}
+Winter's here. Bundle up.    {season=winter, w=2}
+Long nights again. Perfect.  {season=winter, night_owl, w=3}
+Winter. Of course. Everything dies in winter. {season=winter, pessimist, w=3}
+
+== biome_enter ==
+Huh. [biome_word.the.cap].
+So this is [biome_word.the].
+Oh, [biome_word.the]! I love it here! {biome_like=love, w=3}
+Ah, [biome_word.the]. Nice. {biome_like=like, w=2}
+[biome_word.the.cap]. Great. {biome_like=dislike, w=2}
+Ugh. [biome_word.the.cap]. Do we have to? {biome_like=hate, w=3}
+Why'd you bring me to [biome_word.the], [listener]? {biome_like=hate, leader=yes, w=4}
+Lead on, [listener]. I'm right behind you. {leader=yes, w=0.5}
+Oh! I've never been anywhere like this. {curious, w=2}
+Anything could be hiding out here. {paranoid}
+Hot. So hot.                 {biome=desert, w=2}
+Hot. So hot.                 {biome=outback, w=2}
+Sand. In everything. Already. {biome=desert, biome_like=dislike, w=3}
+Cold!                        {biome=tundra, w=2}
+Cold!                        {biome=glacier, w=2}
+Cold!                        {biome=taiga}
+Watch where you step.        {biome=swamp, w=2}
+Watch where you step.        {biome=muddy_swamp, w=2}
+It smells like a swamp. Because it is one. {biome=swamp, lighthearted, w=2}
+Look at all these trees.     {biome=forest}
+Look at all these trees.     {biome=rainforest}
+Look at all these trees.     {biome=birch_forest}
+Wide open country.           {biome=plains}
+Wide open country.           {biome=grasslands}
+Flowers everywhere.          {biome=meadow, w=2}
+Oh, the colors.              {biome=seasonal_forest, w=2}
+

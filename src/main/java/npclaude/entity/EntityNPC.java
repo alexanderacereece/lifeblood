@@ -21,6 +21,7 @@ import net.minecraft.core.item.Items;
 import net.minecraft.core.util.helper.DamageType;
 import net.minecraft.core.util.helper.MathHelper;
 import net.minecraft.core.world.World;
+import net.minecraft.core.world.pos.TilePos;
 import npclaude.ai.NpcBrain;
 import npclaude.ai.NpcNavigator;
 import npclaude.ai.behavior.FollowPlayerBehavior;
@@ -35,14 +36,14 @@ import npclaude.dialogue.NpcDialogue;
 import npclaude.interaction.NpcInteractions;
 import npclaude.inventory.NpcInventory;
 import npclaude.perf.NpcProfiler;
-import npclaude.personality.FoodPreferences;
+import npclaude.personality.Surroundings;
+import npclaude.personality.Tastes;
 import npclaude.personality.NpcPersonality;
 import npclaude.personality.Quirk;
 import npclaude.social.MemoryType;
 import npclaude.social.NpcMemories;
 import npclaude.social.Opinions;
 import npclaude.speech.NpcVoice;
-import npclaude.speech.SpeechFacts;
 import npclaude.speech.Word;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -85,7 +86,12 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private static final float RESCUE_HEALTH = 0.3F;
 	/** How long an NPC must survive after being rescued for it to count (10 seconds). */
 	private static final int RESCUE_CONFIRM_TICKS = 200;
-	private static final int RAIN_CHECK_INTERVAL = 600;
+	/** How often the NPC notices a change of weather, biome or season (2 seconds). */
+	private static final int SURROUNDINGS_CHECK_INTERVAL = 40;
+	/** How often the weather and the place it's in affect its mood (30 seconds). */
+	private static final int SURROUNDINGS_MOOD_INTERVAL = 600;
+	/** At least this long between remarks about a new biome, so walking along a border doesn't set it off (2 minutes). */
+	private static final int BIOME_REMARK_COOLDOWN = 2400;
 	private static final int MEMORY_PRUNE_INTERVAL = 1200;
 
 	public final NpcBrain brain = new NpcBrain(this);
@@ -102,6 +108,18 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	@Nullable
 	private Entity rescuer;
 	private int rescueTick;
+	/** The surroundings last noticed, so changes can be remarked on. Not saved, so nothing fires on load. */
+	@Nullable
+	private String lastWeather;
+	@Nullable
+	private String lastBiome;
+	@Nullable
+	private String lastSeason;
+	/** A remark about new surroundings waiting to be made (after a short, random pause), and when. */
+	@Nullable
+	private String pendingRemark;
+	private int pendingRemarkTick;
+	private int lastBiomeRemarkTick = -BIOME_REMARK_COOLDOWN;
 	private HealthMode healthMode = HealthMode.MORTAL;
 	/** Ticks left lying down after a would-be killing blow; 0 when standing. */
 	private int downedTicks;
@@ -262,7 +280,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		}
 	}
 
-	/** Speaking up, confirming rescues, and noticing the weather. */
+	/** Speaking up, confirming rescues, and noticing the weather and where it is. */
 	private void socialUpdate() {
 		this.voice.tick();
 		if (this.rescuer != null && this.tickCount - this.rescueTick >= RESCUE_CONFIRM_TICKS) {
@@ -275,12 +293,78 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		}
 
 		int offset = this.tickCount + this.id;
-		if (offset % RAIN_CHECK_INTERVAL == 0 && SpeechFacts.isRaining(this)) {
-			this.remember(MemoryType.GOT_RAINED_ON, null, 1.0F);
+		if (offset % SURROUNDINGS_CHECK_INTERVAL == 0) {
+			this.noticeSurroundings();
+		}
+
+		if (offset % SURROUNDINGS_MOOD_INTERVAL == 0) {
+			this.feelSurroundings();
+		}
+
+		if (this.pendingRemark != null && this.tickCount >= this.pendingRemarkTick) {
+			String remark = this.pendingRemark;
+			this.pendingRemark = null;
+			if (!this.isBusy()) {
+				this.voice.bark(remark, this.getLeader(), null, false);
+			}
 		}
 
 		if (offset % MEMORY_PRUNE_INTERVAL == 0) {
 			this.memories.prune(this.world.getWorldTime());
+		}
+	}
+
+	/**
+	 * Notices when the weather turns, the season changes, or it walks into a new biome, and maybe says something
+	 * about it a moment later. The stronger its feelings about the new surroundings, the likelier it speaks up.
+	 */
+	private void noticeSurroundings() {
+		String weather = Surroundings.weatherAt(this.world, this.x, this.y + this.getHeadHeight(), this.z);
+		String biome = Surroundings.biomeAt(this.world, this.x, this.y, this.z);
+		String season = Surroundings.seasonOf(this.world);
+		if (this.lastWeather != null && !weather.equals(this.lastWeather)) {
+			this.considerRemark("weather_change", Surroundings.Kind.WEATHER, weather, 300);
+		} else if (this.lastSeason != null && season != null && !season.equals(this.lastSeason)) {
+			this.considerRemark("season_change", Surroundings.Kind.SEASON, season, 600);
+		} else if (this.lastBiome != null && biome != null && !biome.equals(this.lastBiome)
+			&& this.tickCount - this.lastBiomeRemarkTick >= BIOME_REMARK_COOLDOWN) {
+			this.lastBiomeRemarkTick = this.tickCount;
+			this.considerRemark("biome_enter", Surroundings.Kind.BIOME, biome, 60);
+		}
+
+		this.lastWeather = weather;
+		this.lastBiome = biome;
+		this.lastSeason = season;
+	}
+
+	private void considerRemark(String event, Surroundings.Kind kind, String key, int maxDelay) {
+		float like = this.personality.tastes.like(kind, key);
+		if (this.random.nextFloat() < 0.25F + 0.6F * Math.abs(like)) {
+			this.pendingRemark = event;
+			this.pendingRemarkTick = this.tickCount + 20 + this.random.nextInt(maxDelay);
+		}
+	}
+
+	/** Weather it likes cheers it up while it's out in it; living somewhere it loves (or hates) colors its mood. */
+	private void feelSurroundings() {
+		if (this.world.canBlockSeeSky(new TilePos(MathHelper.floor(this.x), MathHelper.floor(this.y + this.getHeadHeight()), MathHelper.floor(this.z)))) {
+			float like = this.personality.tastes.like(Surroundings.Kind.WEATHER,
+				Surroundings.weatherAt(this.world, this.x, this.y + this.getHeadHeight(), this.z));
+			if (like >= 0.3F) {
+				this.remember(MemoryType.ENJOYED_THE_WEATHER, null, like);
+			} else if (like <= -0.3F) {
+				this.remember(MemoryType.MISERABLE_WEATHER, null, -like);
+			}
+		}
+
+		String biome = Surroundings.biomeAt(this.world, this.x, this.y, this.z);
+		if (biome != null) {
+			float like = this.personality.tastes.like(Surroundings.Kind.BIOME, biome);
+			if (like >= 0.3F) {
+				this.remember(MemoryType.LIKES_IT_HERE, null, like);
+			} else if (like <= -0.3F) {
+				this.remember(MemoryType.HATES_IT_HERE, null, -like);
+			}
 		}
 	}
 
@@ -355,8 +439,8 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		float bestLike = Float.NEGATIVE_INFINITY;
 		for (int slot = 0; slot < this.inventory.getContainerSize(); slot++) {
 			ItemStack stack = this.inventory.getItem(slot);
-			if (stack != null && FoodPreferences.isFood(stack.getItem()) && ((ItemFood) stack.getItem()).getHealAmount(stack) > 0) {
-				float like = this.personality.food.like(stack.getItem());
+			if (stack != null && Tastes.isFood(stack.getItem()) && ((ItemFood) stack.getItem()).getHealAmount(stack) > 0) {
+				float like = this.personality.tastes.like(stack.getItem());
 				if (like > bestLike) {
 					best = slot;
 					bestLike = like;
@@ -369,7 +453,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 
 	/** Good food lifts the mood and bad food sours it, twice as much for gluttons; sometimes the NPC says so. */
 	private void reactToFood(ItemFood food) {
-		float like = this.personality.food.like(food);
+		float like = this.personality.tastes.like(food);
 		float strength = Math.abs(like) * (this.personality.has(Quirk.GLUTTON) ? 2.0F : 1.0F);
 		if (like >= 0.2F) {
 			this.remember(MemoryType.ATE_FOOD_I_LIKE, null, strength);

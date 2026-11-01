@@ -40,7 +40,8 @@ import npclaude.entity.HealthMode;
 import npclaude.entity.NpcGender;
 import npclaude.entity.SkinModel;
 import npclaude.perf.NpcProfiler;
-import npclaude.personality.FoodPreferences;
+import npclaude.personality.Surroundings;
+import npclaude.personality.Tastes;
 import npclaude.personality.NpcPersonality;
 import npclaude.personality.Quirk;
 import npclaude.personality.TraitAxis;
@@ -67,12 +68,13 @@ import org.joml.Vector3dc;
  * /npc wander <name> [radius]
  * /npc skin <name> <skin> [auto|wide|slim]
  * /npc mortality <name> [mortal|invincible|invulnerable]   (invincible: hurt, but knocked down instead of killed)
- * /npc personality <name>                     (trait axes, quirks, favorite and hated food)
+ * /npc personality <name>                     (trait axes, quirks, and what they like and hate most)
  * /npc personality <name> <axis> <-100..100>   (e.g. courage 80; - is the left pole, + the right)
  * /npc personality <name> randomize            (a whole new personality)
  * /npc quirk <name> add|remove <quirk>
- * /npc food <name>                             (what they like most and least, and what they think of what you hold)
- * /npc food <name> <-100..100>                 (sets how much they like the food you're holding)
+ * /npc likes <name>                            (favorite and hated foods, things, weather, places and seasons)
+ * /npc like <name> [<-100..100>]               (what they think of the item you're holding, or sets it)
+ * /npc like <name> weather|biome|season <key> [<-100..100>]   (e.g. weather storm; shows or sets it)
  * /npc faction list
  * /npc faction create <faction> [ally|neutral|hostile]   (its default stance; neutral if left out)
  * /npc faction delete <faction>
@@ -371,15 +373,25 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 
 							return reply(c, npc.nickname + " is no longer " + quirk.displayName() + ".");
 						})))))
-			.then(literal("food")
+			.then(literal("likes")
+				.then(npcArgument().executes(NpcCommand::showLikes)))
+			.then(literal("like")
 				.then(npcArgument()
-					.executes(NpcCommand::showFood)
+					.executes(c -> {
+						EntityNPC npc = findNpc(c);
+						Item item = requireHeldItem(c);
+						return reply(c, npc.nickname + " " + describeLike(npc.personality.tastes.like(item)) + " " + itemName(item)
+							+ " (" + Math.round(npc.personality.tastes.like(item) * 100) + ").");
+					})
 					.then(argument("like", ArgumentTypeInteger.integer(-100, 100)).executes(c -> {
 						EntityNPC npc = findNpc(c);
-						Item food = requireHeldFood(c);
-						npc.personality.food.set(food, c.getArgument("like", Integer.class) / 100.0F);
-						return reply(c, npc.nickname + " now " + describeLike(npc.personality.food.like(food)) + " " + foodName(food) + ".");
-					}))))
+						Item item = requireHeldItem(c);
+						npc.personality.tastes.set(item, c.getArgument("like", Integer.class) / 100.0F);
+						return reply(c, npc.nickname + " now " + describeLike(npc.personality.tastes.like(item)) + " " + itemName(item) + ".");
+					}))
+					.then(surroundingsLike(Surroundings.Kind.WEATHER))
+					.then(surroundingsLike(Surroundings.Kind.BIOME))
+					.then(surroundingsLike(Surroundings.Kind.SEASON))))
 			.then(literal("faction")
 				.then(literal("list").executes(NpcCommand::listFactions))
 				.then(literal("create")
@@ -676,11 +688,16 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 		}
 
 		reply(c, "- quirks: " + (quirks.isEmpty() ? "none" : String.join(", ", quirks)));
-		Item favorite = personality.food.favorite();
-		Item hated = personality.food.hated();
+		Item favorite = personality.tastes.favoriteFood();
+		Item hated = personality.tastes.hatedFood();
 		if (favorite != null && hated != null) {
-			reply(c, "- favorite food: " + foodName(favorite) + "; hates " + foodName(hated));
+			reply(c, "- favorite food: " + itemName(favorite) + "; hates " + itemName(hated));
 		}
+
+		Item favoriteThing = personality.tastes.favoriteThing();
+		Item hatedThing = personality.tastes.hatedThing();
+		reply(c, "- loves " + (favoriteThing != null ? itemName(favoriteThing) : "nothing in particular") + "; hates "
+			+ (hatedThing != null ? itemName(hatedThing) : "nothing in particular"));
 
 		return 1;
 	}
@@ -693,30 +710,69 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 		return Math.round(value * 100) + ", " + amount;
 	}
 
-	private static int showFood(CommandContext<CommandSource> c) throws CommandSyntaxException {
+	private static int showLikes(CommandContext<CommandSource> c) throws CommandSyntaxException {
 		EntityNPC npc = findNpc(c);
-		List<Item> ranked = npc.personality.food.ranked();
-		int shown = Math.min(3, ranked.size() / 2);
-		List<String> liked = new ArrayList<>();
-		List<String> disliked = new ArrayList<>();
-		for (int i = 0; i < shown; i++) {
-			liked.add(foodSummary(npc, ranked.get(i)));
-			disliked.add(foodSummary(npc, ranked.get(ranked.size() - 1 - i)));
+		Tastes tastes = npc.personality.tastes;
+		List<Item> foods = tastes.rankedFoods();
+		List<Item> things = tastes.rankedThings();
+		reply(c, npc.nickname + "'s tastes:");
+		reply(c, "- foods: loves " + summarize(npc, foods.subList(0, Math.min(3, foods.size()))) + "; hates "
+			+ summarize(npc, foods.subList(Math.max(0, foods.size() - 2), foods.size())));
+		reply(c, "- things: loves " + summarize(npc, things.subList(0, Math.min(4, things.size()))) + "; hates "
+			+ summarize(npc, things.subList(Math.max(0, things.size() - 3), things.size())));
+		Item favorite = tastes.favoriteThing();
+		Item hated = tastes.hatedThing();
+		reply(c, "- most their own: " + (favorite != null ? summarize(npc, List.of(favorite)) : "nothing") + " / "
+			+ (hated != null ? summarize(npc, List.of(hated)) : "nothing"));
+		for (Surroundings.Kind kind : Surroundings.Kind.values()) {
+			List<String> parts = new ArrayList<>();
+			for (String key : Surroundings.table(kind).keySet()) {
+				parts.add(key + " " + Math.round(tastes.like(kind, key) * 100));
+			}
+
+			reply(c, "- " + kind.id() + ": " + String.join(", ", parts));
 		}
 
-		reply(c, npc.nickname + " likes " + String.join(", ", liked) + ".");
-		reply(c, npc.nickname + " dislikes " + String.join(", ", disliked) + ".");
 		Player player = c.getSource().getSender();
 		ItemStack held = player != null ? player.inventory.getCurrentItem() : null;
-		if (held != null && FoodPreferences.isFood(held.getItem())) {
-			reply(c, npc.nickname + " " + describeLike(npc.personality.food.like(held.getItem())) + " " + foodName(held.getItem()) + ".");
+		if (held != null) {
+			reply(c, npc.nickname + " " + describeLike(tastes.like(held.getItem())) + " " + itemName(held.getItem()) + ".");
 		}
 
 		return 1;
 	}
 
-	private static String foodSummary(EntityNPC npc, Item food) {
-		return foodName(food) + " (" + Math.round(npc.personality.food.like(food) * 100) + ")";
+	private static ArgumentBuilderLiteral<CommandSource> surroundingsLike(Surroundings.Kind kind) {
+		SuggestionProvider<CommandSource> keys = (c, builder) -> {
+			for (String key : Surroundings.table(kind).keySet()) {
+				builder.suggest(key);
+			}
+
+			return builder.buildFuture();
+		};
+		return literal(kind.id())
+			.then(argument("key", ArgumentTypeString.word()).suggests(keys)
+				.executes(c -> {
+					EntityNPC npc = findNpc(c);
+					String key = ArgumentTypeString.getString(c, "key");
+					float like = npc.personality.tastes.like(kind, key);
+					return reply(c, npc.nickname + " " + describeLike(like) + " " + Surroundings.displayName(key) + " (" + Math.round(like * 100) + ").");
+				})
+				.then(argument("like", ArgumentTypeInteger.integer(-100, 100)).executes(c -> {
+					EntityNPC npc = findNpc(c);
+					String key = ArgumentTypeString.getString(c, "key");
+					npc.personality.tastes.set(kind, key, c.getArgument("like", Integer.class) / 100.0F);
+					return reply(c, npc.nickname + " now " + describeLike(npc.personality.tastes.like(kind, key)) + " " + Surroundings.displayName(key) + ".");
+				})));
+	}
+
+	private static String summarize(EntityNPC npc, List<Item> items) {
+		List<String> parts = new ArrayList<>();
+		for (Item item : items) {
+			parts.add(itemName(item) + " (" + Math.round(npc.personality.tastes.like(item) * 100) + ")");
+		}
+
+		return String.join(", ", parts);
 	}
 
 	private static String describeLike(float like) {
@@ -733,8 +789,8 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 		return "hates";
 	}
 
-	private static String foodName(Item food) {
-		return new ItemStack(food).getDisplayName().toLowerCase(Locale.ROOT);
+	private static String itemName(Item item) {
+		return new ItemStack(item).getDisplayName().toLowerCase(Locale.ROOT);
 	}
 
 	private static Quirk requireQuirk(CommandContext<CommandSource> c) throws CommandSyntaxException {
@@ -747,10 +803,10 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 		return quirk;
 	}
 
-	private static Item requireHeldFood(CommandContext<CommandSource> c) throws CommandSyntaxException {
+	private static Item requireHeldItem(CommandContext<CommandSource> c) throws CommandSyntaxException {
 		ItemStack held = requirePlayer(c.getSource()).inventory.getCurrentItem();
-		if (held == null || !FoodPreferences.isFood(held.getItem())) {
-			throw error("Hold the food you want to set a taste for.");
+		if (held == null) {
+			throw error("Hold the item you want to ask about.");
 		}
 
 		return held.getItem();

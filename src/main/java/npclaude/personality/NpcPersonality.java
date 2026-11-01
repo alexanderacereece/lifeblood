@@ -11,7 +11,7 @@ import java.util.Random;
 import java.util.Set;
 
 /**
- * Who an NPC is: eight trait axes, a few quirks, and food preferences. Fixed for life (mood, coming later,
+ * Who an NPC is: eight trait axes, a few quirks, and tastes in food, things, weather and places. Fixed for life (mood, coming later,
  * shifts how the axes come across without changing them). See docs/personality.md.
  */
 public class NpcPersonality {
@@ -26,7 +26,7 @@ public class NpcPersonality {
 
 	private final Map<TraitAxis, Float> axes = new EnumMap<>(TraitAxis.class);
 	private final Set<Quirk> quirks = EnumSet.noneOf(Quirk.class);
-	public final FoodPreferences food = new FoodPreferences();
+	public final Tastes tastes = new Tastes(this);
 
 	public NpcPersonality() {
 		for (TraitAxis axis : TraitAxis.values()) {
@@ -77,7 +77,7 @@ public class NpcPersonality {
 		return this.quirks.remove(quirk);
 	}
 
-	/** Rolls a whole new personality: axes from a bell curve, 0 to 3 quirks, and new food tastes. */
+	/** Rolls a whole new personality: axes from a bell curve, 0 to 3 quirks, and new tastes. */
 	public void randomize(Random random) {
 		for (TraitAxis axis : TraitAxis.values()) {
 			this.set(axis, (float) (random.nextGaussian() * AXIS_SPREAD));
@@ -95,7 +95,7 @@ public class NpcPersonality {
 			this.addQuirk(quirk);
 		}
 
-		this.food.reroll(random);
+		this.tastes.reroll(random);
 	}
 
 	private static int rollQuirkCount(Random random) {
@@ -124,7 +124,7 @@ public class NpcPersonality {
 
 		tag.putCompound("Axes", axisTag);
 		tag.putString("Quirks", String.join(",", quirkIds));
-		tag.putCompound("Food", this.food.save());
+		tag.putCompound("Tastes", this.tastes.save());
 		return tag;
 	}
 
@@ -154,8 +154,10 @@ public class NpcPersonality {
 			}
 		}
 
-		if (tag.containsKey("Food")) {
-			this.food.load(tag.getCompound("Food"));
+		if (tag.containsKey("Tastes")) {
+			this.tastes.load(tag.getCompound("Tastes"));
+		} else if (tag.containsKey("Food")) {
+			this.tastes.load(tag.getCompound("Food"));
 		}
 	}
 

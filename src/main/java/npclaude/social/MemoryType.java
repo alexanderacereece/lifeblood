@@ -16,6 +16,8 @@ public enum MemoryType {
 	/** Scaled by how much the NPC likes the food. */
 	GAVE_ME_FOOD_I_LIKE("gave me food I like", 10, 5, 8, 3),
 	GAVE_ME_FOOD_I_HATE("gave me food I hate", -3, -2, 3, 3),
+	/** Something the NPC doesn't like; truly rude gifts (dirt) count as an insult instead. */
+	GAVE_ME_JUNK("gave me junk", -3, -2, 3, 3),
 	HAD_A_NICE_CHAT("had a nice chat", 3, 2, 2, 5),
 	TAUGHT_ME_A_WORD("taught me a word", 2, 0, 3, 5),
 	INSULTED_ME("insulted me", -8, -3, 4, 5, true),
@@ -35,7 +37,12 @@ public enum MemoryType {
 	ATE_FOOD_I_HATE("ate food I hate", 0, -4, 0.25F, 3),
 	SLEPT_IN_A_BED("slept in a bed", 0, 4, 1, 1),
 	SLEPT_OUTSIDE("slept outside", 0, -4, 1, 1),
-	GOT_RAINED_ON("got rained on", 0, -3, 0.25F, 3),
+	/** Scaled by how much the NPC likes the weather it's out in. */
+	ENJOYED_THE_WEATHER("enjoyed the weather", 0, 3, 0.25F, 3),
+	MISERABLE_WEATHER("miserable weather", 0, -3, 0.25F, 3),
+	/** Scaled by how much the NPC likes the biome it's in; refreshed while it stays. */
+	LIKES_IT_HERE("likes it here", 0, 4, 0.1F, 1),
+	HATES_IT_HERE("hates it here", 0, -4, 0.1F, 1),
 	SAW_A_DEATH("saw a death", 0, -6, 2, 3),
 	A_FRIEND_DIED("a friend died", 0, -20, 10, 3),
 	FAMILY_DIED("family died", 0, -30, 20, 3),

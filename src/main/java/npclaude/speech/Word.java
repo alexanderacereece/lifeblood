@@ -25,6 +25,12 @@ public record Word(String singular, String plural, Kind kind) {
 	private static final List<String> MASS_ENDINGS = List.of("fish", "venison", "bread", "stew", "soup", "meat", "beef", "milk", "jerky",
 		"salmon", "cod", "rice", "cheese");
 
+	/** Endings of things that are usually uncountable: "some dirt", "some gunpowder". */
+	private static final List<String> MASS_THING_ENDINGS = List.of("dirt", "sand", "gravel", "stone", "rack", "mud", "clay", "wool",
+		"string", "leather", "paper", "powder", "dust", "sugar", "wheat", "cloth", "coal", "flint", "obsidian", "glass", "snow", "ice",
+		"sulfur", "ash", "moss", "grass", "rock", "slate", "basalt", "granite", "marble", "permafrost", "shale", "redstone", "quartz",
+		"olivine", "algae");
+
 	public static Word one(String singular) {
 		return new Word(singular, pluralize(singular), Kind.ONE);
 	}
@@ -50,8 +56,25 @@ public record Word(String singular, String plural, Kind kind) {
 		return one(name);
 	}
 
+	/** An item talked about in general ("I love compasses", "dirt is the worst"). */
+	public static Word ofThing(Item item) {
+		String name = new ItemStack(item).getDisplayName().toLowerCase(Locale.ROOT);
+		for (String ending : MASS_THING_ENDINGS) {
+			if (name.endsWith(ending)) {
+				return mass(name);
+			}
+		}
+
+		return one(name);
+	}
+
+	/** A particular stack: "a compass", "some compasses", "some dirt". */
 	public static Word ofItem(ItemStack stack) {
 		String name = stack.getDisplayName().toLowerCase(Locale.ROOT);
+		if (ofThing(stack.getItem()).kind() == Kind.MASS) {
+			return mass(name);
+		}
+
 		if (stack.stackSize > 1) {
 			return new Word(name, pluralize(name), Kind.PLURAL);
 		}

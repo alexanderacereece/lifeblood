@@ -9,6 +9,8 @@ import net.minecraft.core.world.weather.Weather;
 import npclaude.combat.FactionRegistry;
 import npclaude.combat.FactionRelation;
 import npclaude.entity.EntityNPC;
+import npclaude.personality.Surroundings;
+import npclaude.personality.Tastes;
 import npclaude.social.Opinions;
 import org.jetbrains.annotations.Nullable;
 
@@ -18,9 +20,14 @@ import org.jetbrains.annotations.Nullable;
  * ({time=night}) and fill them in ([listener], [favorite_food.a]).
  *
  * Facts: name, listener, listener_type (player/npc), opinion (enemy ... close_friend), leader (yes if the listener is
- * who they follow), time (morning/day/evening/night), weather (rain/clear), mood (awful/bad/okay/good/great),
+ * who they follow), time (morning/day/evening/night), weather (clear/rain/snow/storm/fog/blood_rain), wet (yes if
+ * it's coming down on them), outside, season (spring/summer/fall/winter), biome (desert, tundra...), with
+ * weather_like, season_like and biome_like (love/like/meh/dislike/hate), mood (awful/bad/okay/good/great),
  * health (fine/hurt/low), faction and enemy_faction (with has_faction/has_enemy = yes/no), recovering, address,
- * catchphrase. Words: favorite_food, hated_food, and whatever the event adds (food, item...).
+ * catchphrase, surprising_thing (yes if their favorite thing is one most people wouldn't care for).
+ * Words: favorite_food, hated_food, favorite_thing, hated_thing, weather_word, biome_word, season_word,
+ * favorite_weather, hated_weather, favorite_biome, hated_biome, favorite_season, hated_season, and whatever the
+ * event adds (food, item...).
  */
 public final class SpeechFacts {
 	private SpeechFacts() {
@@ -42,7 +49,7 @@ public final class SpeechFacts {
 		}
 
 		context.fact("time", timeOfDay(npc));
-		context.fact("weather", isRaining(npc) ? "rain" : "clear");
+		addSurroundings(npc, context);
 		context.fact("mood", moodLabel(mood));
 		float health = npc.getHealth() / (float) npc.getMaxHealth();
 		context.fact("health", health < 0.3F ? "low" : health < 0.7F ? "hurt" : "fine");
@@ -62,14 +69,31 @@ public final class SpeechFacts {
 			context.fact("has_enemy", "no");
 		}
 
-		Item favorite = npc.personality.food.favorite();
-		Item hated = npc.personality.food.hated();
+		Tastes tastes = npc.personality.tastes;
+		Item favorite = tastes.favoriteFood();
+		Item hated = tastes.hatedFood();
 		if (favorite != null) {
 			context.word("favorite_food", Word.ofFood(favorite));
 		}
 
 		if (hated != null) {
 			context.word("hated_food", Word.ofFood(hated));
+		}
+
+		Item favoriteThing = tastes.favoriteThing();
+		Item hatedThing = tastes.hatedThing();
+		if (favoriteThing != null) {
+			context.word("favorite_thing", Word.ofThing(favoriteThing));
+			context.fact("surprising_thing", tastes.personal(favoriteThing) >= 0.6F ? "yes" : "no");
+		}
+
+		if (hatedThing != null) {
+			context.word("hated_thing", Word.ofThing(hatedThing));
+		}
+
+		for (Surroundings.Kind kind : Surroundings.Kind.values()) {
+			context.word("favorite_" + kind.id(), surroundingsWord(tastes.favorite(kind, true)));
+			context.word("hated_" + kind.id(), surroundingsWord(tastes.favorite(kind, false)));
 		}
 
 		SpeechStyle style = npc.voice.style;
@@ -82,6 +106,42 @@ public final class SpeechFacts {
 		}
 
 		return context;
+	}
+
+	/** What the weather, biome and season are, and how the NPC feels about each. */
+	private static void addSurroundings(EntityNPC npc, SpeechContext context) {
+		Tastes tastes = npc.personality.tastes;
+		double headY = npc.y + npc.getHeadHeight();
+		String weather = Surroundings.weatherAt(npc.world, npc.x, headY, npc.z);
+		boolean outside = npc.world.canBlockSeeSky(new TilePos(MathHelper.floor(npc.x), MathHelper.floor(headY), MathHelper.floor(npc.z)));
+		context.fact("weather", weather);
+		context.fact("weather_like", EntityNPC.tasteOf(tastes.like(Surroundings.Kind.WEATHER, weather)));
+		context.word("weather_word", surroundingsWord(weather));
+		context.fact("outside", outside ? "yes" : "no");
+		context.fact("wet", isRaining(npc) && !weather.equals("clear") ? "yes" : "no");
+		String biome = Surroundings.biomeAt(npc.world, npc.x, npc.y, npc.z);
+		if (biome != null) {
+			context.fact("biome", biome);
+			context.fact("biome_like", EntityNPC.tasteOf(tastes.like(Surroundings.Kind.BIOME, biome)));
+			context.word("biome_word", surroundingsWord(biome));
+		}
+
+		String season = Surroundings.seasonOf(npc.world);
+		if (season != null) {
+			context.fact("season", season);
+			context.fact("season_like", EntityNPC.tasteOf(tastes.like(Surroundings.Kind.SEASON, season)));
+			context.word("season_word", surroundingsWord(season));
+		}
+	}
+
+	/** "storm" reads as "storms" when talked about in general, "plains" is plural, "rain" can't be counted. */
+	private static Word surroundingsWord(String key) {
+		String name = Surroundings.displayName(key);
+		if (Surroundings.isPluralName(key)) {
+			return new Word(name, name, Word.Kind.PLURAL);
+		}
+
+		return key.equals("storm") ? Word.one(name) : Word.mass(name);
 	}
 
 	/** A faction this NPC's faction is hostile toward (an explicit war first, then anyone if it's hostile by default). */

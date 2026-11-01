@@ -352,14 +352,30 @@ The player can do everything NPCs can, with the player making their own choices 
 
 ---
 
-## 6. Food preferences
+## 6. Tastes
 
-Instead of one favorite food, every NPC has a like value from -1.0 to +1.0 for every food in the game.
-- Values are derived from the NPC's random seed and the food's id, so foods added by other mods get preferences automatically and nothing needs storing until it changes.
-- `[favorite_food]` is the food they like most, and `[hated_food]` the one they like least. Lines can also ask for any liked or disliked food.
-- Preferences drive memories and mood: eating or being given food they like is good, food they hate is bad.
-- When choosing what to eat, NPCs prefer foods they like (the same rules as the player for actually eating).
-- Gluttons feel their preferences twice as strongly.
+Every NPC has a like value from -1.0 to +1.0 for every item in the game, every kind of weather, every biome and every season.
+
+Each like is built from three parts:
+- **A shared default.** Everyone loves a diamond, nobody wants a handful of dirt (giving dirt is rude). Items are sorted into categories (food, valuable, junk, gross, material, tool, weapon, armor, flower, plant, curio, music, decor, dangerous, comfort, fun) by name, so modded items land somewhere sensible.
+- **Personality pulls.** Traits and quirks pull whole categories:
+  - greedy loves valuables, humble and generous care less for them
+  - gluttons like all food more and feel their tastes more strongly
+  - hardworking likes tools and materials, lazy likes beds
+  - brave likes weapons and storms, timid likes armor and hates storms and explosives
+  - curious likes curios, romantic likes flowers and spring, sentimental likes flowers, music and fall
+  - crude doesn't mind gross things or junk, proper minds them more; proud is insulted by junk
+  - lighthearted likes music, fun things and snow; introverts like rain and fog; paranoid hates fog
+  - night owls like winter, early birds like summer
+- **Personal noise.** Derived from the NPC's seed and the thing's id, so nothing needs storing until it's changed. Food gets a lot of noise, so favorite foods vary widely. Now and then (about 6% of items) the noise flips the default on its head: the odd NPC really doesn't mind dirt, or isn't impressed by diamonds.
+
+What it drives:
+- **Gifts.** Liked gifts raise opinion more the more they're liked. Disliked gifts lower it ("gave me junk"). Junk or gross gifts the NPC strongly dislikes count as an insult (doubled for proud NPCs). The NPC says something about the kind of thing and how it feels, and remarks when its taste is unusual.
+- **Eating.** NPCs eat the food they like most; good and bad food affect mood (twice as much for gluttons).
+- **Weather.** Being out in weather they like or hate affects mood (rain lovers enjoy a downpour). When the weather turns, they may remark on it, likelier the stronger they feel.
+- **Places.** Living in a biome they love or hate colors their mood. Walking into a new biome (usually while following someone) may get a remark.
+- **Seasons.** Remarks when the season changes, and smalltalk about it.
+- **Speech words:** `[favorite_food]`, `[hated_food]`, `[favorite_thing]` and `[hated_thing]` (the things most their own: what they love or hate more than most people do, so a curious NPC's favorite may be a compass rather than a diamond), `[favorite_weather]`, `[favorite_biome]`, `[favorite_season]` and their hated versions.
 
 ---
 
