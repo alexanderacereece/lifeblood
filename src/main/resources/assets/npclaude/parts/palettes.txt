@@ -1,6 +1,8 @@
 # NPC appearance palettes: five colors per palette, darkest to lightest.
 # In a recolorable part, #202020 #505050 #808080 #B0B0B0 #E0E0E0 become these five colors, in order;
 # every other color in the part is drawn as is. Add or override palettes in the game folder's npc_parts/palettes.txt.
+# Skin palettes are listed palest first: NPCs from cold places lean toward the top of the list, and NPCs from
+# hot places toward the bottom (new skin palettes in your own file go at the end, so list them dark ones).
 
 [skin]
 porcelain: #66554F #967F76 #C4A99C #F2D3C2 #F8DFD0
@@ -8,23 +10,23 @@ fair: #614B41 #907262 #BC9882 #E8BFA3 #F2D1B7
 light: #5B4135 #876250 #B0846B #D9A887 #EAC1A2
 tan: #533526 #7B513A #A06F50 #C68E66 #E0AE87
 olive: #4C3424 #705037 #926C4A #B48A5F #D6AF83
-brown: #3F2316 #5C3723 #794C30 #95633F #C59168
-dark_brown: #2E170E #442516 #59331F #6E4329 #AF7A55
-deep: #1F0F09 #2E180F #3C2215 #4A2C1C #9B6A4C
+brown: #3F2316 #5C3723 #794C30 #95633F #A97452
+dark_brown: #3A2114 #563321 #6E432C #865639 #9A6747
+deep: #2E1A10 #45291A #5A3624 #6E4630 #80553D
 
 [hair]
-black: #120E0E #1A1615 #221D1B #2A2422 #8A7A74
-dark_brown: #1F120E #2E1C16 #3C271E #4A3226 #9B745D
-brown: #2E1B12 #442A1C #593927 #6E4A32 #AF8361
-light_brown: #3E2719 #5C3C27 #785335 #946A45 #C4996E
-auburn: #3B1209 #571F10 #712E18 #8C3F22 #C06D49
-red: #4C130B #702213 #93331E #B5482A #D6714F
-ginger: #572911 #81411D #A85C2A #D07A3A #E59C5E
-dirty_blond: #4D3921 #725733 #957546 #B8955A #D8B97D
-blond: #5D4A2A #897141 #B39759 #DDBF72 #ECD58E
-platinum: #615A4F #8F8675 #BAB19A #E6DCC0 #F1EAD1
-gray: #3C3938 #585553 #736F6C #8E8A86 #C1BDB8
-white: #5D5B5A #898784 #B3B0AD #DDDAD6 #ECEAE6
+black: #120E0E #1A1615 #221D1B #2A2422 #4C423F
+dark_brown: #1F120E #2E1C16 #3C271E #4A3226 #664939
+brown: #2E1B12 #442A1C #593927 #6E4A32 #855E42
+light_brown: #3E2719 #5C3C27 #785335 #946A45 #A57A53
+auburn: #3B1209 #571F10 #712E18 #8C3F22 #9E4F30
+red: #4C130B #702213 #93331E #B5482A #C15637
+ginger: #572911 #81411D #A85C2A #D07A3A #D78647
+dirty_blond: #4D3921 #725733 #957546 #B8955A #C3A266
+blond: #5D4A2A #897141 #B39759 #DDBF72 #E2C77C
+platinum: #615A4F #8F8675 #BAB19A #E6DCC0 #EAE1C6
+gray: #3C3938 #585553 #736F6C #8E8A86 #A09C98
+white: #5D5B5A #898784 #B3B0AD #DDDAD6 #E2E0DC
 
 [eyes]
 brown: #2D170C #422414 #57321D #6B4226 #AE7A52

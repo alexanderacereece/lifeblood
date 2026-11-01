@@ -150,6 +150,37 @@ public final class Surroundings {
 		};
 	}
 
+	/**
+	 * How warm a biome is, from 0 (glacier) to 1 (rainforest). The game's temperatures bunch up at the warm end
+	 * (plains and forests are nearly as warm as deserts), so they're spread out: the temperate biomes land in the
+	 * middle and only deserts, outbacks and rainforests near the top. NaN where there's no biome.
+	 */
+	public static float warmthAt(World world, double x, double y, double z) {
+		Biome biome = biomeObjectAt(world, x, y, z);
+		if (biome == null) {
+			return Float.NaN;
+		}
+
+		float t = biome.defaultTemperature;
+		if (t < 0.4F) {
+			return Math.max(0.0F, t / 0.4F * 0.2F);
+		} else if (t < 0.9F) {
+			return 0.2F + (t - 0.4F) / 0.5F * 0.35F;
+		}
+
+		return Math.min(1.0F, 0.55F + (t - 0.9F) / 0.1F * 0.45F);
+	}
+
+	/** "cold", "mild" or "hot", for a warmth from warmthAt; null if unknown. */
+	@Nullable
+	public static String climateOf(float warmth) {
+		if (Float.isNaN(warmth)) {
+			return null;
+		}
+
+		return warmth < 0.2F ? "cold" : warmth > 0.65F ? "hot" : "mild";
+	}
+
 	@Nullable
 	private static Biome biomeObjectAt(World world, double x, double y, double z) {
 		try {

@@ -29,7 +29,8 @@ import org.jetbrains.annotations.Nullable;
  * Facts: name, listener, listener_type (player/npc), opinion (enemy ... close_friend), relation (ally/neutral/hostile), leader (yes if the listener is
  * who they follow), time (morning/day/evening/night), weather (clear/rain/snow/storm/fog/blood_rain), wet (yes if
  * it's coming down on them), outside, season (spring/summer/fall/winter), biome (desert, tundra...), with
- * weather_like, season_like and biome_like (love/like/meh/dislike/hate), mood (awful/bad/okay/good/great),
+ * climate (cold/mild/hot here), home_climate and home_biome (where they're from), at_home (yes in their home
+ * biome), weather_like, season_like and biome_like (love/like/meh/dislike/hate), mood (awful/bad/okay/good/great),
  * health (fine/hurt/low), faction and enemy_faction (with has_faction/has_enemy = yes/no), recovering, address,
  * catchphrase, age (child/adult), birthday (yes on their birthday), relationship (single/dating/engaged/married/widowed), listener_kin (what the listener is to them,
  * or none), surprising_thing (yes if their favorite thing is one most people wouldn't care for).
@@ -180,6 +181,20 @@ public final class SpeechFacts {
 			context.fact("biome", biome);
 			context.fact("biome_like", EntityNPC.tasteOf(tastes.like(Surroundings.Kind.BIOME, biome)));
 			context.word("biome_word", surroundingsWord(biome));
+		}
+
+		// Where they're from, and whether here is colder or hotter than they're used to.
+		String climate = Surroundings.climateOf(Surroundings.warmthAt(npc.world, npc.x, npc.y, npc.z));
+		String homeClimate = Surroundings.climateOf(npc.getHomeWarmth());
+		if (climate != null) {
+			context.fact("climate", climate);
+		}
+
+		if (homeClimate != null && !npc.getHomeBiome().isEmpty()) {
+			context.fact("home_climate", homeClimate);
+			context.fact("home_biome", npc.getHomeBiome());
+			context.fact("at_home", npc.getHomeBiome().equals(biome) ? "yes" : "no");
+			context.word("home_biome", surroundingsWord(npc.getHomeBiome()));
 		}
 
 		String season = Surroundings.seasonOf(npc.world);

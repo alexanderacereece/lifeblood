@@ -11,12 +11,13 @@
 # partner, parent, child, sibling, grandparent, grandchild, aunt_uncle, niece_nephew, cousin, ..._in_law, or none),
 # leader (yes/no), time (morning/day/evening/night), weather (clear/rain/snow/storm/fog/blood_rain), wet (yes when
 # it's coming down on them), outside, season (spring/summer/fall/winter), biome (plains, desert, tundra...),
+# climate (cold/mild/hot here), home_climate, home_biome and at_home (where they're from and whether they're there),
 # weather_like/season_like/biome_like (love/like/meh/dislike/hate), mood (awful/bad/okay/good/great),
 # health (fine/hurt/low), recovering (yes/no), has_faction, has_enemy, address, catchphrase.
 # Words: taught_food, taught_animal, taught_thing, taught_place, taught_exclamation, taught_greeting,
 # taught_farewell, taught_describe, taught_activity, taught_angry, taught_happy, taught_sad, taught_scared (words
 # players taught them), partner, favorite_food, hated_food, favorite_thing, hated_thing, weather_word, biome_word, season_word,
-# favorite_weather, hated_weather, favorite_biome, hated_biome, favorite_season, hated_season, faction,
+# favorite_weather, hated_weather, favorite_biome, hated_biome, favorite_season, hated_season, home_biome, faction,
 # enemy_faction, and per event: enemy, food, item.
 # Gifts add kind (food/valuable/junk/gross/material/tool/weapon/armor/flower/plant/curio/music/decor/dangerous/
 # comfort/fun/block/item), taste, rude_gift (yes for dirt and the like) and surprising (yes when they feel very
@@ -500,6 +501,14 @@ What is this, a toy?          {kind=fun, serious, w=5}
 [idle_thought] [catchphrase]  {w=0.3}
 
 == idle_thought ==
+I miss [home_biome.the] sometimes. {at_home=no, w=0.4}
+I wonder how things are back in [home_biome.the]. {at_home=no, w=0.3}
+Nothing like [home_biome.the]. Nothing. {at_home=no, biome_like=dislike, w=0.6}
+My hands are numb. I'm from [home_biome.the], you know. We don't do cold. {home_climate=hot, climate=cold, w=1.5}
+This cold gets into your bones. {home_climate=hot, climate=cold, pessimist, w=1.5}
+How is it this hot? Is the sun closer here? {home_climate=cold, climate=hot, w=1.5}
+I'd kill for some snow right now. {home_climate=cold, climate=hot, w=1.5}
+I'd kill for some snow right now. Not literally. Probably. {home_climate=cold, climate=hot, lighthearted, w=1}
 Quiet today.
 Hm.                          {introvert}
 Anyone else hungry? I'm hungry. {glutton, w=2}
@@ -576,6 +585,10 @@ Glad you're here, [listener]. {opinion=close_friend}
 # NPCs talking to each other. [listener] is the other NPC.
 
 == chat_open ==
+[listener]! You're not from around here either, are you? {at_home=no, w=0.4}
+[listener], ever been to [home_biome.the]? That's where I'm from. {w=0.3}
+[listener], how do you stand this cold? {home_climate=hot, climate=cold, w=0.8}
+[listener], how do you stand this heat? {home_climate=cold, climate=hot, w=0.8}
 Hey, [listener].
 [hello_named] How's things?
 [listener]! Have you eaten? I'm thinking about [favorite_food.s]. {glutton}
@@ -830,6 +843,20 @@ Long nights again. Perfect.  {season=winter, night_owl, w=3}
 Winter. Of course. Everything dies in winter. {season=winter, pessimist, w=3}
 
 == biome_enter ==
+Ah. [home_biome.the.cap]. Feels like home. {at_home=yes, w=3}
+Smell that? That's home.     {at_home=yes, biome_like=love, w=4}
+Home sweet home. Sort of.    {at_home=yes, lighthearted, w=2}
+Brr. Where I'm from, it never gets like this. {home_climate=hot, climate=cold, w=4}
+Cold. Why is it so cold. I'm from [home_biome.the], I'm not built for this. {home_climate=hot, climate=cold, w=4}
+Gods, it's freezing. I miss [home_biome.the]. {home_climate=hot, climate=cold, w=3}
+Damn, it's cold.             {home_climate=hot, climate=cold, crude, w=3}
+Phew. I'm used to [home_biome.the]. This heat is something else. {home_climate=cold, climate=hot, w=4}
+Too hot. Way too hot. Back home we'd have snow by now. {home_climate=cold, climate=hot, w=4}
+Is it always this hot? How does anyone live here? {home_climate=cold, climate=hot, curious, w=3}
+I'm melting. I'm actually melting. {home_climate=cold, climate=hot, lighthearted, w=3}
+Hell's teeth, this heat.     {home_climate=cold, climate=hot, crude, w=3}
+Cold, huh? You should see [home_biome.the]. {home_climate=cold, climate=cold, w=2}
+Hot? This is nothing. Try [home_biome.the] sometime. {home_climate=hot, climate=hot, proud, w=2}
 Huh. [biome_word.the.cap].
 So this is [biome_word.the].
 Oh, [biome_word.the]! I love it here! {biome_like=love, w=3}
@@ -933,6 +960,30 @@ Ugh. Fine.                   {rude}
 Hm.                          {taciturn, w=2}
 That's a big question.       {serious}
 I'm an open book. A short one. {lighthearted}
+
+== where_from ==
+[home_biome.the.cap]. Born and raised. {w=3}
+[home_biome.the.cap]. You can probably tell. {w=2}
+I'm from [home_biome.the]. {w=3}
+[home_biome.the.cap]. Best place there is. {biome_like=like, at_home=yes, w=2}
+Right here! [home_biome.the.cap], born and raised. {at_home=yes, w=4}
+You're standing in it. [home_biome.the.cap]. {at_home=yes, lighthearted, w=3}
+Here. Never been anywhere else, really. {at_home=yes, introvert, w=3}
+Oh, [home_biome.the]! I could talk about it for hours. Don't worry, I won't. {extrovert, w=2}
+[home_biome.the.cap]. Why? {paranoid, w=3}
+Why do you want to know? {paranoid, w=1}
+[home_biome.the.cap]. Not that it's any of your business. {rude, w=3}
+[home_biome.the.cap].        {taciturn, w=4}
+[home_biome.the.cap]. Cold enough to freeze the words in your mouth. {home_climate=cold, w=3}
+[home_biome.the.cap]. You learn to love snow, or you leave. {home_climate=cold, w=2}
+[home_biome.the.cap]. You learn to love the heat, or you leave. {home_climate=hot, w=2}
+[home_biome.the.cap]. Hot as hell and twice as dry. {home_climate=hot, crude, w=3}
+[home_biome.the.cap]. Not much to say about it. It's nice. {home_climate=mild, w=2}
+[home_biome.the.cap]. Haven't been back in a long time. {at_home=no, serious, w=2}
+[home_biome.the.cap]. I miss it. {at_home=no, w=2}
+[home_biome.the.cap]. I don't miss it. {at_home=no, pessimist, w=2}
+Around. Here and there.
+I'd rather not say.          {taciturn}
 
 == ask_about_who ==
 Who?

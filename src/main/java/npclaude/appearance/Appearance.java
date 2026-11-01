@@ -94,11 +94,15 @@ public final class Appearance {
 		return new Appearance(choices);
 	}
 
+	/** How widely skin tones spread around the one most usual for a climate, in palettes. */
+	private static final float SKIN_SPREAD = 1.3F;
+
 	/**
 	 * A random look from the parts available, or NONE if there are no base parts yet. Hair and facial hair share a
-	 * color; top and bottom each get their own dye (used only if the part has recolorable pixels).
+	 * color; top and bottom each get their own dye (used only if the part has recolorable pixels). Skin tone leans
+	 * on how warm the place they're from is (0 cold to 1 hot, NaN for anywhere): paler in the cold, darker in the heat.
 	 */
-	public static Appearance random(PartCatalog catalog, NpcGender gender, Random random) {
+	public static Appearance random(PartCatalog catalog, NpcGender gender, Random random, float warmth) {
 		Map<AppearanceLayer, Choice> choices = new EnumMap<>(AppearanceLayer.class);
 		if (catalog.parts(AppearanceLayer.BASE, gender).isEmpty()) {
 			return NONE;
@@ -118,6 +122,7 @@ public final class Appearance {
 			}
 
 			String palette = layer.paletteGroup == null ? "" : "hair".equals(layer.paletteGroup) ? hairColor
+				: layer == AppearanceLayer.BASE ? pickSkin(catalog.paletteNames("skin"), random, warmth)
 				: pick(catalog.paletteNames(layer.paletteGroup), random, "");
 			choices.put(layer, new Choice(pick(parts, random, ""), palette));
 		}
@@ -130,7 +135,7 @@ public final class Appearance {
 	 * eyes or face, and no facial hair (that can come with adulthood). Parents may be NONE (a player parent).
 	 */
 	public static Appearance inherit(PartCatalog catalog, NpcGender gender, Appearance first, Appearance second, Random random) {
-		Appearance child = random(catalog, gender, random).with(AppearanceLayer.FACIAL_HAIR, null, "");
+		Appearance child = random(catalog, gender, random, Float.NaN).with(AppearanceLayer.FACIAL_HAIR, null, "");
 		List<Appearance> parents = new java.util.ArrayList<>();
 		for (Appearance parent : new Appearance[] {first, second}) {
 			if (!parent.isEmpty()) {
@@ -194,6 +199,16 @@ public final class Appearance {
 
 		Choice hair = this.get(AppearanceLayer.HAIR);
 		return this.with(AppearanceLayer.FACIAL_HAIR, pick(beards, random, ""), hair != null ? hair.palette() : "");
+	}
+
+	/** Skin palettes are listed palest first; the climate picks a spot along the list, and it's spread around that. */
+	private static String pickSkin(List<String> skins, Random random, float warmth) {
+		if (skins.isEmpty() || Float.isNaN(warmth)) {
+			return pick(skins, random, "");
+		}
+
+		double spot = warmth * (skins.size() - 1) + random.nextGaussian() * SKIN_SPREAD;
+		return skins.get((int) Math.max(0, Math.min(skins.size() - 1, Math.round(spot))));
 	}
 
 	private static String pick(List<String> options, Random random, String fallback) {

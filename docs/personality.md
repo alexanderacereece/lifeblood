@@ -618,6 +618,12 @@ Layers are stacked in order and combined into a single texture per NPC, built on
 
 Variety comes from multiplying a modest amount of art: a dozen hairstyles in many colors, a range of skin tones, and clothing in dye colors already gives millions of combinations.
 
+### Where they're from
+
+Every NPC has a homeland: the biome it was first seen in (a child's is where it was born). Skin tone leans on how warm that biome is. Skin palettes are listed palest first, and the climate picks a spot along that list: tundra and taiga toward the pale end, plains and forests in the middle, deserts, outbacks and rainforests toward the dark end. The pick is spread about 1.3 palettes either way, so any place still has a range. Children take their skin tone from a parent instead.
+
+The homeland also feeds speech: "Where are you from?" in the questions menu, remarks when the climate is colder or hotter than home ("I'm from the desert, I'm not built for this"), homesickness, and feeling at home on returning to their own biome.
+
 ### Clothing that changes
 
 An NPC's look is split into **body** (skin, eyes, face, hair: fixed for life, except hair could grow or be cut later) and **outfits** (sets of clothing layers). NPCs change outfits with their job and schedule: work clothes for the farmer, an apron for the cook, nightclothes for sleeping, something nicer for a wedding. Armor still draws on top of everything, as it does now.

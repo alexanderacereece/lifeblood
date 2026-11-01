@@ -678,7 +678,7 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 					.executes(NpcCommand::describeLook)
 					.then(literal("randomize").executes(c -> {
 						EntityNPC npc = findNpc(c);
-						npc.setAppearance(Appearance.random(PartCatalog.get(), npc.getGender(), npc.getRandom()));
+						npc.setAppearance(Appearance.random(PartCatalog.get(), npc.getGender(), npc.getRandom(), npc.getHomeWarmth()));
 						if (npc.getAppearance().isEmpty()) {
 							throw error("There are no base parts yet. Put some in " + new File(PartCatalog.getDirectory(), "base"));
 						}

@@ -185,6 +185,9 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private long birthTime = UNKNOWN_BIRTH;
 	/** The last year it celebrated its birthday, so it happens once a year. */
 	private long lastBirthdayYear = Long.MIN_VALUE;
+	/** Where it's from: the biome it was first seen in (or born in), and how warm that is (NaN until known). */
+	private String homeBiome = "";
+	private float homeWarmth = Float.NaN;
 	/** The size its hitbox was last set for, so it's only resized when growth changes. */
 	private int sizedForGrowth = -1;
 	/** Something it wants to ask a player next time they talk (out on a date, or to marry), and which player. */
@@ -1024,9 +1027,34 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	 * Runs once after spawning or loading, so NPCs from before parts existed get a look once parts are added.
 	 */
 	public void rollAppearanceIfNeeded() {
+		this.ensureHomeland();
 		if (this.getSkin().isEmpty() && this.getAppearance().isEmpty()) {
-			this.setAppearance(Appearance.random(PartCatalog.get(), this.gender, this.random));
+			this.setAppearance(Appearance.random(PartCatalog.get(), this.gender, this.random, this.homeWarmth));
 		}
+	}
+
+	/** Decides where it's from, if that isn't known yet: wherever it is now. */
+	private void ensureHomeland() {
+		if (!Float.isNaN(this.homeWarmth)) {
+			return;
+		}
+
+		String biome = Surroundings.biomeAt(this.world, this.x, this.y, this.z);
+		float warmth = Surroundings.warmthAt(this.world, this.x, this.y, this.z);
+		if (biome != null && !Float.isNaN(warmth)) {
+			this.homeBiome = biome;
+			this.homeWarmth = warmth;
+		}
+	}
+
+	/** The biome it comes from ("tundra"), or "" if unknown. */
+	public String getHomeBiome() {
+		return this.homeBiome;
+	}
+
+	/** How warm the place it comes from is, 0 cold to 1 hot; NaN if unknown. */
+	public float getHomeWarmth() {
+		return this.homeWarmth;
 	}
 
 	public SkinModel getSkinModel() {
@@ -1562,6 +1590,8 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		npc.putString("Appearance", this.getAppearance());
 		npc.putLong("BirthTime", this.birthTime);
 		npc.putLong("LastBirthday", this.lastBirthdayYear);
+		npc.putString("HomeBiome", this.homeBiome);
+		npc.putFloat("HomeWarmth", this.homeWarmth);
 		npc.putByte("Growth", this.entityData.getByte(DATA_GROWTH));
 		npc.putByte("SkinModel", (byte) this.getSkinModel().ordinal());
 		npc.putString("HealthMode", this.healthMode.name());
@@ -1605,6 +1635,8 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		// kept and their birth worked out from it.
 		this.birthTime = npc.getLongOrDefault("BirthTime", UNKNOWN_BIRTH);
 		this.lastBirthdayYear = npc.getLongOrDefault("LastBirthday", Long.MIN_VALUE);
+		this.homeBiome = npc.getStringOrDefault("HomeBiome", "");
+		this.homeWarmth = npc.containsKey("HomeWarmth") ? npc.getFloat("HomeWarmth") : Float.NaN;
 		this.entityData.set(DATA_GROWTH, npc.containsKey("Growth") ? npc.getByte("Growth") : (byte) 100);
 		this.setSkinModel(SkinModel.byId(npc.getByte("SkinModel")));
 		HealthMode mode = HealthMode.byName(npc.getStringOrDefault("HealthMode", ""));

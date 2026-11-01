@@ -114,6 +114,7 @@ public record NpcDialogue(String line, List<DialogueOption> options) {
 			session.show(questions(npc, player, say(npc, player, "about_me", "Not much to tell.")));
 			session.openProfile();
 		}));
+		options.add(new DialogueOption("Where are you from?", session -> session.show(questions(npc, player, say(npc, player, "where_from", "Around here.")))));
 		options.add(new DialogueOption("What do you think of...", session -> session.show(askAbout(npc, player))));
 		options.add(new DialogueOption("What words do you know?", session -> session.show(questions(npc, player, WordDialogue.listWords(npc, player)))));
 		options.add(new DialogueOption("Tell me about your family.", session -> session.show(questions(npc, player, RomanceDialogue.describeFamily(npc, player)))));
