@@ -87,9 +87,15 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private static final int GROWTH_CHECK_INTERVAL = 200;
 	/** A birth time not decided yet (an NPC from before ages, or a brand new one). */
 	private static final long UNKNOWN_BIRTH = Long.MIN_VALUE;
-	/** Adults without a known birth get an age in this range. */
+	/**
+	 * Adults without a known birth get an age around this, most between their twenties and forties: a bell curve,
+	 * tighter below the peak than above it, so there are a fair few older people and nobody under 18.
+	 */
+	private static final float TYPICAL_ADULT_AGE = 27.0F;
+	private static final float YOUNGER_SPREAD = 4.0F;
+	private static final float OLDER_SPREAD = 12.0F;
 	private static final int MIN_ADULT_AGE = 18;
-	private static final int MAX_ADULT_AGE = 60;
+	private static final int MAX_ADULT_AGE = 85;
 	private static final float ADULT_WIDTH = 0.6F;
 	private static final float ADULT_HEIGHT = 1.825F;
 	/** A conversation ends if the player walks further away than this. */
@@ -941,7 +947,9 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 			return;
 		}
 
-		int years = MIN_ADULT_AGE + this.random.nextInt(MAX_ADULT_AGE - MIN_ADULT_AGE + 1);
+		float spread = (float) this.random.nextGaussian();
+		float age = TYPICAL_ADULT_AGE + spread * (spread < 0.0F ? YOUNGER_SPREAD : OLDER_SPREAD);
+		int years = Math.max(MIN_ADULT_AGE, Math.min(MAX_ADULT_AGE, (int) age));
 		long ticks = years * Calendar.ticksPerYear(this.world) + (long) (this.random.nextFloat() * Calendar.ticksPerYear(this.world));
 		this.birthTime = this.world.getWorldTime() - ticks;
 	}
@@ -958,9 +966,11 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		return Calendar.describeDate(this.world, this.birthTime);
 	}
 
+	/** Its birthday is today (but not the day it was born). */
 	public boolean isBirthday() {
 		this.ensureBirth();
-		return Calendar.dayOfYear(this.world, this.birthTime) == Calendar.dayOfYear(this.world, this.world.getWorldTime());
+		long now = this.world.getWorldTime();
+		return Calendar.dayOfYear(this.world, this.birthTime) == Calendar.dayOfYear(this.world, now) && Calendar.day(this.birthTime) != Calendar.day(now);
 	}
 
 	/** Once a year, on the day: a good mood, and it tells whoever's around. */

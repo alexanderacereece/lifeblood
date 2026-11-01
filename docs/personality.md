@@ -369,7 +369,12 @@ Married couples have children, which keeps settlements alive across generations.
 
 ### Ages and birthdays
 
-Everyone has a birth date. Adults from before ages existed are given one between 18 and 60 years ago; children's come from their birth. The profile shows their age and birthday ("born Summer 5"), following the world's own calendar of seasons. On their birthday an NPC is in a good mood, says so, and any gift counts double.
+Everyone has a birth date. Adults without one (new or from before ages existed) get an age on a curve that peaks around 27 and tails off toward old age (18 to 85, most in their twenties to forties); children's come from their birth. No birthday is celebrated on the day someone is born. The profile shows their age and birthday ("born Summer 5"), following the world's own calendar of seasons. On their birthday an NPC is in a good mood, says so, and any gift counts double.
+
+Planned, not built yet:
+- **Dying of old age.** Past a certain age (somewhere in the 70s), a small and rising chance each year of dying peacefully, ideally at home. Family and friends grieve as for any death, without anyone to blame. Possibly a funeral, the way weddings gather people.
+- **An item that stops aging.** Given like the guardian amulet (its own locked slot, kept for good), it stops the NPC's age from advancing: no old age, and a child given one stays a child. Open questions: its recipe, whether it can be given to children at all, and whether it shows its effect on the profile.
+- **The player's own birthday.** The player picks it (a dialogue or a setting); NPCs who know it wish them a happy birthday, and close friends and family give a gift.
 
 ### The player
 

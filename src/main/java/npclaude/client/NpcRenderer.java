@@ -23,6 +23,8 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Math;
 import org.joml.Vector3dc;
 import org.useless.dragonfly.data.entity.mojang.EntityGeometryMojangData.Cache;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
 import org.useless.dragonfly.models.entity.BoneTransform;
 import org.useless.dragonfly.models.entity.StaticEntityModel;
 
@@ -38,6 +40,8 @@ public class NpcRenderer extends MobRendererBipedArmored<EntityNPC> {
 	private static final float CHILD_HEAD_START = 0.75F;
 	/** How grown up a child is when its head reaches full size. */
 	private static final float CHILD_HEAD_FULL_AT = 0.5F;
+	/** Where the head turns and scales from (the neck), in model pixels, per the player model. */
+	private static final float HEAD_PIVOT_Y = 24.0F;
 	private static final float LYING_LIFT = 0.125F;
 	private static final double HEALTH_BAR_RANGE = 16.0;
 	/** Bar size in name-tag pixels; the name tag sits 0.8 above the head, the bar just above it. */
@@ -87,6 +91,17 @@ public class NpcRenderer extends MobRendererBipedArmored<EntityNPC> {
 			transform.scaleX *= relative;
 			transform.scaleY *= relative;
 			transform.scaleZ *= relative;
+			// Bones scale around the model's origin (at the feet), so a bigger head would also float upward. Moving it
+			// back by how far the neck (the head's pivot) moved, turned the way the head is turned, keeps it on the neck.
+			// (The same turn the model applies: radians, with X and Z negated.)
+			Vector3f offset = new Matrix4f()
+				.rotateZ((float) -transform.rotZ)
+				.rotateY((float) transform.rotY)
+				.rotateX((float) -transform.rotX)
+				.transformDirection(new Vector3f(0.0F, HEAD_PIVOT_Y * (1.0F - relative), 0.0F));
+			transform.posX += offset.x;
+			transform.posY += offset.y;
+			transform.posZ += offset.z;
 		}
 
 		return posed;
