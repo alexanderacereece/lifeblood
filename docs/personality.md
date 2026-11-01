@@ -562,18 +562,31 @@ Generated NPCs are assembled from layers instead of using one fixed skin. Hand-m
 
 ### Layers
 
-Each layer is a 64x64 skin-format PNG. Recolorable layers are drawn in grayscale and tinted; fixed layers are drawn in full color and used as they are.
+Each layer is a 64x64 skin-format PNG. Fixed layers are drawn in full color and used as they are. Recolorable layers are recolored by palette swap (a gradient map), not by multiplying a tint, so dark colors keep their shading:
 
-| Layer | Recolorable? | Tinted by | Examples |
+| Pixel in a recolorable layer | Becomes |
+|---|---|
+| `#202020` | palette shade 1: deepest shadow, inner lines |
+| `#505050` | palette shade 2: shadow |
+| `#808080` | palette shade 3: mid shade |
+| `#B0B0B0` | palette shade 4: base color (most of the area) |
+| `#E0E0E0` | palette shade 5: highlight |
+| anything else | itself, unchanged |
+
+- Every color option (a hair color, a dye, a skin tone, an eye color) is a palette of five colors, darkest to lightest, defined in a small text file. Using the same five grays in every part means a palette looks the same on hair, shirts and pants.
+- Anything that isn't one of the five grays passes through untouched: pure white eye whites and black pupils on an eye layer (only the iris recolors), a brown belt on a recolorable shirt, a colored gem. So a part never needs splitting into two files just to keep a detail fixed.
+- Pixel art only: no soft brushes or anti-aliasing, so every pixel is either one of the five grays or meant to stay as drawn.
+
+| Layer | Recolorable? | Palette | Examples |
 |---|---|---|---|
 | Base | yes | skin tone | the body, in wide and slim arm versions |
-| Eyes | yes | eye color | several eye shapes |
+| Eyes | yes (iris only) | eye color | several eye shapes; whites and pupils stay as drawn |
 | Mouth | no | | mouths and expressions |
 | Facial hair | yes | hair color | beards, moustaches |
 | Hair | yes | hair color | styles, using the outer layer for volume |
 | Tops | either | dye color, if recolorable | shirts, tunics, dresses, aprons |
 | Bottoms | either | dye color, if recolorable | trousers, skirts, shoes |
-| Accessories | no | | the guardian amulet, scarves, glasses, hats |
+| Accessories | no | | scarves, glasses, hats |
 
 Tops and bottoms are recolorable or fixed per item: plain clothes come in any dye color, while patterned or detailed ones keep their drawn colors.
 
