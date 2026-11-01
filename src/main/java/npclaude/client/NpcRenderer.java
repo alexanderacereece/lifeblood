@@ -54,6 +54,9 @@ public class NpcRenderer extends MobRendererBipedArmored<EntityNPC> {
 		GLRenderer.modelM4f().rotateY(-this.getBodyYaw(entity, partialTick));
 		GLRenderer.modelM4f().scale(0.062539086F, 0.062539086F, -0.062539086F);
 		GLRenderer.modelM4f().scale(PLAYER_SCALE, PLAYER_SCALE, PLAYER_SCALE);
+		// Children are drawn smaller, growing to full size as they grow up.
+		float size = entity.getSizeScale();
+		GLRenderer.modelM4f().scale(size, size, size);
 		if (fall > 0.0F) {
 			GLRenderer.modelM4f().rotateX(Math.toRadians((entity.isDownedOnFront() ? -90.0F : 90.0F) * fall));
 		} else if (entity.deathTime > 0) {

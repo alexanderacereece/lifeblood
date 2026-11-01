@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Who an NPC is: eight trait axes, a few quirks, and tastes in food, things, weather and places. Fixed for life (mood, coming later,
@@ -167,6 +168,42 @@ public class NpcPersonality {
 			this.tastes.load(tag.getCompound("Tastes"));
 		} else if (tag.containsKey("Food")) {
 			this.tastes.load(tag.getCompound("Food"));
+		}
+	}
+
+	/**
+	 * A child's personality: each trait a blend of both parents plus its own shift (just one parent's, shifted
+	 * further, if the other is a player), each parent quirk passed on 30% of the time, sometimes a quirk of its own,
+	 * and new tastes.
+	 */
+	public void inherit(NpcPersonality first, @Nullable NpcPersonality second, Random random) {
+		this.randomize(random);
+		for (TraitAxis axis : TraitAxis.values()) {
+			float parents = second != null ? (first.get(axis) + second.get(axis)) / 2.0F : first.get(axis);
+			this.set(axis, parents + (float) random.nextGaussian() * (second != null ? 0.3F : 0.45F));
+		}
+
+		this.quirks.clear();
+		List<Quirk> inherited = new ArrayList<>(first.getQuirks());
+		if (second != null) {
+			inherited.addAll(second.getQuirks());
+		}
+
+		Collections.shuffle(inherited, random);
+		for (Quirk quirk : inherited) {
+			if (random.nextFloat() < 0.3F) {
+				this.addQuirk(quirk);
+			}
+		}
+
+		if (this.quirks.isEmpty() || random.nextFloat() < 0.25F) {
+			List<Quirk> pool = new ArrayList<>(List.of(Quirk.values()));
+			Collections.shuffle(pool, random);
+			for (Quirk quirk : pool) {
+				if (this.addQuirk(quirk)) {
+					break;
+				}
+			}
 		}
 	}
 

@@ -125,6 +125,77 @@ public final class Appearance {
 		return new Appearance(choices);
 	}
 
+	/**
+	 * A child's look: skin tone, hair color and eye color from one parent or the other, often a parent's hairstyle,
+	 * eyes or face, and no facial hair (that can come with adulthood). Parents may be NONE (a player parent).
+	 */
+	public static Appearance inherit(PartCatalog catalog, NpcGender gender, Appearance first, Appearance second, Random random) {
+		Appearance child = random(catalog, gender, random).with(AppearanceLayer.FACIAL_HAIR, null, "");
+		List<Appearance> parents = new java.util.ArrayList<>();
+		for (Appearance parent : new Appearance[] {first, second}) {
+			if (!parent.isEmpty()) {
+				parents.add(parent);
+			}
+		}
+
+		if (parents.isEmpty() || child.isEmpty()) {
+			return child;
+		}
+
+		String hairColor = null;
+		for (AppearanceLayer layer : new AppearanceLayer[] {AppearanceLayer.BASE, AppearanceLayer.EYES, AppearanceLayer.MOUTH, AppearanceLayer.HAIR}) {
+			Choice mine = child.get(layer);
+			Choice theirs = parents.get(random.nextInt(parents.size())).get(layer);
+			if (mine == null || theirs == null) {
+				continue;
+			}
+
+			// The color always comes from a parent; the part itself sometimes, if it suits the child's gender.
+			String part = random.nextFloat() < 0.5F && catalog.parts(layer, gender).contains(theirs.part()) ? theirs.part() : mine.part();
+			String palette = theirs.palette().isEmpty() ? mine.palette() : theirs.palette();
+			if (layer == AppearanceLayer.HAIR) {
+				hairColor = palette;
+			}
+
+			child = child.with(layer, part, palette);
+		}
+
+		if (hairColor == null) {
+			for (Appearance parent : parents) {
+				Choice hair = parent.get(AppearanceLayer.HAIR);
+				if (hair != null && !hair.palette().isEmpty()) {
+					hairColor = hair.palette();
+				}
+			}
+		}
+
+		return hairColor != null ? child.withHairColor(hairColor) : child;
+	}
+
+	/** A copy with hair (and facial hair) recolored. */
+	public Appearance withHairColor(String palette) {
+		Appearance result = this;
+		for (AppearanceLayer layer : new AppearanceLayer[] {AppearanceLayer.HAIR, AppearanceLayer.FACIAL_HAIR}) {
+			Choice choice = result.get(layer);
+			if (choice != null) {
+				result = result.with(layer, choice.part(), palette);
+			}
+		}
+
+		return result;
+	}
+
+	/** Grown up: a man may grow facial hair, in his hair color. */
+	public Appearance cameOfAge(PartCatalog catalog, NpcGender gender, Random random) {
+		List<String> beards = catalog.parts(AppearanceLayer.FACIAL_HAIR, gender);
+		if (gender != NpcGender.MALE || beards.isEmpty() || this.get(AppearanceLayer.FACIAL_HAIR) != null || random.nextFloat() >= MALE_FACIAL_HAIR) {
+			return this;
+		}
+
+		Choice hair = this.get(AppearanceLayer.HAIR);
+		return this.with(AppearanceLayer.FACIAL_HAIR, pick(beards, random, ""), hair != null ? hair.palette() : "");
+	}
+
 	private static String pick(List<String> options, Random random, String fallback) {
 		return options.isEmpty() ? fallback : options.get(random.nextInt(options.size()));
 	}

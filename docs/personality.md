@@ -357,12 +357,14 @@ Family is stored at world level (`npclaude_family`), so relatives who are far aw
 
 ### Children
 
-Married couples with a home may have children, which keeps settlements alive across generations. (Minecraft Comes Alive does something similar; this design is our own.)
-- A child starts small and grows into an adult over a number of in-game days (starting point: 20). Children need a smaller model, likely the player model scaled down with a larger head.
-- Children inherit trait axes as a blend of both parents plus a random shift, and each parent quirk has a chance (about 30%) to pass on. Food preferences are partly inherited too.
-- Family links are set automatically, so siblings, cousins and so on follow from the graph.
-- Children are invincible by default (section 7). They don't fight; they flee and hide.
-- Children don't work real jobs, but follow parents around, play, and help with small tasks as they get older.
+Married couples have children, which keeps settlements alive across generations. (Minecraft Comes Alive does something similar; this design is our own.)
+- A married couple at 80+ opinion, near each other, has about one child every ten in-game days, up to four, and not until the youngest is five days old. An NPC married to the player has children the same way.
+- A child is born beside its NPC parent, with a name from `assets/npclaude/names.txt`, its parents' faction and home, and family links set, so siblings, cousins and so on follow from the graph.
+- It starts at half size and grows to full size over 20 in-game days (`/npc grow` shows or sets it).
+- Children inherit trait axes as a blend of both parents plus a random shift, and each parent quirk has a 30% chance to pass on (sometimes they get one of their own). Tastes are their own.
+- Looks: skin tone, hair color and eye color from one parent or the other, often a parent's hairstyle, eyes or mouth, and no facial hair. A young man may grow a beard on coming of age.
+- Children are invincible (section 7). They don't fight, brawl or date: they run from danger.
+- Not yet: following parents around, playing, and helping with small tasks as they get older.
 
 ### The player
 

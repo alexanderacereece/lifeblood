@@ -63,6 +63,7 @@ public enum MemoryType {
 	SAW_A_DEATH("saw a death", 0, -6, 2, 3),
 	A_FRIEND_DIED("a friend died", 0, -20, 10, 3),
 	FAMILY_DIED("family died", 0, -30, 20, 3),
+	HAD_A_CHILD("had a child", 0, 25, 10, 2),
 	STARTED_DATING("started dating", 0, 10, 5, 1),
 	GOT_ENGAGED("got engaged", 0, 15, 7, 1),
 	WENT_TO_A_WEDDING("went to a wedding", 0, 6, 2, 2),

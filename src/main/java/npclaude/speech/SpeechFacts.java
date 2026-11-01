@@ -29,7 +29,7 @@ import org.jetbrains.annotations.Nullable;
  * it's coming down on them), outside, season (spring/summer/fall/winter), biome (desert, tundra...), with
  * weather_like, season_like and biome_like (love/like/meh/dislike/hate), mood (awful/bad/okay/good/great),
  * health (fine/hurt/low), faction and enemy_faction (with has_faction/has_enemy = yes/no), recovering, address,
- * catchphrase, relationship (single/dating/engaged/married/widowed), listener_kin (what the listener is to them,
+ * catchphrase, age (child/adult), relationship (single/dating/engaged/married/widowed), listener_kin (what the listener is to them,
  * or none), surprising_thing (yes if their favorite thing is one most people wouldn't care for).
  * Words: partner, favorite_food, hated_food, favorite_thing, hated_thing, weather_word, biome_word, season_word,
  * favorite_weather, hated_weather, favorite_biome, hated_biome, favorite_season, hated_season, and whatever the
@@ -56,6 +56,7 @@ public final class SpeechFacts {
 		}
 
 		addFamily(npc, listener, context);
+		context.fact("age", npc.isChild() ? "child" : "adult");
 		context.fact("time", timeOfDay(npc));
 		addSurroundings(npc, context);
 		context.fact("mood", moodLabel(mood));

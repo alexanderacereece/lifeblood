@@ -71,7 +71,7 @@ public final class Brawl {
 
 	private static boolean canBrawl(Mob mob) {
 		if (mob instanceof EntityNPC npc) {
-			return npc.isAlive() && npc.getBrawl() == null && !npc.isRecovering() && !npc.isDowned();
+			return npc.isAlive() && npc.getBrawl() == null && !npc.isRecovering() && !npc.isDowned() && !npc.isChild();
 		}
 
 		return mob instanceof Player player && player.isAlive() && player.getGamemode().hasHostileMobs();

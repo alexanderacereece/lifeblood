@@ -7,7 +7,7 @@
 #
 # Facts: name, listener, listener_type (player/npc), opinion (enemy/disliked/neutral/friendly/friend/close_friend),
 # relation (ally/neutral/hostile: how they'd treat the listener in a fight),
-# relationship (single/dating/engaged/married/widowed), listener_kin (what the listener is to them: spouse, fiance,
+# age (child/adult), relationship (single/dating/engaged/married/widowed), listener_kin (what the listener is to them: spouse, fiance,
 # partner, parent, child, sibling, grandparent, grandchild, aunt_uncle, niece_nephew, cousin, ..._in_law, or none),
 # leader (yes/no), time (morning/day/evening/night), weather (clear/rain/snow/storm/fog/blood_rain), wet (yes when
 # it's coming down on them), outside, season (spring/summer/fall/winter), biome (plains, desert, tundra...),
@@ -122,6 +122,13 @@ Good grief!                  {proper}
 [hello_named] Still in one piece, I see. {opinion=friend}
 [listener]! There you are.   {opinion=close_friend, w=2}
 There you are, love.         {listener_kin=spouse, w=6}
+Hi! Hi! Hello!               {age=child, w=8}
+Wanna play?                  {age=child, w=8}
+Mom! Dad! ...Oh, it's you. Hi. {age=child, w=4}
+You're back! You're back!   {age=child, listener_kin=parent, w=10}
+Hi! I missed you!            {age=child, listener_kin=parent, w=10}
+There's my little one!       {listener_kin=child, w=10}
+Hey, kiddo.                  {listener_kin=child, w=8}
 Hello, dear.                 {listener_kin=spouse, polite, w=5}
 Oh! It's you. Hi.            {listener_kin=partner, introvert, w=6}
 Hey, you.                    {listener_kin=partner, w=5}
@@ -284,6 +291,16 @@ I still set two plates out, some nights. {relationship=widowed, sentimental, w=2
 I miss them every day.       {relationship=widowed, w=1}
 It's lonely, some nights.    {relationship=widowed, w=1.5}
 Being single's fine. Really. {relationship=single, pessimist, w=0.5}
+When I grow up I'm gonna be the strongest person ever. {age=child, w=6}
+Do you know any games? I know lots of games. {age=child, w=6}
+I'm not tired. I'm NOT.      {age=child, time=evening, w=8}
+Why is the sky up there?     {age=child, curious, w=8}
+I found a bug! I named it Steve. {age=child, lighthearted, w=8}
+Mom says I can't go past the trees. {age=child, w=6}
+Are you a grown-up? You look like a grown-up. {age=child, w=6}
+I'm gonna eat all the [favorite_food.s] when I'm big. {age=child, glutton, w=8}
+I'm hiding. Don't tell anyone. {age=child, timid, w=8}
+Kids. They grow up so fast.  {relationship=married, w=0.5}
 I'd like to meet someone special one day. {relationship=single, romantic, w=2}
 You and me, [listener]. Always. {listener_kin=spouse, w=4}
 I love you, you know.        {listener_kin=spouse, romantic, w=4}
@@ -1442,4 +1459,25 @@ No family to speak of. Just me.
 It's just me, I'm afraid.
 Never had much family. That's fine.
 Family? Haven't found mine yet. {romantic, w=3}
+
+# ---------------------------------------------------------------------------------------------------------------
+# Children. [baby] is the newborn's name; baby_gender is male or female.
+
+== new_baby ==
+It's here! Our baby is here! Meet [baby]!
+We have a baby! [baby]. Isn't [baby] perfect?
+Everyone, meet [baby]!
+It's a girl! We're calling her [baby]. {baby_gender=female, w=4}
+It's a boy! We're calling him [baby]. {baby_gender=male, w=4}
+Cube God, thank you for [baby]. {pious, w=4}
+I'm a parent. Me! A parent!  {extrovert, w=3}
+Oh, [baby]. Look at those tiny hands. {sentimental, w=4}
+
+== grown_up ==
+I'm all grown up!
+Look at me! I'm a grown-up now.
+No more kid stuff for me.
+Finally! Nobody can tell me when to go to bed.  {lighthearted, w=3}
+Time to get to work, I suppose. {hardworking, w=3}
+Being a grown-up looks hard.  {pessimist, w=3}
 

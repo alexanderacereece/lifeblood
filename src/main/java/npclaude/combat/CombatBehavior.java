@@ -62,6 +62,11 @@ public class CombatBehavior implements NpcBehavior {
 
 	/** Courage threshold: fully timid runs from anything but easy fights, fully brave stands against about 3 to 1. */
 	public static double courageOf(EntityNPC npc) {
+		if (npc.isChild()) {
+			// Children don't fight: they run from anything.
+			return 0.0;
+		}
+
 		if (npc.isRecovering()) {
 			// Fresh from near death: in no shape to fight anything.
 			return RECOVERING_COURAGE;

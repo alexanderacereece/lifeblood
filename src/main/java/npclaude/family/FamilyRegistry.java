@@ -39,6 +39,8 @@ public class FamilyRegistry extends SavedData {
 		public boolean player;
 		public boolean alive = true;
 		public final List<UUID> parents = new ArrayList<>();
+		/** When they were born (world time), if born in this world; -1 otherwise. */
+		public long born = -1L;
 		/** A spouse who died, remembered as such. */
 		@Nullable
 		public UUID lateSpouse;
@@ -255,6 +257,7 @@ public class FamilyRegistry extends SavedData {
 					}
 				}
 
+				person.born = personTag.getLongOrDefault("Born", -1L);
 				if (personTag.containsKey("LateSpouse")) {
 					person.lateSpouse = UUID.fromString(personTag.getString("LateSpouse"));
 				}
@@ -303,6 +306,8 @@ public class FamilyRegistry extends SavedData {
 			if (person.lateSpouse != null) {
 				personTag.putString("LateSpouse", person.lateSpouse.toString());
 			}
+
+			personTag.putLong("Born", person.born);
 
 			people.addTag(personTag);
 		}

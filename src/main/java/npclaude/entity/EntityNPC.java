@@ -42,6 +42,7 @@ import npclaude.combat.MonsterContact;
 import npclaude.combat.NpcFactions;
 import npclaude.combat.NpcRelations;
 import npclaude.dialogue.NpcDialogue;
+import npclaude.family.Children;
 import npclaude.family.Romance;
 import npclaude.interaction.NpcInteractions;
 import npclaude.inventory.NpcInventory;
@@ -54,6 +55,7 @@ import npclaude.personality.NpcPersonality;
 import npclaude.personality.Quirk;
 import npclaude.personality.TraitAxis;
 import npclaude.social.Brawl;
+import npclaude.social.Memory;
 import npclaude.social.MemoryType;
 import npclaude.social.NpcMemories;
 import npclaude.social.Opinions;
@@ -77,6 +79,13 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private static final int DATA_DOWNED = 22;
 	/** The NPC's look built from parts (see Appearance), as an encoded string; empty for none. */
 	private static final int DATA_APPEARANCE = 23;
+	/** How grown up it is, 0 (newborn) to 100 (adult). */
+	private static final int DATA_GROWTH = 24;
+	/** Children grow into adults over this many in-game days. */
+	public static final float DAYS_TO_GROW_UP = 20.0F;
+	private static final int GROWTH_CHECK_INTERVAL = 200;
+	private static final float ADULT_WIDTH = 0.6F;
+	private static final float ADULT_HEIGHT = 1.825F;
 	/** A conversation ends if the player walks further away than this. */
 	private static final float TALK_DISTANCE = 8.0F;
 	/** How often the NPC checks whether it should eat, in ticks. */
@@ -160,6 +169,10 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private int lastRefusalTick = -REFUSAL_COOLDOWN;
 	/** Whether it's been given a look from parts yet this session, if it needed one. */
 	private boolean appearanceChecked;
+	/** When it was born (world time), while it's growing up; -1 once it's an adult (or if it never was a child). */
+	private long birthTime = -1L;
+	/** The size its hitbox was last set for, so it's only resized when growth changes. */
+	private int sizedForGrowth = -1;
 	/** Something it wants to ask a player next time they talk (out on a date, or to marry), and which player. */
 	@Nullable
 	private Romance.Request romanceRequest;
@@ -237,6 +250,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		this.entityData.define(DATA_SKIN_MODEL, (byte) SkinModel.AUTO.ordinal(), Byte.class);
 		this.entityData.define(DATA_DOWNED, (byte) 0, Byte.class);
 		this.entityData.define(DATA_APPEARANCE, "", String.class);
+		this.entityData.define(DATA_GROWTH, (byte) 100, Byte.class);
 	}
 
 	@Override
@@ -339,6 +353,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 			this.startEating();
 		}
 
+		this.updateSize();
 		if (!this.world.isClientSide) {
 			this.socialUpdate();
 		}
@@ -346,6 +361,10 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 
 	/** Speaking up, confirming rescues, and noticing the weather and where it is. */
 	private void socialUpdate() {
+		if (this.birthTime >= 0 && (this.tickCount + this.id) % GROWTH_CHECK_INTERVAL == 0) {
+			this.grow();
+		}
+
 		if (!this.appearanceChecked) {
 			this.appearanceChecked = true;
 			this.rollAppearanceIfNeeded();
@@ -805,7 +824,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	 * otherwise only someone who hates it right back. Never when hurt, busy, or outmatched by its own nerves.
 	 */
 	private void considerBrawl() {
-		if (this.brawl != null || this.isBusy() || this.isRecovering() || this.getHealth() < this.getMaxHealth() * 0.75F) {
+		if (this.brawl != null || this.isBusy() || this.isRecovering() || this.isChild() || this.getHealth() < this.getMaxHealth() * 0.75F) {
 			return;
 		}
 
@@ -877,6 +896,51 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 
 	public void setSkin(String skin) {
 		this.entityData.set(DATA_SKIN, skin);
+	}
+
+	// Growing up
+
+	/** 0 for a newborn, 1 for an adult. */
+	public float getGrowth() {
+		return this.entityData.getByte(DATA_GROWTH) / 100.0F;
+	}
+
+	public boolean isChild() {
+		return this.entityData.getByte(DATA_GROWTH) < 100;
+	}
+
+	/** Makes it a child of this growth (0 newborn, 1 adult), counting its birth back from now to match. */
+	public void setGrowth(float growth) {
+		growth = Math.max(0.0F, Math.min(1.0F, growth));
+		this.entityData.set(DATA_GROWTH, (byte) Math.round(growth * 100.0F));
+		this.birthTime = growth >= 1.0F ? -1L : this.world.getWorldTime() - (long) (growth * DAYS_TO_GROW_UP * Memory.TICKS_PER_DAY);
+	}
+
+	/** How big it's drawn and how big its hitbox is: half size as a newborn, full as an adult. */
+	public float getSizeScale() {
+		return 0.5F + 0.5F * this.getGrowth();
+	}
+
+	/** Grows a little older; on becoming an adult, it says so (and men may grow a beard). */
+	private void grow() {
+		float growth = (this.world.getWorldTime() - this.birthTime) / (DAYS_TO_GROW_UP * Memory.TICKS_PER_DAY);
+		if (growth >= 1.0F) {
+			this.setGrowth(1.0F);
+			Children.cameOfAge(this);
+		} else {
+			this.entityData.set(DATA_GROWTH, (byte) Math.max(0, Math.round(growth * 100.0F)));
+		}
+	}
+
+	/** Keeps the hitbox matching its size as it grows. */
+	private void updateSize() {
+		int growth = this.entityData.getByte(DATA_GROWTH);
+		if (growth != this.sizedForGrowth) {
+			this.sizedForGrowth = growth;
+			float scale = this.getSizeScale();
+			this.setSize(ADULT_WIDTH * scale, ADULT_HEIGHT * scale);
+			this.setPos(this.x, this.y, this.z);
+		}
 	}
 
 	/** The look built from appearance parts, encoded; shown when the NPC has no skin file set. */
@@ -1065,7 +1129,8 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 
 	/** The health mode that actually applies: a mortal NPC carrying a guardian amulet is invincible. */
 	public HealthMode getEffectiveHealthMode() {
-		if (this.healthMode == HealthMode.MORTAL && this.inventory.hasAmulet()) {
+		// Children are kept safe the same way an amulet keeps adults safe.
+		if (this.healthMode == HealthMode.MORTAL && (this.inventory.hasAmulet() || this.isChild())) {
 			return HealthMode.INVINCIBLE;
 		}
 
@@ -1428,6 +1493,8 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		npc.putInt("DataVersion", DATA_VERSION);
 		npc.putString("Skin", this.getSkin());
 		npc.putString("Appearance", this.getAppearance());
+		npc.putLong("Born", this.birthTime);
+		npc.putByte("Growth", this.entityData.getByte(DATA_GROWTH));
 		npc.putByte("SkinModel", (byte) this.getSkinModel().ordinal());
 		npc.putString("HealthMode", this.healthMode.name());
 		npc.putInt("DownedTicks", this.downedTicks);
@@ -1466,6 +1533,8 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		CompoundTag npc = tag.getCompound(SAVE_KEY);
 		this.setSkin(npc.getString("Skin"));
 		this.entityData.set(DATA_APPEARANCE, npc.getStringOrDefault("Appearance", ""));
+		this.birthTime = npc.getLongOrDefault("Born", -1L);
+		this.entityData.set(DATA_GROWTH, npc.containsKey("Growth") ? npc.getByte("Growth") : (byte) 100);
 		this.setSkinModel(SkinModel.byId(npc.getByte("SkinModel")));
 		HealthMode mode = HealthMode.byName(npc.getStringOrDefault("HealthMode", ""));
 		// Saves from before health modes only had an invulnerable flag.

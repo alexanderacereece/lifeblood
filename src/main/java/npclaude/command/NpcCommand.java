@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.UUID;
 import net.minecraft.core.Global;
 import net.minecraft.core.entity.Entity;
+import net.minecraft.core.entity.Mob;
 import net.minecraft.core.entity.EntityDispatcher;
 import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.item.Item;
@@ -33,6 +34,7 @@ import npclaude.ai.behavior.GoToBehavior;
 import npclaude.ai.behavior.StayBehavior;
 import npclaude.ai.behavior.WanderBehavior;
 import npclaude.appearance.Appearance;
+import npclaude.family.Children;
 import npclaude.family.FamilyRegistry;
 import npclaude.family.Kinship;
 import npclaude.family.Romance;
@@ -107,6 +109,8 @@ import org.joml.Vector3dc;
  * /npc family <name> unlink <target>           (removes a parent/child link between them)
  * /npc couple <name> <target> dating|engaged|married|none   (debug: sets their relationship, clock starting now)
  * /npc attraction <name> [opposite|same|both]  (who it can fall for)
+ * /npc baby <name>                             (debug: it and its partner have a child now)
+ * /npc grow <name> [0..100]                    (how grown up it is; children grow up over 20 days)
  * /npc look <name>                             (the parts and colors its look is built from)
  * /npc look <name> randomize                   (a new random look from the parts available)
  * /npc look <name> <layer> <part|none> [palette]   (e.g. hair bob auburn)
@@ -610,6 +614,38 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 
 							return builder.buildFuture();
 						}).executes(NpcCommand::setCouple)))))
+			.then(literal("baby")
+				.then(npcArgument().executes(c -> {
+					EntityNPC npc = findNpc(c);
+					UUID partnerId = FamilyRegistry.get(npc.world).partnerOf(npc.getUuid());
+					Mob partner = partnerId != null ? Romance.findPerson(npc.world, partnerId) : null;
+					if (partner == null) {
+						throw error(npc.nickname + " needs a partner who's here (see /npc couple).");
+					}
+
+					EntityNPC child = Children.born(npc, partner);
+					if (child == null) {
+						throw error("The child couldn't be created.");
+					}
+
+					return reply(c, npc.nickname + " and " + nameOf(partner) + " have a new baby: " + child.nickname + ".");
+				})))
+			.then(literal("grow")
+				.then(npcArgument()
+					.executes(c -> {
+						EntityNPC npc = findNpc(c);
+						return reply(c, npc.nickname + " is " + Math.round(npc.getGrowth() * 100) + "% grown" + (npc.isChild() ? "." : " (an adult)."));
+					})
+					.then(argument("percent", ArgumentTypeInteger.integer(0, 100)).executes(c -> {
+						EntityNPC npc = findNpc(c);
+						boolean wasChild = npc.isChild();
+						npc.setGrowth(c.getArgument("percent", Integer.class) / 100.0F);
+						if (wasChild && !npc.isChild()) {
+							Children.cameOfAge(npc);
+						}
+
+						return reply(c, npc.nickname + " is now " + Math.round(npc.getGrowth() * 100) + "% grown.");
+					}))))
 			.then(literal("attraction")
 				.then(npcArgument()
 					.executes(c -> {
