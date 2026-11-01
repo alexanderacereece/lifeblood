@@ -18,14 +18,14 @@ import npclaude.personality.Tastes;
 import npclaude.personality.TraitAxis;
 import npclaude.personality.TraitTier;
 import npclaude.social.Memory;
-import npclaude.social.Opinions;
 import npclaude.speech.SpeechFacts;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.input.Keyboard;
 
 /**
  * What the NPC is like, laid out on one page: its eight traits as sliders between their poles, its quirks, what it
- * loves and hates, how it feels right now and why, and what it thinks of you. Opened by asking it about itself;
+ * loves and hates (once the player has heard about them), and how it feels right now and why. What it thinks of the
+ * player isn't here: ask it. Opened by asking it about itself;
  * any click or Escape goes back to the conversation.
  */
 @Environment(EnvType.CLIENT)
@@ -37,6 +37,8 @@ public class NpcProfileScreen extends Screen {
 	private static final int ROW = 13;
 	private static final int POLE_WIDTH = 66;
 	private static final int BAR_WIDTH = 64;
+	/** How far wrapped quirk descriptions are indented under the quirk's name. */
+	private static final int QUIRK_INDENT = 8;
 
 	private static final int BOX_COLOR = 0xE0101018;
 	private static final int BORDER_COLOR = 0xFF8B7B55;
@@ -74,7 +76,6 @@ public class NpcProfileScreen extends Screen {
 		NpcPersonality personality = this.npc.personality;
 		long now = this.npc.world.getWorldTime();
 		float mood = this.npc.memories.mood(personality, now);
-		Opinions.Label opinion = Opinions.Label.of(Opinions.of(this.npc, this.player));
 		this.drawStringShadow(this.fontRenderer, this.npc.nickname, x + PADDING, y + PADDING, TITLE_COLOR);
 		List<String> subtitle = new ArrayList<>();
 		if (this.npc.getFaction() != null) {
@@ -82,7 +83,6 @@ public class NpcProfileScreen extends Screen {
 		}
 
 		subtitle.add("feeling " + SpeechFacts.moodLabel(mood));
-		subtitle.add("thinks of you as " + describe(opinion));
 		this.drawStringShadow(this.fontRenderer, String.join(" · ", subtitle), x + PADDING, y + PADDING + LINE + 2, DIM_COLOR);
 
 		int top = y + PADDING + LINE * 2 + 10;
@@ -132,11 +132,15 @@ public class NpcProfileScreen extends Screen {
 		}
 
 		for (Quirk quirk : personality.getQuirks()) {
+			// "Greedy - loves money and" / "things": the description wraps under the name rather than getting cut off.
 			String name = capitalize(quirk.displayName()) + " ";
 			this.drawStringShadow(this.fontRenderer, name, rightColumn, ry, TEXT_COLOR);
 			int nameWidth = this.fontRenderer.stringWidth(name);
-			this.drawStringShadow(this.fontRenderer, this.fit("- " + quirk.blurb(), columnWidth - nameWidth), rightColumn + nameWidth, ry, DIM_COLOR);
-			ry += LINE;
+			List<String> lines = this.wrap("- " + quirk.blurb(), columnWidth - nameWidth, columnWidth - QUIRK_INDENT);
+			for (int i = 0; i < lines.size(); i++) {
+				this.drawStringShadow(this.fontRenderer, lines.get(i), rightColumn + (i == 0 ? nameWidth : QUIRK_INDENT), ry, DIM_COLOR);
+				ry += LINE;
+			}
 		}
 
 		// Tastes
@@ -212,6 +216,25 @@ public class NpcProfileScreen extends Screen {
 		this.drawRect(x + w - 1, y + 1, x + w, y + h - 1, BORDER_COLOR);
 	}
 
+	/** Word-wraps text: the first line gets one width, the rest another. */
+	private List<String> wrap(String text, int firstWidth, int restWidth) {
+		List<String> lines = new ArrayList<>();
+		StringBuilder line = new StringBuilder();
+		for (String word : text.split(" ")) {
+			String attempt = line.isEmpty() ? word : line + " " + word;
+			int width = lines.isEmpty() ? firstWidth : restWidth;
+			if (!line.isEmpty() && this.fontRenderer.stringWidth(attempt) > width) {
+				lines.add(line.toString());
+				line = new StringBuilder(word);
+			} else {
+				line = new StringBuilder(attempt);
+			}
+		}
+
+		lines.add(line.toString());
+		return lines;
+	}
+
 	/** Cuts text to fit on one line, ending in "..." if it had to be cut. (The game's own version wraps instead.) */
 	private String fit(String text, int width) {
 		if (this.fontRenderer.stringWidth(text) <= width) {
@@ -228,17 +251,6 @@ public class NpcProfileScreen extends Screen {
 
 	private static float effect(Memory memory, long now) {
 		return memory.type().mood * memory.scale() * memory.strength(now);
-	}
-
-	private static String describe(Opinions.Label label) {
-		return switch (label) {
-			case ENEMY -> "an enemy";
-			case DISLIKED -> "someone they dislike";
-			case NEUTRAL -> "an acquaintance";
-			case FRIENDLY -> "friendly";
-			case FRIEND -> "a friend";
-			case CLOSE_FRIEND -> "a close friend";
-		};
 	}
 
 	private static String itemName(@Nullable Item item) {

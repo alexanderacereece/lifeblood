@@ -2,6 +2,7 @@ package npclaude.client;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.client.gui.Screen;
 import net.minecraft.client.gui.container.ScreenContainerAbstract;
 import net.minecraft.client.render.EntityRendererDispatcher;
 import net.minecraft.client.render.Lighting;
@@ -12,7 +13,9 @@ import net.minecraft.client.render.renderer.State;
 import net.minecraft.core.entity.player.Player;
 import npclaude.entity.EntityNPC;
 import npclaude.inventory.NpcMenu;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Math;
+import org.lwjgl.input.Keyboard;
 
 /**
  * The NPC's inventory, styled after the player's own inventory screen:
@@ -25,13 +28,29 @@ public class NpcInventoryScreen extends ScreenContainerAbstract {
 
 	private final Player player;
 	private final EntityNPC npc;
+	/** Where Escape goes back to: the conversation it was opened from, if any. */
+	@Nullable
+	private final Screen parent;
 	private float mouseX;
 	private float mouseY;
 
-	public NpcInventoryScreen(Player player, EntityNPC npc) {
+	public NpcInventoryScreen(Player player, EntityNPC npc, @Nullable Screen parent) {
 		super(new NpcMenu(player.inventory, npc));
 		this.player = player;
 		this.npc = npc;
+		this.parent = parent;
+	}
+
+	/** Escape steps back to the conversation instead of closing everything. */
+	@Override
+	public void keyPressed(char eventCharacter, int eventKey, int mx, int my) {
+		if (this.parent != null && (eventKey == Keyboard.KEY_ESCAPE || eventKey == Keyboard.KEY_BACK)) {
+			this.player.containerMenu = this.player.inventoryMenu;
+			this.mc.displayScreen(this.parent);
+			return;
+		}
+
+		super.keyPressed(eventCharacter, eventKey, mx, my);
 	}
 
 	@Override

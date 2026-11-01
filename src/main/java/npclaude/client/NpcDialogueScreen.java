@@ -205,7 +205,7 @@ public class NpcDialogueScreen extends Screen implements DialogueSession {
 
 	@Override
 	public void openInventory() {
-		this.mc.displayScreen(new NpcInventoryScreen(this.player, this.npc));
+		this.mc.displayScreen(new NpcInventoryScreen(this.player, this.npc, this));
 	}
 
 	@Override
