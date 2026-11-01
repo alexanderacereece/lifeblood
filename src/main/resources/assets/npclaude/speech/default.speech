@@ -13,7 +13,8 @@
 # it's coming down on them), outside, season (spring/summer/fall/winter), biome (plains, desert, tundra...),
 # weather_like/season_like/biome_like (love/like/meh/dislike/hate), mood (awful/bad/okay/good/great),
 # health (fine/hurt/low), recovering (yes/no), has_faction, has_enemy, address, catchphrase.
-# Words: partner, favorite_food, hated_food, favorite_thing, hated_thing, weather_word, biome_word, season_word,
+# Words: taught_food, taught_animal, taught_thing, taught_place, taught_exclamation, taught_greeting,
+# taught_farewell, taught_describe, taught_activity (words players taught them), partner, favorite_food, hated_food, favorite_thing, hated_thing, weather_word, biome_word, season_word,
 # favorite_weather, hated_weather, favorite_biome, hated_biome, favorite_season, hated_season, faction,
 # enemy_faction, and per event: enemy, food, item.
 # Gifts add kind (food/valuable/junk/gross/material/tool/weapon/armor/flower/plant/curio/music/decor/dangerous/
@@ -85,6 +86,8 @@ Good day.                    {proper, polite}
 Yo.                          {crude, lighthearted}
 Oi.                          {crude+}
 Hey, you.                    {rude}
+[taught_greeting]!           {w=3}
+[taught_greeting], [listener]! {w=3}
 Ugh, you.                    {rude+}
 Morning.                     {time=morning}
 Good morning!                {time=morning, optimist}
@@ -112,6 +115,7 @@ By the Cube!                 {pious}
 Blast!                       {!proper}
 Rats!                        {lighthearted}
 Good grief!                  {proper}
+[taught_exclamation]!        {w=3}
 
 # ---------------------------------------------------------------------------------------------------------------
 # Greetings: a player walks up.
@@ -291,6 +295,18 @@ I still set two plates out, some nights. {relationship=widowed, sentimental, w=2
 I miss them every day.       {relationship=widowed, w=1}
 It's lonely, some nights.    {relationship=widowed, w=1.5}
 Being single's fine. Really. {relationship=single, pessimist, w=0.5}
+Haven't had [taught_food.a] in days. {w=1.5}
+I could really go for [taught_food.a] right now. {glutton, w=3}
+I saw [taught_animal.a] by the river yesterday! {w=1.5}
+Do you think [taught_animal.s] bite? {timid, w=2}
+Lost my [taught_thing] again. {w=1.5}
+Can't find my [taught_thing] anywhere. Have you seen it? {w=1}
+Ever been to [taught_place]? {w=1.5}
+I'd love to see [taught_place] one day. {curious, w=2}
+Isn't this weather just [taught_describe]? {weather=clear, w=1.5}
+You know what you are? [taught_describe.cap]. {opinion=friend, w=1.5}
+Been [taught_activity] lately? {w=1.5}
+I spent all morning [taught_activity]. Best morning in ages. {w=1}
 When I grow up I'm gonna be the strongest person ever. {age=child, w=6}
 Do you know any games? I know lots of games. {age=child, w=6}
 I'm not tired. I'm NOT.      {age=child, time=evening, w=8}
@@ -1032,6 +1048,8 @@ Finally.                     {opinion=disliked, rude}
 Hm.                          {taciturn}
 Already? Aw.                 {extrovert}
 See you, [address].
+[taught_farewell]!           {w=3}
+[taught_farewell], [listener]. {w=3}
 
 # ---------------------------------------------------------------------------------------------------------------
 # Followers commenting on what their leader is doing. [listener] is the leader.
@@ -1480,4 +1498,38 @@ No more kid stuff for me.
 Finally! Nobody can tell me when to go to bed.  {lighthearted, w=3}
 Time to get to work, I suppose. {hardworking, w=3}
 Being a grown-up looks hard.  {pessimist, w=3}
+
+# ---------------------------------------------------------------------------------------------------------------
+# The word book. [word_prompt] is the question (a full sentence); [word] the word they just learned.
+
+== ask_word ==
+[word_prompt]
+Can I ask you something odd? [word_prompt]
+I've been wondering... [word_prompt]
+Ooh, quick question! [word_prompt]   {extrovert, w=2}
+Help me out. [word_prompt]           {rude, w=2}
+You seem clever. [word_prompt]       {polite, w=2}
+I collect words, you know. [word_prompt] {curious, w=3}
+
+== word_whose ==
+[word.cap]. Is that just for me, or something anyone could say?
+[word.cap]! Is that our word, or can I tell people?
+Can I share [word], or is it just ours? {nosy, w=3}
+[word.cap]... I like it. Just mine, or everyone's? {w=1}
+
+== word_learned ==
+[word.cap]. I like it!
+[word.cap]! I'll remember that.
+[word.cap]. Ha! What a word.         {lighthearted, w=2}
+[word.cap]. Very proper.             {proper, w=2}
+[word.cap]... got it. Thanks.        {introvert, w=2}
+[word.cap]. Our secret, then.        {personal=yes, w=3}
+I'm going to tell EVERYONE about [word]. {personal=no, nosy, w=4}
+I'm going to tell everyone about [word]. {personal=no, extrovert, w=3}
+Fine. [word.cap]. Can I go now?      {rude, w=2}
+
+== no_words ==
+I don't know any special words. Teach me one sometime?
+Words? Just the usual ones.
+Nothing fancy. Teach me something!   {curious, w=3}
 

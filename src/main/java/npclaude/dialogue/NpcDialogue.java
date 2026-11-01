@@ -37,7 +37,12 @@ public record NpcDialogue(String line, List<DialogueOption> options) {
 
 	public static NpcDialogue main(EntityNPC npc, Player player) {
 		NpcDialogue request = RomanceDialogue.request(npc, player);
-		return request != null ? request : main(npc, player, say(npc, player, "dialogue_open", "..."));
+		if (request != null) {
+			return request;
+		}
+
+		NpcDialogue word = WordDialogue.maybeAsk(npc, player);
+		return word != null ? word : main(npc, player, say(npc, player, "dialogue_open", "..."));
 	}
 
 	static NpcDialogue main(EntityNPC npc, Player player, String line) {
@@ -109,6 +114,7 @@ public record NpcDialogue(String line, List<DialogueOption> options) {
 			session.openProfile();
 		}));
 		options.add(new DialogueOption("What do you think of...", session -> session.show(askAbout(npc, player))));
+		options.add(new DialogueOption("What words do you know?", session -> session.show(questions(npc, player, WordDialogue.listWords(npc, player)))));
 		options.add(new DialogueOption("Tell me about your family.", session -> session.show(questions(npc, player, RomanceDialogue.describeFamily(npc, player)))));
 		options.add(new DialogueOption("That's all.", session -> session.show(main(npc, player, say(npc, player, "never_mind", "All right.")))));
 		return new NpcDialogue(line, options);

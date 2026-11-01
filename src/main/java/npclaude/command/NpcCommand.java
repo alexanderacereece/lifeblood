@@ -35,6 +35,7 @@ import npclaude.ai.behavior.StayBehavior;
 import npclaude.ai.behavior.WanderBehavior;
 import npclaude.appearance.Appearance;
 import npclaude.family.Children;
+import npclaude.words.WordBook;
 import npclaude.family.FamilyRegistry;
 import npclaude.family.Kinship;
 import npclaude.family.Romance;
@@ -109,6 +110,8 @@ import org.joml.Vector3dc;
  * /npc family <name> unlink <target>           (removes a parent/child link between them)
  * /npc couple <name> <target> dating|engaged|married|none   (debug: sets their relationship, clock starting now)
  * /npc attraction <name> [opposite|same|both]  (who it can fall for)
+ * /npc words                                   (every word players have taught, with ids)
+ * /npc words delete <id>                       (removes a word from everyone who knows it)
  * /npc baby <name>                             (debug: it and its partner have a child now)
  * /npc grow <name> [0..100]                    (how grown up it is; children grow up over 20 days)
  * /npc look <name>                             (the parts and colors its look is built from)
@@ -614,6 +617,32 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 
 							return builder.buildFuture();
 						}).executes(NpcCommand::setCouple)))))
+			.then(literal("words")
+				.executes(c -> {
+					WordBook book = WordBook.get(c.getSource().getWorld());
+					if (book.all().isEmpty()) {
+						return reply(c, "Nobody has been taught any words yet.");
+					}
+
+					reply(c, "Taught words (/npc words delete <id> removes one from everyone):");
+					for (WordBook.TaughtWord word : book.all()) {
+						reply(c, String.format(Locale.ROOT, "- #%d %s (%s, %s), taught by %s, known by %d", word.id, word.word.singular(),
+							word.category.id(), word.personal ? "personal" : "general", word.teacherName, word.knownBy.size()));
+					}
+
+					return 1;
+				})
+				.then(literal("delete")
+					.then(argument("id", ArgumentTypeInteger.integer(1, Integer.MAX_VALUE)).executes(c -> {
+						WordBook book = WordBook.get(c.getSource().getWorld());
+						int id = c.getArgument("id", Integer.class);
+						WordBook.TaughtWord word = book.find(id);
+						if (word == null || !book.delete(id)) {
+							throw error("There's no word #" + id + ".");
+						}
+
+						return reply(c, "Deleted '" + word.word.singular() + "'. Nobody knows it anymore.");
+					}))))
 			.then(literal("baby")
 				.then(npcArgument().executes(c -> {
 					EntityNPC npc = findNpc(c);

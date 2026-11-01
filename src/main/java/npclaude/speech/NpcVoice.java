@@ -18,6 +18,7 @@ import npclaude.personality.Tastes;
 import npclaude.personality.TraitAxis;
 import npclaude.social.MemoryType;
 import npclaude.social.Opinions;
+import npclaude.words.WordBook;
 import org.jetbrains.annotations.Nullable;
 import org.joml.primitives.AABBd;
 
@@ -28,6 +29,8 @@ import org.joml.primitives.AABBd;
  */
 public class NpcVoice {
 	public static final double HEARING_RANGE = 24.0;
+	/** Chance a friendly NPC chat passes on a taught word. */
+	private static final float WORD_SHARE_CHANCE = 0.3F;
 	private static final int CHECK_INTERVAL = 20;
 	private static final double GREET_RANGE = 6.0;
 	private static final double IDLE_RANGE = 12.0;
@@ -231,6 +234,11 @@ public class NpcVoice {
 				if (opinion > -20.0F && Opinions.of(partner, this.npc) > -20.0F) {
 					this.npc.remember(MemoryType.HAD_A_NICE_CHAT, partner, 1.0F);
 					partner.remember(MemoryType.HAD_A_NICE_CHAT, this.npc, 1.0F);
+				}
+
+				// Friendly chats spread the words players have taught (the general ones).
+				if (opinion >= 20.0F && Opinions.of(partner, this.npc) >= 20.0F && this.npc.getRandom().nextFloat() < WORD_SHARE_CHANCE) {
+					WordBook.get(this.npc.world).share(this.npc.getUuid(), this.npc.nickname, partner.getUuid(), this.npc.getRandom());
 				}
 			}
 

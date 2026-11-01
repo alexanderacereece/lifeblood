@@ -91,6 +91,11 @@ public record Word(String singular, String plural, Kind kind) {
 		return one(name);
 	}
 
+	/** The usual plural of a word: "berry" to "berries", "box" to "boxes". */
+	public static String plural(String word) {
+		return pluralize(word);
+	}
+
 	private static String pluralize(String word) {
 		if (word.endsWith("y") && word.length() > 1 && "aeiou".indexOf(word.charAt(word.length() - 2)) < 0) {
 			return word.substring(0, word.length() - 1) + "ies";

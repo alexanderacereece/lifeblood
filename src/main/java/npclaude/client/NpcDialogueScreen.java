@@ -2,6 +2,7 @@ package npclaude.client;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.Screen;
@@ -11,6 +12,7 @@ import npclaude.dialogue.DialogueOption;
 import npclaude.dialogue.DialogueSession;
 import npclaude.dialogue.NpcDialogue;
 import npclaude.entity.EntityNPC;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * RPG-style conversation: the NPC's line in a box along the bottom of the screen,
@@ -211,6 +213,12 @@ public class NpcDialogueScreen extends Screen implements DialogueSession {
 	@Override
 	public void openInventory() {
 		this.mc.displayScreen(new NpcInventoryScreen(this.player, this.npc, this));
+	}
+
+	@Override
+	public void askForText(String question, String initial, @Nullable String extraLabel, Consumer<String> onDone, @Nullable Runnable onExtra,
+		Runnable onCancel) {
+		this.mc.displayScreen(new TextEntryScreen(this, question, initial, extraLabel, onDone, onExtra, onCancel));
 	}
 
 	@Override

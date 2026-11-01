@@ -14,6 +14,8 @@ import npclaude.combat.NpcFactions;
 import npclaude.entity.EntityNPC;
 import npclaude.family.FamilyRegistry;
 import npclaude.family.Kinship;
+import npclaude.words.WordBook;
+import npclaude.words.WordCategory;
 import npclaude.personality.Surroundings;
 import npclaude.personality.Tastes;
 import npclaude.social.Opinions;
@@ -56,6 +58,7 @@ public final class SpeechFacts {
 		}
 
 		addFamily(npc, listener, context);
+		addTaughtWords(npc, listener, context);
 		context.fact("age", npc.isChild() ? "child" : "adult");
 		context.fact("time", timeOfDay(npc));
 		addSurroundings(npc, context);
@@ -135,6 +138,29 @@ public final class SpeechFacts {
 		UUID listenerId = listener != null ? Opinions.idOf(listener) : null;
 		Kinship kin = listenerId != null ? Kinship.of(family, npc.getUuid(), listenerId) : null;
 		context.fact("listener_kin", kin != null ? kin.id() : "none");
+	}
+
+	/**
+	 * Words players taught it, one of each category it knows, as [taught_food], [taught_greeting] and so on. A
+	 * nickname the listener taught it replaces their name, about half the time.
+	 */
+	private static void addTaughtWords(EntityNPC npc, @Nullable Entity listener, SpeechContext context) {
+		WordBook book = WordBook.get(npc.world);
+		UUID listenerId = listener != null ? Opinions.idOf(listener) : null;
+		for (WordCategory category : WordCategory.values()) {
+			WordBook.TaughtWord word = book.pick(npc.getUuid(), category, listenerId, npc.getRandom());
+			if (word == null) {
+				continue;
+			}
+
+			if (category == WordCategory.NICKNAME) {
+				if (npc.getRandom().nextBoolean()) {
+					context.fact("listener", word.word.singular());
+				}
+			} else {
+				context.word("taught_" + category.id(), word.word);
+			}
+		}
 	}
 
 	/** What the weather, biome and season are, and how the NPC feels about each. */

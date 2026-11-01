@@ -504,9 +504,12 @@ Each word has a **category** that says exactly what it is, which keeps sentences
 | Describing word | text | "That's [describe]." |
 | Activity | as a doing-word phrase ("rock skipping") | "Been [activity] lately?" |
 
+- **How often.** An NPC that likes you at least a little (20+) asks at most once a day, about a quarter of the times you talk to it (twice as often if curious or a chatterbox, half if taciturn), until it knows 15 words. With `/npc limits off` it asks every time.
+- **Spreading.** Each friendly NPC chat (both at 20+) has a 30% chance to pass on a general word the other doesn't know. Everyone remembers who they heard it from.
+- **In speech,** each NPC uses one known word per category in a line, as `[taught_food]`, `[taught_greeting]` and so on. A nickname you taught replaces your name about half the time.
 - **No fading.** Words stay until the player deletes them.
 - **No editing.** A word can only be deleted, never changed.
-- **The word book screen** lists every taught word: category, personal or general, who you taught it to, and how many NPCs know it. Deleting a word removes it from everyone.
+- **The word book screen** lists every taught word: category, personal or general, who you taught it to, and how many NPCs know it. Deleting a word removes it from everyone. For now this is `/npc words` and `/npc words delete <id>`; the screen is still to come.
 - **Per NPC**, a dialogue option ("What words do you know?") lists that NPC's words and where they picked each one up.
 
 ---
