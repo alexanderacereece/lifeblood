@@ -108,6 +108,10 @@ public class Tastes {
 			pull += when(p, Quirk.GLUTTON, 0.3F);
 		}
 
+		if (p.has(Quirk.ANIMAL_LOVER) && (defaults.main() == TasteCategory.GROSS || isAnimalProduct(defaults))) {
+			pull -= 0.25F;
+		}
+
 		if (defaults.is(TasteCategory.MATERIAL)) {
 			pull += work * 0.15F;
 		}
@@ -192,7 +196,13 @@ public class Tastes {
 				case "blood_rain" -> courage * 0.2F - when(p, Quirk.PIOUS, 0.2F) - when(p, Quirk.PARANOID, 0.15F);
 				default -> 0.0F;
 			};
-			case BIOME -> outlook * 0.05F + (Surroundings.base(kind, key) < 0.0F
+			case BIOME -> outlook * 0.05F + switch (key) {
+				// Creepy or cozy, depending on who you ask.
+				case "cave" -> courage * 0.3F - social * 0.15F + when(p, Quirk.CURIOUS, 0.25F) - when(p, Quirk.PARANOID, 0.25F);
+				case "ocean" -> when(p, Quirk.SENTIMENTAL, 0.15F) + when(p, Quirk.ROMANTIC, 0.1F) + humor * 0.1F + when(p, Quirk.ANIMAL_LOVER, 0.1F);
+				case "forest", "birch_forest", "seasonal_forest", "meadow" -> when(p, Quirk.ANIMAL_LOVER, 0.2F) + when(p, Quirk.ZEN, 0.15F);
+				default -> 0.0F;
+			} + (Surroundings.base(kind, key) < 0.0F
 				? when(p, Quirk.CURIOUS, 0.2F) - social * 0.1F - when(p, Quirk.GLUTTON, 0.1F)
 				: social * 0.05F);
 			case SEASON -> switch (key) {
@@ -328,6 +338,11 @@ public class Tastes {
 		z = (z ^ (z >>> 30)) * 0xBF58476D1CE4E5B9L;
 		z = (z ^ (z >>> 27)) * 0x94D049BB133111EBL;
 		return z ^ (z >>> 31);
+	}
+
+	/** Leather, feathers, bones, raw meat: things that came off an animal. */
+	private static boolean isAnimalProduct(ItemDefaults.Default defaults) {
+		return defaults.is(TasteCategory.GROSS) || defaults.animal();
 	}
 
 	private static float when(NpcPersonality personality, Quirk quirk, float amount) {

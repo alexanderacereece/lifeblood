@@ -23,11 +23,19 @@ import net.minecraft.core.item.tool.ItemToolSword;
  */
 public final class ItemDefaults {
 	/** A starting like (-1 to +1), the item's main category, and every category it belongs to. */
-	public record Default(float base, TasteCategory main, Set<TasteCategory> categories, boolean giftable) {
+	public record Default(String name, float base, TasteCategory main, Set<TasteCategory> categories, boolean giftable) {
 		public boolean is(TasteCategory category) {
 			return this.categories.contains(category);
 		}
+
+		/** Came off an animal: leather, feathers, wool, eggs, meat. Animal lovers would rather not. */
+		public boolean animal() {
+			return ANIMAL_PRODUCTS.stream().anyMatch(this.name::startsWith);
+		}
 	}
+
+	private static final List<String> ANIMAL_PRODUCTS = List.of("leather", "feather", "wool", "egg_", "bone", "food_porkchop", "food_venison",
+		"food_fish", "armor_helmet_leather", "armor_chestplate_leather", "armor_leggings_leather", "armor_boots_leather", "saddle");
 
 	/** Exact names, checked first. */
 	private static final Map<String, Rule> EXACT = Map.ofEntries(
@@ -200,7 +208,7 @@ public final class ItemDefaults {
 			categories.add(TasteCategory.VALUABLE);
 		}
 
-		return new Default(base, main, categories, giftable);
+		return new Default(name, base, main, categories, giftable);
 	}
 
 	/** Better materials make better presents. */

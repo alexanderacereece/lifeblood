@@ -65,7 +65,12 @@ public record Word(String singular, String plural, Kind kind) {
 			}
 		}
 
-		return one(name);
+		return isAlreadyPlural(name) ? new Word(name, name, Kind.PLURAL) : one(name);
+	}
+
+	/** "pine leaves", "shears", "ice skates": already plural, so not "leaveses". "Compass" and "glass" aren't. */
+	private static boolean isAlreadyPlural(String name) {
+		return name.endsWith("s") && !name.endsWith("ss") && !name.endsWith("us") && !name.endsWith("is");
 	}
 
 	/** A particular stack: "a compass", "some compasses", "some dirt". */
@@ -73,6 +78,10 @@ public record Word(String singular, String plural, Kind kind) {
 		String name = stack.getDisplayName().toLowerCase(Locale.ROOT);
 		if (ofThing(stack.getItem()).kind() == Kind.MASS) {
 			return mass(name);
+		}
+
+		if (isAlreadyPlural(name)) {
+			return new Word(name, name, Kind.PLURAL);
 		}
 
 		if (stack.stackSize > 1) {

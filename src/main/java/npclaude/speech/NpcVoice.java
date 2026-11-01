@@ -2,6 +2,7 @@ package npclaude.speech;
 
 import com.mojang.nbt.tags.CompoundTag;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -12,6 +13,8 @@ import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.util.helper.MathHelper;
 import npclaude.entity.EntityNPC;
 import npclaude.personality.Quirk;
+import npclaude.personality.Surroundings;
+import npclaude.personality.Tastes;
 import npclaude.personality.TraitAxis;
 import npclaude.social.MemoryType;
 import npclaude.social.Opinions;
@@ -57,6 +60,9 @@ public class NpcVoice {
 	private EntityNPC replyTo;
 	private long replyAt;
 
+	/** Loves and hates the player has heard about; see {@link #isRevealed}. */
+	private final Set<String> revealed = new HashSet<>();
+
 	public NpcVoice(EntityNPC npc) {
 		this.npc = npc;
 	}
@@ -81,6 +87,8 @@ public class NpcVoice {
 		if (line == null) {
 			return null;
 		}
+
+		this.learnFrom(context);
 
 		float catchphraseChance = this.npc.personality.has(Quirk.CHATTERBOX) ? 0.2F : 0.1F;
 		if (CASUAL.contains(event) && !this.style.getCatchphrase().isEmpty() && this.npc.getRandom().nextFloat() < catchphraseChance
@@ -252,11 +260,74 @@ public class NpcVoice {
 		return this.npc.personality.has(Quirk.TACITURN) ? 0.33F : 1.0F;
 	}
 
+	/**
+	 * Whether the player has heard this NPC talk about one of its loves or hates ("favorite_food", "hated_biome"...).
+	 * Until then the profile screen shows a question mark.
+	 */
+	public boolean isRevealed(String topic) {
+		return this.revealed.contains(topic);
+	}
+
+	public void revealAll() {
+		for (String which : new String[] {"favorite_", "hated_"}) {
+			for (String topic : new String[] {"food", "thing", "weather", "biome", "season"}) {
+				this.revealed.add(which + topic);
+			}
+		}
+	}
+
+	public void reveal(String topic) {
+		this.revealed.add(topic);
+	}
+
+	/** Notes which tastes a line gave away, if a player was close enough to hear it. */
+	private void learnFrom(SpeechContext context) {
+		boolean heard = false;
+		for (Player player : this.npc.world.players) {
+			heard |= player.distanceTo(this.npc) <= HEARING_RANGE;
+		}
+
+		if (!heard) {
+			return;
+		}
+
+		Tastes tastes = this.npc.personality.tastes;
+		for (String topic : context.mentioned()) {
+			if (!topic.startsWith("felt:")) {
+				this.revealed.add(topic);
+				continue;
+			}
+
+			// "I love the rain!" while it's raining gives away a favorite only if rain really is the favorite.
+			String key = topic.substring("felt:".length(), topic.length() - "_like".length());
+			for (Surroundings.Kind kind : Surroundings.Kind.values()) {
+				String current = context.fact(kind.id());
+				if (!kind.id().equals(key) || current == null) {
+					continue;
+				}
+
+				if (current.equals(tastes.favorite(kind, true))) {
+					this.revealed.add("favorite_" + kind.id());
+				} else if (current.equals(tastes.favorite(kind, false))) {
+					this.revealed.add("hated_" + kind.id());
+				}
+			}
+		}
+	}
+
 	public CompoundTag save() {
-		return this.style.save();
+		CompoundTag tag = this.style.save();
+		tag.putString("Revealed", String.join(",", this.revealed));
+		return tag;
 	}
 
 	public void load(CompoundTag tag) {
 		this.style.load(tag);
+		this.revealed.clear();
+		for (String topic : tag.getStringOrDefault("Revealed", "").split(",")) {
+			if (!topic.isBlank()) {
+				this.revealed.add(topic.trim());
+			}
+		}
 	}
 }

@@ -32,7 +32,8 @@ public enum Quirk {
 	CURIOUS,
 	JEALOUS,
 	SENTIMENTAL,
-	COMPETITIVE;
+	COMPETITIVE,
+	ANIMAL_LOVER;
 
 	/** The other side of this quirk's pair, or null for a quirk without one. */
 	@Nullable
@@ -102,6 +103,7 @@ public enum Quirk {
 			case JEALOUS -> "minds who you spend time with";
 			case SENTIMENTAL -> "holds on to memories";
 			case COMPETITIVE -> "has to win";
+			case ANIMAL_LOVER -> "has a soft spot for animals";
 		};
 	}
 

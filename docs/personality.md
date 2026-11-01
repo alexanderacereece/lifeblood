@@ -152,6 +152,7 @@ Discrete traits. Most come in opposing pairs, where most NPCs sit in the unmarke
 - **Jealous:** resents friends spending time with others, envies others' wealth and partners. Opinion penalties toward rivals for the same person.
 - **Sentimental:** good memories last longer (×1.5), remembers anniversaries and old favors, brings up the past.
 - **Competitive:** compares themselves to others in work and fights. Friction with other competitive people, but respects whoever beats them.
+- **Animal lover:** upset when someone kills an animal in front of them, and thinks less of whoever did it. Likes forests and meadows, dislikes leather, meat and other animal products.
 
 ### Blacklist
 
@@ -375,6 +376,8 @@ What it drives:
 - **Weather.** Being out in weather they like or hate affects mood (rain lovers enjoy a downpour). When the weather turns, they may remark on it, likelier the stronger they feel.
 - **Places.** Living in a biome they love or hate colors their mood. Walking into a new biome (usually while following someone) may get a remark.
 - **Seasons.** Remarks when the season changes, and smalltalk about it.
+- **Places** include caves (creepy to some, cozy to others) and the ocean (some love the smell of it), besides biomes.
+- **Secret until heard.** The profile screen shows a love or hate as "?" until the player has heard the NPC talk about it, or seen its reaction to being given it.
 - **Speech words:** `[favorite_food]`, `[hated_food]`, `[favorite_thing]` and `[hated_thing]` (the things most their own: what they love or hate more than most people do, so a curious NPC's favorite may be a compass rather than a diamond), `[favorite_weather]`, `[favorite_biome]`, `[favorite_season]` and their hated versions.
 
 ---

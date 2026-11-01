@@ -1,7 +1,9 @@
 package npclaude.speech;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import net.minecraft.core.entity.Entity;
 import npclaude.entity.EntityNPC;
 import npclaude.personality.TraitAxis;
@@ -23,6 +25,11 @@ public class SpeechContext {
 	private final float mood;
 	private final Map<String, String> facts = new HashMap<>();
 	private final Map<String, Word> words = new HashMap<>();
+	/**
+	 * What the chosen lines gave away about the speaker's tastes: topics like "favorite_food", and "felt:weather_like"
+	 * when a line expressed how it feels about the weather (or biome, or season) right now.
+	 */
+	private final Set<String> mentioned = new HashSet<>();
 
 	public SpeechContext(EntityNPC speaker, @Nullable Entity listener, float mood) {
 		this.speaker = speaker;
@@ -57,6 +64,14 @@ public class SpeechContext {
 	@Nullable
 	public Word word(String key) {
 		return this.words.get(key);
+	}
+
+	public void mention(String topic) {
+		this.mentioned.add(topic);
+	}
+
+	public Set<String> mentioned() {
+		return this.mentioned;
 	}
 
 	/**

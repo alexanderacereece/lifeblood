@@ -22,6 +22,8 @@ public enum MemoryType {
 	TAUGHT_ME_A_WORD("taught me a word", 2, 0, 3, 5),
 	INSULTED_ME("insulted me", -8, -3, 4, 5, true),
 	HIT_ME("hit me", -12, -5, 3, 5),
+	/** Only animal lovers keep this one. */
+	KILLED_AN_ANIMAL("killed an animal", -4, 0, 2, 5),
 	BEAT_ME_IN_A_BRAWL("beat me in a brawl", -5, -5, 10, 3, true),
 	FLED_AND_LEFT_ME("fled and left me", -15, 0, 15, 3),
 	LIED_TO_ME("lied to me", -20, 0, 20, 3),
@@ -43,6 +45,7 @@ public enum MemoryType {
 	/** Scaled by how much the NPC likes the biome it's in; refreshed while it stays. */
 	LIKES_IT_HERE("likes it here", 0, 4, 0.1F, 1),
 	HATES_IT_HERE("hates it here", 0, -4, 0.1F, 1),
+	SAW_AN_ANIMAL_DIE("saw an animal die", 0, -3, 0.5F, 3),
 	SAW_A_DEATH("saw a death", 0, -6, 2, 3),
 	A_FRIEND_DIED("a friend died", 0, -20, 10, 3),
 	FAMILY_DIED("family died", 0, -30, 20, 3),

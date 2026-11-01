@@ -3,6 +3,7 @@ package npclaude.client;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.Supplier;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.Screen;
@@ -134,7 +135,7 @@ public class NpcProfileScreen extends Screen {
 			String name = capitalize(quirk.displayName()) + " ";
 			this.drawStringShadow(this.fontRenderer, name, rightColumn, ry, TEXT_COLOR);
 			int nameWidth = this.fontRenderer.stringWidth(name);
-			this.drawStringConstrained(this.fontRenderer, "- " + quirk.blurb(), rightColumn + nameWidth, ry, columnWidth - nameWidth, DIM_COLOR);
+			this.drawStringShadow(this.fontRenderer, this.fit("- " + quirk.blurb(), columnWidth - nameWidth), rightColumn + nameWidth, ry, DIM_COLOR);
 			ry += LINE;
 		}
 
@@ -143,19 +144,19 @@ public class NpcProfileScreen extends Screen {
 		ry += 4;
 		this.drawStringShadow(this.fontRenderer, "Loves", rightColumn, ry, HEADING_COLOR);
 		ry += LINE + 2;
-		ry = this.drawTaste("food", itemName(tastes.favoriteFood()), rightColumn, ry, columnWidth, LOVE_COLOR);
-		ry = this.drawTaste("things", itemName(tastes.favoriteThing()), rightColumn, ry, columnWidth, LOVE_COLOR);
-		ry = this.drawTaste("weather", Surroundings.displayName(tastes.favorite(Surroundings.Kind.WEATHER, true)), rightColumn, ry, columnWidth, LOVE_COLOR);
-		ry = this.drawTaste("place", Surroundings.displayName(tastes.favorite(Surroundings.Kind.BIOME, true)), rightColumn, ry, columnWidth, LOVE_COLOR);
-		ry = this.drawTaste("season", Surroundings.displayName(tastes.favorite(Surroundings.Kind.SEASON, true)), rightColumn, ry, columnWidth, LOVE_COLOR);
+		ry = this.drawTaste("food", this.secret("favorite_food", () -> itemName(tastes.favoriteFood())), rightColumn, ry, columnWidth, LOVE_COLOR);
+		ry = this.drawTaste("things", this.secret("favorite_thing", () -> itemName(tastes.favoriteThing())), rightColumn, ry, columnWidth, LOVE_COLOR);
+		ry = this.drawTaste("weather", this.secret("favorite_weather", () -> Surroundings.displayName(tastes.favorite(Surroundings.Kind.WEATHER, true))), rightColumn, ry, columnWidth, LOVE_COLOR);
+		ry = this.drawTaste("place", this.secret("favorite_biome", () -> Surroundings.displayName(tastes.favorite(Surroundings.Kind.BIOME, true))), rightColumn, ry, columnWidth, LOVE_COLOR);
+		ry = this.drawTaste("season", this.secret("favorite_season", () -> Surroundings.displayName(tastes.favorite(Surroundings.Kind.SEASON, true))), rightColumn, ry, columnWidth, LOVE_COLOR);
 		ry += 4;
 		this.drawStringShadow(this.fontRenderer, "Hates", rightColumn, ry, HEADING_COLOR);
 		ry += LINE + 2;
-		ry = this.drawTaste("food", itemName(tastes.hatedFood()), rightColumn, ry, columnWidth, HATE_COLOR);
-		ry = this.drawTaste("things", itemName(tastes.hatedThing()), rightColumn, ry, columnWidth, HATE_COLOR);
-		ry = this.drawTaste("weather", Surroundings.displayName(tastes.favorite(Surroundings.Kind.WEATHER, false)), rightColumn, ry, columnWidth, HATE_COLOR);
-		ry = this.drawTaste("place", Surroundings.displayName(tastes.favorite(Surroundings.Kind.BIOME, false)), rightColumn, ry, columnWidth, HATE_COLOR);
-		this.drawTaste("season", Surroundings.displayName(tastes.favorite(Surroundings.Kind.SEASON, false)), rightColumn, ry, columnWidth, HATE_COLOR);
+		ry = this.drawTaste("food", this.secret("hated_food", () -> itemName(tastes.hatedFood())), rightColumn, ry, columnWidth, HATE_COLOR);
+		ry = this.drawTaste("things", this.secret("hated_thing", () -> itemName(tastes.hatedThing())), rightColumn, ry, columnWidth, HATE_COLOR);
+		ry = this.drawTaste("weather", this.secret("hated_weather", () -> Surroundings.displayName(tastes.favorite(Surroundings.Kind.WEATHER, false))), rightColumn, ry, columnWidth, HATE_COLOR);
+		ry = this.drawTaste("place", this.secret("hated_biome", () -> Surroundings.displayName(tastes.favorite(Surroundings.Kind.BIOME, false))), rightColumn, ry, columnWidth, HATE_COLOR);
+		this.drawTaste("season", this.secret("hated_season", () -> Surroundings.displayName(tastes.favorite(Surroundings.Kind.SEASON, false))), rightColumn, ry, columnWidth, HATE_COLOR);
 
 		if (y + h + 3 + LINE <= this.height) {
 			this.drawStringCenteredShadow(this.fontRenderer, "Click or press Esc to go back", x + w / 2, y + h + 3, DIM_COLOR);
@@ -191,10 +192,15 @@ public class NpcProfileScreen extends Screen {
 		return towardPole >= TraitTier.LEAN_THRESHOLD ? TEXT_COLOR : DIM_COLOR;
 	}
 
+	/** The answer if the player has heard the NPC mention it, otherwise a question mark. */
+	private String secret(String topic, Supplier<String> answer) {
+		return this.npc.voice.isRevealed(topic) ? answer.get() : "?";
+	}
+
 	private int drawTaste(String label, String value, int x, int y, int width, int color) {
 		this.drawStringShadow(this.fontRenderer, label + ":", x, y, DIM_COLOR);
 		int labelWidth = this.fontRenderer.stringWidth(label + ": ");
-		this.drawStringConstrained(this.fontRenderer, value, x + labelWidth, y, width - labelWidth, color);
+		this.drawStringShadow(this.fontRenderer, this.fit(value, width - labelWidth), x + labelWidth, y, color);
 		return y + LINE;
 	}
 
@@ -204,6 +210,20 @@ public class NpcProfileScreen extends Screen {
 		this.drawRect(x, y + h - 1, x + w, y + h, BORDER_COLOR);
 		this.drawRect(x, y + 1, x + 1, y + h - 1, BORDER_COLOR);
 		this.drawRect(x + w - 1, y + 1, x + w, y + h - 1, BORDER_COLOR);
+	}
+
+	/** Cuts text to fit on one line, ending in "..." if it had to be cut. (The game's own version wraps instead.) */
+	private String fit(String text, int width) {
+		if (this.fontRenderer.stringWidth(text) <= width) {
+			return text;
+		}
+
+		String cut = text;
+		while (!cut.isEmpty() && this.fontRenderer.stringWidth(cut + "...") > width) {
+			cut = cut.substring(0, cut.length() - 1);
+		}
+
+		return cut.trim() + "...";
 	}
 
 	private static float effect(Memory memory, long now) {

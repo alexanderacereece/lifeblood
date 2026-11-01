@@ -66,6 +66,18 @@ public final class NpcGifts {
 			npc.remember(MemoryType.GAVE_ME_A_GIFT, player, 0.4F + Math.max(0.0F, like));
 		}
 
+		// Their reaction to their very favorite (or most hated) gives it away.
+		Tastes tastes = npc.personality.tastes;
+		if (food && gift.getItem() == tastes.favoriteFood()) {
+			npc.voice.reveal("favorite_food");
+		} else if (food && gift.getItem() == tastes.hatedFood()) {
+			npc.voice.reveal("hated_food");
+		} else if (gift.getItem() == tastes.favoriteThing()) {
+			npc.voice.reveal("favorite_thing");
+		} else if (gift.getItem() == tastes.hatedThing()) {
+			npc.voice.reveal("hated_thing");
+		}
+
 		Word word = food ? Word.ofFood(held.getItem()) : Word.ofItem(gift);
 		String line = npc.voice.line("gift", player, context -> context.word("item", word).fact("kind", defaults.main().id())
 			.fact("taste", EntityNPC.tasteOf(like)).fact("rude_gift", rude ? "yes" : "no")

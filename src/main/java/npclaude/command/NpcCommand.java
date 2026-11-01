@@ -73,6 +73,7 @@ import org.joml.Vector3dc;
  * /npc personality <name> randomize            (a whole new personality)
  * /npc quirk <name> add|remove <quirk>
  * /npc likes <name>                            (favorite and hated foods, things, weather, places and seasons)
+ * /npc likes <name> reveal                     (debug: shows them all on the profile, without having to hear about them)
  * /npc like <name> [<-100..100>]               (what they think of the item you're holding, or sets it)
  * /npc like <name> weather|biome|season <key> [<-100..100>]   (e.g. weather storm; shows or sets it)
  * /npc faction list
@@ -374,7 +375,13 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 							return reply(c, npc.nickname + " is no longer " + quirk.displayName() + ".");
 						})))))
 			.then(literal("likes")
-				.then(npcArgument().executes(NpcCommand::showLikes)))
+				.then(npcArgument()
+					.executes(NpcCommand::showLikes)
+					.then(literal("reveal").executes(c -> {
+						EntityNPC npc = findNpc(c);
+						npc.voice.revealAll();
+						return reply(c, npc.nickname + "'s loves and hates now show on their profile.");
+					}))))
 			.then(literal("like")
 				.then(npcArgument()
 					.executes(c -> {

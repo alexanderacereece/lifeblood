@@ -259,6 +259,10 @@ Don't ever give me [hated_thing]. I mean it. {w=0.6}
 Want to know what I hate? [hated_thing.cap]. {w=0.5}
 I could look at [favorite_thing.s] all day. {curious}
 A person can never have too many [favorite_thing.s]. {greedy}
+I love animals. All of them. Even the ones that bite. {animal_lover, w=2}
+Be gentle with the animals, would you? {animal_lover}
+People who hurt animals... I don't trust them. {animal_lover, serious}
+If I could, I'd live in [favorite_biome.the]. I love the smell of it. {w=0.3}
 I've had a rough time lately. {mood=bad}
 Not great. Let's leave it there. {mood=awful}
 I feel wonderful today!      {mood=great}
@@ -469,6 +473,12 @@ Ah, [season_word].           {season_like=love}
 [season_word.cap]...         {season_like=hate}
 Another day in [biome_word.the]. {biome_like=meh}
 Home sweet [biome_word].     {biome_like=love}
+Caves give me the creeps.    {biome=cave, biome_like=hate, w=2}
+I could get used to it down here. {biome=cave, biome_like=love, w=2}
+That sea breeze...           {biome=ocean, biome_like=love, w=2}
+Ugh. The ocean smell's getting into my clothes. {biome=ocean, biome_like=hate, w=2}
+I wonder how the animals are doing. {animal_lover}
+Did you see that little bird? Adorable. {animal_lover, time=day}
 Nothing out here but [biome_word]. {biome_like=hate}
 I wonder where I could find [favorite_thing.a]. {w=0.5}
 I should get myself [favorite_thing.a] one of these days. {w=0.4}
@@ -768,6 +778,27 @@ Look at all these trees.     {biome=birch_forest}
 Wide open country.           {biome=plains}
 Wide open country.           {biome=grasslands}
 Flowers everywhere.          {biome=meadow, w=2}
+It's so dark down here.      {biome=cave, w=2}
+I don't like caves. Things live in caves. {biome=cave, biome_like=dislike, w=4}
+I don't like caves. Things live in caves. {biome=cave, biome_like=hate, w=4}
+Listen to that. Dripping. Echoes. Lovely. {biome=cave, biome_like=love, w=4}
+Ooh, what's down that tunnel? {biome=cave, curious, w=3}
+Something's watching us down here. I know it. {biome=cave, paranoid, w=4}
+Stay close. Caves are no place to get lost. {biome=cave, brave, w=3}
+Can we go back up now? Please? {biome=cave, timid, w=4}
+Cozy. In a damp, dark sort of way. {biome=cave, biome_like=like, lighthearted, w=3}
+Ahh, smell that sea air.     {biome=ocean, biome_like=love, w=4}
+Ahh, smell that sea air.     {biome=ocean, biome_like=like, w=3}
+I hate the smell of the ocean. Salt and fish. {biome=ocean, biome_like=hate, w=4}
+The ocean. All that water.   {biome=ocean, w=2}
+I could watch the waves all day. {biome=ocean, biome_like=love, introvert, w=3}
+The sea always makes me think of the old days. {biome=ocean, sentimental, w=3}
+What's on the other side, do you think? {biome=ocean, curious, w=3}
+I'm not getting in there.    {biome=ocean, timid, w=3}
+So many fish out there.      {biome=ocean, glutton, w=3}
+So peaceful.                 {biome=forest, biome_like=love, w=3}
+Listen to the birds.         {biome=forest, animal_lover, w=3}
+So peaceful.                 {biome=meadow, biome_like=love, w=3}
 Oh, the colors.              {biome=seasonal_forest, w=2}
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -960,4 +991,87 @@ Finally.                     {opinion=disliked, rude}
 Hm.                          {taciturn}
 Already? Aw.                 {extrovert}
 See you, [address].
+
+# ---------------------------------------------------------------------------------------------------------------
+# Followers commenting on what their leader is doing. [listener] is the leader.
+
+== remark_swim ==
+Going for a swim?
+Water's nice, huh?
+I'll just wait here. Nice and dry. {timid, w=2}
+I'll just wait here. Nice and dry. {weather_like=hate, w=0.5}
+Race you across! Just kidding. Unless? {competitive, w=3}
+Ha! Wait for me!             {extrovert, lighthearted, w=3}
+Careful, [listener]. Things live in the water. {paranoid, w=3}
+Don't drown. I'm not carrying you. {rude, w=3}
+Don't drown, all right? I mean it. {opinion=friend, w=3}
+Fishing would be faster, you know. {glutton, w=2}
+I'm not getting wet for you. {lazy, w=2}
+Swimming? In this?           {weather=storm, w=3}
+Bit cold for a swim, isn't it? {weather=snow, w=3}
+Bit cold for a swim, isn't it? {season=winter, w=3}
+
+== remark_high_up ==
+It's hard to breathe up here.
+Long way down.
+Don't look down. Don't look down. {timid, w=3}
+What a view!                 {optimist, w=2}
+What a view!                 {curious, w=2}
+You can see forever from up here. {w=1}
+Closer to the Cube God up here. {pious, w=3}
+One wrong step and that's it for us. {pessimist, w=3}
+I'm not climbing any higher. {lazy, w=2}
+Why are we up here, exactly? {serious}
+Ha! King of the world!       {lighthearted, extrovert, w=3}
+My ears just popped.         {w=1}
+
+== remark_leader_hurt ==
+You're hurt, [listener].
+You don't look so good.
+[listener], you're bleeding! {timid, w=3}
+Get behind me, [listener].   {brave, w=3}
+Eat something, would you? You look terrible. {glutton, w=3}
+You look awful. No offense. {rude, w=2}
+You look awful. Some offense. {rude+, w=2}
+Hang in there, [listener]!   {opinion=friend, w=3}
+Don't you dare die on me, [listener]. {opinion=close_friend, w=4}
+Cube God, watch over [listener]. {pious, w=3}
+Maybe we should head home.   {pessimist, w=2}
+Bloody hell, [listener], you're a mess. {crude, w=3}
+
+== remark_leader_found ==
+Ooh, [item]!
+Nice find.
+Now that's a find.
+[item.cap]! Can I have some? {greedy, w=4}
+[item.cap]. Remember who carried your stuff. {greedy, w=4}
+You're rich! Well. Richer.   {lighthearted, w=3}
+Don't spend it all at once.  {pessimist, w=2}
+Good for you, [listener]. Really. {generous, w=3}
+Good for you, [listener]. Really. {humble, w=3}
+I'd have found it first if you'd let me lead. {competitive, w=4}
+I'd have found it first if you'd let me lead. {proud, w=3}
+Better hide that before someone sees. {paranoid, w=4}
+Pretty, I suppose.           {taste=meh, w=3}
+[item.cap]! I love [item]!   {taste=love, w=3}
+Is that... [item.a]? [item.cap]! My favorite! {is_favorite=yes, w=8}
+[listener], is that for me? Please say it's for me. {is_favorite=yes, w=6}
+Ha! Jackpot!                 {extrovert, w=2}
+Hell yes!                    {crude, w=3}
+
+== animal_killed ==
+Oh. Poor thing.
+Dinner!                      {glutton, w=4}
+Mm. [animal] tonight.        {glutton, w=3}
+Nice shot.                   {brave}
+Clean kill.                  {serious}
+Was that necessary?          {forgiving}
+Oh, the poor [animal].       {timid}
+NO! Why would you do that?!  {animal_lover, w=10}
+You monster. It never hurt anyone. {animal_lover, rude, w=10}
+That poor [animal]... how could you, [listener]? {animal_lover, w=10}
+I'll pray for that [animal]. And for you. {animal_lover, pious, w=10}
+Please don't do that again. Please. {animal_lover, polite, w=10}
+You murderer!                {animal_lover, hothead, w=10}
+Nooo... little [animal]...   {animal_lover, sentimental, w=10}
 

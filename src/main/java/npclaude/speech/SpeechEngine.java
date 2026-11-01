@@ -77,6 +77,13 @@ public final class SpeechEngine {
 				Matcher topics = TOPIC.matcher(line.text());
 				while (topics.find()) {
 					used.put("@" + topics.group(1), now);
+					context.mention(topics.group(1));
+				}
+
+				for (Condition condition : line.conditions()) {
+					if (condition instanceof Condition.Fact fact && !fact.negated() && fact.key().endsWith("_like")) {
+						context.mention("felt:" + fact.key());
+					}
 				}
 
 				return text;

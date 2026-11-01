@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import net.minecraft.core.block.material.Materials;
 import net.minecraft.core.util.helper.MathHelper;
 import net.minecraft.core.world.World;
 import net.minecraft.core.world.biome.Biome;
@@ -32,7 +33,8 @@ public final class Surroundings {
 		"shrubland", 0.1F, "rainforest", 0.1F, "swamp", -0.25F, "muddy_swamp", -0.35F, "desert", -0.1F, "outback", -0.1F,
 		"grassy_outback", 0.0F, "caatinga", 0.0F, "caatinga_plains", 0.05F, "taiga", 0.05F, "boreal_forest", 0.1F, "tundra", -0.15F,
 		"glacier", -0.3F, "retro", 0.1F, "hell", -0.6F, "crag", -0.5F, "volcanic_islands", -0.5F, "sulfur_pools", -0.6F,
-		"crystal_plains", -0.2F, "crystal_forest", -0.2F, "old_world", -0.3F, "old_world_desert", -0.4F, "shelf", -0.4F, "drift", -0.2F);
+		"crystal_plains", -0.2F, "crystal_forest", -0.2F, "old_world", -0.3F, "old_world_desert", -0.4F, "shelf", -0.4F, "drift", -0.2F,
+		"cave", -0.15F, "ocean", 0.15F);
 	public static final Map<String, Float> SEASONS = ordered("spring", 0.25F, "summer", 0.15F, "fall", 0.15F, "winter", -0.1F);
 
 	/** Biome names that read as plural: "the plains are...". */
@@ -80,6 +82,46 @@ public final class Surroundings {
 		}
 
 		return "clear";
+	}
+
+	/** Below this many blocks under sea level with no sky overhead counts as a cave. */
+	private static final int CAVE_DEPTH = 6;
+	private static final int OCEAN_SAMPLE_RADIUS = 10;
+	private static final int OCEAN_SAMPLES = 12;
+
+	/**
+	 * Where someone is, as far as feelings go: "cave" underground, "ocean" by a big stretch of open water, otherwise
+	 * the biome.
+	 */
+	@Nullable
+	public static String placeAt(World world, double x, double y, double z) {
+		int seaLevel = world.getWorldType().getOceanY();
+		TilePos head = new TilePos(MathHelper.floor(x), MathHelper.floor(y + 1.5), MathHelper.floor(z));
+		boolean sky = world.canBlockSeeSky(head);
+		if (!sky && y < seaLevel - CAVE_DEPTH) {
+			return "cave";
+		}
+
+		if (sky && y > seaLevel - 4 && y < seaLevel + 12 && isByOpenWater(world, x, z, seaLevel)) {
+			return "ocean";
+		}
+
+		return biomeAt(world, x, y, z);
+	}
+
+	/** Most of a ring around the spot is water at sea level. */
+	private static boolean isByOpenWater(World world, double x, double z, int seaLevel) {
+		int water = 0;
+		for (int i = 0; i < OCEAN_SAMPLES; i++) {
+			double angle = Math.PI * 2.0 * i / OCEAN_SAMPLES;
+			TilePos pos = new TilePos(MathHelper.floor(x + Math.cos(angle) * OCEAN_SAMPLE_RADIUS), seaLevel - 1,
+				MathHelper.floor(z + Math.sin(angle) * OCEAN_SAMPLE_RADIUS));
+			if (world.isBlockLoaded(pos) && world.getBlockMaterial(pos) == Materials.WATER) {
+				water++;
+			}
+		}
+
+		return water >= OCEAN_SAMPLES * 3 / 4;
 	}
 
 	@Nullable

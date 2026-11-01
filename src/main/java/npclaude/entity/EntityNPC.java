@@ -1,9 +1,12 @@
 package npclaude.entity;
 
 import com.mojang.nbt.tags.CompoundTag;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
+import java.util.function.Consumer;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.IArmorWearing;
 import net.minecraft.core.entity.IItemHolding;
@@ -13,6 +16,7 @@ import net.minecraft.core.entity.monster.MobSlime;
 import net.minecraft.core.entity.projectile.Projectile;
 import net.minecraft.core.enums.Difficulty;
 import net.minecraft.core.enums.HumanArmorShape;
+import net.minecraft.core.item.Item;
 import net.minecraft.core.item.ItemBow;
 import net.minecraft.core.item.ItemFood;
 import net.minecraft.core.item.ItemSoup;
@@ -37,7 +41,9 @@ import npclaude.dialogue.NpcDialogue;
 import npclaude.interaction.NpcInteractions;
 import npclaude.inventory.NpcInventory;
 import npclaude.perf.NpcProfiler;
+import npclaude.personality.ItemDefaults;
 import npclaude.personality.Surroundings;
+import npclaude.personality.TasteCategory;
 import npclaude.personality.Tastes;
 import npclaude.personality.NpcPersonality;
 import npclaude.personality.Quirk;
@@ -46,6 +52,7 @@ import npclaude.social.MemoryType;
 import npclaude.social.NpcMemories;
 import npclaude.social.Opinions;
 import npclaude.speech.NpcVoice;
+import npclaude.speech.SpeechContext;
 import npclaude.speech.Word;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -96,6 +103,10 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private static final int FOLLOW_CHECK_INTERVAL = 100;
 	/** A follower whose opinion of its leader sinks this low leaves. */
 	private static final float QUIT_FOLLOWING_OPINION = -15.0F;
+	/** How often a follower looks at what its leader is up to (2 seconds). */
+	private static final int LEADER_WATCH_INTERVAL = 40;
+	/** This far above sea level, the air feels thin. */
+	private static final int HIGH_UP_ABOVE_SEA = 70;
 	/** At least this long between "not now, I'm fighting" lines when clicked mid-fight (1.5 seconds). */
 	private static final int REFUSAL_COOLDOWN = 30;
 	/** At least this long between remarks about a new biome, so walking along a border doesn't set it off (2 minutes). */
@@ -129,6 +140,11 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private int pendingRemarkTick;
 	private int lastBiomeRemarkTick = -BIOME_REMARK_COOLDOWN;
 	private int lastRefusalTick = -REFUSAL_COOLDOWN;
+	/** When each kind of remark about the leader can next be made, by event. */
+	private final Map<String, Integer> remarkReady = new HashMap<>();
+	/** How many valuables (and of this NPC's favorite thing) its leader carried at the last look; null before the first. */
+	@Nullable
+	private Map<Item, Integer> leaderValuables;
 	private HealthMode healthMode = HealthMode.MORTAL;
 	/** Ticks left lying down after a would-be killing blow; 0 when standing. */
 	private int downedTicks;
@@ -310,6 +326,10 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 			this.reconsiderFollowing();
 		}
 
+		if (offset % LEADER_WATCH_INTERVAL == 0) {
+			this.watchLeader();
+		}
+
 		if (offset % SURROUNDINGS_MOOD_INTERVAL == 0) {
 			this.feelSurroundings();
 		}
@@ -333,7 +353,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	 */
 	private void noticeSurroundings() {
 		String weather = Surroundings.weatherAt(this.world, this.x, this.y + this.getHeadHeight(), this.z);
-		String biome = Surroundings.biomeAt(this.world, this.x, this.y, this.z);
+		String biome = Surroundings.placeAt(this.world, this.x, this.y, this.z);
 		String season = Surroundings.seasonOf(this.world);
 		if (this.lastWeather != null && !weather.equals(this.lastWeather)) {
 			this.considerRemark("weather_change", Surroundings.Kind.WEATHER, weather, 300);
@@ -370,7 +390,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 			}
 		}
 
-		String biome = Surroundings.biomeAt(this.world, this.x, this.y, this.z);
+		String biome = Surroundings.placeAt(this.world, this.x, this.y, this.z);
 		if (biome != null) {
 			float like = this.personality.tastes.like(Surroundings.Kind.BIOME, biome);
 			if (like >= 0.3F) {
@@ -730,6 +750,72 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	/** Goes back to wandering around home. */
 	public void stopFollowing() {
 		this.brain.set(new WanderBehavior());
+	}
+
+	/**
+	 * A follower keeps an eye on its leader and comments now and then: going for a swim, climbing somewhere the air
+	 * is thin, getting badly hurt, or picking up something valuable (or something this NPC loves).
+	 */
+	private void watchLeader() {
+		Player leader = this.getLeader();
+		if (leader == null) {
+			this.leaderValuables = null;
+			return;
+		}
+
+		if (this.isBusy()) {
+			return;
+		}
+
+		if (leader.isInWater()) {
+			this.remarkOnLeader("remark_swim", leader, 3000, 0.6F, null);
+		} else if (leader.y > this.world.getWorldType().getOceanY() + HIGH_UP_ABOVE_SEA) {
+			this.remarkOnLeader("remark_high_up", leader, 6000, 0.6F, null);
+		}
+
+		if (leader.getHealth() > 0 && leader.getHealth() < leader.getMaxHealth() * RESCUE_HEALTH) {
+			this.remarkOnLeader("remark_leader_hurt", leader, 1200, 0.8F, null);
+		}
+
+		Map<Item, Integer> valuables = this.countValuables(leader);
+		if (this.leaderValuables != null) {
+			for (Map.Entry<Item, Integer> entry : valuables.entrySet()) {
+				if (entry.getValue() > this.leaderValuables.getOrDefault(entry.getKey(), 0)) {
+					Item item = entry.getKey();
+					float like = this.personality.tastes.like(item);
+					boolean favorite = item == this.personality.tastes.favoriteThing();
+					this.remarkOnLeader("remark_leader_found", leader, 600, favorite ? 1.0F : 0.7F, context -> context
+						.word("item", Word.ofThing(item)).fact("taste", tasteOf(like)).fact("is_favorite", favorite ? "yes" : "no"));
+					break;
+				}
+			}
+		}
+
+		this.leaderValuables = valuables;
+	}
+
+	private Map<Item, Integer> countValuables(Player player) {
+		Map<Item, Integer> counts = new HashMap<>();
+		Item favorite = this.personality.tastes.favoriteThing();
+		for (ItemStack stack : player.inventory.mainInventory) {
+			if (stack != null && (ItemDefaults.of(stack.getItem()).is(TasteCategory.VALUABLE) || stack.getItem() == favorite)) {
+				counts.merge(stack.getItem(), stack.stackSize, Integer::sum);
+			}
+		}
+
+		return counts;
+	}
+
+	/** Says something about the leader, if this kind of remark isn't on cooldown and the chance comes up. */
+	private void remarkOnLeader(String event, Player leader, int cooldown, float chance, @Nullable Consumer<SpeechContext> extras) {
+		if (this.tickCount < this.remarkReady.getOrDefault(event, 0)) {
+			return;
+		}
+
+		this.remarkReady.put(event, this.tickCount + cooldown);
+		if (this.random.nextFloat() < chance) {
+			this.voice.bark(event, leader, extras, false);
+		}
 	}
 
 	/** A follower that's fallen out with its leader says so and leaves. */

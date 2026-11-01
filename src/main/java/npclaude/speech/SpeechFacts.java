@@ -122,7 +122,7 @@ public final class SpeechFacts {
 		context.word("weather_word", surroundingsWord(weather));
 		context.fact("outside", outside ? "yes" : "no");
 		context.fact("wet", isRaining(npc) && !weather.equals("clear") ? "yes" : "no");
-		String biome = Surroundings.biomeAt(npc.world, npc.x, npc.y, npc.z);
+		String biome = Surroundings.placeAt(npc.world, npc.x, npc.y, npc.z);
 		if (biome != null) {
 			context.fact("biome", biome);
 			context.fact("biome_like", EntityNPC.tasteOf(tastes.like(Surroundings.Kind.BIOME, biome)));
