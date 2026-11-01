@@ -8,6 +8,7 @@ import net.minecraft.core.util.helper.MathHelper;
 import npclaude.ai.NpcBehavior;
 import npclaude.entity.EntityNPC;
 import npclaude.personality.TraitAxis;
+import npclaude.social.SocialEvents;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -75,6 +76,12 @@ public class CombatBehavior implements NpcBehavior {
 		return ID;
 	}
 
+	/** Who the NPC is fighting (or running from) right now, if anyone. */
+	@Nullable
+	public Mob getCurrentTarget() {
+		return this.currentTarget;
+	}
+
 	@Override
 	public int getPriority() {
 		return PRIORITY;
@@ -114,6 +121,10 @@ public class CombatBehavior implements NpcBehavior {
 			return;
 		}
 
+		if (this.currentTarget == null) {
+			npc.voice.bark("fight", target, context -> context.word("enemy", SocialEvents.wordFor(target)), false);
+		}
+
 		this.currentTarget = target;
 
 		double courage = courageOf(npc);
@@ -122,6 +133,9 @@ public class CombatBehavior implements NpcBehavior {
 		if (afraid != this.fleeing) {
 			this.fleeing = afraid;
 			this.repathCooldown = 0;
+			if (afraid) {
+				npc.voice.bark("flee", target, context -> context.word("enemy", SocialEvents.wordFor(target)), false);
+			}
 		}
 
 		if (this.fleeing) {

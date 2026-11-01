@@ -3,6 +3,7 @@ package npclaude.entity;
 import com.mojang.nbt.tags.CompoundTag;
 import java.util.List;
 import java.util.Random;
+import java.util.UUID;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.IArmorWearing;
 import net.minecraft.core.entity.IItemHolding;
@@ -26,6 +27,7 @@ import npclaude.ai.behavior.FollowPlayerBehavior;
 import npclaude.ai.behavior.RecoverBehavior;
 import npclaude.combat.CombatBehavior;
 import npclaude.combat.CombatStyle;
+import npclaude.combat.FactionRelation;
 import npclaude.combat.MonsterContact;
 import npclaude.combat.NpcFactions;
 import npclaude.combat.NpcRelations;
@@ -33,7 +35,15 @@ import npclaude.dialogue.NpcDialogue;
 import npclaude.interaction.NpcInteractions;
 import npclaude.inventory.NpcInventory;
 import npclaude.perf.NpcProfiler;
+import npclaude.personality.FoodPreferences;
 import npclaude.personality.NpcPersonality;
+import npclaude.personality.Quirk;
+import npclaude.social.MemoryType;
+import npclaude.social.NpcMemories;
+import npclaude.social.Opinions;
+import npclaude.speech.NpcVoice;
+import npclaude.speech.SpeechFacts;
+import npclaude.speech.Word;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.primitives.AABBd;
@@ -71,13 +81,27 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private static final int RECOVERY_DURATION = 6000;
 	private static final byte DOWNED_ON_BACK = 1;
 	private static final byte DOWNED_ON_FRONT = 2;
+	/** Below this share of health, someone who kills its attacker has saved its life (if it lives a while longer). */
+	private static final float RESCUE_HEALTH = 0.3F;
+	/** How long an NPC must survive after being rescued for it to count (10 seconds). */
+	private static final int RESCUE_CONFIRM_TICKS = 200;
+	private static final int RAIN_CHECK_INTERVAL = 600;
+	private static final int MEMORY_PRUNE_INTERVAL = 1200;
 
 	public final NpcBrain brain = new NpcBrain(this);
 	public final NpcNavigator navigator = new NpcNavigator(this);
 	public final NpcInventory inventory = new NpcInventory(this);
 	public final NpcPersonality personality = new NpcPersonality();
-	/** Personal standing with individual players, separate from faction relations. */
+	/** Debug overrides of how the NPC regards individual players, set by /npc relation; they beat opinions and factions. */
 	public final NpcRelations relations = new NpcRelations();
+	public final NpcMemories memories = new NpcMemories();
+	public final NpcVoice voice = new NpcVoice(this);
+	/** Who this NPC is, for others' memories of it; kept for life. */
+	private UUID uuid = UUID.randomUUID();
+	/** Someone who just killed what was about to kill this NPC; becomes "saved my life" if it survives a while. */
+	@Nullable
+	private Entity rescuer;
+	private int rescueTick;
 	private HealthMode healthMode = HealthMode.MORTAL;
 	/** Ticks left lying down after a would-be killing blow; 0 when standing. */
 	private int downedTicks;
@@ -232,6 +256,72 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		} else if (this.tickCount % EAT_CHECK_INTERVAL == 0) {
 			this.startEating();
 		}
+
+		if (!this.world.isClientSide) {
+			this.socialUpdate();
+		}
+	}
+
+	/** Speaking up, confirming rescues, and noticing the weather. */
+	private void socialUpdate() {
+		this.voice.tick();
+		if (this.rescuer != null && this.tickCount - this.rescueTick >= RESCUE_CONFIRM_TICKS) {
+			Entity saviour = this.rescuer;
+			this.rescuer = null;
+			if (this.isAlive() && !saviour.removed) {
+				this.remember(MemoryType.SAVED_MY_LIFE, saviour, 1.0F);
+				this.voice.bark("thanks_saved", saviour, null, true);
+			}
+		}
+
+		int offset = this.tickCount + this.id;
+		if (offset % RAIN_CHECK_INTERVAL == 0 && SpeechFacts.isRaining(this)) {
+			this.remember(MemoryType.GOT_RAINED_ON, null, 1.0F);
+		}
+
+		if (offset % MEMORY_PRUNE_INTERVAL == 0) {
+			this.memories.prune(this.world.getWorldTime());
+		}
+	}
+
+	// Social life
+
+	public UUID getUuid() {
+		return this.uuid;
+	}
+
+	/**
+	 * Remembers something, about someone or (for mood-only memories) about nothing in particular.
+	 * Scale multiplies its effects, e.g. by how much a food is liked.
+	 */
+	public void remember(MemoryType type, @Nullable Entity subject, float scale) {
+		if (this.world.isClientSide) {
+			return;
+		}
+
+		UUID id = subject != null ? Opinions.idOf(subject) : null;
+		if (type.isAboutSomeone() && id == null) {
+			return;
+		}
+
+		boolean bond = subject != null && (this.faction != null && this.faction.equals(NpcFactions.affiliation(this.world, subject))
+			|| Opinions.of(this, subject) >= 50.0F);
+		this.memories.add(type, id, subject != null ? Opinions.nameOf(subject) : "", scale, this.personality, bond, this.world.getWorldTime());
+	}
+
+	/** Someone killed whatever was attacking this badly hurt NPC; if it lives another ten seconds, they saved its life. */
+	public void noticeRescue(Entity rescuer) {
+		this.rescuer = rescuer;
+		this.rescueTick = this.tickCount;
+	}
+
+	public boolean isBadlyHurt() {
+		return this.getHealth() < this.getMaxHealth() * RESCUE_HEALTH;
+	}
+
+	/** Too occupied to start a conversation: fighting, talking to someone, or lying on the ground. */
+	public boolean isBusy() {
+		return this.talkingTo != null || this.isDowned() || this.brain.getActive() instanceof CombatBehavior;
 	}
 
 	/** The player's rule for eating: only while health plus the healing still queued from earlier food is below max. */
@@ -265,7 +355,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		float bestLike = Float.NEGATIVE_INFINITY;
 		for (int slot = 0; slot < this.inventory.getContainerSize(); slot++) {
 			ItemStack stack = this.inventory.getItem(slot);
-			if (stack != null && stack.getItem() instanceof ItemFood) {
+			if (stack != null && FoodPreferences.isFood(stack.getItem()) && ((ItemFood) stack.getItem()).getHealAmount(stack) > 0) {
 				float like = this.personality.food.like(stack.getItem());
 				if (like > bestLike) {
 					best = slot;
@@ -277,11 +367,40 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		return best;
 	}
 
+	/** Good food lifts the mood and bad food sours it, twice as much for gluttons; sometimes the NPC says so. */
+	private void reactToFood(ItemFood food) {
+		float like = this.personality.food.like(food);
+		float strength = Math.abs(like) * (this.personality.has(Quirk.GLUTTON) ? 2.0F : 1.0F);
+		if (like >= 0.2F) {
+			this.remember(MemoryType.ATE_FOOD_I_LIKE, null, strength);
+		} else if (like <= -0.2F) {
+			this.remember(MemoryType.ATE_FOOD_I_HATE, null, strength);
+		}
+
+		if (this.random.nextFloat() < 0.25F) {
+			this.voice.bark("eat", null, context -> context.word("food", Word.ofFood(food)).fact("taste", tasteOf(like)), false);
+		}
+	}
+
+	/** How a liking sounds in speech files: love, like, meh, dislike or hate. */
+	public static String tasteOf(float like) {
+		if (like >= 0.6F) {
+			return "love";
+		} else if (like >= 0.2F) {
+			return "like";
+		} else if (like > -0.2F) {
+			return "meh";
+		}
+
+		return like > -0.6F ? "dislike" : "hate";
+	}
+
 	/** Eats one of the held food (soup leaves its bowl behind), then switches back to what was held before. */
 	private void finishEating() {
 		ItemStack stack = this.getHeldItem();
 		if (stack != null && stack.getItem() instanceof ItemFood food && this.wantsFood() && stack.consumeItem(null)) {
 			this.eatFood(stack);
+			this.reactToFood(food);
 			this.world.playSoundAtEntity(null, this, food.getTicksPerHeal(stack) >= 10 ? "random.bite_extended" : "random.bite",
 				0.5F + (this.random.nextFloat() - this.random.nextFloat()) * 0.1F, 1.1F + (this.random.nextFloat() - this.random.nextFloat()) * 0.1F);
 			if (stack.stackSize <= 0) {
@@ -331,7 +450,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 
 	/** The conversation offered to this player when they right-click the NPC. */
 	public NpcDialogue getDialogue(Player player) {
-		return NpcDialogue.placeholder(this);
+		return NpcDialogue.main(this, player);
 	}
 
 	@Nullable
@@ -549,6 +668,9 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		this.eatTicks = 0;
 		this.eatReturnSlot = -1;
 		this.remainingFireTicks = 0;
+		this.rescuer = null;
+		this.remember(MemoryType.NEARLY_DIED, null, 1.0F);
+		this.voice.bark("downed", null, null, true);
 	}
 
 	/**
@@ -583,6 +705,10 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		this.entityData.set(DATA_DOWNED, (byte) 0);
 		if (this.isInLava() || this.isInWall() || this.isUnderAcidOrWater() || this.y < 0.0) {
 			this.teleportTo(this.homeX, this.homeY, this.homeZ);
+		}
+
+		if (!this.world.isClientSide && this.isRecovering()) {
+			this.voice.bark("get_up", null, null, true);
 		}
 	}
 
@@ -687,6 +813,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 			return false;
 		}
 
+		boolean wasBadlyHurt = this.isBadlyHurt();
 		this.incomingDamageSource = attacker;
 		boolean hurt;
 		try {
@@ -705,9 +832,27 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		if (source != null && source != this) {
 			this.lastAttacker = source;
 			this.lastAttackedTick = this.tickCount;
+			this.reactToHit(source);
+		}
+
+		if (!wasBadlyHurt && this.isBadlyHurt() && !this.isDowned()) {
+			this.voice.bark("low_health", null, null, true);
 		}
 
 		return true;
+	}
+
+	/** Being hit by a person is remembered; being hit by someone it isn't fighting gets a complaint. */
+	private void reactToHit(Entity source) {
+		if (!(source instanceof Player) && !(source instanceof EntityNPC)) {
+			return;
+		}
+
+		boolean wasHostile = NpcFactions.regard(this, source) == FactionRelation.HOSTILE;
+		this.remember(MemoryType.HIT_ME, source, 1.0F);
+		if (!wasHostile && !(this.brain.getActive() instanceof CombatBehavior)) {
+			this.voice.bark("hit_by_friend", source, null, false);
+		}
 	}
 
 	/** Armor reduces damage and wears down exactly as it does for players. */
@@ -776,6 +921,9 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		npc.putList("Behaviors", this.brain.save());
 		npc.putList("Inventory", this.inventory.save());
 		npc.putList("PlayerRelations", this.relations.save());
+		npc.putString("Uuid", this.uuid.toString());
+		npc.putList("Memories", this.memories.save());
+		npc.putCompound("Voice", this.voice.save());
 		tag.putCompound(SAVE_KEY, npc);
 	}
 
@@ -819,6 +967,22 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 
 		if (npc.containsKey("PlayerRelations")) {
 			this.relations.load(npc.getList("PlayerRelations"));
+		}
+
+		try {
+			if (npc.containsKey("Uuid")) {
+				this.uuid = UUID.fromString(npc.getString("Uuid"));
+			}
+		} catch (IllegalArgumentException ignored) {
+			// Keep the fresh id rather than fail to load.
+		}
+
+		if (npc.containsKey("Memories")) {
+			this.memories.load(npc.getList("Memories"));
+		}
+
+		if (npc.containsKey("Voice")) {
+			this.voice.load(npc.getCompound("Voice"));
 		}
 	}
 }

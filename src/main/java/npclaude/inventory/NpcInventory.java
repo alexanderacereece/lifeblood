@@ -116,6 +116,18 @@ public class NpcInventory implements Container {
 		return -1;
 	}
 
+	/** Puts a whole stack into the first empty pack slot; returns false (and changes nothing) if the pack is full. */
+	public boolean addToPack(ItemStack stack) {
+		for (int i = 0; i < PACK_SIZE; i++) {
+			if (this.items[PACK_START + i] == null) {
+				this.items[PACK_START + i] = stack;
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	/** Swaps an item into the hand, putting what was held in its place, like switching hotbar slots. */
 	public void swapWithHand(int slot) {
 		if (slot != HAND_SLOT) {

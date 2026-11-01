@@ -1,0 +1,474 @@
+# NPClaude speech: the first writing pass.
+#
+# Each "== name ==" is a symbol; each line under it is one way to say it. [name] fills in another symbol, a fact
+# or a word. Braces at the end hold conditions: a pole (polite, polite+ for strongly), a quirk (glutton), a fact
+# (time=night), any of them negated with "!", and w=2 to make a line more likely. Lines with more conditions are
+# picked more often when they fit, so every symbol keeps plain lines as a fallback.
+#
+# Facts: name, listener, listener_type (player/npc), opinion (enemy/disliked/neutral/friendly/friend/close_friend),
+# leader (yes/no), time (morning/day/evening/night), weather (rain/clear), mood (awful/bad/okay/good/great),
+# health (fine/hurt/low), recovering (yes/no), has_faction, has_enemy, address, catchphrase.
+# Words: favorite_food, hated_food, faction, enemy_faction, and per event: enemy, food, item.
+# Word modifiers: .a .the .s .it .is .this .cap
+
+# ---------------------------------------------------------------------------------------------------------------
+# Speech style pools: rolled once per NPC.
+
+== style_address ==
+friend
+friend                       {polite}
+traveler                     {proper}
+stranger                     {introvert}
+pal                          {lighthearted}
+mate                         {crude}
+bud                          {crude, lighthearted}
+chief                        {lighthearted}
+my friend                    {proper, polite}
+kid                          {rude}
+buddy                        {extrovert}
+
+== style_catchphrase ==
+Cube God willing.            {pious, w=3}
+Cube God keep you.           {pious, w=2}
+Mark my words.               {proud}
+Just saying.
+Don't quote me on that.      {liar}
+Honest truth.                {honest}
+Could be worse.              {pessimist}
+Could be better, too.        {pessimist}
+Onward!                      {optimist}
+Chin up.                     {optimist}
+Ha!                          {lighthearted}
+Heh.                         {lighthearted}
+Anyway.
+Funny old world.
+Such is life.                {serious}
+No rest for the wicked.      {hardworking}
+Let's not rush things.       {lazy}
+Hm.                          {introvert}
+Strange times.               {curious}
+Watch your back.             {paranoid}
+Easy does it.                {zen}
+
+== style_filler ==
+y'know                       {!proper}
+I reckon                     {!proper+}
+I suppose
+eh                           {lighthearted}
+mind you                     {proper}
+honestly                     {!liar}
+truth be told
+see                          {crude}
+
+# ---------------------------------------------------------------------------------------------------------------
+# Building blocks
+
+== hello ==
+Hello.
+Hey.
+Hi there.
+Oh, hey.
+Hey there!                   {extrovert}
+Oh! Hi!                      {extrovert+}
+Greetings.                   {proper}
+Good day.                    {proper, polite}
+Yo.                          {crude, lighthearted}
+Oi.                          {crude+}
+Hey, you.                    {rude}
+Ugh, you.                    {rude+}
+Morning.                     {time=morning}
+Good morning!                {time=morning, optimist}
+Evening.                     {time=evening}
+You're up late.              {time=night}
+...Hm.                       {introvert+}
+
+== hello_named ==
+[hello]
+Hey, [listener].
+[listener]!                  {extrovert}
+Oh, [listener]. Hello.       {polite}
+Ah, [listener]. Good to see you. {proper, polite}
+Hey, [address].
+[listener]. What now?        {rude}
+Look who it is.              {lighthearted}
+Look who it is. [listener]!  {lighthearted, opinion=friend}
+
+== exclaim ==
+Whoa!
+Hey!
+Oh no!                       {timid}
+Ha!                          {brave}
+By the Cube!                 {pious}
+Blast!                       {!proper}
+Rats!                        {lighthearted}
+Good grief!                  {proper}
+
+# ---------------------------------------------------------------------------------------------------------------
+# Greetings: a player walks up.
+
+== greet ==
+[hello_named]
+[hello_named] [smalltalk_short] {w=0.6}
+[hello_named] Still in one piece, I see. {opinion=friend}
+[listener]! There you are.   {opinion=close_friend, w=2}
+Oh, it's you. Good.          {opinion=friend}
+...                          {opinion=disliked}
+Oh. It's you.                {opinion=disliked}
+Keep walking.                {opinion=disliked, rude}
+What do you want?            {opinion=disliked, rude+}
+Hm. Hello.                   {opinion=disliked, polite}
+Hey, [listener]. Coming along? {leader=yes}
+Right behind you.            {leader=yes}
+Mm.                          {taciturn, w=2}
+[hello] Lovely weather for ducks. {weather=rain, lighthearted}
+[hello] Miserable weather.   {weather=rain, pessimist}
+[hello] Some rain, huh?      {weather=rain}
+Oh, hey. Didn't see you there. {timid}
+[hello] Need something?      {polite}
+[hello] Make it quick.       {rude}
+[hello] Make it quick, I'm working. {hardworking, rude}
+Oh good, an excuse to stop working. {lazy, lighthearted}
+
+== smalltalk_short ==
+How's it going?
+Keep safe out there.
+Nice day.                    {weather=clear, time=day}
+Rough day.                   {mood=bad}
+What a day!                  {mood=great}
+
+# ---------------------------------------------------------------------------------------------------------------
+# Conversations
+
+== dialogue_open ==
+[hello_named]
+Yes?
+What can I do for you?       {polite}
+What is it?                  {!polite}
+What do you want?            {rude}
+Hm?                          {introvert}
+Oh! Hi! What's up?           {extrovert+}
+Mm.                          {taciturn}
+Talk fast.                   {opinion=disliked}
+What now?                    {opinion=disliked, rude}
+Hey, [listener]. What's on your mind? {opinion=friend}
+[listener]! Always good to see you. {opinion=close_friend}
+Not now... I'm still sore all over. {recovering=yes}
+Make it quick, I've got work to do. {hardworking}
+Oh, thank the Cube. A break.  {lazy, pious}
+Oh, thank goodness. A break.  {lazy}
+
+== smalltalk ==
+Not much to say, really.
+Same as always.
+Keeping busy.                {hardworking}
+Trying not to get too busy.  {lazy}
+I've been thinking about [favorite_food.s] all day. {glutton, w=2}
+You know what I could go for? [favorite_food.a.cap]. {glutton}
+I'd kill for [favorite_food.a] right now. {glutton, crude}
+Some folks like [hated_food.s]. I don't get it. {w=0.6}
+If anyone offers you [hated_food.a], say no. Trust me. {w=0.6}
+[favorite_food.cap] [favorite_food.is] the best thing there is. Fight me. {lighthearted, w=0.6}
+Have you heard anything interesting? {nosy, w=2}
+So, who've you been talking to? {nosy}
+What's out there, past the hills? {curious, w=2}
+Seen anything strange on your travels? {curious}
+The Cube God watches over us all. {pious, w=2}
+Say your prayers to the Cube God tonight. {pious, time=evening}
+I won a race once. Did I tell you? {competitive}
+Bet I could beat you in a race. {competitive, lighthearted}
+I don't like to brag, but I'm the best around here. {proud}
+Oh, I'm nobody special.      {humble}
+Everything's going to be fine. I can feel it. {optimist}
+Something bad is coming. I can feel it. {pessimist}
+Honestly? Could be worse.    {pessimist}
+Isn't it a fine day?         {optimist, weather=clear, time=day}
+This rain is getting into my bones. {weather=rain, pessimist}
+I like the rain, honestly.   {weather=rain, optimist}
+I've had a rough time lately. {mood=bad}
+Not great. Let's leave it there. {mood=awful}
+I feel wonderful today!      {mood=great}
+Life's good.                 {mood=good}
+Still recovering. Don't make me laugh, it hurts. {recovering=yes}
+I'm still sore from that beating. {recovering=yes}
+The [enemy_faction] are trouble. Watch yourself. {has_enemy=yes}
+If you see any of the [enemy_faction], run. {has_enemy=yes, timid}
+If you see any of the [enemy_faction], send them my way. {has_enemy=yes, brave}
+Being one of the [faction] is all right. {has_faction=yes}
+You and me, we make a good team. {opinion=friend, leader=yes}
+I'm glad we're friends, [listener]. {opinion=close_friend}
+You again.                   {opinion=disliked}
+Why are you talking to me?   {opinion=disliked, rude}
+I hear the [enemy_faction] eat [hated_food.s]. Disgusting. {has_enemy=yes, lighthearted, w=0.5}
+Late, isn't it? I like the night. {night_owl, time=night}
+I should be in bed.          {early_bird, time=night}
+Up with the sun, that's me.  {early_bird, time=morning}
+Know any good jokes? I know a terrible one. {lighthearted}
+Let's keep this short.       {introvert}
+So much to talk about, where do I even start? {chatterbox}
+Hm.                          {taciturn}
+Did you see that? No? Never mind. {paranoid}
+They're watching us, you know. {paranoid}
+I met a talking sheep once. Honest. {liar}
+I'd never lie to you.        {honest}
+You look good today. Really. {romantic}
+Do you ever think about settling down? {romantic}
+
+# ---------------------------------------------------------------------------------------------------------------
+# Gifts
+
+== gift ==
+Thanks.
+Oh, for me? Thank you.       {polite}
+Huh. Thanks, I guess.        {!polite}
+Fine. I'll take it.          {rude}
+You shouldn't have. Really.  {humble}
+About time someone noticed me. {proud}
+[item.cap]! Thank you!       {extrovert}
+I'll put [item.it] to good use. {hardworking}
+Is this a trick?             {paranoid}
+What do you want for [item.it]? {greedy}
+Free? I'll take [item.it].   {greedy}
+Oh, I'll pass [item.it] on to someone who needs [item.it] more. {generous}
+[item.cap]! I love [item.it]! {kind=food, taste=love, w=4}
+My favorite! How did you know? {kind=food, taste=love, w=3}
+[item.cap]! You're a saint, [listener]. {kind=food, taste=love, glutton, w=4}
+Ooh, [item.a]. Thanks!       {kind=food, taste=like, w=3}
+Mm, [item]. Nice.            {kind=food, taste=like, w=2}
+Oh. [item.cap]. Thanks.      {kind=food, taste=meh, w=2}
+[item.cap]. Food is food.    {kind=food, taste=meh, w=2}
+Ugh, [item]. ...Thanks.      {kind=food, taste=dislike, polite, w=3}
+I don't really like [item], but thanks. {kind=food, taste=dislike, w=3}
+[item.cap]? Seriously?       {kind=food, taste=hate, w=3}
+I can't stand [item]. Keep [item.it]. {kind=food, taste=hate, rude, w=3}
+Oh. [item.cap]. How... thoughtful. {kind=food, taste=hate, polite, w=3}
+Thank you, [listener]. Truly. {opinion=friend, polite}
+Aw, [listener]. You're the best. {opinion=close_friend}
+Hm. Trying to buy my good opinion? {opinion=disliked}
+
+== gift_full ==
+My hands are full.
+I've got no room for that.
+Can't carry any more, sorry. {polite}
+Where would I even put that?
+
+# ---------------------------------------------------------------------------------------------------------------
+# Remarks made unprompted to a nearby player.
+
+== idle ==
+[idle_thought]
+[idle_thought] [catchphrase]  {w=0.3}
+
+== idle_thought ==
+Quiet today.
+Hm.                          {introvert}
+Anyone else hungry? I'm hungry. {glutton, w=2}
+I'd do anything for [favorite_food.a].   {glutton}
+Now where did I put my [favorite_food]...  {glutton}
+I could go for [favorite_food.a]. {w=0.5}
+What's that over there?      {curious}
+I wonder what's underground around here. {curious}
+I heard something. Did you hear something? {paranoid}
+Someone's been moving my things. {paranoid}
+Praise be to the Cube God.   {pious, w=2}
+The Cube God sends the rain for a reason. {pious, weather=rain}
+Beautiful night.             {time=night, optimist}
+Too dark. I don't like it.   {time=night, timid}
+Monsters come out at night. Stay close. {time=night, brave}
+Sun's coming up. Better get moving. {time=morning, hardworking}
+Too early.                   {time=morning, lazy}
+Too early.                   {time=morning, night_owl, w=2}
+Getting dark.                {time=evening}
+Rain, rain, rain.            {weather=rain}
+I'm soaked through.          {weather=rain, pessimist}
+Smell that rain!             {weather=rain, optimist}
+Could use a nap.             {lazy, w=2}
+There's always something to do. {hardworking}
+Nothing ever goes right.     {pessimist}
+Something good's coming, I can feel it. {optimist}
+Hey [listener], want to hear a joke? Never mind, I forgot it. {lighthearted}
+Life's too short to be serious. {lighthearted}
+Life is serious business.    {serious}
+Did you hear what happened? No? Me neither. {nosy}
+I wonder who's sweet on who around here. {nosy, romantic}
+I'm the best at what I do. Just so you know. {proud}
+Bet I could do that faster.  {competitive}
+Ow. Still hurts.             {recovering=yes, w=3}
+I nearly didn't make it back there. {recovering=yes, w=2}
+Keep an eye out for the [enemy_faction]. {has_enemy=yes}
+Feeling good today.          {mood=great}
+Some days are just bad days. {mood=bad}
+Leave me be for a while.     {mood=awful}
+Nice to have company, [listener]. {opinion=friend}
+Glad you're here, [listener]. {opinion=close_friend}
+
+# ---------------------------------------------------------------------------------------------------------------
+# NPCs talking to each other. [listener] is the other NPC.
+
+== chat_open ==
+Hey, [listener].
+[hello_named] How's things?
+[listener]! Have you eaten? I'm thinking about [favorite_food.s]. {glutton}
+[listener], did you hear the news? {nosy, w=2}
+Psst, [listener]. Come here. {nosy}
+[listener]. Nice weather, huh? {weather=clear}
+[listener]. Wet one today.   {weather=rain}
+[listener], you look tired.  {polite}
+You still owe me, [listener]. {greedy}
+[listener]! Race you to the trees! {competitive, lighthearted}
+Morning, [listener]. Praise the Cube. {pious, time=morning}
+[listener]. Seen anything odd lately? {paranoid}
+[listener]! I was just thinking about you. {romantic, opinion=friend}
+Oh. [listener].              {opinion=disliked}
+What are you looking at, [listener]? {opinion=disliked, rude}
+
+== chat_reply ==
+Not bad, you?
+Same as ever.
+Can't complain.              {optimist}
+Could be better.             {pessimist}
+Oh, you know.
+Mm.                          {taciturn, w=2}
+Ha! Good one.                {lighthearted}
+Busy, busy. Can't stop.      {hardworking}
+Shh. I'm resting.            {lazy}
+Did you? Tell me everything! {nosy}
+I'd rather not talk about it. {introvert}
+Cube God keep you.           {pious}
+Is that a threat?            {paranoid}
+Sure, whatever.              {rude}
+Of course, of course.        {polite}
+You're always welcome, [listener]. {opinion=friend}
+Get lost, [listener].        {opinion=disliked, rude}
+Hm. If you say so.           {opinion=disliked}
+Mmh. Food. Yes.              {glutton}
+
+# ---------------------------------------------------------------------------------------------------------------
+# Combat barks. [enemy] is who or what they're fighting.
+
+== fight ==
+[exclaim] [enemy.a.cap]!
+Here comes [enemy.a]!
+I'll handle this!            {brave}
+Come on, then!               {brave, !polite}
+Stand back!                  {brave, polite}
+For the [faction]!           {has_faction=yes, brave}
+Oh no, oh no, oh no...       {timid}
+Why is it always me?         {timid, pessimist}
+Watch out, [enemy.a]!        {!brave}
+Cube God, guide my arm!      {pious, brave}
+You picked the wrong fight!  {proud}
+Let's see who's faster!      {competitive}
+I've been waiting for this.  {vengeful}
+Not again...                 {lazy}
+To arms!                     {proper, brave}
+Get 'em!                     {crude}
+
+== flee ==
+Run!
+I'm out of here!
+Nope! Nope!                  {lighthearted}
+Too many! Fall back!         {brave}
+Help!                        {timid}
+Cube God save me!            {pious}
+Every one for themselves!    {!polite}
+Retreat! Retreat!            {proper}
+I can't do this!             {timid, pessimist}
+Run! Don't look back!        {polite}
+
+== low_health ==
+I'm hurt!
+I'm hurt bad!
+Can't take much more of this!
+Ugh... that hurt.
+Is that all you've got?      {brave, proud}
+Just a scratch!              {brave, optimist}
+I don't want to die here!    {timid}
+This is it, isn't it?        {pessimist}
+Somebody help!               {!brave}
+Cube God, not yet...         {pious}
+
+== victory ==
+Got it!
+Down it goes.
+Ha! Next!                    {brave}
+That's how it's done!        {proud}
+Phew. That was close.        {timid}
+That'll teach you.           {vengeful}
+Rest in peace, [enemy].      {forgiving}
+The Cube God provides.       {pious}
+One less [enemy] in the world. {serious}
+Did you see that? Did you?   {competitive}
+
+== hit_by_friend ==
+Hey! Watch it!
+Ow! What was that for?
+Careful!
+Do that again and see what happens. {rude}
+Hey! I'm on your side!       {opinion=friendly}
+Ow! [listener]!              {opinion=friend}
+That's going on my list, [listener]. {vengeful}
+I'll forget that, just this once. {forgiving}
+Was that really necessary?   {proper}
+Oi! Knock it off!            {crude}
+
+# ---------------------------------------------------------------------------------------------------------------
+# Being downed, getting up, and rescue
+
+== downed ==
+Agh!
+Ugh...
+I'm down!
+Not... like... this...       {lighthearted}
+So... tired...               {lazy}
+Cube God...                  {pious}
+Tell my [favorite_food] I loved [favorite_food.it]... {glutton, lighthearted, w=2}
+I'll... get you... for this... {vengeful}
+Help...                      {timid}
+
+== get_up ==
+I'm... I'm all right.
+Ow. Ow. Ow.
+I need to lie down somewhere softer. Home.
+That's it, I'm going home.
+I'll be fine. Just need some rest.
+Still alive. Barely.         {pessimist}
+Ha! Can't keep me down!      {optimist}
+Thank the Cube God.          {pious}
+I'll remember that one.      {vengeful}
+
+== thanks_saved ==
+You saved my life, [listener]!
+I owe you one, [listener]. A big one.
+Thank you. I mean it.        {serious}
+I thought I was done for. Thank you, [listener]. {timid}
+I had it handled! ...But thanks. {proud}
+Thank the Cube God, and thank you. {pious}
+I won't forget this, [listener]. {sentimental, w=2}
+I'm in your debt.            {proper}
+You're a lifesaver, literally. {lighthearted}
+
+== grief ==
+No... [victim]...
+[victim]! No!
+Not [victim]...
+[victim]... Cube God keep you. {pious}
+Whoever did this will pay.   {vengeful, w=2}
+Why does this always happen? {pessimist}
+Rest well, [victim].         {forgiving}
+
+# ---------------------------------------------------------------------------------------------------------------
+# Eating
+
+== eat ==
+Mm.
+Food.
+[food.cap]! My favorite!     {taste=love, w=3}
+Mmm, [food].                 {taste=like, w=2}
+Not bad.                     {taste=like}
+[food.cap]. It's food.       {taste=meh, w=2}
+Ugh. [food.cap]. If I must.  {taste=dislike, w=2}
+I hate [food]. Hate it.      {taste=hate, w=3}
+Bleh.                        {taste=hate}
+Food, glorious food!         {glutton, w=2}
+Thank the Cube God for [food]. {pious}
+Om nom nom.                  {lighthearted}

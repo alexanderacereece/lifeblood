@@ -16,8 +16,11 @@ import java.util.Set;
  */
 public class NpcPersonality {
 	public static final int MAX_QUIRKS = 3;
-	/** Spread of the bell curve trait values are rolled from: about half land neutral, one in six strong. */
-	private static final double AXIS_SPREAD = 0.4;
+	/**
+	 * Spread of the bell curve trait values are rolled from: about 40% land neutral, a third lean, a quarter
+	 * are strong, and a few hit the very end of the scale.
+	 */
+	private static final double AXIS_SPREAD = 0.55;
 	/** Chance of 0, 1, 2 and 3 quirks. */
 	private static final double[] QUIRK_COUNT_ODDS = {0.05, 0.55, 0.32, 0.08};
 

@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import net.minecraft.core.item.Item;
+import net.minecraft.core.item.ItemBucket;
 import net.minecraft.core.item.ItemFood;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,9 +28,17 @@ public class FoodPreferences {
 		this.overrides.clear();
 	}
 
+	/**
+	 * Whether this item is a food people have tastes about. Buckets count as food in BTA (for milk),
+	 * but a bucket isn't a dish.
+	 */
+	public static boolean isFood(Item item) {
+		return item instanceof ItemFood && !(item instanceof ItemBucket);
+	}
+
 	/** How much this NPC likes the food: -1 to +1. Non-food is 0. */
 	public float like(Item item) {
-		if (!(item instanceof ItemFood)) {
+		if (!isFood(item)) {
 			return 0.0F;
 		}
 
@@ -67,7 +76,7 @@ public class FoodPreferences {
 	public List<Item> ranked() {
 		List<Item> foods = new ArrayList<>();
 		for (Item item : Item.itemsList) {
-			if (item instanceof ItemFood) {
+			if (isFood(item)) {
 				foods.add(item);
 			}
 		}

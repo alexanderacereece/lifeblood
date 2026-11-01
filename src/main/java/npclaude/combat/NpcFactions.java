@@ -5,12 +5,15 @@ import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.world.World;
 import npclaude.entity.EntityNPC;
+import npclaude.social.Opinions;
 import org.jetbrains.annotations.Nullable;
 
 /**
  * How an NPC regards another person, combining every layer:
- * its personal relation with that person (players only, for now) overrides everything; otherwise its faction
- * decides (see {@link FactionRegistry#regard}), with players counting as members of whatever faction they joined.
+ * 1. a debug override set by /npc relation (players only) beats everything;
+ * 2. its opinion of them, at the extremes: a close enough friend is an ally, a bitter enough enemy is hostile;
+ * 3. otherwise its faction decides (see {@link FactionRegistry#regard}), with players counting as members of
+ *    whatever faction they joined.
  */
 public final class NpcFactions {
 	private NpcFactions() {
@@ -47,6 +50,17 @@ public final class NpcFactions {
 			FactionRelation personal = npc.relations.get(player);
 			if (personal != null) {
 				return personal;
+			}
+		}
+
+		if (other instanceof Player || other instanceof EntityNPC) {
+			float opinion = Opinions.of(npc, other);
+			if (opinion >= Opinions.ALLY_THRESHOLD) {
+				return FactionRelation.ALLY;
+			}
+
+			if (opinion <= Opinions.hostileThreshold(npc)) {
+				return FactionRelation.HOSTILE;
 			}
 		}
 

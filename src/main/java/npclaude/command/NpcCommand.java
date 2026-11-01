@@ -14,12 +14,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 import net.minecraft.core.Global;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.EntityDispatcher;
 import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.item.Item;
-import net.minecraft.core.item.ItemFood;
 import net.minecraft.core.item.ItemStack;
 import net.minecraft.core.net.command.CommandManager;
 import net.minecraft.core.net.command.CommandSource;
@@ -40,10 +40,16 @@ import npclaude.entity.HealthMode;
 import npclaude.entity.NpcGender;
 import npclaude.entity.SkinModel;
 import npclaude.perf.NpcProfiler;
+import npclaude.personality.FoodPreferences;
 import npclaude.personality.NpcPersonality;
 import npclaude.personality.Quirk;
 import npclaude.personality.TraitAxis;
 import npclaude.personality.TraitTier;
+import npclaude.social.Memory;
+import npclaude.social.MemoryType;
+import npclaude.social.Opinions;
+import npclaude.speech.SpeechFacts;
+import npclaude.speech.SpeechLibrary;
 import npclaude.skin.NpcSkinFiles;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3dc;
@@ -74,7 +80,13 @@ import org.joml.Vector3dc;
  * /npc faction relation <faction> <faction> [ally|neutral|hostile|default]   (default removes the explicit relation)
  * /npc faction set <name> <faction|none>
  * /npc faction join <faction|none>                       (you join a faction, or leave yours)
- * /npc relation <name> [ally|neutral|hostile|default]    (the NPC's personal feeling toward you; default removes it)
+ * /npc relation <name> [ally|neutral|hostile|default]    (debug: forces how the NPC treats you; default removes it)
+ * /npc opinion <name> [<target>]              (what the NPC thinks of you or someone else, and why)
+ * /npc mood <name>                            (the NPC's mood and what's behind it)
+ * /npc remember <name> <memory> [<target>]    (debug: gives the NPC a memory, about you or someone else)
+ * /npc forget <name> [<target>]               (debug: wipes its memories, or only those about someone)
+ * /npc say <name> <symbol>                    (debug: says a line from the speech files aloud)
+ * /npc speech reload                          (reads the speech files again)
  * /npc list
  * /npc skins [reload]
  *
@@ -156,6 +168,13 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 	private static final SuggestionProvider<CommandSource> QUIRK_NAMES = (c, builder) -> {
 		for (Quirk quirk : Quirk.values()) {
 			builder.suggest(quirk.id());
+		}
+
+		return builder.buildFuture();
+	};
+	private static final SuggestionProvider<CommandSource> MEMORY_NAMES = (c, builder) -> {
+		for (MemoryType type : MemoryType.values()) {
+			builder.suggest(type.id());
 		}
 
 		return builder.buildFuture();
@@ -435,6 +454,51 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 
 						return reply(c, npc.nickname + " is now " + describePersonal(relation) + ".");
 					}))))
+			.then(literal("opinion")
+				.then(npcArgument()
+					.executes(c -> showOpinion(c, requirePlayer(c.getSource())))
+					.then(argument("target", ArgumentTypeString.string()).suggests(TARGET_NAMES)
+						.executes(c -> showOpinion(c, findTarget(c))))))
+			.then(literal("mood")
+				.then(npcArgument().executes(NpcCommand::showMood)))
+			.then(literal("remember")
+				.then(npcArgument()
+					.then(argument("memory", ArgumentTypeString.word()).suggests(MEMORY_NAMES)
+						.executes(c -> addMemory(c, requirePlayer(c.getSource())))
+						.then(argument("target", ArgumentTypeString.string()).suggests(TARGET_NAMES)
+							.executes(c -> addMemory(c, findTarget(c)))))))
+			.then(literal("forget")
+				.then(npcArgument()
+					.executes(c -> {
+						EntityNPC npc = findNpc(c);
+						npc.memories.clear();
+						return reply(c, npc.nickname + " has forgotten everything.");
+					})
+					.then(argument("target", ArgumentTypeString.string()).suggests(TARGET_NAMES).executes(c -> {
+						EntityNPC npc = findNpc(c);
+						Entity target = findTarget(c);
+						UUID id = Opinions.idOf(target);
+						if (id != null) {
+							npc.memories.forget(id);
+						}
+
+						return reply(c, npc.nickname + " has forgotten everything about " + nameOf(target) + ".");
+					}))))
+			.then(literal("say")
+				.then(npcArgument()
+					.then(argument("symbol", ArgumentTypeString.word()).executes(c -> {
+						EntityNPC npc = findNpc(c);
+						String symbol = ArgumentTypeString.getString(c, "symbol");
+						String line = npc.voice.line(symbol, c.getSource().getSender(), null);
+						if (line == null) {
+							throw error(npc.nickname + " has nothing to say for '" + symbol + "' right now.");
+						}
+
+						npc.voice.sayAloud(line);
+						return 1;
+					}))))
+			.then(literal("speech")
+				.then(literal("reload").executes(c -> reply(c, "Loaded " + SpeechLibrary.reload() + " speech lines."))))
 			.then(literal("remove")
 				.then(npcArgument().executes(c -> {
 					EntityNPC npc = findNpc(c);
@@ -644,7 +708,7 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 		reply(c, npc.nickname + " dislikes " + String.join(", ", disliked) + ".");
 		Player player = c.getSource().getSender();
 		ItemStack held = player != null ? player.inventory.getCurrentItem() : null;
-		if (held != null && held.getItem() instanceof ItemFood) {
+		if (held != null && FoodPreferences.isFood(held.getItem())) {
 			reply(c, npc.nickname + " " + describeLike(npc.personality.food.like(held.getItem())) + " " + foodName(held.getItem()) + ".");
 		}
 
@@ -685,7 +749,7 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 
 	private static Item requireHeldFood(CommandContext<CommandSource> c) throws CommandSyntaxException {
 		ItemStack held = requirePlayer(c.getSource()).inventory.getCurrentItem();
-		if (held == null || !(held.getItem() instanceof ItemFood)) {
+		if (held == null || !FoodPreferences.isFood(held.getItem())) {
 			throw error("Hold the food you want to set a taste for.");
 		}
 
@@ -753,10 +817,65 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 		EntityNPC npc = findNpc(c);
 		FactionRelation personal = npc.relations.get(player);
 		FactionRelation overall = NpcFactions.regard(npc, player);
+		float opinion = Opinions.of(npc, player);
 		String member = npc.getFaction() != null ? "one of the " + npc.getFaction() : "someone unaffiliated";
-		String reason = personal != null ? "personally" : "as " + member + ", toward someone "
-			+ factionLabel(FactionRegistry.get(c.getSource().getWorld()).getPlayerFaction(player.uuid));
+		String reason;
+		if (personal != null) {
+			reason = "set by command";
+		} else if (opinion >= Opinions.ALLY_THRESHOLD || opinion <= Opinions.hostileThreshold(npc)) {
+			reason = "because its opinion of you is " + Math.round(opinion);
+		} else {
+			reason = "as " + member + ", toward someone " + factionLabel(FactionRegistry.get(c.getSource().getWorld()).getPlayerFaction(player.uuid));
+		}
+
 		return reply(c, npc.nickname + " is " + describePersonal(overall) + " (" + reason + ").");
+	}
+
+	private static int showOpinion(CommandContext<CommandSource> c, Entity target) throws CommandSyntaxException {
+		EntityNPC npc = findNpc(c);
+		if (target == npc) {
+			throw error(npc.nickname + " doesn't keep an opinion of itself.");
+		}
+
+		Opinions.Opinion opinion = Opinions.explain(npc, target);
+		reply(c, String.format(Locale.ROOT, "%s's opinion of %s: %d (%s)", npc.nickname, nameOf(target), Math.round(opinion.value()),
+			opinion.label().displayName()));
+		for (Map.Entry<String, Float> part : opinion.parts().entrySet()) {
+			reply(c, String.format(Locale.ROOT, "- %s: %+d", part.getKey(), Math.round(part.getValue())));
+		}
+
+		return 1;
+	}
+
+	private static int showMood(CommandContext<CommandSource> c) throws CommandSyntaxException {
+		EntityNPC npc = findNpc(c);
+		long now = c.getSource().getWorld().getWorldTime();
+		float mood = npc.memories.mood(npc.personality, now);
+		reply(c, String.format(Locale.ROOT, "%s's mood: %d (%s)", npc.nickname, Math.round(mood), SpeechFacts.moodLabel(mood)));
+		for (Memory memory : npc.memories.moodMemories(now)) {
+			String about = memory.subjectName().isEmpty() ? "" : " (" + memory.subjectName() + ")";
+			float effect = memory.type().mood * memory.scale() * memory.strength(now);
+			long hoursLeft = (memory.expires() - now) / 1000L;
+			reply(c, String.format(Locale.ROOT, "- %s%s: %+d, %d more hours", memory.type().description, about, Math.round(effect), hoursLeft));
+		}
+
+		return 1;
+	}
+
+	private static int addMemory(CommandContext<CommandSource> c, Entity target) throws CommandSyntaxException {
+		EntityNPC npc = findNpc(c);
+		String name = ArgumentTypeString.getString(c, "memory");
+		MemoryType type = MemoryType.byName(name);
+		if (type == null) {
+			throw error("Unknown memory '" + name + "'.");
+		}
+
+		if (type.isAboutSomeone() && Opinions.idOf(target) == null) {
+			throw error("That memory needs a person to be about.");
+		}
+
+		npc.remember(type, type.isAboutSomeone() ? target : null, 1.0F);
+		return reply(c, npc.nickname + " remembers: " + type.description + (type.isAboutSomeone() ? " (" + nameOf(target) + ")" : "") + ".");
 	}
 
 	private static String factionLabel(@Nullable String faction) {
