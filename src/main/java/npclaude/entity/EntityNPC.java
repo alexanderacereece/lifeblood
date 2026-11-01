@@ -41,7 +41,6 @@ import npclaude.combat.NpcFactions;
 import npclaude.combat.NpcRelations;
 import npclaude.dialogue.NpcDialogue;
 import npclaude.interaction.NpcInteractions;
-import npclaude.item.NpcItems;
 import npclaude.inventory.NpcInventory;
 import npclaude.perf.NpcProfiler;
 import npclaude.personality.ItemDefaults;
@@ -109,6 +108,8 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private static final float QUIT_FOLLOWING_OPINION = -15.0F;
 	/** How often the NPC considers picking a fight with someone it can't stand (10 seconds). */
 	private static final int BRAWL_CHECK_INTERVAL = 200;
+	/** Hitting someone this soon after a brawl with them ended is a cheap shot, and starts a real fight (30 seconds). */
+	private static final int CHEAP_SHOT_TICKS = 600;
 	/** Within this long of a first punch, a second one from a friend starts a brawl (5 seconds). */
 	private static final int SECOND_PUNCH_TICKS = 100;
 	/** How often a follower looks at what its leader is up to (2 seconds). */
@@ -153,6 +154,10 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private Brawl brawl;
 	/** Set while a brawl punch lands, so it can't take the NPC below 1 health. */
 	private boolean takingBrawlHit;
+	/** Who its last brawl was with, and when it ended, to recognize a cheap shot afterwards. */
+	@Nullable
+	private Entity lastBrawlOpponent;
+	private int lastBrawlEndTick;
 	private int lastFriendlyPunchTick = -SECOND_PUNCH_TICKS;
 	/** When each kind of remark about the leader can next be made, by event. */
 	private final Map<String, Integer> remarkReady = new HashMap<>();
@@ -728,6 +733,8 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	public void leaveBrawl(Brawl brawl, @Nullable Entity forgiven) {
 		if (this.brawl == brawl) {
 			this.brawl = null;
+			this.lastBrawlOpponent = brawl.opponentOf(this);
+			this.lastBrawlEndTick = this.tickCount;
 		}
 
 		if (forgiven != null && this.lastAttacker == forgiven) {
@@ -986,7 +993,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 
 	/** The health mode that actually applies: a mortal NPC carrying a guardian amulet is invincible. */
 	public HealthMode getEffectiveHealthMode() {
-		if (this.healthMode == HealthMode.MORTAL && this.inventory.findSlot(NpcItems::isGuardianAmulet) >= 0) {
+		if (this.healthMode == HealthMode.MORTAL && this.inventory.hasAmulet()) {
 			return HealthMode.INVINCIBLE;
 		}
 
@@ -1203,7 +1210,14 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		boolean armed = attacker instanceof Projectile || isArmed(source);
 		boolean brawlHit = false;
 		boolean friendlyPunch = false;
-		if (person && source != this && type == DamageType.COMBAT) {
+		// Hitting it again once a brawl is over isn't part of the brawl: that's a real attack.
+		boolean cheapShot = this.brawl == null && source != null && source == this.lastBrawlOpponent
+			&& this.tickCount - this.lastBrawlEndTick < CHEAP_SHOT_TICKS;
+		if (cheapShot && type == DamageType.COMBAT) {
+			this.lastBrawlOpponent = null;
+			this.remember(MemoryType.HIT_ME, source, 1.0F);
+			this.voice.bark("brawl_cheap_shot", source, null, true);
+		} else if (person && source != this && type == DamageType.COMBAT) {
 			if (this.isBrawlingWith(source)) {
 				// Fists only: reaching for a weapon turns the brawl into a real fight.
 				if (armed) {

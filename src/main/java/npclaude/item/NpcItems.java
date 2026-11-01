@@ -1,11 +1,14 @@
 package npclaude.item;
 
+import net.minecraft.core.block.Blocks;
 import net.minecraft.core.item.Item;
 import net.minecraft.core.item.ItemStack;
 import net.minecraft.core.item.Items;
 import npclaude.NPClaude;
 import turniplabs.halplibe.helper.ItemBuilder;
 import turniplabs.halplibe.helper.RecipeBuilder;
+import turniplabs.halplibe.helper.creativeInventory.CreativeInventoryCategory;
+import turniplabs.halplibe.helper.creativeInventory.CreativeInventoryPlacement;
 import turniplabs.halplibe.event.defs.CommonEvents;
 import turniplabs.halplibe.util.dependency.Key;
 
@@ -29,18 +32,20 @@ public final class NpcItems {
 	}
 
 	private static void registerItems() {
+		// The builder adds the mod id to the translation key itself: item.npclaude.guardian_amulet.
 		guardianAmulet = new ItemBuilder(NPClaude.MOD_ID).setStackSize(1)
-			.build(new Item("npclaude.guardian_amulet", NPClaude.MOD_ID + ":item/guardian_amulet", GUARDIAN_AMULET_ID));
+			.setCreativeInventoryPlacement(new CreativeInventoryPlacement.Category(CreativeInventoryCategory.MISCELLANEOUS))
+			.build(new Item("guardian_amulet", NPClaude.MOD_ID + ":item/guardian_amulet", GUARDIAN_AMULET_ID));
 		NPClaude.LOGGER.info("Registered the guardian amulet.");
 	}
 
-	/** A diamond set in gold, on a string. */
+	/** A block of gold set in gold, on a string. */
 	private static void registerRecipes() {
 		RecipeBuilder.Shaped(NPClaude.MOD_ID)
-			.setShape(" S ", "GDG", " G ")
+			.setShape(" S ", "GBG", " G ")
 			.addInput('S', Items.STRING)
 			.addInput('G', Items.INGOT_GOLD)
-			.addInput('D', Items.DIAMOND)
+			.addInput('B', Blocks.BLOCK_GOLD)
 			.create("guardian_amulet", new ItemStack(guardianAmulet));
 	}
 

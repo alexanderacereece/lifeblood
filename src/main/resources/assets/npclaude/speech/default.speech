@@ -418,12 +418,6 @@ A bed? I don't have time to sleep. {kind=comfort, hardworking, w=5}
 Ha! I love [item]!            {kind=fun, lighthearted, w=5}
 What is this, a toy?          {kind=fun, serious, w=5}
 
-== gift_full ==
-My hands are full.
-I've got no room for that.
-Can't carry any more, sorry. {polite}
-Where would I even put that?
-
 # ---------------------------------------------------------------------------------------------------------------
 # Remarks made unprompted to a nearby player.
 
@@ -1201,4 +1195,33 @@ Ooh, questions! Go on.       {extrovert, w=2}
 Depends what you're asking.  {paranoid, w=2}
 Make it quick.               {rude}
 Hm?                          {taciturn}
+
+== gift_amulet_already ==
+I already have one. But thank you, really.
+One's enough to keep me safe. Keep it for someone else.
+Two? Do you know something I don't? {paranoid, w=3}
+Give it to someone who needs it, [listener]. {generous, w=3}
+Oh, I'll take it! ...What? I can't have two? {greedy, w=3}
+
+== brawl_cheap_shot ==
+It's over! What are you doing?!
+Oh, you want a real fight? Fine!
+I yielded! You don't hit someone who's yielded!
+Cheap shot! You're going to regret that!
+You dishonorable worm!       {proper, w=3}
+You son of a...!             {crude, w=3}
+That's it. No more fists.    {brave, w=3}
+I'll never forgive this.     {vengeful, w=3}
+Somebody help! [listener]'s gone mad! {timid, w=3}
+
+== leader_died ==
+[listener]! No!
+[listener]? [listener]!
+No, no, no... [listener]...
+I'll... I'll head home.
+Cube God, take [listener] gently. {pious, w=3}
+I couldn't save them...      {sentimental, w=2}
+I should have been faster.   {competitive, w=2}
+Whoever did this will pay.   {vengeful, w=2}
+I'm going home. I can't do this alone. {timid, w=2}
 

@@ -85,7 +85,8 @@ public class NpcInventoryScreen extends ScreenContainerAbstract {
 	@Override
 	protected void drawGuiContainerForegroundLayer() {
 		this.drawStringNoShadow(this.fontRenderer, this.npc.nickname, 86, 6, LABEL_COLOR);
-		this.drawStringNoShadow(this.fontRenderer, "Inventory", 116, 16, LABEL_COLOR);
+		this.drawStringNoShadow(this.fontRenderer, "Amulet", 84, 16, LABEL_COLOR);
+		this.drawStringNoShadow(this.fontRenderer, "Inventory", 120, 16, LABEL_COLOR);
 		this.drawStringNoShadow(this.fontRenderer, "Hand", 86, 52, LABEL_COLOR);
 	}
 
@@ -96,6 +97,8 @@ public class NpcInventoryScreen extends ScreenContainerAbstract {
 		int x = (this.width - this.xSize) / 2;
 		int y = (this.height - this.ySize) / 2;
 		this.drawTexturedModalRect(x, y, 0, 0, this.xSize, this.ySize);
+		// The texture has no amulet slot, so borrow the hand slot's frame for it.
+		this.drawTexturedModalRect(x + 87, y + 25, 87, 61, 18, 18);
 		this.drawNpcPreview(x + 51, y + 75, partialTick);
 	}
 

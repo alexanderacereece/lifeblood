@@ -305,7 +305,7 @@ Rules:
 - Bystanders react: friends of a brawler may join or break it up, extroverts gather to watch, timid NPCs keep away.
 - Afterwards, the winner and loser get memories ("beat me in a brawl", "won a fight", "lost a fight"), and the hate often cools a little. Competitive NPCs gain respect for whoever beat them.
 - The player can be challenged to brawls too, and can start one by punching an NPC who isn't hostile. Someone who likes you gets one warning ("Hey! Watch it!") before a second punch starts the brawl.
-- Reaching for a weapon (or a bow) mid-brawl turns it into a real fight. Walking more than 16 blocks away forfeits it.
+- Reaching for a weapon (or a bow) mid-brawl turns it into a real fight. Walking more than 16 blocks away forfeits it. Hitting someone in the 30 seconds after a brawl with them ended is a cheap shot, and starts a real fight too.
 - Whoever is challenged remembers who picked the fight. Afterwards both sides usually "clear the air", which mostly outweighs the brawl's bad memories.
 - Not yet: bystanders joining in or breaking it up (for now they just comment).
 
@@ -401,10 +401,11 @@ An invincible NPC fights, gets hurt and flees like anyone else. Damage that woul
 
 The player chooses who they want to keep safe: a spouse, children, friends, companions, allies. This is done with a **guardian amulet**, a craftable item that makes any NPC invincible while it's in their inventory.
 - **Gifted like any item.** You can give it to any NPC you could normally give gifts to, and they respond to it with their own lines (touched, flustered, suspicious of the gesture, and so on).
-- **Theirs to keep.** Once given, they keep it no matter what happens between you later. No special rules are needed: they can't die while carrying it, so it never drops.
+- **Theirs to keep.** Once given, they keep it no matter what happens between you later. They can't die while carrying it, so it never drops.
+- **Gifts in general are consumed.** A gift doesn't go into the NPC's inventory, so it can't be taken back out of a follower's pack.
 - **A real cost.** The recipe should be expensive enough (gold and a diamond, for example) that you protect the people who matter, not everyone.
-- **Not shown on the model.** Modular appearance (section 11) gives NPCs enough visual variety; the amulet stays in their pack.
-- **Recipe:** string on top, a diamond set in gold below.
+- **Its own slot.** The amulet goes into a dedicated, locked slot in the NPC's inventory, so it takes up no pack space and can't be taken back. It isn't shown on the model: modular appearance (section 11) gives enough visual variety.
+- **Recipe:** string on top, a gold block in the middle, gold ingots around it.
 
 Children are the exception: they're invincible by default, with no amulet needed.
 

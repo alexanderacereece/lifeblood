@@ -31,12 +31,14 @@ public final class NpcGifts {
 
 		ItemStack gift = held.copy();
 		gift.stackSize = 1;
-		if (!npc.inventory.addToPack(gift)) {
-			String line = npc.voice.line("gift_full", player, null);
-			return line != null ? line : "I've got no room for that.";
+		boolean amulet = NpcItems.isGuardianAmulet(gift);
+		if (amulet && !npc.inventory.giveAmulet(gift)) {
+			String line = npc.voice.line("gift_amulet_already", player, null);
+			return line != null ? line : "I already have one. But thank you.";
 		}
 
-		// Only one of the stack changes hands.
+		// Only one of the stack changes hands, and it's theirs now: gifts don't go into their inventory, so they
+		// can't be taken back out of it. (The amulet goes into its own locked slot.)
 		held.stackSize--;
 		if (held.stackSize <= 0) {
 			for (int slot = 0; slot < player.inventory.mainInventory.length; slot++) {
@@ -46,7 +48,7 @@ public final class NpcGifts {
 			}
 		}
 
-		if (NpcItems.isGuardianAmulet(gift)) {
+		if (amulet) {
 			npc.remember(MemoryType.GAVE_ME_AN_AMULET, player, 1.0F);
 			String line = npc.voice.line("gift_amulet", player, null);
 			return line != null ? line : "For me? I... thank you.";

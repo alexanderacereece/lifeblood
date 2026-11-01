@@ -16,7 +16,7 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * Everything an NPC carries: 4 armor slots (head, chest, legs, boots, matching HumanArmorShape order),
- * the item in its hand, and a 3x3 pack.
+ * the item in its hand, a 3x3 pack, and a slot for a guardian amulet.
  */
 public class NpcInventory implements Container {
 	public static final int ARMOR_START = 0;
@@ -24,7 +24,9 @@ public class NpcInventory implements Container {
 	public static final int HAND_SLOT = 4;
 	public static final int PACK_START = 5;
 	public static final int PACK_SIZE = 9;
-	public static final int SIZE = PACK_START + PACK_SIZE;
+	/** Holds a guardian amulet, if it's been given one. Only gifting fills it, and nothing takes it back out. */
+	public static final int AMULET_SLOT = PACK_START + PACK_SIZE;
+	public static final int SIZE = AMULET_SLOT + 1;
 	/** Players further than this (8 blocks) can't keep the inventory open. */
 	private static final double MAX_USE_DISTANCE_SQR = 64.0;
 
@@ -98,7 +100,21 @@ public class NpcInventory implements Container {
 	/** A guardian amulet, once given, is the NPC's to keep: it can't be taken back out. */
 	@Override
 	public boolean locked(int slot) {
-		return NpcItems.isGuardianAmulet(this.items[slot]);
+		return slot == AMULET_SLOT;
+	}
+
+	public boolean hasAmulet() {
+		return NpcItems.isGuardianAmulet(this.items[AMULET_SLOT]);
+	}
+
+	/** Puts a guardian amulet in its slot; false if it already has one. */
+	public boolean giveAmulet(ItemStack amulet) {
+		if (this.items[AMULET_SLOT] != null) {
+			return false;
+		}
+
+		this.items[AMULET_SLOT] = amulet;
+		return true;
 	}
 
 	/** Sorts only the pack, so armor and the held item stay put. */
@@ -203,6 +219,14 @@ public class NpcInventory implements Container {
 				if (slot < SIZE) {
 					this.items[slot] = ItemStack.readItemStackFromNbt(tag);
 				}
+			}
+		}
+
+		// Amulets given before there was an amulet slot move into it.
+		for (int slot = PACK_START; slot < PACK_START + PACK_SIZE && this.items[AMULET_SLOT] == null; slot++) {
+			if (NpcItems.isGuardianAmulet(this.items[slot])) {
+				this.items[AMULET_SLOT] = this.items[slot];
+				this.items[slot] = null;
 			}
 		}
 	}

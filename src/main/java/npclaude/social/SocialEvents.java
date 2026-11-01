@@ -40,6 +40,10 @@ public final class SocialEvents {
 			return;
 		}
 
+		if (victim instanceof Player player) {
+			stopFollowingDeadLeader(player);
+		}
+
 		Entity killer = killedBy instanceof Projectile projectile && projectile.owner != null ? projectile.owner : killedBy;
 		boolean person = isPerson(victim);
 		AABBd area = MathHelper.aabbGrow(victim.bb, WITNESS_RANGE, 8.0, WITNESS_RANGE, new AABBd());
@@ -56,6 +60,16 @@ public final class SocialEvents {
 				onPersonDied(npc, victim, killer);
 			} else if (isAnimal(victim) && killer != null && killer != npc && isPerson(killer) && npc.canEntityBeSeen(victim)) {
 				onAnimalKilled(npc, victim, killer);
+			}
+		}
+	}
+
+	/** A player who dies loses their followers: they head home rather than waiting for them to come back. */
+	private static void stopFollowingDeadLeader(Player player) {
+		for (Entity entity : player.world.entities) {
+			if (entity instanceof EntityNPC npc && npc.isAlive() && npc.getLeader() == player) {
+				npc.voice.bark("leader_died", player, null, true);
+				npc.stopFollowing();
 			}
 		}
 	}

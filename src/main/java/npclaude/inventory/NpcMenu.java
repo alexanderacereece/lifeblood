@@ -38,6 +38,14 @@ public class NpcMenu extends MenuAbstract {
 			}
 		}
 
+		// Only a gift fills the amulet slot, and it's locked once filled.
+		this.addSlot(new Slot(inventory, NpcInventory.AMULET_SLOT, 88, 26) {
+			@Override
+			public boolean mayPlace(ItemStack stack) {
+				return false;
+			}
+		});
+
 		for (int y = 0; y < 3; y++) {
 			for (int x = 0; x < 9; x++) {
 				this.addSlot(new Slot(playerInventory, x + y * 9 + 9, 8 + x * 18, 84 + y * 18));
@@ -57,6 +65,10 @@ public class NpcMenu extends MenuAbstract {
 	/** Slots affected by "move all" style clicks: the clicked slot's own group. */
 	@Override
 	public IntList getMoveSlots(@NotNull InventoryAction action, @NotNull Slot slot, int target, Player player) {
+		if (slot.index == NpcInventory.AMULET_SLOT) {
+			return new IntArrayList();
+		}
+
 		if (slot.index < NpcInventory.HAND_SLOT) {
 			return this.getSlots(NpcInventory.ARMOR_START, NpcInventory.ARMOR_SIZE, false);
 		}
@@ -75,6 +87,10 @@ public class NpcMenu extends MenuAbstract {
 	/** Where shift-clicked items go: NPC items to the player; player items onto the NPC (armor to armor slots). */
 	@Override
 	public IntList getTargetSlots(@NotNull InventoryAction action, @NotNull Slot slot, int target, Player player) {
+		if (slot.index == NpcInventory.AMULET_SLOT) {
+			return new IntArrayList();
+		}
+
 		if (slot.index < PLAYER_START) {
 			return this.getSlots(PLAYER_START, 36, true);
 		}
