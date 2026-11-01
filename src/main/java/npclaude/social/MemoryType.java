@@ -18,6 +18,8 @@ public enum MemoryType {
 	GAVE_ME_FOOD_I_HATE("gave me food I hate", -3, -2, 3, 3),
 	/** Something the NPC doesn't like; truly rude gifts (dirt) count as an insult instead. */
 	GAVE_ME_JUNK("gave me junk", -3, -2, 3, 3),
+	/** Given a guardian amulet: someone wants them kept safe. */
+	GAVE_ME_AN_AMULET("gave me a guardian amulet", 25, 8, 60, 1),
 	HAD_A_NICE_CHAT("had a nice chat", 3, 2, 2, 5),
 	TAUGHT_ME_A_WORD("taught me a word", 2, 0, 3, 5),
 	INSULTED_ME("insulted me", -8, -3, 4, 5, true),
@@ -25,6 +27,11 @@ public enum MemoryType {
 	/** Only animal lovers keep this one. */
 	KILLED_AN_ANIMAL("killed an animal", -4, 0, 2, 5),
 	BEAT_ME_IN_A_BRAWL("beat me in a brawl", -5, -5, 10, 3, true),
+	PICKED_A_FIGHT_WITH_ME("picked a fight with me", -6, -2, 5, 3),
+	/** After a brawl: getting it out of their system. Usually outweighs the brawl's own bad memories. */
+	CLEARED_THE_AIR("cleared the air", 8, 2, 5, 2),
+	/** Competitive losers respect whoever beat them. */
+	BEAT_ME_FAIR_AND_SQUARE("beat me fair and square", 8, 0, 10, 2),
 	FLED_AND_LEFT_ME("fled and left me", -15, 0, 15, 3),
 	LIED_TO_ME("lied to me", -20, 0, 20, 3),
 	STOLE_FROM_ME("stole from me", -25, -5, 30, 3),

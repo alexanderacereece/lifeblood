@@ -6,6 +6,7 @@ import net.minecraft.core.net.command.CommandManager;
 import net.minecraft.core.util.collection.NamespaceID;
 import npclaude.command.NpcCommand;
 import npclaude.entity.EntityNPC;
+import npclaude.item.NpcItems;
 import npclaude.skin.NpcSkinFiles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +22,7 @@ public class NPClaude implements ModInitializer {
 	public void onInitialize() {
 		CommonEvents.BEFORE_GAME_START.listen(Key.of(MOD_ID), this::beforeGameStart);
 		CommandManager.registerCommand(new NpcCommand());
+		NpcItems.init();
 		LOGGER.info("NPClaude initialized. NPC skins folder: {}", NpcSkinFiles.getDirectory());
 	}
 

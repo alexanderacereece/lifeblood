@@ -10,6 +10,7 @@ import net.minecraft.core.item.ItemStack;
 import net.minecraft.core.player.inventory.InventorySorter;
 import net.minecraft.core.player.inventory.container.Container;
 import npclaude.entity.EntityNPC;
+import npclaude.item.NpcItems;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -92,6 +93,12 @@ public class NpcInventory implements Container {
 	@Override
 	public boolean stillValid(@NotNull Player player) {
 		return this.npc.isAlive() && !this.npc.removed && this.npc.distanceToSqr(player) <= MAX_USE_DISTANCE_SQR;
+	}
+
+	/** A guardian amulet, once given, is the NPC's to keep: it can't be taken back out. */
+	@Override
+	public boolean locked(int slot) {
+		return NpcItems.isGuardianAmulet(this.items[slot]);
 	}
 
 	/** Sorts only the pack, so armor and the held item stay put. */

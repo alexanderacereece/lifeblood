@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.IArmorWearing;
 import net.minecraft.core.entity.IItemHolding;
+import net.minecraft.core.entity.Mob;
 import net.minecraft.core.entity.MobPathfinder;
 import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.entity.monster.MobSlime;
@@ -31,6 +32,7 @@ import npclaude.ai.NpcNavigator;
 import npclaude.ai.behavior.FollowPlayerBehavior;
 import npclaude.ai.behavior.RecoverBehavior;
 import npclaude.ai.behavior.WanderBehavior;
+import npclaude.combat.BrawlBehavior;
 import npclaude.combat.CombatBehavior;
 import npclaude.combat.CombatStyle;
 import npclaude.combat.FactionRelation;
@@ -39,6 +41,7 @@ import npclaude.combat.NpcFactions;
 import npclaude.combat.NpcRelations;
 import npclaude.dialogue.NpcDialogue;
 import npclaude.interaction.NpcInteractions;
+import npclaude.item.NpcItems;
 import npclaude.inventory.NpcInventory;
 import npclaude.perf.NpcProfiler;
 import npclaude.personality.ItemDefaults;
@@ -48,6 +51,7 @@ import npclaude.personality.Tastes;
 import npclaude.personality.NpcPersonality;
 import npclaude.personality.Quirk;
 import npclaude.personality.TraitAxis;
+import npclaude.social.Brawl;
 import npclaude.social.MemoryType;
 import npclaude.social.NpcMemories;
 import npclaude.social.Opinions;
@@ -103,6 +107,10 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private static final int FOLLOW_CHECK_INTERVAL = 100;
 	/** A follower whose opinion of its leader sinks this low leaves. */
 	private static final float QUIT_FOLLOWING_OPINION = -15.0F;
+	/** How often the NPC considers picking a fight with someone it can't stand (10 seconds). */
+	private static final int BRAWL_CHECK_INTERVAL = 200;
+	/** Within this long of a first punch, a second one from a friend starts a brawl (5 seconds). */
+	private static final int SECOND_PUNCH_TICKS = 100;
 	/** How often a follower looks at what its leader is up to (2 seconds). */
 	private static final int LEADER_WATCH_INTERVAL = 40;
 	/** This far above sea level, the air feels thin. */
@@ -140,6 +148,12 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private int pendingRemarkTick;
 	private int lastBiomeRemarkTick = -BIOME_REMARK_COOLDOWN;
 	private int lastRefusalTick = -REFUSAL_COOLDOWN;
+	/** The fistfight it's in, if any. Not saved: a brawl doesn't survive leaving the world. */
+	@Nullable
+	private Brawl brawl;
+	/** Set while a brawl punch lands, so it can't take the NPC below 1 health. */
+	private boolean takingBrawlHit;
+	private int lastFriendlyPunchTick = -SECOND_PUNCH_TICKS;
 	/** When each kind of remark about the leader can next be made, by event. */
 	private final Map<String, Integer> remarkReady = new HashMap<>();
 	/** How many valuables (and of this NPC's favorite thing) its leader carried at the last look; null before the first. */
@@ -187,6 +201,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		super(world);
 		this.doRandomWalk = false;
 		this.brain.addInstinct(new CombatBehavior());
+		this.brain.addInstinct(new BrawlBehavior());
 		this.brain.addInstinct(new RecoverBehavior());
 		// Every NPC starts as someone; loading a saved NPC replaces this with who it was.
 		this.personality.randomize(this.random);
@@ -330,6 +345,10 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 			this.watchLeader();
 		}
 
+		if (offset % BRAWL_CHECK_INTERVAL == 0) {
+			this.considerBrawl();
+		}
+
 		if (offset % SURROUNDINGS_MOOD_INTERVAL == 0) {
 			this.feelSurroundings();
 		}
@@ -436,9 +455,9 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		return this.getHealth() < this.getMaxHealth() * RESCUE_HEALTH;
 	}
 
-	/** Too occupied to start a conversation: fighting, talking to someone, or lying on the ground. */
+	/** Too occupied to start a conversation: fighting, brawling, talking to someone, or lying on the ground. */
 	public boolean isBusy() {
-		return this.talkingTo != null || this.isDowned() || this.brain.getActive() instanceof CombatBehavior;
+		return this.talkingTo != null || this.isDowned() || this.brawl != null || this.brain.getActive() instanceof CombatBehavior;
 	}
 
 	/** The player's rule for eating: only while health plus the healing still queued from earlier food is below max. */
@@ -564,12 +583,13 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		// No chatting mid-fight, or with someone it means to fight: it says so instead.
 		CombatBehavior combat = this.brain.getActive() instanceof CombatBehavior active ? active : null;
 		boolean hostile = NpcFactions.regard(this, player) == FactionRelation.HOSTILE;
-		if (combat != null || hostile) {
+		if (combat != null || hostile || this.brawl != null) {
 			if (this.tickCount - this.lastRefusalTick >= REFUSAL_COOLDOWN) {
 				this.lastRefusalTick = this.tickCount;
-				boolean fightingYou = combat != null && combat.getCurrentTarget() == player;
+				boolean fightingYou = combat != null && combat.getCurrentTarget() == player || this.isBrawlingWith(player);
 				this.voice.bark("busy_fighting", player, context -> context.fact("fighting_you", fightingYou ? "yes" : "no")
-					.fact("in_combat", combat != null ? "yes" : "no"), true);
+					.fact("in_combat", combat != null || this.brawl != null ? "yes" : "no")
+					.fact("brawling", this.brawl != null ? "yes" : "no"), true);
 			}
 
 			return true;
@@ -656,6 +676,115 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	/** True if anything carried hits harder than a bare fist (bows don't count). */
 	public boolean hasMeleeWeapon() {
 		return this.inventory.findSlot(stack -> !(stack.getItem() instanceof ItemBow) && stack.getDamageVsEntity(this) > 1) >= 0;
+	}
+
+	/**
+	 * A bare-fisted punch, like a player's with an empty hand, for brawls. Never takes a player below 1 health, and
+	 * a player beaten down to their yield point loses.
+	 */
+	public boolean tryPunch(Mob target) {
+		if (this.attackTime > 0 || this.isEating() || target.distanceToSqr(this) > MELEE_REACH * MELEE_REACH
+			|| target.bb.maxY <= this.bb.minY || target.bb.minY >= this.bb.maxY) {
+			return false;
+		}
+
+		this.attackTime = MELEE_COOLDOWN;
+		this.swingArm();
+		if (target instanceof Player && target.getHealth() <= 1) {
+			return false;
+		}
+
+		boolean hit = target.hurt(this, 1, DamageType.COMBAT);
+		if (hit && this.brawl != null && target instanceof Player) {
+			this.brawl.checkYield(target);
+		}
+
+		return hit;
+	}
+
+	/** Moves a held weapon into the pack (if there's room), like putting it away for a fistfight. */
+	public void putAwayWeapon() {
+		ItemStack held = this.getHeldItem();
+		if (held != null && (held.getDamageVsEntity(this) > 1 || held.getItem() instanceof ItemBow) && this.inventory.addToPack(held)) {
+			this.setHeldItem(null);
+		}
+	}
+
+	@Nullable
+	public Brawl getBrawl() {
+		return this.brawl;
+	}
+
+	public boolean isBrawlingWith(Entity entity) {
+		return this.brawl != null && this.brawl.involves(entity);
+	}
+
+	public void joinBrawl(Brawl brawl) {
+		this.brawl = brawl;
+		this.talkingTo = null;
+	}
+
+	/** Leaves the brawl; punches from the forgiven opponent no longer count as a reason to fight them for real. */
+	public void leaveBrawl(Brawl brawl, @Nullable Entity forgiven) {
+		if (this.brawl == brawl) {
+			this.brawl = null;
+		}
+
+		if (forgiven != null && this.lastAttacker == forgiven) {
+			this.lastAttacker = null;
+		}
+	}
+
+	/** Whether this NPC still wants to fight back against someone who hit it recently (not counting brawl punches). */
+	public boolean holdsGrudge(Entity mob, int grudgeTicks) {
+		return mob == this.lastAttacker && this.ticksSinceAttacked() < grudgeTicks && !this.isBrawlingWith(mob);
+	}
+
+	/**
+	 * Picks a fight, now and then, with someone nearby it can't stand: anyone it dislikes if it's a hothead,
+	 * otherwise only someone who hates it right back. Never when hurt, busy, or outmatched by its own nerves.
+	 */
+	private void considerBrawl() {
+		if (this.brawl != null || this.isBusy() || this.isRecovering() || this.getHealth() < this.getMaxHealth() * 0.75F) {
+			return;
+		}
+
+		boolean hothead = this.personality.has(Quirk.HOTHEAD);
+		float threshold = hothead ? -20.0F : -40.0F;
+		AABBd area = MathHelper.aabbGrow(this.bb, 8.0, 3.0, 8.0, new AABBd());
+		for (Entity entity : this.world.getEntitiesWithinAABBExcludingEntity(this, area)) {
+			if (!(entity instanceof Player) && !(entity instanceof EntityNPC) || !this.canEntityBeSeen(entity)
+				|| NpcFactions.regard(this, entity) == FactionRelation.HOSTILE) {
+				continue;
+			}
+
+			Mob other = (Mob) entity;
+			float opinion = Opinions.of(this, other);
+			if (opinion > threshold) {
+				continue;
+			}
+
+			if (other instanceof EntityNPC npc && (npc.isBusy() || npc.getHealth() < npc.getMaxHealth() * 0.75F
+				|| !hothead && Opinions.of(npc, this) > -40.0F)) {
+				continue;
+			}
+
+			if (other instanceof Player && other.getHealth() <= Brawl.PLAYER_YIELD_HEALTH + 2) {
+				continue;
+			}
+
+			float chance = 0.04F + (threshold - opinion) / 250.0F;
+			chance *= hothead ? 2.0F : 1.0F;
+			chance *= this.personality.has(Quirk.ZEN) ? 0.3F : 1.0F;
+			chance *= this.personality.get(TraitAxis.COURAGE) <= -0.3F ? 0.3F : 1.0F;
+			if (this.random.nextFloat() < chance) {
+				if (Brawl.start(this, other, this) != null) {
+					this.voice.bark("brawl_challenge", other, null, true);
+				}
+
+				return;
+			}
+		}
 	}
 
 	/** Hits the target with the held item, like a player's attack, if it's in reach and the cooldown is over. */
@@ -855,6 +984,15 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		return this.healthMode;
 	}
 
+	/** The health mode that actually applies: a mortal NPC carrying a guardian amulet is invincible. */
+	public HealthMode getEffectiveHealthMode() {
+		if (this.healthMode == HealthMode.MORTAL && this.inventory.findSlot(NpcItems::isGuardianAmulet) >= 0) {
+			return HealthMode.INVINCIBLE;
+		}
+
+		return this.healthMode;
+	}
+
 	public void setHealthMode(HealthMode healthMode) {
 		this.healthMode = healthMode;
 		if (healthMode == HealthMode.MORTAL && this.isDowned()) {
@@ -971,7 +1109,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	/** Falling out of the world can't kill an invincible NPC either: it's brought home. */
 	@Override
 	public void outOfWorld() {
-		if (this.healthMode == HealthMode.MORTAL) {
+		if (this.getEffectiveHealthMode() == HealthMode.MORTAL) {
 			super.outOfWorld();
 		} else {
 			this.teleportTo(this.homeX, this.homeY, this.homeZ);
@@ -1060,12 +1198,40 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		}
 
 		boolean wasBadlyHurt = this.isBadlyHurt();
+		Entity source = attacker instanceof Projectile projectile && projectile.owner != null ? projectile.owner : attacker;
+		boolean person = source instanceof Player || source instanceof EntityNPC;
+		boolean armed = attacker instanceof Projectile || isArmed(source);
+		boolean brawlHit = false;
+		boolean friendlyPunch = false;
+		if (person && source != this && type == DamageType.COMBAT) {
+			if (this.isBrawlingWith(source)) {
+				// Fists only: reaching for a weapon turns the brawl into a real fight.
+				if (armed) {
+					this.brawl.escalate((Mob) source);
+				} else {
+					brawlHit = true;
+				}
+			} else if (this.brawl == null && !armed && NpcFactions.regard(this, source) != FactionRelation.HOSTILE
+				&& !(this.brain.getActive() instanceof CombatBehavior) && !this.isRecovering()) {
+				// A punch from someone it isn't fighting. A friend gets one warning; otherwise it's a brawl.
+				if (Opinions.of(this, source) >= 20.0F && this.tickCount - this.lastFriendlyPunchTick > SECOND_PUNCH_TICKS) {
+					this.lastFriendlyPunchTick = this.tickCount;
+					friendlyPunch = true;
+				} else if (Brawl.start(this, (Mob) source, (Mob) source) != null) {
+					brawlHit = true;
+					this.voice.bark("brawl_accept", source, null, true);
+				}
+			}
+		}
+
 		this.incomingDamageSource = attacker;
+		this.takingBrawlHit = brawlHit || friendlyPunch;
 		boolean hurt;
 		try {
 			hurt = super.hurt(attacker, damage, type);
 		} finally {
 			this.incomingDamageSource = null;
+			this.takingBrawlHit = false;
 		}
 
 		if (!hurt) {
@@ -1073,9 +1239,16 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		}
 
 		// Being hurt breaks off any conversation, and the NPC remembers who did it (the archer, not the arrow).
+		// Brawl punches and a friend's first shove don't make it want to fight for real.
 		this.talkingTo = null;
-		Entity source = attacker instanceof Projectile projectile && projectile.owner != null ? projectile.owner : attacker;
-		if (source != null && source != this) {
+		if (brawlHit) {
+			if (this.brawl != null) {
+				this.brawl.checkYield(this);
+			}
+		} else if (friendlyPunch) {
+			this.remember(MemoryType.HIT_ME, source, 0.3F);
+			this.voice.bark("hit_by_friend", source, null, false);
+		} else if (source != null && source != this) {
 			this.lastAttacker = source;
 			this.lastAttackedTick = this.tickCount;
 			this.reactToHit(source);
@@ -1086,6 +1259,12 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		}
 
 		return true;
+	}
+
+	/** Whether this person is holding something that hits harder than a fist. */
+	private boolean isArmed(@Nullable Entity person) {
+		ItemStack held = person instanceof Player player ? player.inventory.getCurrentItem() : person instanceof EntityNPC npc ? npc.getHeldItem() : null;
+		return held != null && held.getDamageVsEntity(this) > 1;
 	}
 
 	/** Being hit by a person is remembered; being hit by someone it isn't fighting gets a complaint. */
@@ -1116,7 +1295,11 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 			this.damageArmor((int) Math.ceil((damage - newDamage) / 4.0));
 		}
 
-		if (this.healthMode == HealthMode.INVINCIBLE && newDamage >= this.getHealth()) {
+		if (this.takingBrawlHit) {
+			newDamage = Math.min(newDamage, this.getHealth() - 1);
+		}
+
+		if (this.getEffectiveHealthMode() == HealthMode.INVINCIBLE && newDamage >= this.getHealth()) {
 			newDamage = this.getHealth() - 1;
 			this.knockDown();
 		}

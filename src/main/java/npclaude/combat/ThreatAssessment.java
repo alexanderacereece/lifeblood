@@ -112,7 +112,7 @@ public final class ThreatAssessment {
 
 	/** Is this enemy attacking (or hunting) the NPC or the player it follows? */
 	private static boolean isComingFor(Mob mob, EntityNPC npc, Player leader) {
-		if (mob == npc.getLastAttacker() && npc.ticksSinceAttacked() < GRUDGE_TICKS) {
+		if (npc.holdsGrudge(mob, GRUDGE_TICKS)) {
 			return true;
 		}
 
@@ -137,6 +137,11 @@ public final class ThreatAssessment {
 			return false;
 		}
 
+		// A brawl opponent is someone to punch, not to kill.
+		if (npc.isBrawlingWith(mob)) {
+			return false;
+		}
+
 		FactionRelation relation = relationTo(npc, mob);
 		if (relation != null) {
 			if (relation == FactionRelation.ALLY) {
@@ -144,11 +149,11 @@ public final class ThreatAssessment {
 			}
 
 			// Neutral people are left alone unless they start something.
-			boolean grudge = mob == npc.getLastAttacker() && npc.ticksSinceAttacked() < GRUDGE_TICKS;
+			boolean grudge = npc.holdsGrudge(mob, GRUDGE_TICKS);
 			return grudge || relation == FactionRelation.HOSTILE && npc.canEntityBeSeen(mob);
 		}
 
-		if (mob == npc.getLastAttacker() && npc.ticksSinceAttacked() < GRUDGE_TICKS) {
+		if (npc.holdsGrudge(mob, GRUDGE_TICKS)) {
 			return true;
 		}
 

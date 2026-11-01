@@ -811,6 +811,10 @@ Kind of busy here!
 Can't talk!
 Later!
 Not now, [listener]! Help me!  {relation=ally, w=3}
+Wait your turn!              {brawling=yes, fighting_you=no, w=4}
+This is between me and them. {brawling=yes, fighting_you=no, w=4}
+Talking won't save you. Fists up! {brawling=yes, fighting_you=yes, w=6}
+Less talking, more punching! {brawling=yes, fighting_you=yes, lighthearted, w=6}
 Grab a weapon, [listener]!   {relation=ally, w=3}
 Talk later, fight now!       {relation=ally, brave, w=3}
 I'm a little busy not dying!  {relation=ally, lighthearted, w=3}
@@ -1074,4 +1078,127 @@ I'll pray for that [animal]. And for you. {animal_lover, pious, w=10}
 Please don't do that again. Please. {animal_lover, polite, w=10}
 You murderer!                {animal_lover, hothead, w=10}
 Nooo... little [animal]...   {animal_lover, sentimental, w=10}
+
+# ---------------------------------------------------------------------------------------------------------------
+# Brawls: fistfights nobody dies in. [listener] is the other brawler (or, for brawl_watch, a friend in the fight).
+
+== brawl_challenge ==
+That's it. You and me, right now.
+I've had it with you, [listener]. Put 'em up.
+Come on then, [listener]! Fists!
+You want to settle this? Let's settle this.
+Outside. Now. Oh wait, we're already outside. {lighthearted, w=2}
+Put 'em up, you son of a slime! {crude, w=3}
+I've been waiting a long time for this. {vengeful, w=3}
+I'm going to wipe that look off your face. {hothead, w=3}
+Let's see who's better. For real this time. {competitive, w=3}
+You. Me. No weapons. Let's go. {proper, w=2}
+I don't like you, [listener]. Never have. {honest, w=2}
+
+== brawl_accept ==
+Oh, it's like that? Fine!
+You want a fight? You've got one!
+Big mistake, [listener].
+Did you just hit me?!
+Ow! Right, that's it!
+You'll regret that.          {vengeful, w=2}
+Hey! I don't want to fight! ...Fine! {timid, w=3}
+Ha! Finally, some excitement! {brave, lighthearted, w=3}
+Oh, you're going to pay for that, you little... {crude, w=3}
+I'll make you sorry for that. {hothead, w=3}
+Very well. If you insist.    {proper, w=3}
+Was that a punch? Felt like a breeze. {proud, w=3}
+
+== brawl_yield ==
+Okay! Okay! I give up!
+Enough! You win!
+Stop! I yield!
+Fine, fine. You win.
+Ow... all right, you win, [listener].
+I yield! Please, no more!    {timid, w=3}
+You got lucky. That's all.   {proud, w=4}
+This isn't over.             {vengeful, w=3}
+Rematch. Tomorrow. I mean it. {competitive, w=4}
+Good fight, [listener]. You earned it. {forgiving, w=3}
+Damn it... you win.          {crude, w=3}
+Ha... ow. Well, I had fun.   {lighthearted, w=3}
+Cube God, I'm sore.          {pious, w=2}
+
+== brawl_win ==
+And stay down!
+Ha! Had enough?
+That settles that.
+Now we're even.
+Good fight.
+Next time, think twice.      {brave, w=2}
+That's what you get!         {hothead, w=3}
+Never doubt me.              {proud, w=3}
+Ha! Another one for me.      {competitive, w=3}
+No hard feelings, [listener]. {forgiving, w=3}
+Sorry. Got a bit carried away. {polite, w=3}
+I feel so much better now.   {hothead, w=2}
+Thank the Cube God that's over. {pious, w=2}
+Running away? Coward!        {forfeit=yes, w=8}
+That's right, walk away.     {forfeit=yes, w=8}
+Ha! Didn't think you had the guts. {forfeit=yes, rude, w=8}
+
+== brawl_escalate ==
+A weapon?! In a fistfight?!
+Oh, so that's how it is!
+You brought a weapon to a fistfight! You're dead!
+Cheater!                     {competitive, w=3}
+Now it's serious.            {serious, w=3}
+Coward! Fight fair!          {proud, w=3}
+You bastard!                 {crude, w=3}
+
+== brawl_watch ==
+Fight! Fight! Fight!         {extrovert, w=3}
+Ooh, [brawler] and [other_brawler] are at it again.
+Somebody stop them!          {timid, w=3}
+Stop it, both of you!        {polite, w=2}
+Ten on [brawler]!            {greedy, w=3}
+Ten on [other_brawler]!      {greedy, w=3}
+Ha! Get 'em!                 {lighthearted, w=2}
+Grown adults, fighting in the street. {serious, w=2}
+Violence never solved anything. {forgiving, w=2}
+Hit 'em harder, [listener]!  {friend_fighting=yes, brave, w=4}
+Be careful, [listener]!      {friend_fighting=yes, w=4}
+Leave [listener] alone!      {friend_fighting=yes, hothead, w=4}
+Oh, I'm telling everyone about this. {nosy, w=4}
+Cube God, give them sense.   {pious, w=2}
+...                          {introvert}
+
+# ---------------------------------------------------------------------------------------------------------------
+# Being given a guardian amulet
+
+== gift_amulet ==
+For me? So I'll... be safe? Thank you, [listener].
+You want me kept safe? I... don't know what to say.
+I'll never take it off. I promise.
+This must have cost you a fortune.
+Nobody's ever done anything like this for me. {sentimental, w=3}
+Oh, [listener]. I'll treasure it. Always. {sentimental, w=3}
+I... thank you. Truly.       {introvert, w=2}
+Ha! Now nothing can stop me! {brave, w=3}
+Ha! Now nothing can stop me! {lighthearted, w=2}
+Oh, thank goodness. I've been so worried. {timid, w=4}
+What's the catch?            {paranoid, w=4}
+Gold and a diamond? For me? Oh, it's lovely. {greedy, w=4}
+I don't deserve this.        {humble, w=4}
+About time someone recognized my worth. {proud, w=3}
+The Cube God works through you, [listener]. {pious, w=3}
+Is this... a proposal?       {romantic, w=3}
+I'd have done the same for you. Thank you. {loyal, w=3}
+Fine. I'll wear it. ...Thanks. {rude, w=3}
+Hmph. Thanks, I guess.       {opinion=disliked, w=4}
+
+== questions_open ==
+Sure.
+Go ahead.
+Ask away.
+What do you want to know?
+Ooh, questions! Go on.       {extrovert, w=2}
+Depends what you're asking.  {paranoid, w=2}
+Make it quick.               {rude}
+Hm?                          {taciturn}
 

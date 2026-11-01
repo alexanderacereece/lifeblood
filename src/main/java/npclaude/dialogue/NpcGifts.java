@@ -3,6 +3,7 @@ package npclaude.dialogue;
 import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.item.ItemStack;
 import npclaude.entity.EntityNPC;
+import npclaude.item.NpcItems;
 import npclaude.personality.ItemDefaults;
 import npclaude.personality.Quirk;
 import npclaude.personality.TasteCategory;
@@ -43,6 +44,12 @@ public final class NpcGifts {
 					player.inventory.mainInventory[slot] = null;
 				}
 			}
+		}
+
+		if (NpcItems.isGuardianAmulet(gift)) {
+			npc.remember(MemoryType.GAVE_ME_AN_AMULET, player, 1.0F);
+			String line = npc.voice.line("gift_amulet", player, null);
+			return line != null ? line : "For me? I... thank you.";
 		}
 
 		ItemDefaults.Default defaults = ItemDefaults.of(held.getItem());

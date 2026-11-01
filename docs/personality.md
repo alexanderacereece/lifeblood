@@ -304,7 +304,10 @@ Rules:
   If an NPC is both timid and proud, the two cancel out to 10. As a final safeguard, brawl hits can never take anyone below 1 health.
 - Bystanders react: friends of a brawler may join or break it up, extroverts gather to watch, timid NPCs keep away.
 - Afterwards, the winner and loser get memories ("beat me in a brawl", "won a fight", "lost a fight"), and the hate often cools a little. Competitive NPCs gain respect for whoever beat them.
-- The player can be challenged to brawls too, and can start one by punching an NPC who isn't hostile.
+- The player can be challenged to brawls too, and can start one by punching an NPC who isn't hostile. Someone who likes you gets one warning ("Hey! Watch it!") before a second punch starts the brawl.
+- Reaching for a weapon (or a bow) mid-brawl turns it into a real fight. Walking more than 16 blocks away forfeits it.
+- Whoever is challenged remembers who picked the fight. Afterwards both sides usually "clear the air", which mostly outweighs the brawl's bad memories.
+- Not yet: bystanders joining in or breaking it up (for now they just comment).
 
 ### Gossip (later)
 
@@ -400,7 +403,8 @@ The player chooses who they want to keep safe: a spouse, children, friends, comp
 - **Gifted like any item.** You can give it to any NPC you could normally give gifts to, and they respond to it with their own lines (touched, flustered, suspicious of the gesture, and so on).
 - **Theirs to keep.** Once given, they keep it no matter what happens between you later. No special rules are needed: they can't die while carrying it, so it never drops.
 - **A real cost.** The recipe should be expensive enough (gold and a diamond, for example) that you protect the people who matter, not everyone.
-- **Visible.** The amulet shows on the NPC's model (section 11).
+- **Not shown on the model.** Modular appearance (section 11) gives NPCs enough visual variety; the amulet stays in their pack.
+- **Recipe:** string on top, a diamond set in gold below.
 
 Children are the exception: they're invincible by default, with no amulet needed.
 

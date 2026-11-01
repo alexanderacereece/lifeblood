@@ -15,8 +15,8 @@ import org.jetbrains.annotations.Nullable;
 /**
  * What an NPC says when a conversation reaches this point, and the replies the player can pick.
  *
- * The main menu: chat, give the held item, ask about them, ask what they think of someone, ask them to come along
- * (or to stop), and, for people who trust you, practical matters (inventory, follow distance, how to fight).
+ * The main menu: chat, give the held item, questions (about them, what they think of someone), ask them to come
+ * along (or to stop), and, for people who trust you, practical matters (inventory, follow distance, how to fight).
  */
 public record NpcDialogue(String line, List<DialogueOption> options) {
 	/** People they'll offer an opinion on: everyone within this distance, plus every player in the world. */
@@ -37,11 +37,8 @@ public record NpcDialogue(String line, List<DialogueOption> options) {
 			options.add(new DialogueOption("Here, take this.", session -> session.show(main(npc, player, NpcGifts.give(npc, player)))));
 		}
 
-		options.add(new DialogueOption("Tell me about yourself.", session -> {
-			session.say(say(npc, player, "about_me", "Not much to tell."));
-			session.openProfile();
-		}));
-		options.add(new DialogueOption("What do you think of...", session -> session.show(askAbout(npc, player))));
+		options.add(new DialogueOption("Can I ask you something?", session -> session.show(questions(npc, player, say(npc, player,
+			"questions_open", "Sure.")))));
 		if (npc.getLeader() == player) {
 			options.add(new DialogueOption("You can stop following me.", session -> {
 				npc.stopFollowing();
@@ -74,10 +71,22 @@ public record NpcDialogue(String line, List<DialogueOption> options) {
 		return new NpcDialogue(line, options);
 	}
 
+	/** Questions about them and the people they know. Family goes here too, once there is family. */
+	private static NpcDialogue questions(EntityNPC npc, Player player, String line) {
+		List<DialogueOption> options = new ArrayList<>();
+		options.add(new DialogueOption("Tell me about yourself.", session -> {
+			session.show(questions(npc, player, say(npc, player, "about_me", "Not much to tell.")));
+			session.openProfile();
+		}));
+		options.add(new DialogueOption("What do you think of...", session -> session.show(askAbout(npc, player))));
+		options.add(new DialogueOption("That's all.", session -> session.show(main(npc, player, say(npc, player, "never_mind", "All right.")))));
+		return new NpcDialogue(line, options);
+	}
+
 	/** Who they can be asked about: you first, then the people nearby and the other players. */
 	private static NpcDialogue askAbout(EntityNPC npc, Player player) {
 		List<DialogueOption> options = new ArrayList<>();
-		options.add(new DialogueOption("Me?", session -> session.show(main(npc, player, say(npc, player, "opinion_of_you", "You're all right.")))));
+		options.add(new DialogueOption("Me?", session -> session.show(questions(npc, player, say(npc, player, "opinion_of_you", "You're all right.")))));
 		List<Entity> people = new ArrayList<>();
 		for (Entity entity : npc.world.entities) {
 			if (entity == npc || entity == player) {
@@ -94,10 +103,10 @@ public record NpcDialogue(String line, List<DialogueOption> options) {
 		people.sort((a, b) -> Float.compare(a.distanceTo(npc), b.distanceTo(npc)));
 		for (Entity other : people.subList(0, Math.min(MAX_PEOPLE, people.size()))) {
 			String name = Opinions.nameOf(other);
-			options.add(new DialogueOption(name + "?", session -> session.show(main(npc, player, opinionOf(npc, player, other)))));
+			options.add(new DialogueOption(name + "?", session -> session.show(questions(npc, player, opinionOf(npc, player, other)))));
 		}
 
-		options.add(new DialogueOption("Never mind.", session -> session.show(main(npc, player, say(npc, player, "never_mind", "Oh. All right.")))));
+		options.add(new DialogueOption("Never mind.", session -> session.show(questions(npc, player, say(npc, player, "never_mind", "Oh. All right.")))));
 		return new NpcDialogue(say(npc, player, "ask_about_who", "Who?"), options);
 	}
 
