@@ -1,0 +1,464 @@
+# NPClaude speech: conversation. The format and every fact and word are described in basics.speech.
+
+# ---------------------------------------------------------------------------------------------------------------
+# Greetings: a player walks up.
+
+== greet ==
+It's my birthday today!      {birthday=yes, w=8}
+[hello] Guess whose birthday it is? Mine! {birthday=yes, extrovert, w=8}
+Oh! Hi. It's, um... my birthday. {birthday=yes, introvert, w=8}
+[hello_named]
+[hello_named] [smalltalk_short] {w=0.6}
+[hello_named] Still in one piece, I see. {opinion=friend}
+[listener]! There you are.   {opinion=close_friend, w=2}
+There you are, love.         {listener_kin=spouse, w=6}
+Hi! Hi! Hello!               {age=child, w=8}
+Wanna play?                  {age=child, w=8}
+Mom! Dad! ...Oh, it's you. Hi. {age=child, w=4}
+You're back! You're back!   {age=child, listener_kin=parent, w=10}
+Hi! I missed you!            {age=child, listener_kin=parent, w=10}
+There's my little one!       {listener_kin=child, w=10}
+Hey, kiddo.                  {listener_kin=child, w=8}
+Hello, dear.                 {listener_kin=spouse, polite, w=5}
+Oh! It's you. Hi.            {listener_kin=partner, introvert, w=6}
+Hey, you.                    {listener_kin=partner, w=5}
+There's my favorite person.  {listener_kin=partner, romantic, w=6}
+Hello, future spouse! Too much? Too much. {listener_kin=fiance, lighthearted, w=4}
+Hello, soon-to-be.           {listener_kin=fiance, w=5}
+Oh, it's you. Good.          {opinion=friend}
+...                          {opinion=disliked}
+Oh. It's you.                {opinion=disliked}
+Keep walking.                {opinion=disliked, rude}
+What do you want?            {opinion=disliked, rude+}
+Hm. Hello.                   {opinion=disliked, polite}
+Hey, [listener]. Coming along? {leader=yes}
+Right behind you.            {leader=yes}
+Mm.                          {taciturn, w=2}
+[hello] Lovely weather for ducks. {weather=rain, lighthearted}
+[hello] Miserable weather.   {weather=rain, pessimist}
+[hello] Some rain, huh?      {weather=rain}
+[hello] Isn't this rain wonderful? {weather=rain, weather_like=love}
+[hello] Get inside, it's pouring. {weather=rain, weather_like=hate, outside=yes}
+[hello] Some storm, huh?     {weather=storm}
+[hello] Hear that thunder?   {weather=storm, weather_like=love}
+Oh, thank goodness, company. This storm... {weather=storm, timid}
+[hello] Snow!                {weather=snow, weather_like=love}
+[hello] Cold enough for you? {weather=snow, lighthearted}
+[hello] Can't see a thing in this fog. {weather=fog}
+[hello] Lovely day, isn't it? {weather=clear, weather_like=love, time=day}
+[hello] Don't look at the sky. Just don't. {weather=blood_rain}
+Oh, hey. Didn't see you there. {timid}
+[hello] Need something?      {polite}
+[hello] Make it quick.       {rude}
+[hello] Make it quick, I'm working. {hardworking, rude}
+Oh good, an excuse to stop working. {lazy, lighthearted}
+
+== smalltalk_short ==
+How's it going?
+Keep safe out there.
+Nice day.                    {weather=clear, time=day}
+Nice day, if you like that sort of thing. {weather=clear, time=day, weather_like=dislike}
+Lovely rain.                 {weather=rain, weather_like=love}
+Wet one.                     {weather=rain}
+Wild weather.                {weather=storm}
+Cold out.                    {weather=snow}
+Foggy.                       {weather=fog}
+Rough day.                   {mood=bad}
+What a day!                  {mood=great}
+
+# ---------------------------------------------------------------------------------------------------------------
+# Conversations
+
+== dialogue_open ==
+[hello_named]
+Yes?
+What can I do for you?       {polite}
+What is it?                  {!polite}
+What do you want?            {rude}
+Hm?                          {introvert}
+Oh! Hi! What's up?           {extrovert+}
+Mm.                          {taciturn}
+Talk fast.                   {opinion=disliked}
+What now?                    {opinion=disliked, rude}
+Hey, [listener]. What's on your mind? {opinion=friend}
+[listener]! Always good to see you. {opinion=close_friend}
+Not now... I'm still sore all over. {recovering=yes}
+Make it quick, I've got work to do. {hardworking}
+Oh, thank the Cube. A break.  {lazy, pious}
+Oh, thank goodness. A break.  {lazy}
+
+== smalltalk ==
+Another year older. Feels about the same. {birthday=yes, w=6}
+It's my birthday! Did you get me anything? {birthday=yes, greedy, w=10}
+It's my birthday! Did you get me anything? {birthday=yes, lighthearted, w=6}
+Birthdays make me think about all the years gone by. {birthday=yes, sentimental, w=10}
+Another year closer to the end. Happy birthday to me. {birthday=yes, pessimist, w=10}
+Not much to say, really.
+Same as always.
+Keeping busy.                {hardworking}
+Trying not to get too busy.  {lazy}
+I've been thinking about [favorite_food.s] all day. {glutton, w=2}
+You know what I could go for? [favorite_food.a.cap]. {glutton}
+I'd kill for [favorite_food.a] right now. {glutton, crude}
+Some folks like [hated_food.s]. I don't get it. {w=0.6}
+If anyone offers you [hated_food.a], say no. Trust me. {w=0.6}
+[favorite_food.cap] [favorite_food.is] the best thing there is. Fight me. {lighthearted, w=0.6}
+Have you heard anything interesting? {nosy, w=2}
+So, who've you been talking to? {nosy}
+What's out there, past the hills? {curious, w=2}
+Seen anything strange on your travels? {curious}
+The Cube God watches over us all. {pious, w=2}
+Say your prayers to the Cube God tonight. {pious, time=evening}
+I've been keeping score, you know. I'm winning. {competitive}
+Whatever you're good at, I'm probably better. No offense. {competitive, lighthearted}
+Someone here thinks they work harder than me. They're wrong. {competitive, hardworking}
+I don't lose. I occasionally fail to win. {competitive, proud}
+I don't like to brag, but I'm the best around here. {proud}
+Oh, I'm nobody special.      {humble}
+Everything's going to be fine. I can feel it. {optimist}
+Something bad is coming. I can feel it. {pessimist}
+Honestly? Could be worse.    {pessimist}
+Isn't it a fine day?         {optimist, weather=clear, time=day}
+This rain is getting into my bones. {weather=rain, pessimist}
+I like the rain, honestly.   {weather=rain, weather_like=like}
+I love the rain. Everything smells new. {weather=rain, weather_like=love, w=2}
+I could stand out in this rain all day. {weather=rain, weather_like=love, lighthearted}
+I hate the rain. Everything's damp. Me especially. {weather=rain, weather_like=hate, w=2}
+This rain had better stop soon. {weather=rain, weather_like=dislike}
+I love a good storm. Makes you feel alive. {weather=storm, weather_like=love, w=2}
+I'm not scared of storms. I just don't like them. At all. {weather=storm, weather_like=hate, timid, w=2}
+Storms make me nervous.      {weather=storm, weather_like=dislike}
+The Cube God is angry today. {weather=storm, pious}
+Snow makes everything quiet. I like that. {weather=snow, weather_like=love, introvert}
+I love the snow!             {weather=snow, weather_like=love}
+Snow. Cold, wet, and everywhere. {weather=snow, weather_like=hate}
+Fog like this, anything could be out there. {weather=fog, paranoid, w=2}
+I like the fog. Nobody bothers you. {weather=fog, weather_like=love}
+Can't see my own hands in this fog. {weather=fog, weather_like=dislike}
+Red rain. That's an omen if ever I saw one. {weather=blood_rain, pious, w=2}
+Is the rain... red? Why is the rain red? {weather=blood_rain}
+Blood from the sky. Wonderful. Just wonderful. {weather=blood_rain, pessimist}
+Honestly, I think the red rain is kind of pretty. {weather=blood_rain, weather_like=like}
+Not a cloud in the sky. Perfect. {weather=clear, weather_like=love, time=day}
+Too bright out. I miss the clouds. {weather=clear, weather_like=hate, time=day}
+My favorite weather? [favorite_weather.s.cap]. No contest. {w=0.6}
+Give me [favorite_weather.s] any day. {w=0.6}
+I can't stand [hated_weather.s].  {w=0.5}
+I love [season_word]. Best time of the year. {season_like=love, w=1.5}
+[season_word.cap] again. I'll live. {season_like=dislike}
+I can't wait for [favorite_season]. {!season_like=love, w=0.6}
+Every [season_word] I tell myself I'll get used to it. I never do. {season_like=hate}
+[season_word.cap] is for harvests. And eating them. {season=fall, glutton}
+Spring makes everyone fall in love. Have you noticed? {season=spring, romantic}
+Fall always makes me think of the old days. {season=fall, sentimental}
+Winter nights are the best nights. So long. {season=winter, night_owl}
+Long summer days. More time to work. {season=summer, hardworking}
+Summer means naps in the shade. {season=summer, lazy}
+I love it out here in [biome_word.the]. {biome_like=love, w=1.5}
+[biome_word.the.cap] suits me. {biome_like=like}
+I'll never get used to [biome_word.the]. {biome_like=hate}
+Some days I wish I lived somewhere other than [biome_word.the]. {biome_like=dislike}
+If I could live anywhere, it'd be [favorite_biome.the]. {w=0.6}
+You'll never catch me in [hated_biome.the]. Never. {w=0.5}
+Have you ever been to [favorite_biome.the]? You should. {extrovert, w=0.5}
+I've always wanted to see [hated_biome.the]. Just to know. {curious, w=0.6}
+I've got a thing for [favorite_thing.s], you know. {w=0.8}
+If you ever find [favorite_thing.a], think of me. {w=0.7}
+I love [favorite_thing.s]. Don't ask me why. {w=0.6}
+Nobody believes me, but I love [favorite_thing.s]. {surprising_thing=yes}
+Don't ever give me [hated_thing]. I mean it. {w=0.6}
+Want to know what I hate? [hated_thing.cap]. {w=0.5}
+I could look at [favorite_thing.s] all day. {curious}
+A person can never have too many [favorite_thing.s]. {greedy}
+I love animals. All of them. Even the ones that bite. {animal_lover, w=2}
+Be gentle with the animals, would you? {animal_lover}
+People who hurt animals... I don't trust them. {animal_lover, serious}
+If I could, I'd live in [favorite_biome.the]. I love the smell of it. {w=0.3}
+I've had a rough time lately. {mood=bad}
+[partner] and I are doing well, thanks for asking. Well, you didn't ask. {relationship=married, w=1.5}
+Married life suits me.       {relationship=married, optimist, w=1.5}
+Married life is... an adjustment. {relationship=married, pessimist, w=1.5}
+I can't stop thinking about [partner]. {relationship=dating, romantic, w=3}
+[partner] and I have been seeing each other. Don't tell anyone. {relationship=dating, w=1.5}
+I'm getting married! Did you hear? {relationship=engaged, w=2.5}
+Wedding plans. So many wedding plans. {relationship=engaged, hardworking, w=2}
+I still set two plates out, some nights. {relationship=widowed, sentimental, w=2}
+I miss them every day.       {relationship=widowed, w=1}
+It's lonely, some nights.    {relationship=widowed, w=1.5}
+Being single's fine. Really. {relationship=single, pessimist, w=0.5}
+Haven't had [taught_food.a] in days. {w=1.5}
+I could really go for [taught_food.a] right now. {glutton, w=3}
+I saw [taught_animal.a] by the river yesterday! {w=1.5}
+Do you think [taught_animal.s] bite? {timid, w=2}
+Lost my [taught_thing] again. {w=1.5}
+Can't find my [taught_thing] anywhere. Have you seen it? {w=1}
+Ever been to [taught_place]? {w=1.5}
+I'd love to see [taught_place] one day. {curious, w=2}
+Isn't this weather just [taught_describe]? {weather=clear, w=1.5}
+You know what you are? [taught_describe.cap]. {opinion=friend, w=1.5}
+Been [taught_activity] lately? {w=1.5}
+I spent all morning [taught_activity]. Best morning in ages. {w=1}
+When I grow up I'm gonna be the strongest person ever. {age=child, w=6}
+Do you know any games? I know lots of games. {age=child, w=6}
+I'm not tired. I'm NOT.      {age=child, time=evening, w=8}
+Why is the sky up there?     {age=child, curious, w=8}
+I found a bug! I named it Steve. {age=child, lighthearted, w=8}
+Mom says I can't go past the trees. {age=child, w=6}
+Are you a grown-up? You look like a grown-up. {age=child, w=6}
+I'm gonna eat all the [favorite_food.s] when I'm big. {age=child, glutton, w=8}
+I'm hiding. Don't tell anyone. {age=child, timid, w=8}
+Kids. They grow up so fast.  {relationship=married, w=0.5}
+I'd like to meet someone special one day. {relationship=single, romantic, w=2}
+You and me, [listener]. Always. {listener_kin=spouse, w=4}
+I love you, you know.        {listener_kin=spouse, romantic, w=4}
+I love you, you know.        {listener_kin=partner, romantic, w=3}
+I was hoping you'd come by.  {listener_kin=partner, w=3}
+Can't wait to marry you.     {listener_kin=fiance, w=4}
+Not great. Let's leave it there. {mood=awful}
+I feel wonderful today!      {mood=great}
+Life's good.                 {mood=good}
+Still recovering. Don't make me laugh, it hurts. {recovering=yes}
+I'm still sore from that beating. {recovering=yes}
+The [enemy_faction] are trouble. Watch yourself. {has_enemy=yes}
+If you see any of the [enemy_faction], run. {has_enemy=yes, timid}
+If you see any of the [enemy_faction], send them my way. {has_enemy=yes, brave}
+Being one of the [faction] is all right. {has_faction=yes}
+You and me, we make a good team. {opinion=friend, leader=yes}
+I'm glad we're friends, [listener]. {opinion=close_friend}
+You again.                   {opinion=disliked}
+Why are you talking to me?   {opinion=disliked, rude}
+I hear the [enemy_faction] eat [hated_food.s]. Disgusting. {has_enemy=yes, lighthearted, w=0.5}
+Late, isn't it? I like the night. {night_owl, time=night}
+I should be in bed.          {early_bird, time=night}
+Up with the sun, that's me.  {early_bird, time=morning}
+Know any good jokes? I know a terrible one. {lighthearted}
+Let's keep this short.       {introvert}
+So much to talk about, where do I even start? {chatterbox}
+Hm.                          {taciturn}
+Did you see that? No? Never mind. {paranoid}
+They're watching us, you know. {paranoid}
+I met a talking sheep once. Honest. {liar}
+I'd never lie to you.        {honest}
+You look good today. Really. {romantic}
+Do you ever think about settling down? {romantic}
+
+# ---------------------------------------------------------------------------------------------------------------
+# The conversation menu
+
+== about_me ==
+Me? Not much to tell.
+What do you want to know?
+Oh! Where do I start?        {extrovert, w=2}
+Me? Why?                     {paranoid, w=2}
+I'm not very interesting.    {humble, w=2}
+Finally, someone asks.       {proud, w=2}
+Ugh. Fine.                   {rude}
+Hm.                          {taciturn, w=2}
+That's a big question.       {serious}
+I'm an open book. A short one. {lighthearted}
+
+== where_from ==
+[home_biome.the.cap]. Born and raised. {w=3}
+[home_biome.the.cap]. You can probably tell. {w=2}
+I'm from [home_biome.the]. {w=3}
+[home_biome.the.cap]. Best place there is. {biome_like=like, at_home=yes, w=2}
+Right here! [home_biome.the.cap], born and raised. {at_home=yes, w=4}
+You're standing in it. [home_biome.the.cap]. {at_home=yes, lighthearted, w=3}
+Here. Never been anywhere else, really. {at_home=yes, introvert, w=3}
+Oh, [home_biome.the]! I could talk about it for hours. Don't worry, I won't. {extrovert, w=2}
+[home_biome.the.cap]. Why? {paranoid, w=3}
+Why do you want to know? {paranoid, w=1}
+[home_biome.the.cap]. Not that it's any of your business. {rude, w=3}
+[home_biome.the.cap].        {taciturn, w=4}
+[home_biome.the.cap]. Cold enough to freeze the words in your mouth. {home_climate=cold, w=3}
+[home_biome.the.cap]. You learn to love snow, or you leave. {home_climate=cold, w=2}
+[home_biome.the.cap]. You learn to love the heat, or you leave. {home_climate=hot, w=2}
+[home_biome.the.cap]. Hot as hell and twice as dry. {home_climate=hot, crude, w=3}
+[home_biome.the.cap]. Not much to say about it. It's nice. {home_climate=mild, w=2}
+[home_biome.the.cap]. Haven't been back in a long time. {at_home=no, serious, w=2}
+[home_biome.the.cap]. I miss it. {at_home=no, w=2}
+[home_biome.the.cap]. I don't miss it. {at_home=no, pessimist, w=2}
+Around. Here and there.
+I'd rather not say.          {taciturn}
+
+== ask_about_who ==
+Who?
+Who do you mean?
+About who?
+Ooh. Who?                    {nosy, w=3}
+Gossip? I'm listening.       {nosy, w=2}
+I don't talk about people behind their backs. {honest, w=2}
+Careful what you ask, [listener]. {paranoid}
+
+== opinion_of_you ==
+You? You're all right.       {opinion=neutral}
+I don't really know you yet. {opinion=neutral}
+Honestly? Haven't made my mind up. {opinion=neutral, honest}
+I like you, [listener].      {opinion=friendly}
+I enjoy having you around.   {opinion=friendly}
+You're a friend. A real one. {opinion=friend}
+I'd trust you with my life.  {opinion=close_friend}
+You're the best friend I've got, [listener]. {opinion=close_friend, w=2}
+Honestly? Not much.          {opinion=disliked}
+You really want to know? No. {opinion=disliked, rude}
+I'd rather not say.          {opinion=disliked, polite}
+I can't stand you.           {opinion=enemy}
+Get out of my sight.         {opinion=enemy, rude}
+You know exactly what I think of you. {opinion=enemy, vengeful}
+I think you're wonderful. Don't let it go to your head. {opinion=close_friend, lighthearted}
+Do you really need me to say it? {opinion=friend, introvert}
+
+== opinion_of ==
+[other]? Don't know much about them.     {about=neutral}
+[other]? They're all right.              {about=neutral}
+[other]? Haven't made up my mind.        {about=neutral}
+[other]? Never really talked.            {about=neutral, introvert}
+[other]? Nice enough.                    {about=friendly}
+[other]'s good company.                  {about=friendly}
+[other]? I like them.                    {about=friendly}
+[other]? A good friend.                  {about=friend}
+[other] and I go way back. Well. Back.   {about=friend, lighthearted}
+I'd do anything for [other].             {about=close_friend}
+[other]? My best friend. Don't tell them I said that. {about=close_friend}
+[other]? Ugh.                            {about=disliked}
+Don't get me started on [other].         {about=disliked}
+[other] and I don't get along.           {about=disliked, polite}
+[other] is a waste of good air.          {about=disliked, rude}
+[other]? I'd rather not say.             {about=disliked, polite}
+[other] can go to hell.                  {about=enemy, crude, w=2}
+If I never see [other] again, it'll be too soon. {about=enemy}
+I'll get [other] one day. You'll see.    {about=enemy, vengeful}
+[other]? Don't trust them. Don't trust anyone. {paranoid, w=0.5}
+Oh, I have SO much to tell you about [other]. {nosy, about=neutral}
+Oh, I have SO much to tell you about [other]. {nosy, about=disliked}
+Why, what have you heard about [other]? {nosy, w=0.7}
+[other] is my friend. That's all you need to know. {loyal, about=friend}
+
+== never_mind ==
+Oh. All right.
+Never mind, then.
+Hm. Okay.
+Make up your mind.           {rude}
+Of course.                   {polite}
+
+== follow_accept ==
+Lead the way.
+Sure, I'll come.
+Right behind you.
+Let's go!                    {extrovert}
+Adventure! Finally!          {curious, w=2}
+For you? Of course.          {opinion=friend}
+For you, [listener], anywhere. {opinion=close_friend}
+I'll watch your back.        {brave}
+I'll... try to keep up.      {timid}
+Fine, but you're carrying the heavy stuff. {lazy, w=2}
+Can't let you go alone.      {loyal, w=2}
+The Cube God guide our steps. {pious}
+Ha! Let's see what's out there. {lighthearted}
+If we must.                  {pessimist}
+
+== follow_refuse ==
+I don't think so.
+No, thank you.
+I'd rather stay here.
+I hardly know you.           {opinion=neutral}
+Why would I go anywhere with you? {opinion=disliked, w=2}
+Not a chance.                {opinion=disliked, rude, w=2}
+Not with you. Never with you. {opinion=enemy, w=2}
+Sorry, I'm a homebody.       {introvert}
+And walk all that way? No.   {lazy, w=2}
+I've got work to do here.    {hardworking, w=2}
+Ask me again when I know you better. {polite, opinion=neutral}
+How do I know you won't lead me into a trap? {paranoid, w=2}
+I'm in no shape to go anywhere. {recovering=yes, w=5}
+Hell no.                     {crude, opinion=disliked}
+Maybe some other time.       {polite}
+
+== follow_stop ==
+All right. I'll head home.
+Fair enough. Be safe.
+Oh. Okay.
+Aw. That was fun.            {extrovert}
+Finally. My feet are killing me. {lazy, w=2}
+Back to work, then.          {hardworking}
+Call me if you need me, [listener]. {opinion=friend}
+Fine. Don't miss me too much. {lighthearted}
+Was it something I said?     {sentimental}
+
+== follow_quit ==
+You know what? I'm done following you.
+I've had enough of you, [listener]. I'm going home.
+That's it. Find someone else to follow.
+I'm not following you anywhere anymore.
+Go on without me. Far without me.     {rude}
+I'm sorry, [listener]. I can't do this anymore. {polite}
+To hell with this. I'm out.           {crude, w=2}
+I'll remember this, [listener].       {vengeful}
+I thought we were friends.            {sentimental, w=2}
+
+== practical_open ==
+What do you need?
+Business, then.
+Sure. What is it?
+Go on.
+At your service.             {polite, proper}
+Make it quick.               {rude}
+Practical stuff. My favorite. {hardworking}
+Ugh, practical stuff.        {lazy}
+
+== farewell ==
+Bye.
+See you around.
+Take care.
+Later.
+Farewell, [listener].        {proper}
+Stay safe out there, [listener]. {polite}
+Cube God keep you.           {pious, w=2}
+Don't let the monsters bite. {lighthearted}
+Finally.                     {opinion=disliked, rude}
+Hm.                          {taciturn}
+Already? Aw.                 {extrovert}
+See you, [address].
+[taught_farewell]!           {w=3}
+[taught_farewell], [listener]. {w=3}
+
+# ---------------------------------------------------------------------------------------------------------------
+# Trying to talk to them mid-fight, or when they're out to get you. fighting_you=yes when you're who they're
+# fighting; in_combat=no means they're hostile but not fighting yet (say, you're in creative).
+
+== busy_fighting ==
+Not now!
+Kind of busy here!
+Can't talk!
+Later!
+Not now, [listener]! Help me!  {relation=ally, w=3}
+Wait your turn!              {brawling=yes, fighting_you=no, w=4}
+This is between me and them. {brawling=yes, fighting_you=no, w=4}
+Talking won't save you. Fists up! {brawling=yes, fighting_you=yes, w=6}
+Less talking, more punching! {brawling=yes, fighting_you=yes, lighthearted, w=6}
+Grab a weapon, [listener]!   {relation=ally, w=3}
+Talk later, fight now!       {relation=ally, brave, w=3}
+I'm a little busy not dying!  {relation=ally, lighthearted, w=3}
+Can't you see I'm fighting?! {rude, w=2}
+Not now, damn it!            {crude, w=3}
+Are you serious right now?   {lighthearted, w=2}
+Pardon me, I'm rather occupied. {proper, polite, w=3}
+Help! Please!                {timid, w=3}
+Run! Why are you standing there?! {timid, relation=ally, w=3}
+Cube God, give me strength! {pious, w=2}
+You want to talk? Talk to my fist! {fighting_you=yes, hothead, w=4}
+Talk? Ha! Not a chance. {fighting_you=yes, w=4}
+Oh, NOW you want to chat? {fighting_you=yes, lighthearted, w=4}
+I've got nothing to say to you. {fighting_you=yes, w=4}
+Nice try. Die.               {fighting_you=yes, rude, w=4}
+Go to hell!                  {fighting_you=yes, crude, w=5}
+Nothing personal. Well. A little personal. {fighting_you=yes, has_faction=yes, w=3}
+For the [faction]!           {fighting_you=yes, has_faction=yes, brave, w=3}
+The [faction] don't talk to your kind. {relation=hostile, has_faction=yes, w=4}
+I don't talk to your kind.   {relation=hostile, w=3}
+Get away from me.            {relation=hostile, w=3}
+Get lost before I change my mind. {relation=hostile, in_combat=no, w=4}
+You're lucky I'm in a good mood. {relation=hostile, in_combat=no, mood=great, w=4}
+Back off.                    {relation=hostile, in_combat=no, w=3}
+Piss off.                    {relation=hostile, crude, w=5}
+I know what you did.         {relation=hostile, opinion=enemy, vengeful, w=5}

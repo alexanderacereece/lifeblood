@@ -1,0 +1,196 @@
+# NPClaude speech: gifts. The format and every fact and word are described in basics.speech.
+
+# ---------------------------------------------------------------------------------------------------------------
+# Gifts
+
+== gift ==
+[taught_happy]! [item.cap]!      {taste=love, w=6}
+[taught_angry]. [item.cap]?     {rude_gift=yes, w=8}
+On my birthday, too! Thank you! {birthday=yes, taste=love, w=12}
+On my birthday, too! Thank you! {birthday=yes, taste=like, w=12}
+A birthday present? You remembered! {birthday=yes, w=8}
+On my birthday? Really?          {birthday=yes, rude_gift=yes, w=14}
+Thanks.
+Oh, for me? Thank you.       {polite}
+Huh. Thanks, I guess.        {!polite}
+Fine. I'll take it.          {rude}
+You shouldn't have. Really.  {humble}
+About time someone noticed me. {proud}
+[item.cap]! Thank you!       {extrovert}
+Is this a trick?             {paranoid}
+What do you want for [item.it]? {greedy}
+Oh, I'll pass [item.it] on to someone who needs [item.it] more. {generous}
+Thank you, [listener]. Truly. {opinion=friend, polite}
+Aw, [listener]. You're the best. {opinion=close_friend}
+Hm. Trying to buy my good opinion? {opinion=disliked}
+
+# How much they like it, whatever it is
+[item.cap]! I love [item.it]! {taste=love, w=4}
+For me? [item.cap]? Oh, [listener]... {taste=love, w=3}
+You remembered! Well. You must have. {taste=love, w=2}
+Now this is a gift.          {taste=love, w=2}
+Oh, you've made my day.      {taste=love, polite, w=3}
+Ha! Brilliant!               {taste=love, lighthearted, w=3}
+Ooh, [item.a]. Thanks!       {taste=like, w=3}
+Oh, nice. [item.cap].        {taste=like, w=3}
+I can use [item.it]. Thanks. {taste=like, hardworking, w=3}
+Oh. [item.cap]. Thanks.      {taste=meh, w=3}
+Hm. [item.cap]. All right.   {taste=meh, w=3}
+I'll find a use for [item.it]. Probably. {taste=meh, w=2}
+Ugh, [item]. ...Thanks.      {taste=dislike, polite, w=3}
+I don't really like [item], but thanks. {taste=dislike, w=3}
+What am I supposed to do with [item.this]? {taste=dislike, w=3}
+[item.cap]? Seriously?       {taste=hate, w=3}
+Oh. [item.cap]. How... thoughtful. {taste=hate, polite, w=3}
+Keep [item.it]. Actually no, you already gave [item.it] to me. Great. {taste=hate, lighthearted, w=3}
+I hate [item]. You couldn't have known. ...Could you? {taste=hate, paranoid, w=4}
+
+# Rude gifts: dirt, cobblestone, slime
+[item.cap]? You're giving me [item]? {rude_gift=yes, w=6}
+Is this a joke? Am I a joke to you? {rude_gift=yes, w=6}
+[item.cap]. Wow. Thanks for nothing. {rude_gift=yes, rude, w=8}
+I know when I'm being insulted, [listener]. {rude_gift=yes, proud, w=8}
+Oh. [item.cap]. That's... that's fine. It's fine. {rude_gift=yes, polite, w=8}
+Oh. [item.cap]. That's... that's fine. It's fine. {rude_gift=yes, timid, w=8}
+I'll remember this.          {rude_gift=yes, vengeful, w=8}
+Ha, very funny. Hand it here, I'll throw it at you later. {rude_gift=yes, lighthearted, w=8}
+The Cube God made [item], so I won't complain. Much. {rude_gift=yes, pious, w=8}
+Did you dig this up out of my own yard? {rude_gift=yes, kind=junk, w=6}
+It's slimy. Why is it slimy? {rude_gift=yes, kind=gross, w=6}
+Ugh! Get it away from me!    {rude_gift=yes, kind=gross, proper, w=8}
+
+# Oddballs: they feel very differently about this than most would
+[item.cap]! Finally, someone who gets me. {surprising=yes, taste=love, w=8}
+People think I'm odd for liking [item], but I don't care. {surprising=yes, taste=love, w=8}
+Ooh, [item]! Don't tell anyone I said that. {surprising=yes, taste=like, w=6}
+I know everyone loves [item]. I don't. Sorry. {surprising=yes, taste=dislike, w=8}
+[item.cap]? Everyone loves [item]. I'm not everyone. {surprising=yes, taste=hate, w=8}
+Honestly? [item.cap] doesn't do much for me. {surprising=yes, taste=meh, w=6}
+[item.cap]! Oh, I've always wanted some! {surprising=yes, taste=love, kind=junk, w=10}
+You know, most people would be insulted. I think it's nice. {surprising=yes, kind=junk, w=8}
+
+# Food
+[item.cap]! I love [item.it]! {kind=food, taste=love, w=4}
+My favorite! How did you know? {kind=food, taste=love, w=3}
+[item.cap]! You're a saint, [listener]. {kind=food, taste=love, glutton, w=4}
+I was just thinking about [item]! {kind=food, taste=love, glutton, w=3}
+Mm, [item]. Nice.            {kind=food, taste=like, w=2}
+[item.cap]. Food is food.    {kind=food, taste=meh, w=2}
+I can't stand [item]. Keep [item.it]. {kind=food, taste=hate, rude, w=3}
+
+# Valuables
+Is this... real? It's real! {kind=valuable, taste=love, w=4}
+[item.cap]! Oh, I'm keeping [item.it] somewhere safe. {kind=valuable, taste=love, w=4}
+Mine. All mine. Thank you. {kind=valuable, greedy, w=6}
+This is worth a fortune, you know. Are you sure? {kind=valuable, honest, w=5}
+This is too much. I can't. ...I will, but I can't. {kind=valuable, humble, w=6}
+Shiny. I'll admit, it's shiny. {kind=valuable, taste=meh, w=4}
+I'll give [item.it] to someone who cares about that sort of thing. {kind=valuable, generous, w=5}
+At last, something worthy of me. {kind=valuable, proud, w=6}
+
+# Materials, tools, weapons, armor
+Good, sturdy stuff. I'll put [item.it] to use. {kind=material, hardworking, w=4}
+Materials. That means work. Wonderful. {kind=material, lazy, w=4}
+[item.cap]. Practical. I like practical. {kind=material, taste=like, w=3}
+A proper tool! Now we're talking. {kind=tool, hardworking, w=5}
+A tool. Are you trying to tell me something? {kind=tool, lazy, w=5}
+I'll get some real work done with [item.this]. {kind=tool, taste=like, w=3}
+Ha! Let them come now.        {kind=weapon, brave, w=5}
+A weapon? I'd rather not need one. {kind=weapon, timid, w=5}
+I know exactly who I'll use this on. {kind=weapon, vengeful, w=5}
+Keep your blade, I'd rather talk things out. {kind=weapon, forgiving, taste=dislike, w=5}
+Armor! I feel safer already. {kind=armor, timid, w=5}
+How do I look? Don't answer that. {kind=armor, lighthearted, w=4}
+This'll keep me in one piece. Thanks. {kind=armor, taste=like, w=3}
+Now they'll never get me.     {kind=armor, paranoid, w=6}
+
+# Flowers and plants
+Flowers? For me? Oh, [listener]... {kind=flower, romantic, w=6}
+Flowers. I'm going to press one and keep it forever. {kind=flower, sentimental, w=6}
+Ooh, pretty!                  {kind=flower, taste=like, w=3}
+What am I, a garden?          {kind=flower, taste=dislike, w=4}
+A flower. Huh. Thanks, I suppose. {kind=flower, crude, w=4}
+I'll plant [item.it] somewhere nice. {kind=plant, taste=like, w=4}
+I'll plant [item.it]. Eventually. {kind=plant, lazy, w=4}
+
+# Curios, music, decor and the rest
+Ooh! What does [item.it] do? Never mind, I'll find out. {kind=curio, curious, w=6}
+How fascinating.              {kind=curio, taste=like, w=3}
+Huh. Clever little thing.     {kind=curio, w=2}
+Music! Oh, I love music.      {kind=music, taste=love, w=4}
+Ha! We're having a party now. {kind=music, extrovert, w=5}
+I don't really dance. Or listen. Thanks, though. {kind=music, taste=dislike, w=4}
+This'll look lovely in my home. {kind=decor, taste=like, w=4}
+How elegant.                  {kind=decor, proper, w=5}
+Where am I supposed to put [item.this]? {kind=decor, taste=dislike, w=4}
+Is that going to explode?     {kind=dangerous, w=3}
+Get that away from me!        {kind=dangerous, timid, w=6}
+Oh, this'll be fun.           {kind=dangerous, brave, w=4}
+Oh, this is going to end badly. For someone. {kind=dangerous, hothead, w=6}
+Somewhere to rest! Bless you. {kind=comfort, lazy, w=6}
+A bed? I don't have time to sleep. {kind=comfort, hardworking, w=5}
+Ha! I love [item]!            {kind=fun, lighthearted, w=5}
+What is this, a toy?          {kind=fun, serious, w=5}
+
+# ---------------------------------------------------------------------------------------------------------------
+# Being given a guardian amulet
+
+== gift_amulet ==
+For me? So I'll... be safe? Thank you, [listener].
+You want me kept safe? I... don't know what to say.
+I'll never take it off. I promise.
+This must have cost you a fortune.
+Nobody's ever done anything like this for me. {sentimental, w=3}
+Oh, [listener]. I'll treasure it. Always. {sentimental, w=3}
+I... thank you. Truly.       {introvert, w=2}
+Ha! Now nothing can stop me! {brave, w=3}
+Ha! Now nothing can stop me! {lighthearted, w=2}
+Oh, thank goodness. I've been so worried. {timid, w=4}
+What's the catch?            {paranoid, w=4}
+Gold and a diamond? For me? Oh, it's lovely. {greedy, w=4}
+I don't deserve this.        {humble, w=4}
+About time someone recognized my worth. {proud, w=3}
+The Cube God works through you, [listener]. {pious, w=3}
+Is this... a proposal?       {romantic, w=3}
+I'd have done the same for you. Thank you. {loyal, w=3}
+Fine. I'll wear it. ...Thanks. {rude, w=3}
+Hmph. Thanks, I guess.       {opinion=disliked, w=4}
+
+== questions_open ==
+Sure.
+Go ahead.
+Ask away.
+What do you want to know?
+Ooh, questions! Go on.       {extrovert, w=2}
+Depends what you're asking.  {paranoid, w=2}
+Make it quick.               {rude}
+Hm?                          {taciturn}
+
+== gift_amulet_already ==
+I already have one. But thank you, really.
+One's enough to keep me safe. Keep it for someone else.
+Two? Do you know something I don't? {paranoid, w=3}
+Give it to someone who needs it, [listener]. {generous, w=3}
+Oh, I'll take it! ...What? I can't have two? {greedy, w=3}
+
+== brawl_cheap_shot ==
+It's over! What are you doing?!
+Oh, you want a real fight? Fine!
+I yielded! You don't hit someone who's yielded!
+Cheap shot! You're going to regret that!
+You dishonorable worm!       {proper, w=3}
+You son of a...!             {crude, w=3}
+That's it. No more fists.    {brave, w=3}
+I'll never forgive this.     {vengeful, w=3}
+Somebody help! [listener]'s gone mad! {timid, w=3}
+
+== leader_died ==
+[listener]! No!
+[listener]? [listener]!
+No, no, no... [listener]...
+I'll... I'll head home.
+Cube God, take [listener] gently. {pious, w=3}
+I couldn't save them...      {sentimental, w=2}
+I should have been faster.   {competitive, w=2}
+Whoever did this will pay.   {vengeful, w=2}
+I'm going home. I can't do this alone. {timid, w=2}

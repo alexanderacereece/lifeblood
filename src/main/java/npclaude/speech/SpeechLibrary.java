@@ -35,8 +35,10 @@ import org.jetbrains.annotations.Nullable;
  * weight (w=2 makes a line twice as likely).
  */
 public final class SpeechLibrary {
-	private static final List<String> BUNDLED = List.of("default.speech");
-	private static final String BUNDLED_PATH = "/assets/npclaude/speech/";
+	/** The speech files shipped with the mod, by topic. basics.speech describes the format. */
+	public static final List<String> BUNDLED = List.of("basics.speech", "conversation.speech", "gifts.speech", "remarks.speech",
+		"combat.speech", "brawls.speech", "family.speech", "words.speech");
+	public static final String BUNDLED_PATH = "/assets/npclaude/speech/";
 	public static final String FOLDER_NAME = "npc_speech";
 
 	/** One way to say a symbol. */
