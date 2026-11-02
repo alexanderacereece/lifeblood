@@ -5,6 +5,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 import npclaude.entity.NpcGender;
+import npclaude.people.PeopleRegistry;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -54,12 +55,12 @@ public enum Kinship {
 
 	/** What other is to self, or null if they aren't related. */
 	@Nullable
-	public static Kinship of(FamilyRegistry family, UUID self, UUID other) {
+	public static Kinship of(PeopleRegistry family, UUID self, UUID other) {
 		if (self.equals(other)) {
 			return null;
 		}
 
-		FamilyRegistry.Partnership partnership = family.partnershipOf(self);
+		PeopleRegistry.Partnership partnership = family.partnershipOf(self);
 		if (partnership != null && partnership.other(self).equals(other)) {
 			return switch (partnership.stage) {
 				case MARRIED -> SPOUSE;
@@ -68,7 +69,7 @@ public enum Kinship {
 			};
 		}
 
-		FamilyRegistry.Person person = family.find(self);
+		PeopleRegistry.Person person = family.find(self);
 		if (person != null && other.equals(person.lateSpouse)) {
 			return LATE_SPOUSE;
 		}
@@ -137,9 +138,9 @@ public enum Kinship {
 	}
 
 	/** Everyone related to this person by blood or marriage, alive or not (for listing a family). */
-	public static Set<UUID> relativesOf(FamilyRegistry family, UUID self) {
+	public static Set<UUID> relativesOf(PeopleRegistry family, UUID self) {
 		Set<UUID> relatives = new HashSet<>();
-		for (FamilyRegistry.Person person : family.everyone()) {
+		for (PeopleRegistry.Person person : family.everyone()) {
 			if (of(family, self, person.id) != null) {
 				relatives.add(person.id);
 			}

@@ -5,9 +5,9 @@ import java.util.List;
 import java.util.UUID;
 import net.minecraft.core.entity.player.Player;
 import npclaude.entity.EntityNPC;
-import npclaude.family.FamilyRegistry;
 import npclaude.family.Kinship;
 import npclaude.family.Romance;
+import npclaude.people.PeopleRegistry;
 import npclaude.social.MemoryType;
 import npclaude.social.Opinions;
 import npclaude.speech.Word;
@@ -25,8 +25,8 @@ public final class RomanceDialogue {
 	/** The romance option for the main menu, if one fits right now. */
 	@Nullable
 	static DialogueOption mainOption(EntityNPC npc, Player player) {
-		FamilyRegistry family = FamilyRegistry.get(npc.world);
-		FamilyRegistry.Partnership partnership = family.partnershipOf(npc.getUuid());
+		PeopleRegistry family = PeopleRegistry.get(npc.world);
+		PeopleRegistry.Partnership partnership = family.partnershipOf(npc.getUuid());
 		if (partnership != null && partnership.other(npc.getUuid()).equals(player.uuid)) {
 			return new DialogueOption("About us...", session -> session.show(aboutUs(npc, player, NpcDialogue.say(npc, player, "about_us", "Yes?"))));
 		}
@@ -50,7 +50,7 @@ public final class RomanceDialogue {
 		List<DialogueOption> options = new ArrayList<>();
 		options.add(new DialogueOption("Yes!", session -> {
 			npc.social.setRomanceRequest(null, null);
-			FamilyRegistry family = FamilyRegistry.get(npc.world);
+			PeopleRegistry family = PeopleRegistry.get(npc.world);
 			Romance.register(player);
 			if (request == Romance.Request.ASK_OUT) {
 				if (family.partnershipOf(player.uuid) != null || family.partnershipOf(npc.getUuid()) != null) {
@@ -77,7 +77,7 @@ public final class RomanceDialogue {
 
 	/** The player asks the NPC out. */
 	private static String askOut(EntityNPC npc, Player player) {
-		FamilyRegistry family = FamilyRegistry.get(npc.world);
+		PeopleRegistry family = PeopleRegistry.get(npc.world);
 		Romance.register(player);
 		UUID theirPartner = family.partnerOf(npc.getUuid());
 		UUID yourPartner = family.partnerOf(player.uuid);
@@ -100,8 +100,8 @@ public final class RomanceDialogue {
 	}
 
 	private static NpcDialogue aboutUs(EntityNPC npc, Player player, String line) {
-		FamilyRegistry family = FamilyRegistry.get(npc.world);
-		FamilyRegistry.Partnership partnership = family.partnershipOf(npc.getUuid());
+		PeopleRegistry family = PeopleRegistry.get(npc.world);
+		PeopleRegistry.Partnership partnership = family.partnershipOf(npc.getUuid());
 		List<DialogueOption> options = new ArrayList<>();
 		if (partnership == null) {
 			return NpcDialogue.main(npc, player, line);
@@ -144,7 +144,7 @@ public final class RomanceDialogue {
 	}
 
 	private static void endIt(EntityNPC npc, Player player, DialogueSession session, String symbol) {
-		FamilyRegistry.get(npc.world).breakUp(npc.getUuid());
+		PeopleRegistry.get(npc.world).breakUp(npc.getUuid());
 		npc.remember(MemoryType.BROKE_UP_WITH_ME, player, 1.0F);
 		npc.social.setRomanceRequest(null, null);
 		session.show(NpcDialogue.main(npc, player, NpcDialogue.say(npc, player, symbol, "...I see.")));
@@ -152,11 +152,11 @@ public final class RomanceDialogue {
 
 	/** "My wife is Ruth. My parents are Ed and Sue. I have two kids, Tom and Ann." */
 	static String describeFamily(EntityNPC npc, Player player) {
-		FamilyRegistry family = FamilyRegistry.get(npc.world);
+		PeopleRegistry family = PeopleRegistry.get(npc.world);
 		Romance.register(npc);
 		UUID self = npc.getUuid();
 		List<String> sentences = new ArrayList<>();
-		FamilyRegistry.Partnership partnership = family.partnershipOf(self);
+		PeopleRegistry.Partnership partnership = family.partnershipOf(self);
 		if (partnership != null) {
 			UUID partner = partnership.other(self);
 			String who = partner.equals(player.uuid) ? "you" : family.nameOf(partner);
@@ -164,7 +164,7 @@ public final class RomanceDialogue {
 			sentences.add(partner.equals(player.uuid) ? "I've got you, haven't I?" : "My " + kin.label(genderOf(family, partner)) + " is " + who + ".");
 		}
 
-		FamilyRegistry.Person person = family.find(self);
+		PeopleRegistry.Person person = family.find(self);
 		if (person != null && person.lateSpouse != null) {
 			sentences.add("My " + Kinship.LATE_SPOUSE.label(genderOf(family, person.lateSpouse)) + ", " + family.nameOf(person.lateSpouse) + ", is gone now.");
 		}
@@ -198,15 +198,15 @@ public final class RomanceDialogue {
 	}
 
 	@Nullable
-	private static npclaude.entity.NpcGender genderOf(FamilyRegistry family, UUID id) {
-		FamilyRegistry.Person person = family.find(id);
+	private static npclaude.entity.NpcGender genderOf(PeopleRegistry family, UUID id) {
+		PeopleRegistry.Person person = family.find(id);
 		return person != null ? person.gender : null;
 	}
 
-	private static List<String> names(FamilyRegistry family, List<UUID> ids, Player player) {
+	private static List<String> names(PeopleRegistry family, List<UUID> ids, Player player) {
 		List<String> names = new ArrayList<>();
 		for (UUID id : ids) {
-			FamilyRegistry.Person person = family.find(id);
+			PeopleRegistry.Person person = family.find(id);
 			String name = id.equals(player.uuid) ? "you" : family.nameOf(id);
 			names.add(person != null && !person.alive ? name + " (gone now)" : name);
 		}

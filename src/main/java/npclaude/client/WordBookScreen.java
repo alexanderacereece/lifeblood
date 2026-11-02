@@ -8,7 +8,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.ButtonElement;
 import net.minecraft.client.gui.Screen;
 import net.minecraft.core.entity.player.Player;
-import npclaude.family.FamilyRegistry;
+import npclaude.people.PeopleRegistry;
 import npclaude.words.WordBook;
 
 /**
@@ -89,7 +89,7 @@ public class WordBookScreen extends Screen {
 				top + 22 + ROW_HEIGHT * 2, DETAIL_COLOR);
 		}
 
-		FamilyRegistry family = FamilyRegistry.get(this.player.world);
+		PeopleRegistry family = PeopleRegistry.get(this.player.world);
 		for (int i = 0; i < ROWS; i++) {
 			int index = this.page * ROWS + i;
 			if (index >= this.words.size()) {

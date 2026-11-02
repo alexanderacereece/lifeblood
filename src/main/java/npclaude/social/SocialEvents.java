@@ -16,8 +16,8 @@ import npclaude.combat.CombatBehavior;
 import npclaude.combat.FactionRelation;
 import npclaude.combat.NpcFactions;
 import npclaude.entity.EntityNPC;
-import npclaude.family.FamilyRegistry;
 import npclaude.family.Kinship;
+import npclaude.people.PeopleRegistry;
 import npclaude.personality.Quirk;
 import npclaude.speech.Word;
 import org.jetbrains.annotations.Nullable;
@@ -79,7 +79,7 @@ public final class SocialEvents {
 			return;
 		}
 
-		FamilyRegistry family = FamilyRegistry.get(victim.world);
+		PeopleRegistry family = PeopleRegistry.get(victim.world);
 		for (Entity entity : victim.world.entities) {
 			if (!(entity instanceof EntityNPC npc) || npc == victim || !npc.isAlive()) {
 				continue;

@@ -8,10 +8,10 @@ import net.minecraft.core.entity.player.Player;
 import npclaude.combat.CombatStyle;
 import npclaude.entity.EntityNPC;
 import npclaude.entity.FollowDistance;
-import npclaude.family.FamilyRegistry;
 import npclaude.family.Kinship;
 import npclaude.family.Romance;
 import npclaude.item.NpcItems;
+import npclaude.people.PeopleRegistry;
 import npclaude.social.MemoryType;
 import npclaude.social.Opinions;
 import npclaude.speech.Word;
@@ -157,7 +157,7 @@ public record NpcDialogue(String line, List<DialogueOption> options) {
 		line = line != null ? line : "I don't really know " + Opinions.nameOf(other) + ".";
 		// Family comes first: "Tom's my brother. Ugh."
 		UUID id = Opinions.idOf(other);
-		Kinship kin = id != null ? Kinship.of(FamilyRegistry.get(npc.world), npc.getUuid(), id) : null;
+		Kinship kin = id != null ? Kinship.of(PeopleRegistry.get(npc.world), npc.getUuid(), id) : null;
 		if (kin != null) {
 			line = Opinions.nameOf(other) + "'s my " + kin.label(Romance.genderOf(other)) + ". " + line;
 		}

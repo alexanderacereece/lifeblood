@@ -21,6 +21,7 @@ import npclaude.appearance.Appearance;
 import npclaude.appearance.PartCatalog;
 import npclaude.entity.EntityNPC;
 import npclaude.entity.NpcGender;
+import npclaude.people.PeopleRegistry;
 import npclaude.social.Memory;
 import npclaude.social.MemoryType;
 import org.jetbrains.annotations.Nullable;
@@ -45,7 +46,7 @@ public final class Children {
 	}
 
 	/** Whether this couple could have another child now (not counting chance). */
-	public static boolean canHaveChild(FamilyRegistry family, UUID first, UUID second, long now) {
+	public static boolean canHaveChild(PeopleRegistry family, UUID first, UUID second, long now) {
 		List<UUID> children = family.childrenOf(first);
 		children.retainAll(family.childrenOf(second));
 		if (children.size() >= MAX_CHILDREN) {
@@ -53,7 +54,7 @@ public final class Children {
 		}
 
 		for (UUID child : children) {
-			FamilyRegistry.Person person = family.find(child);
+			PeopleRegistry.Person person = family.find(child);
 			if (person != null && person.born >= 0 && now - person.born < MIN_DAYS_BETWEEN * Memory.TICKS_PER_DAY) {
 				return false;
 			}
@@ -89,9 +90,9 @@ public final class Children {
 		child.spawnInit();
 		parent.world.entityJoinedWorld(child);
 
-		FamilyRegistry family = FamilyRegistry.get(parent.world);
+		PeopleRegistry family = PeopleRegistry.get(parent.world);
 		Romance.register(parent);
-		FamilyRegistry.Person person = Romance.register(child);
+		PeopleRegistry.Person person = Romance.register(child);
 		person.born = parent.world.getWorldTime();
 		family.addParent(child.getUuid(), parent.getUuid());
 		if (npcParent != null) {

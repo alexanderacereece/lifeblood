@@ -10,8 +10,8 @@ import npclaude.combat.FactionRegistry;
 import npclaude.combat.FactionRelation;
 import npclaude.combat.NpcFactions;
 import npclaude.entity.EntityNPC;
-import npclaude.family.FamilyRegistry;
 import npclaude.family.Kinship;
+import npclaude.people.PeopleRegistry;
 import npclaude.personality.Quirk;
 import org.jetbrains.annotations.Nullable;
 
@@ -105,10 +105,10 @@ public final class Opinions {
 		}
 
 		if (id != null) {
-			FamilyRegistry family = FamilyRegistry.get(npc.world);
+			PeopleRegistry family = PeopleRegistry.get(npc.world);
 			Kinship kin = Kinship.of(family, npc.getUuid(), id);
 			if (kin != null && kin.opinion != 0) {
-				FamilyRegistry.Person person = family.find(id);
+				PeopleRegistry.Person person = family.find(id);
 				parts.put("family (" + kin.label(person != null ? person.gender : null) + ")", (float) kin.opinion);
 			}
 		}

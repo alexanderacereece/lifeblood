@@ -1,6 +1,9 @@
 package npclaude.save;
 
 import com.mojang.nbt.tags.CompoundTag;
+import net.minecraft.core.world.World;
+import npclaude.people.PeopleRegistry;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Every bit of code that reads saves from older versions of the mod, in one place. Each method rewrites old data
@@ -35,6 +38,21 @@ public final class SaveUpgrades {
 		if (npc.containsKey("Personality")) {
 			personality(npc.getCompound("Personality"));
 		}
+	}
+
+	/** The register of people was the family register, saved under another name; its contents carry straight over. */
+	@Nullable
+	public static PeopleRegistry oldPeopleRegistry(World world) {
+		PeopleRegistry old = (PeopleRegistry) world.getSavedData(PeopleRegistry.class, "npclaude_family");
+		if (old == null) {
+			return null;
+		}
+
+		CompoundTag tag = new CompoundTag();
+		old.save(tag);
+		PeopleRegistry registry = new PeopleRegistry(PeopleRegistry.DATA_ID);
+		registry.load(tag);
+		return registry;
 	}
 
 	/** A saved personality. Anything missing after this keeps the values the NPC was just rolled with. */

@@ -12,8 +12,8 @@ import npclaude.combat.FactionRegistry;
 import npclaude.combat.FactionRelation;
 import npclaude.combat.NpcFactions;
 import npclaude.entity.EntityNPC;
-import npclaude.family.FamilyRegistry;
 import npclaude.family.Kinship;
+import npclaude.people.PeopleRegistry;
 import npclaude.words.WordBook;
 import npclaude.words.WordCategory;
 import npclaude.personality.Surroundings;
@@ -127,9 +127,9 @@ public final class SpeechFacts {
 	 * what the listener is to the speaker (spouse, partner, fiance, parent, child, sibling, cousin...) or "none".
 	 */
 	private static void addFamily(EntityNPC npc, @Nullable Entity listener, SpeechContext context) {
-		FamilyRegistry family = FamilyRegistry.get(npc.world);
-		FamilyRegistry.Partnership partnership = family.partnershipOf(npc.getUuid());
-		FamilyRegistry.Person self = family.find(npc.getUuid());
+		PeopleRegistry family = PeopleRegistry.get(npc.world);
+		PeopleRegistry.Partnership partnership = family.partnershipOf(npc.getUuid());
+		PeopleRegistry.Person self = family.find(npc.getUuid());
 		if (partnership != null) {
 			context.fact("relationship", partnership.stage.name().toLowerCase(Locale.ROOT));
 			context.word("partner", Word.name(family.nameOf(partnership.other(npc.getUuid()))));

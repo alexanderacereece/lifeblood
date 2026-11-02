@@ -36,6 +36,7 @@ import npclaude.combat.NpcRelations;
 import npclaude.dialogue.NpcDialogue;
 import npclaude.interaction.NpcInteractions;
 import npclaude.inventory.NpcInventory;
+import npclaude.people.PeopleRegistry;
 import npclaude.perf.NpcProfiler;
 import npclaude.personality.NpcPersonality;
 import npclaude.save.SaveUpgrades;
@@ -80,6 +81,8 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	/** At least this long between "not now, I'm fighting" lines when clicked mid-fight (1.5 seconds). */
 	private static final int REFUSAL_COOLDOWN = 30;
 	private static final int MEMORY_PRUNE_INTERVAL = 1200;
+	/** How often it checks in with the register of people: still here, and where (5 seconds). */
+	private static final int CHECK_IN_INTERVAL = 100;
 
 	public final NpcBrain brain = new NpcBrain(this);
 	public final NpcNavigator navigator = new NpcNavigator(this);
@@ -127,6 +130,8 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private boolean swinging;
 	private int swingTicks;
 	private int thinkInterval;
+	/** The world time it last ticked, so the register of people can tell it's still loaded. */
+	private long lastTickTime;
 
 	public EntityNPC(World world) {
 		super(world);
@@ -233,9 +238,13 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 			return;
 		}
 
+		this.lastTickTime = this.world.getWorldTime();
 		if (!this.appearanceChecked) {
 			this.appearanceChecked = true;
 			this.rollAppearanceIfNeeded();
+			PeopleRegistry.get(this.world).seen(this);
+		} else if ((this.tickCount + this.id) % CHECK_IN_INTERVAL == 0) {
+			PeopleRegistry.get(this.world).seen(this);
 		}
 
 		this.voice.tick();
@@ -252,6 +261,11 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 
 	public UUID getUuid() {
 		return this.uuid;
+	}
+
+	/** The world time it last ticked. */
+	public long getLastTickTime() {
+		return this.lastTickTime;
 	}
 
 	/**

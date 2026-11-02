@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.mojang.nbt.tags.CompoundTag;
 import java.util.UUID;
 import npclaude.entity.NpcGender;
+import npclaude.people.PeopleRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -15,12 +16,12 @@ import org.junit.jupiter.api.Test;
  * Uncle has Cousin.
  */
 class KinshipTest {
-	private FamilyRegistry family;
+	private PeopleRegistry family;
 	private UUID grandpa, grandma, mom, dad, uncle, kid, sis, cousin, stranger;
 
 	@BeforeEach
 	void buildFamily() {
-		this.family = new FamilyRegistry(FamilyRegistry.DATA_ID);
+		this.family = new PeopleRegistry(PeopleRegistry.DATA_ID);
 		this.grandpa = add("Grandpa", NpcGender.MALE);
 		this.grandma = add("Grandma", NpcGender.FEMALE);
 		this.mom = add("Mom", NpcGender.FEMALE);
@@ -36,7 +37,7 @@ class KinshipTest {
 		parents(this.sis, this.mom, this.dad);
 		parents(this.cousin, this.uncle);
 		this.family.startDating(this.mom, this.dad, 0L);
-		this.family.setStage(this.mom, FamilyRegistry.Stage.MARRIED, 0L);
+		this.family.setStage(this.mom, PeopleRegistry.Stage.MARRIED, 0L);
 	}
 
 	private UUID add(String name, NpcGender gender) {
@@ -93,7 +94,7 @@ class KinshipTest {
 	void familySurvivesSaving() {
 		CompoundTag tag = new CompoundTag();
 		this.family.save(tag);
-		FamilyRegistry loaded = new FamilyRegistry(FamilyRegistry.DATA_ID);
+		PeopleRegistry loaded = new PeopleRegistry(PeopleRegistry.DATA_ID);
 		loaded.load(tag);
 		assertEquals(Kinship.COUSIN, Kinship.of(loaded, this.kid, this.cousin));
 		assertEquals(Kinship.SPOUSE, Kinship.of(loaded, this.dad, this.mom));

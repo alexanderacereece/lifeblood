@@ -36,7 +36,6 @@ import npclaude.ai.behavior.WanderBehavior;
 import npclaude.appearance.Appearance;
 import npclaude.family.Children;
 import npclaude.words.WordBook;
-import npclaude.family.FamilyRegistry;
 import npclaude.family.Kinship;
 import npclaude.family.Romance;
 import npclaude.appearance.AppearanceLayer;
@@ -51,11 +50,12 @@ import npclaude.entity.EntityNPC;
 import npclaude.entity.HealthMode;
 import npclaude.entity.NpcGender;
 import npclaude.entity.SkinModel;
+import npclaude.people.PeopleRegistry;
 import npclaude.perf.NpcProfiler;
 import npclaude.personality.Surroundings;
-import npclaude.personality.Tastes;
 import npclaude.personality.NpcPersonality;
 import npclaude.personality.Quirk;
+import npclaude.personality.Tastes;
 import npclaude.personality.TraitAxis;
 import npclaude.personality.TraitTier;
 import npclaude.social.Memory;
@@ -600,7 +600,7 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 							EntityNPC npc = findNpc(c);
 							Entity target = findTarget(c);
 							UUID id = requireId(target);
-							FamilyRegistry family = FamilyRegistry.get(npc.world);
+							PeopleRegistry family = PeopleRegistry.get(npc.world);
 							family.removeParent(npc.getUuid(), id);
 							family.removeParent(id, npc.getUuid());
 							return reply(c, npc.nickname + " and " + nameOf(target) + " are no longer parent and child.");
@@ -644,7 +644,7 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 			.then(literal("baby")
 				.then(npcArgument().executes(c -> {
 					EntityNPC npc = findNpc(c);
-					UUID partnerId = FamilyRegistry.get(npc.world).partnerOf(npc.getUuid());
+					UUID partnerId = PeopleRegistry.get(npc.world).partnerOf(npc.getUuid());
 					Mob partner = partnerId != null ? Romance.findPerson(npc.world, partnerId) : null;
 					if (partner == null) {
 						throw error(npc.nickname + " needs a partner who's here (see /npc couple).");
@@ -719,8 +719,8 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 	private static int showFamily(CommandContext<CommandSource> c) throws CommandSyntaxException {
 		EntityNPC npc = findNpc(c);
 		Romance.register(npc);
-		FamilyRegistry family = FamilyRegistry.get(npc.world);
-		FamilyRegistry.Partnership partnership = family.partnershipOf(npc.getUuid());
+		PeopleRegistry family = PeopleRegistry.get(npc.world);
+		PeopleRegistry.Partnership partnership = family.partnershipOf(npc.getUuid());
 		if (partnership != null) {
 			reply(c, String.format(Locale.ROOT, "%s is %s %s (%.1f days).", npc.nickname, switch (partnership.stage) {
 				case DATING -> "dating";
@@ -732,7 +732,7 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 		boolean any = partnership != null;
 		for (UUID relative : Kinship.relativesOf(family, npc.getUuid())) {
 			Kinship kin = Kinship.of(family, npc.getUuid(), relative);
-			FamilyRegistry.Person person = family.find(relative);
+			PeopleRegistry.Person person = family.find(relative);
 			if (kin == null || person == null || kin == Kinship.SPOUSE || kin == Kinship.FIANCE || kin == Kinship.PARTNER) {
 				continue;
 			}
@@ -755,7 +755,7 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 		UUID id = requireId(target);
 		Romance.register(npc);
 		registerPerson(target);
-		FamilyRegistry family = FamilyRegistry.get(npc.world);
+		PeopleRegistry family = PeopleRegistry.get(npc.world);
 		UUID child = targetIsParent ? npc.getUuid() : id;
 		UUID parent = targetIsParent ? id : npc.getUuid();
 		if (!family.addParent(child, parent)) {
@@ -772,17 +772,17 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 		String stage = ArgumentTypeString.getString(c, "stage").toLowerCase(Locale.ROOT);
 		Romance.register(npc);
 		registerPerson(target);
-		FamilyRegistry family = FamilyRegistry.get(npc.world);
+		PeopleRegistry family = PeopleRegistry.get(npc.world);
 		long now = npc.world.getWorldTime();
 		if (stage.equals("none")) {
 			family.breakUp(npc.getUuid());
 			return reply(c, npc.nickname + " is single now.");
 		}
 
-		FamilyRegistry.Stage next = switch (stage) {
-			case "dating" -> FamilyRegistry.Stage.DATING;
-			case "engaged" -> FamilyRegistry.Stage.ENGAGED;
-			case "married" -> FamilyRegistry.Stage.MARRIED;
+		PeopleRegistry.Stage next = switch (stage) {
+			case "dating" -> PeopleRegistry.Stage.DATING;
+			case "engaged" -> PeopleRegistry.Stage.ENGAGED;
+			case "married" -> PeopleRegistry.Stage.MARRIED;
 			default -> throw error("Use dating, engaged, married or none.");
 		};
 		UUID current = family.partnerOf(npc.getUuid());

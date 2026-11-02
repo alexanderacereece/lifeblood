@@ -1,4 +1,4 @@
-package npclaude.family;
+package npclaude.people;
 
 import com.mojang.nbt.tags.CompoundTag;
 import com.mojang.nbt.tags.ListTag;
@@ -14,23 +14,30 @@ import java.util.Set;
 import java.util.UUID;
 import net.minecraft.core.world.World;
 import net.minecraft.core.world.saveddata.SavedData;
+import npclaude.entity.EntityNPC;
 import npclaude.entity.NpcGender;
+import npclaude.family.Kinship;
+import npclaude.save.SaveUpgrades;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Everyone's family, saved with the world: each person (NPC or player) and their parents, plus partnerships
- * (dating, engaged, married). Only these direct links are stored; siblings, grandparents, cousins and in-laws are
- * worked out from them (see {@link Kinship}). Kept at world level rather than on each NPC so relatives who are
- * far away, unloaded or dead still count.
+ * Everyone who has lived in this world, saved with it: a record of each person (NPC or player) that outlasts their
+ * entity, so people who are far away, unloaded or dead still count. Each record holds who they are (name, gender,
+ * birth, homeland, faction), where they were last seen, and their family: parents and partnerships (dating,
+ * engaged, married). Siblings, grandparents, cousins and in-laws are worked out from those (see {@link Kinship}).
+ *
+ * It also knows which NPCs are loaded right now, to find one by id without searching the world.
  */
-public class FamilyRegistry extends SavedData {
-	public static final String DATA_ID = "npclaude_family";
+public class PeopleRegistry extends SavedData {
+	public static final String DATA_ID = "npclaude_people";
+	/** How long an NPC can go without ticking before it's taken to be unloaded. */
+	private static final long LOADED_GRACE_TICKS = 40L;
 
 	public enum Stage {
 		DATING, ENGAGED, MARRIED
 	}
 
-	/** A person: name and gender (null for players, who don't set one), whether alive, and their parents. */
+	/** A person: who they are, where they were last seen, and their parents. Gender is null for players. */
 	public static final class Person {
 		public final UUID id;
 		public String name;
@@ -41,6 +48,19 @@ public class FamilyRegistry extends SavedData {
 		public final List<UUID> parents = new ArrayList<>();
 		/** When they were born (world time), if born in this world; -1 otherwise. */
 		public long born = -1L;
+		/** Their birth date (world time, usually before the world began); Long.MIN_VALUE if unknown. */
+		public long birthTime = Long.MIN_VALUE;
+		/** The biome they come from; "" if unknown. */
+		public String homeBiome = "";
+		/** Their faction; null if unaffiliated. */
+		@Nullable
+		public String faction;
+		/** Where and when (world time) they were last seen; lastSeen is -1 if never. */
+		public double lastX;
+		public double lastY;
+		public double lastZ;
+		public int lastDimension;
+		public long lastSeen = -1L;
 		/** A spouse who died, remembered as such. */
 		@Nullable
 		public UUID lateSpouse;
@@ -70,22 +90,65 @@ public class FamilyRegistry extends SavedData {
 	}
 
 	private final Map<UUID, Person> people = new LinkedHashMap<>();
+	/** NPCs loaded right now, by id. Not saved; NPCs add themselves as they tick (see {@link #seen}). */
+	private final Map<UUID, EntityNPC> loaded = new HashMap<>();
 	/** Each person's partnership, if they're in one (both partners map to the same object). */
 	private final Map<UUID, Partnership> partnerships = new HashMap<>();
 
 	/** Called by BTA through reflection when loading saved data. */
-	public FamilyRegistry(String id) {
+	public PeopleRegistry(String id) {
 		super(id);
 	}
 
-	public static FamilyRegistry get(World world) {
-		FamilyRegistry registry = (FamilyRegistry) world.getSavedData(FamilyRegistry.class, DATA_ID);
+	public static PeopleRegistry get(World world) {
+		PeopleRegistry registry = (PeopleRegistry) world.getSavedData(PeopleRegistry.class, DATA_ID);
 		if (registry == null) {
-			registry = new FamilyRegistry(DATA_ID);
+			registry = SaveUpgrades.oldPeopleRegistry(world);
+			if (registry == null) {
+				registry = new PeopleRegistry(DATA_ID);
+			}
+
 			world.setSavedData(DATA_ID, registry);
+			registry.setDirty();
 		}
 
 		return registry;
+	}
+
+	// Who's loaded, and keeping records current
+
+	/**
+	 * An NPC checking in: it's loaded, and its record is brought up to date (who it is, where it is). Called by
+	 * every NPC as it ticks, now and then.
+	 */
+	public void seen(EntityNPC npc) {
+		this.loaded.put(npc.getUuid(), npc);
+		Person person = this.person(npc.getUuid(), npc.nickname, npc.getGender(), false);
+		person.birthTime = npc.life.getBirthTime();
+		person.homeBiome = npc.life.getHomeBiome();
+		person.faction = npc.getFaction();
+		person.lastX = npc.x;
+		person.lastY = npc.y;
+		person.lastZ = npc.z;
+		person.lastDimension = npc.world.dimension.id;
+		person.lastSeen = npc.world.getWorldTime();
+		this.setDirty();
+	}
+
+	/** The NPC with this id, if it's loaded in this world right now. */
+	@Nullable
+	public EntityNPC loaded(World world, UUID id) {
+		EntityNPC npc = this.loaded.get(id);
+		if (npc == null) {
+			return null;
+		}
+
+		if (npc.removed || npc.world != world || world.getWorldTime() - npc.getLastTickTime() > LOADED_GRACE_TICKS) {
+			this.loaded.remove(id);
+			return null;
+		}
+
+		return npc;
 	}
 
 	/** The person with this id, created if new; name and gender are kept up to date. */
@@ -258,6 +321,15 @@ public class FamilyRegistry extends SavedData {
 				}
 
 				person.born = personTag.getLongOrDefault("Born", -1L);
+				person.birthTime = personTag.getLongOrDefault("BirthTime", Long.MIN_VALUE);
+				person.homeBiome = personTag.getStringOrDefault("HomeBiome", "");
+				String faction = personTag.getStringOrDefault("Faction", "");
+				person.faction = faction.isEmpty() ? null : faction;
+				person.lastX = personTag.getDouble("LastX");
+				person.lastY = personTag.getDouble("LastY");
+				person.lastZ = personTag.getDouble("LastZ");
+				person.lastDimension = personTag.getInteger("LastDimension");
+				person.lastSeen = personTag.getLongOrDefault("LastSeen", -1L);
 				if (personTag.containsKey("LateSpouse")) {
 					person.lateSpouse = UUID.fromString(personTag.getString("LateSpouse"));
 				}
@@ -308,6 +380,14 @@ public class FamilyRegistry extends SavedData {
 			}
 
 			personTag.putLong("Born", person.born);
+			personTag.putLong("BirthTime", person.birthTime);
+			personTag.putString("HomeBiome", person.homeBiome);
+			personTag.putString("Faction", person.faction != null ? person.faction : "");
+			personTag.putDouble("LastX", person.lastX);
+			personTag.putDouble("LastY", person.lastY);
+			personTag.putDouble("LastZ", person.lastZ);
+			personTag.putInt("LastDimension", person.lastDimension);
+			personTag.putLong("LastSeen", person.lastSeen);
 
 			people.addTag(personTag);
 		}

@@ -5,8 +5,8 @@ import net.minecraft.core.entity.Mob;
 import net.minecraft.core.util.helper.MathHelper;
 import npclaude.ai.NpcBehavior;
 import npclaude.entity.EntityNPC;
-import npclaude.family.FamilyRegistry;
 import npclaude.family.Romance;
+import npclaude.people.PeopleRegistry;
 
 /**
  * A child keeps close to a parent who's around (an NPC or a player), toddling after them when they wander off and
@@ -68,7 +68,7 @@ public class StayNearParentBehavior implements NpcBehavior {
 	/** The nearest parent close enough to stay with. */
 	private static Mob findParent(EntityNPC npc) {
 		Mob nearest = null;
-		for (UUID id : FamilyRegistry.get(npc.world).parentsOf(npc.getUuid())) {
+		for (UUID id : PeopleRegistry.get(npc.world).parentsOf(npc.getUuid())) {
 			Mob parent = Romance.findPerson(npc.world, id);
 			if (parent != null && parent.isAlive() && parent.distanceTo(npc) <= FIND_RANGE
 				&& (nearest == null || parent.distanceTo(npc) < nearest.distanceTo(npc))) {

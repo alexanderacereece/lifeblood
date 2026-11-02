@@ -9,6 +9,7 @@ import net.minecraft.core.util.helper.MathHelper;
 import net.minecraft.core.world.World;
 import npclaude.entity.EntityNPC;
 import npclaude.entity.NpcGender;
+import npclaude.people.PeopleRegistry;
 import npclaude.personality.Quirk;
 import npclaude.social.MemoryType;
 import npclaude.social.Memory;
@@ -46,12 +47,12 @@ public final class Romance {
 	}
 
 	/** Records an NPC in the family registry (and keeps its name current). */
-	public static FamilyRegistry.Person register(EntityNPC npc) {
-		return FamilyRegistry.get(npc.world).person(npc.getUuid(), npc.nickname, npc.getGender(), false);
+	public static PeopleRegistry.Person register(EntityNPC npc) {
+		return PeopleRegistry.get(npc.world).person(npc.getUuid(), npc.nickname, npc.getGender(), false);
 	}
 
-	public static FamilyRegistry.Person register(Player player) {
-		return FamilyRegistry.get(player.world).person(player.uuid, player.username, null, true);
+	public static PeopleRegistry.Person register(Player player) {
+		return PeopleRegistry.get(player.world).person(player.uuid, player.username, null, true);
 	}
 
 	@Nullable
@@ -66,11 +67,11 @@ public final class Romance {
 			return false;
 		}
 
-		Kinship kin = Kinship.of(FamilyRegistry.get(npc.world), npc.getUuid(), id);
+		Kinship kin = Kinship.of(PeopleRegistry.get(npc.world), npc.getUuid(), id);
 		return (kin == null || !kin.blood) && npc.personality.attraction().allows(npc.getGender(), genderOf(other));
 	}
 
-	public static float daysTogether(FamilyRegistry.Partnership partnership, long now) {
+	public static float daysTogether(PeopleRegistry.Partnership partnership, long now) {
 		return (now - partnership.since) / (float) Memory.TICKS_PER_DAY;
 	}
 
@@ -82,13 +83,7 @@ public final class Romance {
 			return player;
 		}
 
-		for (Entity entity : world.entities) {
-			if (entity instanceof EntityNPC npc && id.equals(npc.getUuid()) && !npc.removed) {
-				return npc;
-			}
-		}
-
-		return null;
+		return PeopleRegistry.get(world).loaded(world, id);
 	}
 
 	/** Once a minute: keep a relationship going (or end it), or look for one. */
@@ -98,8 +93,8 @@ public final class Romance {
 			return;
 		}
 
-		FamilyRegistry family = FamilyRegistry.get(npc.world);
-		FamilyRegistry.Partnership partnership = family.partnershipOf(npc.getUuid());
+		PeopleRegistry family = PeopleRegistry.get(npc.world);
+		PeopleRegistry.Partnership partnership = family.partnershipOf(npc.getUuid());
 		if (partnership != null) {
 			tendRelationship(npc, family, partnership);
 		} else if (!npc.isBusy() && !npc.health.isRecovering()) {
@@ -107,7 +102,7 @@ public final class Romance {
 		}
 	}
 
-	private static void tendRelationship(EntityNPC npc, FamilyRegistry family, FamilyRegistry.Partnership partnership) {
+	private static void tendRelationship(EntityNPC npc, PeopleRegistry family, PeopleRegistry.Partnership partnership) {
 		Mob partner = findPerson(npc.world, partnership.other(npc.getUuid()));
 		if (partner == null) {
 			return;
@@ -115,7 +110,7 @@ public final class Romance {
 
 		long now = npc.world.getWorldTime();
 		float mine = Opinions.of(npc, partner);
-		float limit = partnership.stage == FamilyRegistry.Stage.DATING ? DATING_BREAKUP : COMMITTED_BREAKUP;
+		float limit = partnership.stage == PeopleRegistry.Stage.DATING ? DATING_BREAKUP : COMMITTED_BREAKUP;
 		if (mine < limit) {
 			breakUp(npc, partner, family);
 			return;
@@ -130,27 +125,27 @@ public final class Romance {
 			float theirs = Opinions.of(other, npc);
 			float days = daysTogether(partnership, now);
 			float chance = PROPOSE_CHANCE * (npc.personality.has(Quirk.ROMANTIC) ? 2.0F : 1.0F);
-			if (partnership.stage == FamilyRegistry.Stage.DATING && days >= DATING_DAYS && mine >= ENGAGED_OPINION && theirs >= ENGAGED_OPINION
+			if (partnership.stage == PeopleRegistry.Stage.DATING && days >= DATING_DAYS && mine >= ENGAGED_OPINION && theirs >= ENGAGED_OPINION
 				&& npc.getRandom().nextFloat() < chance) {
 				npc.voice.bark("propose", other, null, true);
 				getEngaged(npc, other, family);
-			} else if (partnership.stage == FamilyRegistry.Stage.ENGAGED && days >= ENGAGED_DAYS && mine >= ENGAGED_OPINION
+			} else if (partnership.stage == PeopleRegistry.Stage.ENGAGED && days >= ENGAGED_DAYS && mine >= ENGAGED_OPINION
 				&& theirs >= ENGAGED_OPINION && npc.getRandom().nextFloat() < chance) {
 				wed(npc, other, family);
-			} else if (partnership.stage == FamilyRegistry.Stage.MARRIED && mine >= ENGAGED_OPINION && theirs >= ENGAGED_OPINION
+			} else if (partnership.stage == PeopleRegistry.Stage.MARRIED && mine >= ENGAGED_OPINION && theirs >= ENGAGED_OPINION
 				&& npc.getRandom().nextFloat() < Children.BIRTH_CHANCE && Children.canHaveChild(family, npc.getUuid(), other.getUuid(), now)) {
 				Children.born(npc, other);
 			}
 		} else if (partner instanceof Player player && npc.distanceTo(player) <= COURTING_RANGE && npc.social.getRomanceRequest() == null) {
 			// With a player, the NPC can't just decide: it asks next time they talk.
 			float days = daysTogether(partnership, now);
-			if (partnership.stage == FamilyRegistry.Stage.MARRIED && mine >= ENGAGED_OPINION && npc.getRandom().nextFloat() < Children.BIRTH_CHANCE
+			if (partnership.stage == PeopleRegistry.Stage.MARRIED && mine >= ENGAGED_OPINION && npc.getRandom().nextFloat() < Children.BIRTH_CHANCE
 				&& Children.canHaveChild(family, npc.getUuid(), player.uuid, now)) {
 				Children.born(npc, player);
 				return;
 			}
 
-			if (partnership.stage == FamilyRegistry.Stage.DATING && days >= DATING_DAYS && mine >= ENGAGED_OPINION
+			if (partnership.stage == PeopleRegistry.Stage.DATING && days >= DATING_DAYS && mine >= ENGAGED_OPINION
 				&& npc.getRandom().nextFloat() < PROPOSE_CHANCE * 0.3F) {
 				npc.social.setRomanceRequest(Request.PROPOSE, player);
 				npc.voice.bark("want_to_talk", player, null, false);
@@ -159,7 +154,7 @@ public final class Romance {
 	}
 
 	/** Single and looking: asks out someone nearby it's grown close to. */
-	private static void lookForLove(EntityNPC npc, FamilyRegistry family) {
+	private static void lookForLove(EntityNPC npc, PeopleRegistry family) {
 		float chance = ASK_CHANCE * (npc.personality.has(Quirk.ROMANTIC) ? 3.0F : 1.0F);
 		if (npc.getRandom().nextFloat() >= chance) {
 			return;
@@ -194,7 +189,7 @@ public final class Romance {
 		}
 	}
 
-	public static void startDating(EntityNPC npc, Mob other, FamilyRegistry family) {
+	public static void startDating(EntityNPC npc, Mob other, PeopleRegistry family) {
 		if (other instanceof Player player) {
 			register(player);
 		}
@@ -207,8 +202,8 @@ public final class Romance {
 		}
 	}
 
-	public static void getEngaged(EntityNPC npc, Mob other, FamilyRegistry family) {
-		family.setStage(npc.getUuid(), FamilyRegistry.Stage.ENGAGED, npc.world.getWorldTime());
+	public static void getEngaged(EntityNPC npc, Mob other, PeopleRegistry family) {
+		family.setStage(npc.getUuid(), PeopleRegistry.Stage.ENGAGED, npc.world.getWorldTime());
 		npc.remember(MemoryType.GOT_ENGAGED, null, 1.0F);
 		if (other instanceof EntityNPC otherNpc) {
 			otherNpc.remember(MemoryType.GOT_ENGAGED, null, 1.0F);
@@ -217,8 +212,8 @@ public final class Romance {
 	}
 
 	/** The wedding: the couple is married, and everyone nearby enjoys it. */
-	public static void wed(EntityNPC npc, Mob other, FamilyRegistry family) {
-		family.setStage(npc.getUuid(), FamilyRegistry.Stage.MARRIED, npc.world.getWorldTime());
+	public static void wed(EntityNPC npc, Mob other, PeopleRegistry family) {
+		family.setStage(npc.getUuid(), PeopleRegistry.Stage.MARRIED, npc.world.getWorldTime());
 		npc.remember(MemoryType.GOT_MARRIED, null, 1.0F);
 		npc.voice.bark("wedding", other, null, true);
 		if (other instanceof EntityNPC otherNpc) {
@@ -237,7 +232,7 @@ public final class Romance {
 	}
 
 	/** This NPC ends it. Both feel it; the one left behind remembers who did it. */
-	public static void breakUp(EntityNPC npc, Mob partner, FamilyRegistry family) {
+	public static void breakUp(EntityNPC npc, Mob partner, PeopleRegistry family) {
 		family.breakUp(npc.getUuid());
 		npc.voice.bark("break_up", partner, null, true);
 		if (partner instanceof EntityNPC other) {
