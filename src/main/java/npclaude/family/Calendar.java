@@ -24,6 +24,11 @@ public final class Calendar {
 		return Math.floorDiv(worldTime, Memory.TICKS_PER_DAY);
 	}
 
+	/** The hour of the day, 0 to 23; world time 0 is 6 in the morning. */
+	public static int hourOfDay(long worldTime) {
+		return (int) (Math.floorMod(worldTime + 6000L, Memory.TICKS_PER_DAY) / 1000L);
+	}
+
 	public static int yearDays(World world) {
 		if (world.getSeasonManager() instanceof SeasonManagerCycle cycle) {
 			int days = 0;

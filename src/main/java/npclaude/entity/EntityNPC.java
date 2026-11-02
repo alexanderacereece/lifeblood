@@ -24,6 +24,7 @@ import npclaude.ai.NpcBrain;
 import npclaude.ai.NpcNavigator;
 import npclaude.ai.behavior.RecoverBehavior;
 import npclaude.ai.behavior.StayNearParentBehavior;
+import npclaude.ai.routine.NpcRoutine;
 import npclaude.appearance.Appearance;
 import npclaude.appearance.PartCatalog;
 import npclaude.combat.BrawlBehavior;
@@ -53,7 +54,7 @@ import org.joml.primitives.AABBd;
 /**
  * A general-purpose NPC. The entity itself handles what every mob must (moving, fighting, being hurt, equipment,
  * saving); everything else lives in its parts: who it is (personality, memories, voice), what it does (brain,
- * navigator), and its {@link NpcPart}s for life, health, eating, following, brawling, awareness and social ties.
+ * navigator, routine), and its {@link NpcPart}s for life, health, eating, following, brawling, awareness and social ties.
  * The display name is the vanilla nickname, which BTA already draws as a name tag.
  */
 public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmorShape>, IItemHolding {
@@ -100,8 +101,10 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	public final NpcAwareness awareness = new NpcAwareness(this);
 	public final NpcFollowing following = new NpcFollowing(this);
 	public final NpcBrawling brawling = new NpcBrawling(this);
+	public final NpcRoutine routine = new NpcRoutine(this);
 	/** The parts, in the order they tick. */
-	private final List<NpcPart> parts = List.of(this.life, this.health, this.eating, this.social, this.awareness, this.following, this.brawling);
+	private final List<NpcPart> parts = List.of(this.life, this.health, this.eating, this.social, this.awareness, this.following, this.brawling,
+		this.routine);
 	/** Who this NPC is, for others' memories of it; kept for life. */
 	private UUID uuid = UUID.randomUUID();
 	private int lastRefusalTick = -REFUSAL_COOLDOWN;

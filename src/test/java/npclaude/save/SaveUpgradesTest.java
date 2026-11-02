@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.mojang.nbt.tags.CompoundTag;
+import com.mojang.nbt.tags.ListTag;
+import com.mojang.nbt.tags.Tag;
 import org.junit.jupiter.api.Test;
 
 class SaveUpgradesTest {
@@ -47,6 +49,29 @@ class SaveUpgradesTest {
 		personality.putCompound("Food", new CompoundTag());
 		SaveUpgrades.personality(personality);
 		assertTrue(personality.containsKey("Tastes"));
+	}
+
+	@Test
+	void defaultWanderingBecomesTheRoutine() {
+		CompoundTag npc = new CompoundTag();
+		ListTag behaviors = new ListTag();
+		CompoundTag wander = new CompoundTag();
+		wander.putString("Id", "wander");
+		wander.putInt("Radius", 8);
+		CompoundTag farWander = new CompoundTag();
+		farWander.putString("Id", "wander");
+		farWander.putInt("Radius", 30);
+		behaviors.addTag(wander);
+		behaviors.addTag(farWander);
+		npc.putList("Behaviors", behaviors);
+		SaveUpgrades.npc(npc);
+		int left = 0;
+		for (Tag<?> entry : npc.getList("Behaviors")) {
+			assertEquals(30, ((CompoundTag) entry).getInteger("Radius"));
+			left++;
+		}
+
+		assertEquals(1, left);
 	}
 
 	@Test

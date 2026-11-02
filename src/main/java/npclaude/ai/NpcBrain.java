@@ -13,10 +13,11 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * Picks which behavior an NPC runs each tick: the highest-priority one that can run.
- * Switching stops the old behavior and starts the new one.
+ * Switching stops the old behavior and starts the new one. Three layers, in order:
  *
- * Instincts (e.g. combat) are built into every NPC: they are never replaced or saved.
- * Behaviors are the NPC's current orders (follow, stay, wander...), set by commands and saved.
+ * 1. Instincts (combat, brawls, recovering...) are built into every NPC: they are never replaced or saved.
+ * 2. Behaviors are the NPC's orders (follow, stay, go somewhere), set by players and commands, and saved.
+ * 3. With no orders that can run, the NPC goes about its day: its routine's activity for the time of day.
  */
 public class NpcBrain {
 	private final EntityNPC npc;
@@ -41,7 +42,7 @@ public class NpcBrain {
 		this.rebuildCandidates();
 	}
 
-	/** Removes all behaviors (instincts stay). */
+	/** Removes all orders (instincts stay), so the NPC goes back to its routine. */
 	public void clear() {
 		if (this.active != null && this.behaviors.contains(this.active)) {
 			this.active.stop(this.npc);
@@ -88,6 +89,11 @@ public class NpcBrain {
 		return this.active;
 	}
 
+	/** Whether it's going about its routine, with no orders or instincts in charge. */
+	public boolean isOnRoutine() {
+		return this.active != null && this.active == this.npc.routine.currentBehavior();
+	}
+
 	public void tick() {
 		NpcBehavior next = null;
 		for (NpcBehavior behavior : this.candidates) {
@@ -95,6 +101,13 @@ public class NpcBrain {
 			if (runnable) {
 				next = behavior;
 				break;
+			}
+		}
+
+		if (next == null) {
+			NpcBehavior routine = this.npc.routine.behavior();
+			if (routine != null && (routine == this.active ? routine.shouldContinue(this.npc) : routine.canStart(this.npc))) {
+				next = routine;
 			}
 		}
 

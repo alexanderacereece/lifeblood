@@ -16,7 +16,6 @@ import net.minecraft.core.entity.Mob;
 import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.lang.I18n;
 import npclaude.NPClaude;
-import npclaude.ai.behavior.WanderBehavior;
 import npclaude.appearance.Appearance;
 import npclaude.appearance.PartCatalog;
 import npclaude.entity.EntityNPC;
@@ -86,7 +85,6 @@ public final class Children {
 		child.setFaction(parent.getFaction());
 		child.setHome(parent.getHomeX(), parent.getHomeY(), parent.getHomeZ());
 		child.life.setGrowth(0.0F);
-		child.brain.set(new WanderBehavior());
 		child.spawnInit();
 		parent.world.entityJoinedWorld(child);
 

@@ -1017,7 +1017,7 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 		c.getSource().sendMessage(npcs.size() + " NPC(s) loaded:");
 		for (EntityNPC npc : npcs) {
 			NpcBehavior active = npc.brain.getActive();
-			String doing = active != null ? active.describe() : "idle";
+			String doing = active == null ? "idle" : npc.brain.isOnRoutine() ? active.describe() + " (its routine)" : active.describe();
 			String skin = npc.getSkin().isEmpty() ? "default" : npc.getSkin();
 			c.getSource().sendMessage(String.format(Locale.ROOT, "- %s (%s): %s, skin %s, health %d, %s style, faction %s, at %d %d %d%s",
 				npc.nickname, npc.getGender().displayName().toLowerCase(Locale.ROOT), doing, skin, npc.getHealth(),

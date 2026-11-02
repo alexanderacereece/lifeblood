@@ -1,6 +1,8 @@
 package npclaude.save;
 
 import com.mojang.nbt.tags.CompoundTag;
+import com.mojang.nbt.tags.ListTag;
+import com.mojang.nbt.tags.Tag;
 import net.minecraft.core.world.World;
 import npclaude.people.PeopleRegistry;
 import org.jetbrains.annotations.Nullable;
@@ -37,6 +39,20 @@ public final class SaveUpgrades {
 
 		if (npc.containsKey("Personality")) {
 			personality(npc.getCompound("Personality"));
+		}
+
+		// Wandering about home was an order before NPCs had routines; now it's what they do without orders.
+		if (npc.containsKey("Behaviors")) {
+			ListTag kept = new ListTag();
+			for (Tag<?> entry : npc.getList("Behaviors")) {
+				boolean defaultWander = entry instanceof CompoundTag behavior && "wander".equals(behavior.getString("Id"))
+					&& behavior.getIntegerOrDefault("Radius", 8) == 8;
+				if (!defaultWander) {
+					kept.addTag(entry);
+				}
+			}
+
+			npc.putList("Behaviors", kept);
 		}
 	}
 

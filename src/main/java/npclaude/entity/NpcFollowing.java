@@ -8,7 +8,6 @@ import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.item.Item;
 import net.minecraft.core.item.ItemStack;
 import npclaude.ai.behavior.FollowPlayerBehavior;
-import npclaude.ai.behavior.WanderBehavior;
 import npclaude.combat.FactionRelation;
 import npclaude.combat.NpcFactions;
 import npclaude.personality.ItemDefaults;
@@ -110,9 +109,9 @@ public final class NpcFollowing implements NpcPart {
 		this.npc.brain.set(new FollowPlayerBehavior(player.uuid));
 	}
 
-	/** Goes back to wandering around home. */
+	/** Goes back to its own routine. */
 	public void stop() {
-		this.npc.brain.set(new WanderBehavior());
+		this.npc.brain.clear();
 	}
 
 	/** A follower that's fallen out with its leader says so and leaves. */
