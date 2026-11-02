@@ -18,6 +18,7 @@ import net.minecraft.core.net.command.CommandSource;
  * /npc heal <name>         (full health, back on its feet, done recovering)
  * /npc perf                 (AI and pathfinding cost over the last second)
  * /npc wander <name> [radius]
+ * /npc free <name>          (drops its orders: it goes about its routine around where it is)
  * /npc skin <name> <skin> [auto|wide|slim]
  * /npc mortality <name> [mortal|invincible|invulnerable]   (invincible: hurt, but knocked down instead of killed)
  * /npc personality <name>                     (trait axes, quirks, and what they like and hate most)

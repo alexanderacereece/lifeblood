@@ -45,6 +45,7 @@ final class NpcBasicsCommands {
 				.then(npcArgument().executes(c -> {
 					Player player = requirePlayer(c.getSource());
 					EntityNPC npc = findNpc(c);
+					overrideRecovery(c, npc);
 					npc.brain.set(new FollowPlayerBehavior(player.uuid));
 					return reply(c, npc.nickname + " is now following you.");
 				})))
@@ -57,6 +58,10 @@ final class NpcBasicsCommands {
 					.then(argument("position", ArgumentTypeVector3d.vec3d()).executes(c -> {
 						double[] pos = position(c);
 						return goTo(c, pos[0], pos[1], pos[2], describe(pos));
+					}))
+					.then(literal("@s").executes(c -> {
+						Player player = requirePlayer(c.getSource());
+						return goTo(c, player.x, player.bb.minY(), player.z, "you");
 					}))
 					.then(argument("target", ArgumentTypeString.string()).suggests(TARGET_NAMES).executes(c -> {
 						Entity target = findTarget(c);
@@ -71,6 +76,10 @@ final class NpcBasicsCommands {
 					.then(argument("position", ArgumentTypeVector3d.vec3d()).executes(c -> {
 						double[] pos = position(c);
 						return teleport(c, pos[0], pos[1], pos[2], describe(pos));
+					}))
+					.then(literal("@s").executes(c -> {
+						Player player = requirePlayer(c.getSource());
+						return teleport(c, player.x, player.bb.minY(), player.z, "you");
 					}))
 					.then(argument("target", ArgumentTypeString.string()).suggests(TARGET_NAMES).executes(c -> {
 						Entity target = findTarget(c);
@@ -113,9 +122,17 @@ final class NpcBasicsCommands {
 			.then(literal("stay")
 				.then(npcArgument().executes(c -> {
 					EntityNPC npc = findNpc(c);
+					overrideRecovery(c, npc);
 					npc.setHomeHere();
 					npc.brain.set(new StayBehavior());
 					return reply(c, npc.nickname + " will stay here.");
+				})))
+			.then(literal("free")
+				.then(npcArgument().executes(c -> {
+					EntityNPC npc = findNpc(c);
+					npc.setHomeHere();
+					npc.brain.clear();
+					return reply(c, npc.nickname + " has no orders now, and goes about its day around here.");
 				})))
 			.then(literal("wander")
 				.then(npcArgument()
@@ -193,8 +210,8 @@ final class NpcBasicsCommands {
 			npc.setFaction(faction);
 		}
 
+		// No orders: it goes about its routine around where it appeared.
 		npc.setHomeHere();
-		npc.brain.set(new StayBehavior());
 		npc.spawnInit();
 		world.entityJoinedWorld(npc);
 
@@ -208,8 +225,17 @@ final class NpcBasicsCommands {
 
 	private static int goTo(CommandContext<CommandSource> c, double x, double y, double z, String where) throws CommandSyntaxException {
 		EntityNPC npc = findNpc(c);
+		overrideRecovery(c, npc);
 		npc.brain.set(new GoToBehavior(x, y, z));
 		return reply(c, npc.nickname + " is heading to " + where + ".");
+	}
+
+	/** An order by command beats recovering from being downed (which otherwise sends it home and ignores orders). */
+	private static void overrideRecovery(CommandContext<CommandSource> c, EntityNPC npc) {
+		if (npc.health.isRecovering()) {
+			npc.health.stopRecovering();
+			reply(c, npc.nickname + " was recovering at home; it's done now.");
+		}
 	}
 
 	private static int teleport(CommandContext<CommandSource> c, double x, double y, double z, String where) throws CommandSyntaxException {
@@ -222,6 +248,7 @@ final class NpcBasicsCommands {
 
 	private static int wander(CommandContext<CommandSource> c, int radius) throws CommandSyntaxException {
 		EntityNPC npc = findNpc(c);
+		overrideRecovery(c, npc);
 		npc.setHomeHere();
 		npc.brain.set(new WanderBehavior(radius));
 		return reply(c, npc.nickname + " will wander within " + radius + " blocks of here.");

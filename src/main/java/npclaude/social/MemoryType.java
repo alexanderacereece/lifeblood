@@ -13,7 +13,7 @@ public enum MemoryType {
 	// About a person
 	SAVED_MY_LIFE("saved my life", 30, 10, 60, 3),
 	FOUGHT_BESIDE_ME("fought beside me", 8, 0, 10, 5),
-	// Gifts (one a day) and chats (three a minute) are the steady way to make friends: a daily gift they like plus
+	// Gifts (one a day) and chats (five a minute) are the steady way to make friends: a daily gift they like plus
 	// some chatting makes most NPCs friends (50) in about three days, and close friends (80+) in about two weeks.
 	/** Scaled by how much the NPC likes the gift. */
 	GAVE_ME_A_GIFT("gave me a gift", 8, 3, 14, 14, false, 0.9F),
@@ -34,7 +34,8 @@ public enum MemoryType {
 	/** Only animal lovers keep this one. */
 	KILLED_AN_ANIMAL("killed an animal", -4, 0, 2, 5),
 	BEAT_ME_IN_A_BRAWL("beat me in a brawl", -5, -5, 10, 3, true),
-	PICKED_A_FIGHT_WITH_ME("picked a fight with me", -6, -2, 5, 3),
+	/** Scaled up when it came out of nowhere. */
+	PICKED_A_FIGHT_WITH_ME("picked a fight with me", -6, -2, 7, 3),
 	/** After a brawl: getting it out of their system. Usually outweighs the brawl's own bad memories. */
 	CLEARED_THE_AIR("cleared the air", 8, 2, 5, 2),
 	/** Competitive losers respect whoever beat them. */

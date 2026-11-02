@@ -109,8 +109,9 @@ public final class NpcFollowing implements NpcPart {
 		this.npc.brain.set(new FollowPlayerBehavior(player.uuid));
 	}
 
-	/** Goes back to its own routine. */
+	/** Goes back to its own routine, around wherever it's left. */
 	public void stop() {
+		this.npc.setHomeHere();
 		this.npc.brain.clear();
 	}
 

@@ -29,18 +29,34 @@ public final class Brawl {
 	public static final double FORFEIT_DISTANCE = 16.0;
 	private static final double BYSTANDER_RANGE = 16.0;
 	private static final float BYSTANDER_REMARK_CHANCE = 0.4F;
+	/** Someone picked on by a person they thought this well of (or better) didn't have it coming. */
+	private static final float UNPROVOKED_OPINION = -20.0F;
+	/** How much more an unprovoked fight counts against whoever started it. */
+	private static final float UNPROVOKED_GRUDGE = 3.0F;
 
 	private final Mob first;
 	private final Mob second;
 	/** Whoever started it, if anyone did on purpose; they get the blame. */
 	@Nullable
 	private final Mob instigator;
+	/** The one who was picked on, if anyone was; null when nobody started it on purpose. */
+	@Nullable
+	private final Mob challenged;
+	/** Whether the challenged side had nothing against the instigator: a fight out of nowhere. */
+	private final boolean unprovoked;
 	private boolean over;
 
 	private Brawl(Mob first, Mob second, @Nullable Mob instigator) {
 		this.first = first;
 		this.second = second;
 		this.instigator = instigator;
+		this.challenged = instigator == first ? second : instigator == second ? first : null;
+		this.unprovoked = this.challenged instanceof EntityNPC npc && Opinions.of(npc, instigator) > UNPROVOKED_OPINION;
+	}
+
+	/** Whether the challenged side had nothing against whoever started it. */
+	public boolean isUnprovoked() {
+		return this.unprovoked;
 	}
 
 	/**
@@ -60,9 +76,8 @@ public final class Brawl {
 			}
 		}
 
-		Mob challenged = instigator == first ? second : instigator == second ? first : null;
-		if (challenged instanceof EntityNPC npc && instigator != null) {
-			npc.remember(MemoryType.PICKED_A_FIGHT_WITH_ME, instigator, 1.0F);
+		if (brawl.challenged instanceof EntityNPC npc) {
+			npc.remember(MemoryType.PICKED_A_FIGHT_WITH_ME, instigator, brawl.unprovoked ? UNPROVOKED_GRUDGE : 1.0F);
 		}
 
 		brawl.alertBystanders();
@@ -160,10 +175,11 @@ public final class Brawl {
 			npc.voice.bark("brawl_win", loser, context -> context.fact("forfeit", forfeit ? "yes" : "no"), true);
 		}
 
-		// Getting it out of their system: the bad blood usually cools a little, more so for hotheads.
+		// Getting it out of their system: the bad blood usually cools a little, more so for hotheads. Someone picked on
+		// out of nowhere had no bad blood to clear.
 		if (!forfeit) {
 			for (Mob side : new Mob[] {loser, winner}) {
-				if (side instanceof EntityNPC npc) {
+				if (side instanceof EntityNPC npc && !(this.unprovoked && side == this.challenged)) {
 					npc.remember(MemoryType.CLEARED_THE_AIR, this.opponentOf(side), npc.personality.has(Quirk.HOTHEAD) ? 1.5F : 1.0F);
 				}
 			}

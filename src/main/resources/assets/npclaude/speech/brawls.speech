@@ -18,6 +18,13 @@ You. Me. No weapons. Let's go. {proper, w=2}
 I don't like you, [listener]. Never have. {honest, w=2}
 
 == brawl_accept ==
+What was that for?! I never did anything to you! {unprovoked=yes, w=4}
+Out of nowhere? Really? Fine, then! {unprovoked=yes, w=3}
+I thought we were fine, [listener]. Guess not. {unprovoked=yes, opinion=friendly, w=4}
+You'll remember this. I certainly will. {unprovoked=yes, vengeful, w=5}
+What the hell, [listener]?! {unprovoked=yes, crude, w=4}
+I... What did I do? {unprovoked=yes, timid, w=4}
+How dare you. Unprovoked! {unprovoked=yes, proper, w=4}
 [taught_angry]! You're going to regret that! {w=4}
 Oh, it's like that? Fine!
 You want a fight? You've got one!

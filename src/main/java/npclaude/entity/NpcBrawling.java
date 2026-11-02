@@ -137,8 +137,9 @@ public final class NpcBrawling implements NpcPart {
 				return Hit.FRIENDLY;
 			}
 
-			if (Brawl.start(this.npc, (Mob) source, (Mob) source) != null) {
-				this.npc.voice.bark("brawl_accept", source, null, true);
+			Brawl brawl = Brawl.start(this.npc, (Mob) source, (Mob) source);
+			if (brawl != null) {
+				this.npc.voice.bark("brawl_accept", source, context -> context.fact("unprovoked", brawl.isUnprovoked() ? "yes" : "no"), true);
 				return Hit.BRAWL;
 			}
 		}
