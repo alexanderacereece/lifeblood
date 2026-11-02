@@ -28,9 +28,12 @@ Each layer is a 64x64 skin-format PNG. Fixed layers are drawn in full color and 
 | Hair | yes | hair color | styles, using the outer layer for volume |
 | Tops | either | dye color, if recolorable | shirts, tunics, dresses, aprons |
 | Bottoms | either | dye color, if recolorable | trousers, skirts, shoes |
+| Outfits | either | dye color, if recolorable | a top and bottom in one: uniforms, dresses, overalls |
 | Accessories | no | | scarves, glasses, hats |
 
 Tops and bottoms are recolorable or fixed per item: plain clothes come in any dye color, while patterned or detailed ones keep their drawn colors.
+
+An outfit is drawn over the body like a top and bottom together, and while one is worn the separate top and bottom aren't drawn at all (they stay chosen, for when the outfit comes off). Random NPCs wear an outfit 35% of the time, if there are outfits for their gender; jobs will hand out their own (a guard's uniform in the faction's colors).
 
 Layers are stacked in order and combined into a single texture per NPC, built once and cached by its exact combination. Two NPCs with identical looks share a texture. Rebuilding a 64x64 texture is cheap, so changing clothes costs almost nothing.
 
@@ -54,7 +57,7 @@ Children inherit body traits: skin tone, hair color and eye color each from one 
 
 Parts live in two places with the same layout: bundled with the mod (`assets/npclaude/parts/`) and in the game folder's `npc_parts/`, which can be added to without rebuilding (`/npc parts reload` picks up changes). Game-folder files win over bundled ones with the same name.
 
-- `<layer>/<name>.png`: a 64x64 skin-format part anyone can roll. Layer folders: `base`, `eyes`, `mouth`, `facial_hair`, `bottom`, `top`, `hair`, `accessory` (drawn in that order).
+- `<layer>/<name>.png`: a 64x64 skin-format part anyone can roll. Layer folders: `base`, `eyes`, `mouth`, `facial_hair`, `bottom`, `top`, `outfit`, `hair`, `accessory` (drawn in that order).
 - `<layer>/male/<name>.png`, `<layer>/female/<name>.png`: parts only rolled for that gender (a command can still put them on anyone).
 - `<name>_slim.png` beside `<name>.png`: the slim-armed version. The base part's arm width decides which one an NPC wears.
 - `palettes.txt` (a swatch sheet of the bundled palettes is in [palette_reference.html](palette_reference.html)): `[skin]`, `[hair]`, `[eyes]`, `[dye]` groups of `name: #c1 #c2 #c3 #c4 #c5` lines, darkest to lightest. The mod ships defaults (8 skin tones, 12 hair colors, 8 eye colors, the 16 dye colors); a game-folder file adds to or overrides them.

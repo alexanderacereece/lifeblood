@@ -92,9 +92,11 @@ final class LookCommands {
 		}
 
 		reply(c, npc.nickname + "'s look" + (npc.getSkin().isEmpty() ? ":" : " (hidden by the skin '" + npc.getSkin() + "'):"));
+		boolean outfit = appearance.get(AppearanceLayer.OUTFIT) != null;
 		for (Map.Entry<AppearanceLayer, Appearance.Choice> entry : appearance.choices().entrySet()) {
 			Appearance.Choice choice = entry.getValue();
-			reply(c, "- " + entry.getKey().id() + ": " + choice.part() + (choice.palette().isEmpty() ? "" : " (" + choice.palette() + ")"));
+			reply(c, "- " + entry.getKey().id() + ": " + choice.part() + (choice.palette().isEmpty() ? "" : " (" + choice.palette() + ")")
+				+ (outfit && entry.getKey().coveredByOutfit() ? ", hidden under the outfit" : ""));
 		}
 
 		return 1;

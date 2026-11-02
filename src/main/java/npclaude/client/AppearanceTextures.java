@@ -82,7 +82,12 @@ public final class AppearanceTextures {
 
 		boolean slim = model == SkinModel.AUTO ? NpcSkinFiles.isSlim(baseImage) : model == SkinModel.SLIM;
 		BufferedImage result = new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB);
+		boolean outfit = appearance.get(AppearanceLayer.OUTFIT) != null;
 		for (AppearanceLayer layer : AppearanceLayer.values()) {
+			if (outfit && layer.coveredByOutfit()) {
+				continue;
+			}
+
 			Appearance.Choice choice = appearance.get(layer);
 			PartCatalog.Part part = choice != null ? catalog.part(layer, choice.part()) : null;
 			BufferedImage image = part != null ? read(part.source(slim)) : null;

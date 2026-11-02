@@ -39,6 +39,18 @@ class AppearanceTest {
 	}
 
 	@Test
+	void outfitsCoverTopAndBottomOnly() {
+		for (AppearanceLayer layer : AppearanceLayer.values()) {
+			assertEquals(layer == AppearanceLayer.TOP || layer == AppearanceLayer.BOTTOM, layer.coveredByOutfit(), layer.id());
+		}
+
+		// Drawn after the clothes it replaces, before hair.
+		assertTrue(AppearanceLayer.OUTFIT.ordinal() > AppearanceLayer.TOP.ordinal());
+		assertTrue(AppearanceLayer.OUTFIT.ordinal() < AppearanceLayer.HAIR.ordinal());
+		assertEquals("dye", AppearanceLayer.OUTFIT.paletteGroup);
+	}
+
+	@Test
 	void removingALayer() {
 		Appearance look = Appearance.NONE.with(AppearanceLayer.HAIR, "short", "black").with(AppearanceLayer.HAIR, null, "");
 		assertNull(look.get(AppearanceLayer.HAIR));

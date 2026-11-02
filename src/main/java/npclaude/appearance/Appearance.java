@@ -22,6 +22,8 @@ public final class Appearance {
 	private static final float FEMALE_HAIR = 0.99F;
 	private static final float MALE_FACIAL_HAIR = 0.35F;
 	private static final float ACCESSORY = 0.15F;
+	/** Chance of an outfit (top and bottom in one) instead of separate clothes, if there are outfits to wear. */
+	private static final float OUTFIT = 0.35F;
 
 	private final Map<AppearanceLayer, Choice> choices;
 
@@ -99,7 +101,8 @@ public final class Appearance {
 
 	/**
 	 * A random look from the parts available, or NONE if there are no base parts yet. Hair and facial hair share a
-	 * color; top and bottom each get their own dye (used only if the part has recolorable pixels). Skin tone leans
+	 * color; clothes are a top and bottom with a dye each, or now and then an outfit that's both (used only if the
+	 * part has recolorable pixels). Skin tone leans
 	 * on how warm the place they're from is (0 cold to 1 hot, NaN for anywhere): paler in the cold, darker in the heat.
 	 */
 	public static Appearance random(PartCatalog catalog, NpcGender gender, Random random, float warmth) {
@@ -109,11 +112,14 @@ public final class Appearance {
 		}
 
 		String hairColor = pick(catalog.paletteNames("hair"), random, "");
+		boolean outfit = !catalog.parts(AppearanceLayer.OUTFIT, gender).isEmpty() && random.nextFloat() < OUTFIT;
 		for (AppearanceLayer layer : AppearanceLayer.values()) {
 			float chance = switch (layer) {
 				case HAIR -> gender == NpcGender.MALE ? MALE_HAIR : FEMALE_HAIR;
 				case FACIAL_HAIR -> gender == NpcGender.MALE ? MALE_FACIAL_HAIR : 0.0F;
 				case ACCESSORY -> ACCESSORY;
+				case OUTFIT -> outfit ? 1.0F : 0.0F;
+				case TOP, BOTTOM -> outfit ? 0.0F : 1.0F;
 				default -> 1.0F;
 			};
 			List<String> parts = catalog.parts(layer, gender);
