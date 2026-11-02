@@ -59,7 +59,7 @@ Parts live in two places with the same layout: bundled with the mod (`assets/npc
 
 - `<layer>/<name>.png`: a 64x64 skin-format part anyone can roll. Layer folders: `base`, `eyes`, `mouth`, `facial_hair`, `bottom`, `top`, `outfit`, `hair`, `accessory` (drawn in that order).
 - `<layer>/male/<name>.png`, `<layer>/female/<name>.png`: parts only rolled for that gender (a command can still put them on anyone).
-- `<name>_slim.png` beside `<name>.png`: the slim-armed version. The base part's arm width decides which one an NPC wears.
+- `<name>_slim.png` beside `<name>.png`: a hand-made slim-armed version. Women are slim unless their skin model says otherwise (men follow their base part's arm width). A slim NPC wearing a part with no slim version gets the wide one squeezed: the faces as wide as the arm (front, back, top, bottom) lose an inner column, keeping both edges, which is how a wide skin is usually redrawn as slim.
 - `palettes.txt` (a swatch sheet of the bundled palettes is in [palette_reference.html](palette_reference.html)): `[skin]`, `[hair]`, `[eyes]`, `[dye]` groups of `name: #c1 #c2 #c3 #c4 #c5` lines, darkest to lightest. The mod ships defaults (8 skin tones, 12 hair colors, 8 eye colors, the 16 dye colors); a game-folder file adds to or overrides them.
 
 Whether a part is recolorable isn't declared anywhere: any of the five grays in it get recolored, and everything else is drawn as is. The mouth is recolored with the base's skin palette and facial hair with the hair's, so they always match. Old-style 64x32 parts work too: they're upgraded like old skins (left limbs mirrored from the right, and a completely filled hat area cleared).

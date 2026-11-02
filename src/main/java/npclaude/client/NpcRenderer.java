@@ -190,6 +190,6 @@ public class NpcRenderer extends MobRendererBipedArmored<EntityNPC> {
 			return NpcSkins.get(this.renderDispatcher.textureManager, entity.getSkin(), entity.getSkinModel());
 		}
 
-		return AppearanceTextures.get(this.renderDispatcher.textureManager, entity.getAppearance(), entity.getSkinModel());
+		return AppearanceTextures.get(this.renderDispatcher.textureManager, entity.getAppearance(), entity.getLookModel());
 	}
 }

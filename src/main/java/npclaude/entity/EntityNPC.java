@@ -68,6 +68,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	static final int DATA_APPEARANCE = 23;
 	/** How grown up it is, 0 (newborn) to 100 (adult). */
 	static final int DATA_GROWTH = 24;
+	static final int DATA_GENDER = 25;
 	/** A conversation ends if the player walks further away than this. */
 	private static final float TALK_DISTANCE = 8.0F;
 	/** Ticks between melee hits; players can click faster, monsters wait 20. */
@@ -126,7 +127,6 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	/** Null when unaffiliated. */
 	@Nullable
 	private String faction;
-	private NpcGender gender = NpcGender.MALE;
 	private CombatStyle combatStyle = CombatStyle.AUTO;
 	@Nullable
 	private Entity lastAttacker;
@@ -156,6 +156,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		this.entityData.define(DATA_DOWNED, (byte) 0, Byte.class);
 		this.entityData.define(DATA_APPEARANCE, "", String.class);
 		this.entityData.define(DATA_GROWTH, (byte) 100, Byte.class);
+		this.entityData.define(DATA_GENDER, (byte) NpcGender.MALE.ordinal(), Byte.class);
 	}
 
 	@Override
@@ -524,6 +525,12 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		this.entityData.set(DATA_SKIN_MODEL, (byte) model.ordinal());
 	}
 
+	/** The arm width its look from parts is drawn with: the skin model, except that women are slim unless set otherwise. */
+	public SkinModel getLookModel() {
+		SkinModel model = this.getSkinModel();
+		return model == SkinModel.AUTO && this.getGender() == NpcGender.FEMALE ? SkinModel.SLIM : model;
+	}
+
 	/** The look built from appearance parts, encoded; shown when the NPC has no skin file set. */
 	public String getAppearance() {
 		return this.entityData.getString(DATA_APPEARANCE);
@@ -540,27 +547,27 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	public void rollAppearanceIfNeeded() {
 		this.life.ensureHomeland();
 		if (this.getSkin().isEmpty() && this.getAppearance().isEmpty()) {
-			this.setAppearance(Appearance.random(PartCatalog.get(), this.gender, this.random, this.life.getHomeWarmth()));
+			this.setAppearance(Appearance.random(PartCatalog.get(), this.getGender(), this.random, this.life.getHomeWarmth()));
 		}
 	}
 
 	public NpcGender getGender() {
-		return this.gender;
+		return NpcGender.byId(this.entityData.getByte(DATA_GENDER));
 	}
 
 	public void setGender(NpcGender gender) {
-		this.gender = gender;
+		this.entityData.set(DATA_GENDER, (byte) gender.ordinal());
 	}
 
 	/** Voiced like a player of the same gender. */
 	@Override
 	protected String getHurtSound() {
-		return this.gender.hurtSound;
+		return this.getGender().hurtSound;
 	}
 
 	@Override
 	protected String getDeathSound() {
-		return this.gender.deathSound;
+		return this.getGender().deathSound;
 	}
 
 	@Override
@@ -793,7 +800,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		npc.putString("Appearance", this.getAppearance());
 		npc.putByte("SkinModel", (byte) this.getSkinModel().ordinal());
 		npc.putString("Faction", this.faction != null ? this.faction : "");
-		npc.putByte("Gender", (byte) this.gender.ordinal());
+		npc.putByte("Gender", (byte) this.getGender().ordinal());
 		npc.putByte("CombatStyle", (byte) this.combatStyle.ordinal());
 		npc.putDouble("HomeX", this.homeX);
 		npc.putDouble("HomeY", this.homeY);
@@ -833,7 +840,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		this.entityData.set(DATA_APPEARANCE, npc.getStringOrDefault("Appearance", ""));
 		this.setSkinModel(SkinModel.byId(npc.getByte("SkinModel")));
 		this.faction = NpcFactions.normalize(npc.getStringOrDefault("Faction", ""));
-		this.gender = NpcGender.byId(npc.getByte("Gender"));
+		this.setGender(NpcGender.byId(npc.getByte("Gender")));
 		this.combatStyle = CombatStyle.byId(npc.getByte("CombatStyle"));
 		this.setHome(npc.getDouble("HomeX"), npc.getDouble("HomeY"), npc.getDouble("HomeZ"));
 		if (npc.containsKey("Personality")) {

@@ -16,6 +16,7 @@ import npclaude.NPClaude;
 import npclaude.appearance.Appearance;
 import npclaude.appearance.AppearanceLayer;
 import npclaude.appearance.PartCatalog;
+import npclaude.appearance.SlimArms;
 import npclaude.entity.SkinModel;
 import npclaude.skin.NpcSkinFiles;
 import org.jetbrains.annotations.Nullable;
@@ -74,7 +75,8 @@ public final class AppearanceTextures {
 			return null;
 		}
 
-		// The base part decides the arm width (unless the NPC's skin model forces one); clothes follow it.
+		// The skin model decides the arm width (women are slim unless set otherwise), or else the base part; every
+		// part follows it. A wide part on a slim NPC has its arms squeezed, unless there's a slim version of it.
 		BufferedImage baseImage = read(base.source(model == SkinModel.SLIM));
 		if (baseImage == null) {
 			return null;
@@ -90,7 +92,8 @@ public final class AppearanceTextures {
 
 			Appearance.Choice choice = appearance.get(layer);
 			PartCatalog.Part part = choice != null ? catalog.part(layer, choice.part()) : null;
-			BufferedImage image = part != null ? read(part.source(slim)) : null;
+			PartCatalog.Source file = part != null ? part.source(slim) : null;
+			BufferedImage image = slim && file != null && file != part.slim() ? readSqueezed(file) : read(file);
 			if (image == null) {
 				continue;
 			}
@@ -181,6 +184,20 @@ public final class AppearanceTextures {
 			}
 		}
 
+		return image;
+	}
+
+	/** A wide part with its arms squeezed to slim (left alone if it has no wide arms to squeeze), read once. */
+	@Nullable
+	private static BufferedImage readSqueezed(PartCatalog.Source source) {
+		String key = source + "|slim";
+		if (IMAGES.containsKey(key)) {
+			return IMAGES.get(key);
+		}
+
+		BufferedImage wide = read(source);
+		BufferedImage image = wide != null && !NpcSkinFiles.isSlim(wide) ? SlimArms.squeeze(wide) : wide;
+		IMAGES.put(key, image);
 		return image;
 	}
 
