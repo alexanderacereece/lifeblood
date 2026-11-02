@@ -1,6 +1,8 @@
 package npclaude.entity;
 
 import com.mojang.nbt.tags.CompoundTag;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -32,6 +34,8 @@ public final class NpcSocial implements NpcPart {
 	private UUID romanceRequestPlayer;
 	/** The in-game day each player last gave it a gift, for the one-gift-a-day limit. */
 	private final Map<UUID, Long> lastGiftDays = new HashMap<>();
+	/** When each player chatted with it lately (real time), for the chats-a-minute limit. Not saved. */
+	private final Map<UUID, Deque<Long>> chatTimes = new HashMap<>();
 
 	NpcSocial(EntityNPC npc) {
 		this.npc = npc;
@@ -86,6 +90,22 @@ public final class NpcSocial implements NpcPart {
 
 	public void setLastGiftDay(UUID player, long day) {
 		this.lastGiftDays.put(player, day);
+	}
+
+	/** Takes up one of this player's chats for the window, or returns false if they've had them all. */
+	public boolean tryChat(UUID player, int allowed, long windowMillis) {
+		long now = System.currentTimeMillis();
+		Deque<Long> times = this.chatTimes.computeIfAbsent(player, id -> new ArrayDeque<>());
+		while (!times.isEmpty() && now - times.peekFirst() >= windowMillis) {
+			times.pollFirst();
+		}
+
+		if (times.size() >= allowed) {
+			return false;
+		}
+
+		times.addLast(now);
+		return true;
 	}
 
 	/** Gift days are saved; a pending question and a rescue in progress aren't. */

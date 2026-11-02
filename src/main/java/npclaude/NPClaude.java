@@ -20,6 +20,7 @@ public class NPClaude implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
+		NpcConfig.load();
 		CommonEvents.BEFORE_GAME_START.listen(Key.of(MOD_ID), this::beforeGameStart);
 		CommandManager.registerCommand(new NpcCommand());
 		NpcItems.init();

@@ -5,6 +5,7 @@ import net.minecraft.core.item.Item;
 import net.minecraft.core.item.ItemStack;
 import net.minecraft.core.item.Items;
 import npclaude.NPClaude;
+import npclaude.NpcConfig;
 import turniplabs.halplibe.helper.ItemBuilder;
 import turniplabs.halplibe.helper.RecipeBuilder;
 import turniplabs.halplibe.helper.creativeInventory.CreativeInventoryCategory;
@@ -17,9 +18,6 @@ import turniplabs.halplibe.util.dependency.Key;
  * down instead, like an invincible NPC). Expensive on purpose, so it goes to the people who matter.
  */
 public final class NpcItems {
-	private static final int GUARDIAN_AMULET_ID = 25000;
-	private static final int WORD_BOOK_ID = 25001;
-
 	public static Item guardianAmulet;
 	public static Item wordBook;
 
@@ -37,10 +35,10 @@ public final class NpcItems {
 		// The builder adds the mod id to the translation key itself: item.npclaude.guardian_amulet.
 		guardianAmulet = new ItemBuilder(NPClaude.MOD_ID).setStackSize(1)
 			.setCreativeInventoryPlacement(new CreativeInventoryPlacement.Category(CreativeInventoryCategory.MISCELLANEOUS))
-			.build(new Item("guardian_amulet", NPClaude.MOD_ID + ":item/guardian_amulet", GUARDIAN_AMULET_ID));
+			.build(new Item("guardian_amulet", NPClaude.MOD_ID + ":item/guardian_amulet", NpcConfig.guardianAmuletId()));
 		wordBook = new ItemBuilder(NPClaude.MOD_ID).setStackSize(1)
 			.setCreativeInventoryPlacement(new CreativeInventoryPlacement.Category(CreativeInventoryCategory.MISCELLANEOUS))
-			.build(new ItemWordBook("word_book", NPClaude.MOD_ID + ":item/word_book", WORD_BOOK_ID));
+			.build(new ItemWordBook("word_book", NPClaude.MOD_ID + ":item/word_book", NpcConfig.wordBookId()));
 		NPClaude.LOGGER.info("Registered the guardian amulet and the word book.");
 	}
 

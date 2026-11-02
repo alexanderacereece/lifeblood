@@ -5,6 +5,7 @@ import java.util.Locale;
 import net.minecraft.core.world.World;
 import net.minecraft.core.world.season.Season;
 import net.minecraft.core.world.season.SeasonManagerCycle;
+import npclaude.NpcConfig;
 import npclaude.social.Memory;
 
 /**
@@ -13,8 +14,6 @@ import npclaude.social.Memory;
  */
 public final class Calendar {
 	public static final int DEFAULT_YEAR_DAYS = 56;
-	/** Children grow up over 18 years. A future game setting; 1008 days in the default world. */
-	public static final int YEARS_TO_GROW_UP = 18;
 	private static final String[] DEFAULT_SEASONS = {"Spring", "Summer", "Fall", "Winter"};
 
 	private Calendar() {
@@ -65,7 +64,8 @@ public final class Calendar {
 	}
 
 	public static long growUpTicks(World world) {
-		return YEARS_TO_GROW_UP * ticksPerYear(world);
+		// 18 years by default (1008 days), set in the config.
+		return NpcConfig.yearsToGrowUp() * ticksPerYear(world);
 	}
 
 	/** Whole years between a birth and now. */
