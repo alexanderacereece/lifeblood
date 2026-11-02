@@ -27,7 +27,7 @@ public final class NpcFactions {
 			return null;
 		}
 
-		return name.equals("default") ? FactionRegistry.SETTLERS : name;
+		return name;
 	}
 
 	/** The faction someone belongs to: an NPC's own, or the one a player joined. Null means unaffiliated. */

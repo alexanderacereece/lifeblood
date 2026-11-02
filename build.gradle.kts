@@ -56,6 +56,13 @@ dependencies {
 	localRuntime("org.lwjgl:lwjgl-openal::$lwjglNatives")
 	localRuntime("org.lwjgl:lwjgl-opengl::$lwjglNatives")
 	localRuntime("org.lwjgl:lwjgl-stb::$lwjglNatives")
+
+	// Unit tests for the mod's pure logic (kinship, calendar, appearance, grammar...)
+	testImplementation(platform("org.junit:junit-bom:5.10.2"))
+	testImplementation("org.junit.jupiter:junit-jupiter")
+	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+	testImplementation(libs.joml)
+	testImplementation(libs.slf4jApi)
 }
 java {
 	toolchain {
@@ -98,7 +105,10 @@ tasks {
 	}
 	withType<JavaExec>().configureEach { defaultCharacterEncoding = "UTF-8" }
 	withType<Javadoc>().configureEach { options.encoding = "UTF-8" }
-	withType<Test>().configureEach { defaultCharacterEncoding = "UTF-8" }
+	withType<Test>().configureEach {
+		defaultCharacterEncoding = "UTF-8"
+		useJUnitPlatform()
+	}
 	withType<Jar>().configureEach {
 		licenseFile?.let {
 			from(it) {

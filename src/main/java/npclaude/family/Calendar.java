@@ -40,11 +40,19 @@ public final class Calendar {
 	}
 
 	public static int dayOfYear(World world, long worldTime) {
-		return (int) Math.floorMod(day(worldTime), yearDays(world));
+		return dayOfYear(yearDays(world), worldTime);
+	}
+
+	public static int dayOfYear(int yearDays, long worldTime) {
+		return (int) Math.floorMod(day(worldTime), yearDays);
 	}
 
 	public static long year(World world, long worldTime) {
-		return Math.floorDiv(day(worldTime), yearDays(world));
+		return year(yearDays(world), worldTime);
+	}
+
+	public static long year(int yearDays, long worldTime) {
+		return Math.floorDiv(day(worldTime), yearDays);
 	}
 
 	public static long ticksPerYear(World world) {
@@ -57,7 +65,11 @@ public final class Calendar {
 
 	/** Whole years between a birth and now. */
 	public static int ageInYears(World world, long born, long now) {
-		return (int) Math.max(0, Math.floorDiv(day(now) - day(born), yearDays(world)));
+		return ageInYears(yearDays(world), born, now);
+	}
+
+	public static int ageInYears(int yearDays, long born, long now) {
+		return (int) Math.max(0, Math.floorDiv(day(now) - day(born), yearDays));
 	}
 
 	/** "Summer 5": the season and day within it. */
@@ -76,6 +88,11 @@ public final class Calendar {
 			}
 		}
 
+		return describeDefaultDate(dayOfYear);
+	}
+
+	/** A day of the default 56-day year as "Summer 5". */
+	public static String describeDefaultDate(int dayOfYear) {
 		int length = DEFAULT_YEAR_DAYS / DEFAULT_SEASONS.length;
 		return DEFAULT_SEASONS[Math.min(DEFAULT_SEASONS.length - 1, dayOfYear / length)] + " " + (dayOfYear % length + 1);
 	}

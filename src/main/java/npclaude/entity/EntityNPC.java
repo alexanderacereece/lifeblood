@@ -56,6 +56,7 @@ import npclaude.personality.Tastes;
 import npclaude.personality.NpcPersonality;
 import npclaude.personality.Quirk;
 import npclaude.personality.TraitAxis;
+import npclaude.save.SaveUpgrades;
 import npclaude.social.Brawl;
 import npclaude.social.Memory;
 import npclaude.social.MemoryType;
@@ -1629,10 +1630,9 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		}
 
 		CompoundTag npc = tag.getCompound(SAVE_KEY);
+		SaveUpgrades.npc(npc);
 		this.setSkin(npc.getString("Skin"));
 		this.entityData.set(DATA_APPEARANCE, npc.getStringOrDefault("Appearance", ""));
-		// Saves from before ages had "Born" only for children (who grew up in 20 days then); their saved growth is
-		// kept and their birth worked out from it.
 		this.birthTime = npc.getLongOrDefault("BirthTime", UNKNOWN_BIRTH);
 		this.lastBirthdayYear = npc.getLongOrDefault("LastBirthday", Long.MIN_VALUE);
 		this.homeBiome = npc.getStringOrDefault("HomeBiome", "");
@@ -1640,17 +1640,13 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		this.entityData.set(DATA_GROWTH, npc.containsKey("Growth") ? npc.getByte("Growth") : (byte) 100);
 		this.setSkinModel(SkinModel.byId(npc.getByte("SkinModel")));
 		HealthMode mode = HealthMode.byName(npc.getStringOrDefault("HealthMode", ""));
-		// Saves from before health modes only had an invulnerable flag.
-		this.healthMode = mode != null ? mode : npc.getBoolean("Invulnerable") ? HealthMode.INVULNERABLE : HealthMode.MORTAL;
+		this.healthMode = mode != null ? mode : HealthMode.MORTAL;
 		this.downedTicks = npc.getIntegerOrDefault("DownedTicks", 0);
 		this.recoveringTicks = npc.getIntegerOrDefault("RecoveringTicks", 0);
 		this.entityData.set(DATA_DOWNED, this.downedTicks > 0 ? DOWNED_ON_BACK : 0);
 		this.fallProgress = this.prevFallProgress = this.downedTicks > 0 ? FALL_TICKS : 0;
 		if (npc.containsKey("Personality")) {
 			this.personality.load(npc.getCompound("Personality"));
-		} else if (npc.containsKey("Bravery")) {
-			// Version 1 stored bravery directly.
-			this.personality.setFromBravery(npc.getFloat("Bravery"));
 		}
 
 		this.faction = NpcFactions.normalize(npc.getStringOrDefault("Faction", ""));

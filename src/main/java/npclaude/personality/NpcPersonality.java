@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import npclaude.save.SaveUpgrades;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -165,43 +166,30 @@ public class NpcPersonality {
 	}
 
 	/**
-	 * Loads a saved personality. Saves from before trait axes only had bravery (0 to 1): those NPCs keep the
-	 * personality they were just rolled, with their bravery carried over as courage.
+	 * Loads a saved personality over the one it was just rolled with. Anything the save doesn't have (a trait axis
+	 * added since, say) keeps its rolled value.
 	 */
 	public void load(CompoundTag tag) {
-		if (!tag.containsKey("Axes")) {
-			if (tag.containsKey("Bravery")) {
-				this.setFromBravery(tag.getFloat("Bravery"));
-			}
-
-			return;
-		}
-
+		SaveUpgrades.personality(tag);
 		CompoundTag axisTag = tag.getCompound("Axes");
 		for (TraitAxis axis : TraitAxis.values()) {
-			this.set(axis, axisTag.getFloatOrDefault(axis.id(), 0.0F));
-		}
-
-		this.quirks.clear();
-		for (String id : tag.getStringOrDefault("Quirks", "").split(",")) {
-			Quirk quirk = Quirk.byName(id.trim());
-			if (quirk != null) {
-				this.addQuirk(quirk);
+			if (axisTag.containsKey(axis.id())) {
+				this.set(axis, axisTag.getFloat(axis.id()));
 			}
 		}
 
-		// Saves from when orientation was stored on its own.
-		Attraction attraction = Attraction.byName(tag.getStringOrDefault("Attraction", ""));
-		if (attraction == Attraction.SAME) {
-			this.addQuirk(Quirk.GAY);
-		} else if (attraction == Attraction.BOTH) {
-			this.addQuirk(Quirk.BISEXUAL);
+		if (tag.containsKey("Quirks")) {
+			this.quirks.clear();
+			for (String id : tag.getString("Quirks").split(",")) {
+				Quirk quirk = Quirk.byName(id.trim());
+				if (quirk != null) {
+					this.addQuirk(quirk);
+				}
+			}
 		}
 
 		if (tag.containsKey("Tastes")) {
 			this.tastes.load(tag.getCompound("Tastes"));
-		} else if (tag.containsKey("Food")) {
-			this.tastes.load(tag.getCompound("Food"));
 		}
 	}
 
@@ -243,7 +231,4 @@ public class NpcPersonality {
 	}
 
 	/** Converts the old 0-to-1 bravery into the courage axis. */
-	public void setFromBravery(float bravery) {
-		this.set(TraitAxis.COURAGE, bravery * 2.0F - 1.0F);
-	}
 }
