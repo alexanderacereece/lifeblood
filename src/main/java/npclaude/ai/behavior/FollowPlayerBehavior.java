@@ -58,7 +58,7 @@ public class FollowPlayerBehavior implements NpcBehavior {
 		npc.setLookTarget(player, 20);
 		float distance = player.distanceTo(npc);
 		// Starts walking once the player is further than the NPC's follow distance, stops once close enough.
-		FollowDistance range = npc.getFollowDistance();
+		FollowDistance range = npc.following.getDistance();
 		if (distance <= range.stop) {
 			npc.navigator.stop();
 			return;

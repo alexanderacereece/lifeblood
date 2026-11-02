@@ -84,8 +84,8 @@ public class NpcProfileScreen extends Screen {
 		}
 
 		subtitle.add(this.npc.getGender() == NpcGender.FEMALE ? "female" : "male");
-		subtitle.add(this.npc.getAgeYears() + (this.npc.getAgeYears() == 1 ? " year old" : " years old"));
-		subtitle.add(this.npc.isBirthday() ? "birthday today!" : "born " + this.npc.getBirthday());
+		subtitle.add(this.npc.life.getAgeYears() + (this.npc.life.getAgeYears() == 1 ? " year old" : " years old"));
+		subtitle.add(this.npc.life.isBirthday() ? "birthday today!" : "born " + this.npc.life.getBirthday());
 		subtitle.add("feeling " + SpeechFacts.moodLabel(mood));
 		this.drawStringShadow(this.fontRenderer, this.fit(String.join(" · ", subtitle), w - PADDING * 2), x + PADDING, y + PADDING + LINE + 2, DIM_COLOR);
 

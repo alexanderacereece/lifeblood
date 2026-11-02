@@ -50,6 +50,19 @@ public class Tastes {
 	 * Whether this item is a food people have tastes about. Buckets count as food in BTA (for milk),
 	 * but a bucket isn't a dish.
 	 */
+	/** How a liking sounds in speech files: love, like, meh, dislike or hate. */
+	public static String describe(float like) {
+		if (like >= 0.6F) {
+			return "love";
+		} else if (like >= 0.2F) {
+			return "like";
+		} else if (like > -0.2F) {
+			return "meh";
+		}
+
+		return like > -0.6F ? "dislike" : "hate";
+	}
+
 	public static boolean isFood(Item item) {
 		return item instanceof ItemFood && !(item instanceof ItemBucket);
 	}

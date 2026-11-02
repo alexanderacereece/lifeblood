@@ -84,7 +84,7 @@ public final class Children {
 			npcParent != null ? Appearance.decode(npcParent.getAppearance()) : Appearance.NONE, random));
 		child.setFaction(parent.getFaction());
 		child.setHome(parent.getHomeX(), parent.getHomeY(), parent.getHomeZ());
-		child.setGrowth(0.0F);
+		child.life.setGrowth(0.0F);
 		child.brain.set(new WanderBehavior());
 		child.spawnInit();
 		parent.world.entityJoinedWorld(child);

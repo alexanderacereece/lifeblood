@@ -35,7 +35,7 @@ public class StayNearParentBehavior implements NpcBehavior {
 
 	@Override
 	public boolean canStart(EntityNPC npc) {
-		return npc.isChild() && findParent(npc) != null;
+		return npc.life.isChild() && findParent(npc) != null;
 	}
 
 	@Override

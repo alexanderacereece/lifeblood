@@ -56,7 +56,7 @@ public final class Brawl {
 		Brawl brawl = new Brawl(first, second, instigator);
 		for (Mob side : new Mob[] {first, second}) {
 			if (side instanceof EntityNPC npc) {
-				npc.joinBrawl(brawl);
+				npc.brawling.join(brawl);
 			}
 		}
 
@@ -71,7 +71,7 @@ public final class Brawl {
 
 	private static boolean canBrawl(Mob mob) {
 		if (mob instanceof EntityNPC npc) {
-			return npc.isAlive() && npc.getBrawl() == null && !npc.isRecovering() && !npc.isDowned() && !npc.isChild();
+			return npc.isAlive() && npc.brawling.getBrawl() == null && !npc.health.isRecovering() && !npc.health.isDowned() && !npc.life.isChild();
 		}
 
 		return mob instanceof Player player && player.isAlive() && player.getGamemode().hasHostileMobs();
@@ -174,7 +174,7 @@ public final class Brawl {
 	private void release(boolean forgive) {
 		for (Mob side : new Mob[] {this.first, this.second}) {
 			if (side instanceof EntityNPC npc) {
-				npc.leaveBrawl(this, forgive ? this.opponentOf(npc) : null);
+				npc.brawling.leave(this, forgive ? this.opponentOf(npc) : null);
 			}
 		}
 	}

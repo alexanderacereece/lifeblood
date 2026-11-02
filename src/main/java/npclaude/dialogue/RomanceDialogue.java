@@ -41,7 +41,7 @@ public final class RomanceDialogue {
 	/** When the NPC has something to ask: the conversation opens with it. */
 	@Nullable
 	static NpcDialogue request(EntityNPC npc, Player player) {
-		Romance.Request request = npc.getRomanceRequest(player);
+		Romance.Request request = npc.social.getRomanceRequest(player);
 		if (request == null) {
 			return null;
 		}
@@ -49,7 +49,7 @@ public final class RomanceDialogue {
 		String symbol = request == Romance.Request.ASK_OUT ? "ask_player_out" : "propose_to_player";
 		List<DialogueOption> options = new ArrayList<>();
 		options.add(new DialogueOption("Yes!", session -> {
-			npc.setRomanceRequest(null, null);
+			npc.social.setRomanceRequest(null, null);
 			FamilyRegistry family = FamilyRegistry.get(npc.world);
 			Romance.register(player);
 			if (request == Romance.Request.ASK_OUT) {
@@ -66,7 +66,7 @@ public final class RomanceDialogue {
 			}
 		}));
 		options.add(new DialogueOption("I'm sorry. No.", session -> {
-			npc.setRomanceRequest(null, null);
+			npc.social.setRomanceRequest(null, null);
 			npc.remember(MemoryType.TURNED_ME_DOWN, player, request == Romance.Request.ASK_OUT ? 1.0F : 1.5F);
 			session.show(NpcDialogue.main(npc, player, NpcDialogue.say(npc, player, "player_said_no", "Oh. I see.")));
 		}));
@@ -90,11 +90,11 @@ public final class RomanceDialogue {
 		}
 
 		if (Opinions.of(npc, player) < Romance.DATING_OPINION) {
-			npc.setRomanceRequest(null, null);
+			npc.social.setRomanceRequest(null, null);
 			return NpcDialogue.say(npc, player, "ask_out_not_yet", "I like you, but... not like that. Not yet, anyway.");
 		}
 
-		npc.setRomanceRequest(null, null);
+		npc.social.setRomanceRequest(null, null);
 		Romance.startDating(npc, player, family);
 		return NpcDialogue.say(npc, player, "ask_out_yes", "Yes! I'd love to.");
 	}
@@ -118,7 +118,7 @@ public final class RomanceDialogue {
 						return;
 					}
 
-					npc.setRomanceRequest(null, null);
+					npc.social.setRomanceRequest(null, null);
 					Romance.getEngaged(npc, player, family);
 					session.show(aboutUs(npc, player, NpcDialogue.say(npc, player, "proposal_yes", "Yes! Of course, yes!")));
 				}));
@@ -146,7 +146,7 @@ public final class RomanceDialogue {
 	private static void endIt(EntityNPC npc, Player player, DialogueSession session, String symbol) {
 		FamilyRegistry.get(npc.world).breakUp(npc.getUuid());
 		npc.remember(MemoryType.BROKE_UP_WITH_ME, player, 1.0F);
-		npc.setRomanceRequest(null, null);
+		npc.social.setRomanceRequest(null, null);
 		session.show(NpcDialogue.main(npc, player, NpcDialogue.say(npc, player, symbol, "...I see.")));
 	}
 

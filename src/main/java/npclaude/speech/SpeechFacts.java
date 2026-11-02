@@ -55,19 +55,19 @@ public final class SpeechFacts {
 				context.fact("relation", NpcFactions.regard(npc, listener).name().toLowerCase(Locale.ROOT));
 			}
 
-			context.fact("leader", listener == npc.getLeader() ? "yes" : "no");
+			context.fact("leader", listener == npc.following.getLeader() ? "yes" : "no");
 		}
 
 		addFamily(npc, listener, context);
 		addTaughtWords(npc, listener, context);
-		context.fact("age", npc.isChild() ? "child" : "adult");
-		context.fact("birthday", npc.isBirthday() ? "yes" : "no");
+		context.fact("age", npc.life.isChild() ? "child" : "adult");
+		context.fact("birthday", npc.life.isBirthday() ? "yes" : "no");
 		context.fact("time", timeOfDay(npc));
 		addSurroundings(npc, context);
 		context.fact("mood", moodLabel(mood));
 		float health = npc.getHealth() / (float) npc.getMaxHealth();
 		context.fact("health", health < 0.3F ? "low" : health < 0.7F ? "hurt" : "fine");
-		context.fact("recovering", npc.isRecovering() ? "yes" : "no");
+		context.fact("recovering", npc.health.isRecovering() ? "yes" : "no");
 
 		String faction = npc.getFaction();
 		context.fact("has_faction", faction != null ? "yes" : "no");
@@ -172,35 +172,35 @@ public final class SpeechFacts {
 		String weather = Surroundings.weatherAt(npc.world, npc.x, headY, npc.z);
 		boolean outside = npc.world.canBlockSeeSky(new TilePos(MathHelper.floor(npc.x), MathHelper.floor(headY), MathHelper.floor(npc.z)));
 		context.fact("weather", weather);
-		context.fact("weather_like", EntityNPC.tasteOf(tastes.like(Surroundings.Kind.WEATHER, weather)));
+		context.fact("weather_like", Tastes.describe(tastes.like(Surroundings.Kind.WEATHER, weather)));
 		context.word("weather_word", surroundingsWord(weather));
 		context.fact("outside", outside ? "yes" : "no");
 		context.fact("wet", isRaining(npc) && !weather.equals("clear") ? "yes" : "no");
 		String biome = Surroundings.placeAt(npc.world, npc.x, npc.y, npc.z);
 		if (biome != null) {
 			context.fact("biome", biome);
-			context.fact("biome_like", EntityNPC.tasteOf(tastes.like(Surroundings.Kind.BIOME, biome)));
+			context.fact("biome_like", Tastes.describe(tastes.like(Surroundings.Kind.BIOME, biome)));
 			context.word("biome_word", surroundingsWord(biome));
 		}
 
 		// Where they're from, and whether here is colder or hotter than they're used to.
 		String climate = Surroundings.climateOf(Surroundings.warmthAt(npc.world, npc.x, npc.y, npc.z));
-		String homeClimate = Surroundings.climateOf(npc.getHomeWarmth());
+		String homeClimate = Surroundings.climateOf(npc.life.getHomeWarmth());
 		if (climate != null) {
 			context.fact("climate", climate);
 		}
 
-		if (homeClimate != null && !npc.getHomeBiome().isEmpty()) {
+		if (homeClimate != null && !npc.life.getHomeBiome().isEmpty()) {
 			context.fact("home_climate", homeClimate);
-			context.fact("home_biome", npc.getHomeBiome());
-			context.fact("at_home", npc.getHomeBiome().equals(biome) ? "yes" : "no");
-			context.word("home_biome", surroundingsWord(npc.getHomeBiome()));
+			context.fact("home_biome", npc.life.getHomeBiome());
+			context.fact("at_home", npc.life.getHomeBiome().equals(biome) ? "yes" : "no");
+			context.word("home_biome", surroundingsWord(npc.life.getHomeBiome()));
 		}
 
 		String season = Surroundings.seasonOf(npc.world);
 		if (season != null) {
 			context.fact("season", season);
-			context.fact("season_like", EntityNPC.tasteOf(tastes.like(Surroundings.Kind.SEASON, season)));
+			context.fact("season_like", Tastes.describe(tastes.like(Surroundings.Kind.SEASON, season)));
 			context.word("season_word", surroundingsWord(season));
 		}
 	}

@@ -86,7 +86,7 @@ public final class ThreatAssessment {
 
 		// An NPC following a player stays at their side: it ignores fights more than a short way from them,
 		// unless the enemy is coming for it or for the player.
-		Player leader = npc.getLeader();
+		Player leader = npc.following.getLeader();
 		double nearestDistance = Double.MAX_VALUE;
 		for (Entity entity : nearby) {
 			if (!(entity instanceof Mob mob) || !(mob == engaged && mob.isAlive() || isHostile(npc, mob, result.allies))) {
@@ -138,7 +138,7 @@ public final class ThreatAssessment {
 		}
 
 		// A brawl opponent is someone to punch, not to kill.
-		if (npc.isBrawlingWith(mob)) {
+		if (npc.brawling.isBrawlingWith(mob)) {
 			return false;
 		}
 
@@ -200,7 +200,7 @@ public final class ThreatAssessment {
 	 * an iron sword makes it about 1.5, and full iron armor adds roughly half again.
 	 */
 	public static double strengthOf(Mob fighter) {
-		if (fighter instanceof EntityNPC npc && npc.getHealthMode() == HealthMode.INVULNERABLE) {
+		if (fighter instanceof EntityNPC npc && npc.health.getMode() == HealthMode.INVULNERABLE) {
 			return 100.0;
 		}
 

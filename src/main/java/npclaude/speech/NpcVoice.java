@@ -149,7 +149,7 @@ public class NpcVoice {
 
 	/** Speaking up unprompted: greetings, remarks, chats with other NPCs, and replies to them. */
 	public void tick() {
-		if ((this.npc.tickCount + this.npc.id) % CHECK_INTERVAL != 0 || this.npc.isDowned()) {
+		if ((this.npc.tickCount + this.npc.id) % CHECK_INTERVAL != 0 || this.npc.health.isDowned()) {
 			return;
 		}
 

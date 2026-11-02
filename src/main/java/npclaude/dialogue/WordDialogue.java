@@ -35,7 +35,7 @@ public final class WordDialogue {
 	/** A chat that turns into asking for a word, if the NPC feels like asking now. */
 	@Nullable
 	static NpcDialogue maybeAsk(EntityNPC npc, Player player) {
-		if (npc.isChild() && npc.getRandom().nextFloat() < 0.5F || Opinions.of(npc, player) < 20.0F) {
+		if (npc.life.isChild() && npc.getRandom().nextFloat() < 0.5F || Opinions.of(npc, player) < 20.0F) {
 			return null;
 		}
 

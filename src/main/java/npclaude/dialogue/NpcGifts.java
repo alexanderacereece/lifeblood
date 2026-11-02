@@ -59,7 +59,7 @@ public final class NpcGifts {
 		}
 
 		// A gift on their birthday means more.
-		float birthday = npc.isBirthday() ? 2.0F : 1.0F;
+		float birthday = npc.life.isBirthday() ? 2.0F : 1.0F;
 		ItemDefaults.Default defaults = ItemDefaults.of(held.getItem());
 		boolean food = Tastes.isFood(held.getItem());
 		float like = npc.personality.tastes.like(held.getItem());
@@ -95,7 +95,7 @@ public final class NpcGifts {
 
 		Word word = food ? Word.ofFood(held.getItem()) : Word.ofItem(gift);
 		String line = npc.voice.line("gift", player, context -> context.word("item", word).fact("kind", defaults.main().id())
-			.fact("taste", EntityNPC.tasteOf(like)).fact("rude_gift", rude ? "yes" : "no")
+			.fact("taste", Tastes.describe(like)).fact("rude_gift", rude ? "yes" : "no")
 			.fact("surprising", Math.abs(like - defaults.base()) >= 0.6F ? "yes" : "no"));
 		return line != null ? line : "Thanks.";
 	}

@@ -29,7 +29,7 @@ public class BrawlBehavior implements NpcBehavior {
 
 	@Override
 	public boolean canStart(EntityNPC npc) {
-		return npc.getBrawl() != null;
+		return npc.brawling.getBrawl() != null;
 	}
 
 	@Override
@@ -40,7 +40,7 @@ public class BrawlBehavior implements NpcBehavior {
 
 	@Override
 	public void tick(EntityNPC npc) {
-		Brawl brawl = npc.getBrawl();
+		Brawl brawl = npc.brawling.getBrawl();
 		if (brawl == null) {
 			return;
 		}
@@ -74,7 +74,7 @@ public class BrawlBehavior implements NpcBehavior {
 	@Override
 	public void stop(EntityNPC npc) {
 		npc.navigator.stop();
-		Brawl brawl = npc.getBrawl();
+		Brawl brawl = npc.brawling.getBrawl();
 		if (brawl != null) {
 			// Something more important took over (a real fight); the brawl can't go on.
 			brawl.callOff();

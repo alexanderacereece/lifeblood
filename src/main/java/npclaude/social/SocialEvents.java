@@ -106,9 +106,9 @@ public final class SocialEvents {
 	/** A player who dies loses their followers: they head home rather than waiting for them to come back. */
 	private static void stopFollowingDeadLeader(Player player) {
 		for (Entity entity : player.world.entities) {
-			if (entity instanceof EntityNPC npc && npc.isAlive() && npc.getLeader() == player) {
+			if (entity instanceof EntityNPC npc && npc.isAlive() && npc.following.getLeader() == player) {
 				npc.voice.bark("leader_died", player, null, true);
-				npc.stopFollowing();
+				npc.following.stop();
 			}
 		}
 	}
@@ -139,7 +139,7 @@ public final class SocialEvents {
 			npc.voice.bark("victory", victim, context -> context.word("enemy", wordFor(victim)), false);
 		} else if (killer != null && isPerson(killer) && wasFighting(npc, victim)) {
 			if (npc.isBadlyHurt()) {
-				npc.noticeRescue(killer);
+				npc.social.noticeRescue(killer);
 			} else {
 				npc.remember(MemoryType.FOUGHT_BESIDE_ME, killer, 1.0F);
 			}

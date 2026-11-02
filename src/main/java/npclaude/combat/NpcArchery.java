@@ -62,7 +62,7 @@ public final class NpcArchery {
 
 	/** Switches the bow into the hand, like a player picking it on the hotbar. */
 	public static void readyBow(EntityNPC npc) {
-		if (npc.isEating()) {
+		if (npc.eating.isEating()) {
 			return;
 		}
 
@@ -75,7 +75,7 @@ public final class NpcArchery {
 	/** Fires one arrow at the target if a bow is held, ammo is available and the shot cooldown is over. */
 	public static boolean tryShoot(EntityNPC npc, Entity target) {
 		ItemStack bow = npc.getHeldItem();
-		if (npc.attackTime > 0 || npc.isEating() || bow == null || !isBow(bow)) {
+		if (npc.attackTime > 0 || npc.eating.isEating() || bow == null || !isBow(bow)) {
 			return false;
 		}
 

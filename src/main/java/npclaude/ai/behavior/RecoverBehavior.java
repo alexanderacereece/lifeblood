@@ -29,7 +29,7 @@ public class RecoverBehavior implements NpcBehavior {
 
 	@Override
 	public boolean canStart(EntityNPC npc) {
-		return npc.isRecovering();
+		return npc.health.isRecovering();
 	}
 
 	@Override

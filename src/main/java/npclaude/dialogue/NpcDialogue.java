@@ -75,15 +75,15 @@ public record NpcDialogue(String line, List<DialogueOption> options) {
 
 		options.add(new DialogueOption("Can I ask you something?", session -> session.show(questions(npc, player, say(npc, player,
 			"questions_open", "Sure.")))));
-		if (npc.getLeader() == player) {
+		if (npc.following.getLeader() == player) {
 			options.add(new DialogueOption("You can stop following me.", session -> {
-				npc.stopFollowing();
+				npc.following.stop();
 				session.show(main(npc, player, say(npc, player, "follow_stop", "All right.")));
 			}));
 		} else {
 			options.add(new DialogueOption("Come with me.", session -> {
-				if (npc.willFollow(player)) {
-					npc.startFollowing(player);
+				if (npc.following.willFollow(player)) {
+					npc.following.start(player);
 					session.show(main(npc, player, say(npc, player, "follow_accept", "Lead the way.")));
 				} else {
 					session.show(main(npc, player, say(npc, player, "follow_refuse", "I don't think so.")));
@@ -91,7 +91,7 @@ public record NpcDialogue(String line, List<DialogueOption> options) {
 			}));
 		}
 
-		if (npc.trusts(player)) {
+		if (npc.following.trusts(player)) {
 			options.add(new DialogueOption("About the practical stuff...", session -> session.show(practical(npc, player, say(npc, player,
 				"practical_open", "What do you need?")))));
 		}
@@ -169,10 +169,10 @@ public record NpcDialogue(String line, List<DialogueOption> options) {
 	private static NpcDialogue practical(EntityNPC npc, Player player, String line) {
 		List<DialogueOption> options = new ArrayList<>();
 		options.add(new DialogueOption("Let me see what you're carrying.", DialogueSession::openInventory));
-		if (npc.getLeader() == player) {
-			options.add(new DialogueOption("Follow distance: " + npc.getFollowDistance().displayName(), session -> {
-				FollowDistance distance = npc.getFollowDistance().next();
-				npc.setFollowDistance(distance);
+		if (npc.following.getLeader() == player) {
+			options.add(new DialogueOption("Follow distance: " + npc.following.getDistance().displayName(), session -> {
+				FollowDistance distance = npc.following.getDistance().next();
+				npc.following.setDistance(distance);
 				session.show(practical(npc, player, switch (distance) {
 					case SHORT -> "I'll stay close.";
 					case MEDIUM -> "I'll give you some room.";

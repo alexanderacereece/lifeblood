@@ -62,12 +62,12 @@ public class CombatBehavior implements NpcBehavior {
 
 	/** Courage threshold: fully timid runs from anything but easy fights, fully brave stands against about 3 to 1. */
 	public static double courageOf(EntityNPC npc) {
-		if (npc.isChild()) {
+		if (npc.life.isChild()) {
 			// Children don't fight: they run from anything.
 			return 0.0;
 		}
 
-		if (npc.isRecovering()) {
+		if (npc.health.isRecovering()) {
 			// Fresh from near death: in no shape to fight anything.
 			return RECOVERING_COURAGE;
 		}
@@ -249,7 +249,7 @@ public class CombatBehavior implements NpcBehavior {
 
 		this.repathCooldown = FLEE_REPATH_INTERVAL;
 		// A follower runs to the player it follows rather than off on its own.
-		Player leader = npc.getLeader();
+		Player leader = npc.following.getLeader();
 		if (leader != null && leader.distanceTo(npc) > LEADER_SAFE_DISTANCE && npc.navigator.fleeToward(leader, threat.hostiles)) {
 			return;
 		}

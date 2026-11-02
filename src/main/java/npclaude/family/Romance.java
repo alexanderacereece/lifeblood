@@ -62,7 +62,7 @@ public final class Romance {
 	/** Whether this NPC could be with them at all: not blood family, and someone it can be attracted to. */
 	public static boolean couldFallFor(EntityNPC npc, Entity other) {
 		UUID id = Opinions.idOf(other);
-		if (id == null || id.equals(npc.getUuid()) || npc.isChild() || other instanceof EntityNPC otherNpc && otherNpc.isChild()) {
+		if (id == null || id.equals(npc.getUuid()) || npc.life.isChild() || other instanceof EntityNPC otherNpc && otherNpc.life.isChild()) {
 			return false;
 		}
 
@@ -94,7 +94,7 @@ public final class Romance {
 	/** Once a minute: keep a relationship going (or end it), or look for one. */
 	public static void tick(EntityNPC npc) {
 		register(npc);
-		if (npc.isChild()) {
+		if (npc.life.isChild()) {
 			return;
 		}
 
@@ -102,7 +102,7 @@ public final class Romance {
 		FamilyRegistry.Partnership partnership = family.partnershipOf(npc.getUuid());
 		if (partnership != null) {
 			tendRelationship(npc, family, partnership);
-		} else if (!npc.isBusy() && !npc.isRecovering()) {
+		} else if (!npc.isBusy() && !npc.health.isRecovering()) {
 			lookForLove(npc, family);
 		}
 	}
@@ -141,7 +141,7 @@ public final class Romance {
 				&& npc.getRandom().nextFloat() < Children.BIRTH_CHANCE && Children.canHaveChild(family, npc.getUuid(), other.getUuid(), now)) {
 				Children.born(npc, other);
 			}
-		} else if (partner instanceof Player player && npc.distanceTo(player) <= COURTING_RANGE && npc.getRomanceRequest() == null) {
+		} else if (partner instanceof Player player && npc.distanceTo(player) <= COURTING_RANGE && npc.social.getRomanceRequest() == null) {
 			// With a player, the NPC can't just decide: it asks next time they talk.
 			float days = daysTogether(partnership, now);
 			if (partnership.stage == FamilyRegistry.Stage.MARRIED && mine >= ENGAGED_OPINION && npc.getRandom().nextFloat() < Children.BIRTH_CHANCE
@@ -152,7 +152,7 @@ public final class Romance {
 
 			if (partnership.stage == FamilyRegistry.Stage.DATING && days >= DATING_DAYS && mine >= ENGAGED_OPINION
 				&& npc.getRandom().nextFloat() < PROPOSE_CHANCE * 0.3F) {
-				npc.setRomanceRequest(Request.PROPOSE, player);
+				npc.social.setRomanceRequest(Request.PROPOSE, player);
 				npc.voice.bark("want_to_talk", player, null, false);
 			}
 		}
@@ -186,8 +186,8 @@ public final class Romance {
 				return;
 			}
 
-			if (entity instanceof Player player && npc.getRomanceRequest() == null && player.getGamemode().hasHostileMobs()) {
-				npc.setRomanceRequest(Request.ASK_OUT, player);
+			if (entity instanceof Player player && npc.social.getRomanceRequest() == null && player.getGamemode().hasHostileMobs()) {
+				npc.social.setRomanceRequest(Request.ASK_OUT, player);
 				npc.voice.bark("want_to_talk", player, null, false);
 				return;
 			}

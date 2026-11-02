@@ -34,11 +34,11 @@ public final class SocialLimits {
 
 	/** Whether this player has already given this NPC something today (since the last dawn). */
 	public static boolean giftedToday(EntityNPC npc, Player player) {
-		return enabled && npc.getLastGiftDay(player.uuid) == today(npc);
+		return enabled && npc.social.getLastGiftDay(player.uuid) == today(npc);
 	}
 
 	public static void recordGift(EntityNPC npc, Player player) {
-		npc.setLastGiftDay(player.uuid, today(npc));
+		npc.social.setLastGiftDay(player.uuid, today(npc));
 	}
 
 	private static long today(EntityNPC npc) {

@@ -325,7 +325,7 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 			.then(literal("heal")
 				.then(npcArgument().executes(c -> {
 					EntityNPC npc = findNpc(c);
-					npc.healFully();
+					npc.health.healFully();
 					return reply(c, npc.nickname + " is fully healed.");
 				})))
 			.then(literal("perf").executes(c -> {
@@ -364,7 +364,7 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 				.then(npcArgument()
 					.executes(c -> {
 						EntityNPC npc = findNpc(c);
-						return reply(c, npc.nickname + " is " + npc.getHealthMode().displayName() + ".");
+						return reply(c, npc.nickname + " is " + npc.health.getMode().displayName() + ".");
 					})
 					.then(argument("mode", ArgumentTypeString.word()).suggests(HEALTH_MODES).executes(c -> {
 						EntityNPC npc = findNpc(c);
@@ -374,7 +374,7 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 							throw error("Unknown mode '" + name + "'. Use mortal, invincible or invulnerable.");
 						}
 
-						npc.setHealthMode(mode);
+						npc.health.setMode(mode);
 						return reply(c, npc.nickname + " is now " + mode.displayName() + ".");
 					}))))
 			.then(literal("personality")
@@ -661,24 +661,24 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 				.then(npcArgument()
 					.executes(c -> {
 						EntityNPC npc = findNpc(c);
-						return reply(c, npc.nickname + " is " + Math.round(npc.getGrowth() * 100) + "% grown" + (npc.isChild() ? "." : " (an adult)."));
+						return reply(c, npc.nickname + " is " + Math.round(npc.life.getGrowth() * 100) + "% grown" + (npc.life.isChild() ? "." : " (an adult)."));
 					})
 					.then(argument("percent", ArgumentTypeInteger.integer(0, 100)).executes(c -> {
 						EntityNPC npc = findNpc(c);
-						boolean wasChild = npc.isChild();
-						npc.setGrowth(c.getArgument("percent", Integer.class) / 100.0F);
-						if (wasChild && !npc.isChild()) {
+						boolean wasChild = npc.life.isChild();
+						npc.life.setGrowth(c.getArgument("percent", Integer.class) / 100.0F);
+						if (wasChild && !npc.life.isChild()) {
 							Children.cameOfAge(npc);
 						}
 
-						return reply(c, npc.nickname + " is now " + Math.round(npc.getGrowth() * 100) + "% grown.");
+						return reply(c, npc.nickname + " is now " + Math.round(npc.life.getGrowth() * 100) + "% grown.");
 					}))))
 			.then(literal("look")
 				.then(npcArgument()
 					.executes(NpcCommand::describeLook)
 					.then(literal("randomize").executes(c -> {
 						EntityNPC npc = findNpc(c);
-						npc.setAppearance(Appearance.random(PartCatalog.get(), npc.getGender(), npc.getRandom(), npc.getHomeWarmth()));
+						npc.setAppearance(Appearance.random(PartCatalog.get(), npc.getGender(), npc.getRandom(), npc.life.getHomeWarmth()));
 						if (npc.getAppearance().isEmpty()) {
 							throw error("There are no base parts yet. Put some in " + new File(PartCatalog.getDirectory(), "base"));
 						}
@@ -1023,7 +1023,7 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 				npc.nickname, npc.getGender().displayName().toLowerCase(Locale.ROOT), doing, skin, npc.getHealth(),
 				npc.getCombatStyle().displayName().toLowerCase(Locale.ROOT), npc.getFaction() != null ? npc.getFaction() : "none",
 				(int) Math.floor(npc.x), (int) Math.floor(npc.y), (int) Math.floor(npc.z),
-				npc.getHealthMode() != HealthMode.MORTAL ? ", " + npc.getHealthMode().displayName() : ""));
+				npc.health.getMode() != HealthMode.MORTAL ? ", " + npc.health.getMode().displayName() : ""));
 		}
 
 		return npcs.size();
