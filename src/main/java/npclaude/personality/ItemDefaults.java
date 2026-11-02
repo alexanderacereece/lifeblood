@@ -132,8 +132,11 @@ public final class ItemDefaults {
 		rule("food_", 0.1F, TasteCategory.FOOD)
 	);
 
-	/** Never offered as anyone's favorite or least favorite: technical blocks and admin tools. */
-	private static final List<String> TECHNICAL = List.of("wand_", "fluid_", "portal_", "fire", "air", "bedrock", "mobspawner",
+	/**
+	 * Never offered as anyone's favorite or least favorite: technical blocks, admin tools, and things a survival
+	 * player can't get (retro-world blocks, legacy chests, deactivated spawners).
+	 */
+	private static final List<String> TECHNICAL = List.of("_retro", "_legacy", "_deactivated", "wand_", "fluid_", "portal_", "fire", "air", "bedrock", "mobspawner",
 		"piston_head", "piston_moving", "_upper", "_lower", "_top", "_bottom", "crops_", "_active", "glowing", "farmland", "overlay_",
 		"handcannon_loaded", "sign_wall", "sign_post", "ammo_fireball", "repeater_", "motion_sensor", "lamp_inverted", "_idle",
 		"wire_redstone", "rubyglass_node", "rubyglass_growth", "doors_", "matcher");
