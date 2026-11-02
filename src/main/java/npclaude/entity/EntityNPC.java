@@ -45,6 +45,7 @@ import npclaude.social.MemoryType;
 import npclaude.social.NpcMemories;
 import npclaude.social.Opinions;
 import npclaude.speech.NpcVoice;
+import npclaude.world.WorldSystems;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.primitives.AABBd;
@@ -130,7 +131,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private boolean swinging;
 	private int swingTicks;
 	private int thinkInterval;
-	/** The world time it last ticked, so the register of people can tell it's still loaded. */
+	/** When it last ticked (by the world systems' steady count), so the register of people can tell it's still loaded. */
 	private long lastTickTime;
 
 	public EntityNPC(World world) {
@@ -238,7 +239,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 			return;
 		}
 
-		this.lastTickTime = this.world.getWorldTime();
+		this.lastTickTime = WorldSystems.ticks(this.world);
 		if (!this.appearanceChecked) {
 			this.appearanceChecked = true;
 			this.rollAppearanceIfNeeded();
@@ -263,7 +264,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		return this.uuid;
 	}
 
-	/** The world time it last ticked. */
+	/** When it last ticked, by {@link WorldSystems#ticks}. */
 	public long getLastTickTime() {
 		return this.lastTickTime;
 	}

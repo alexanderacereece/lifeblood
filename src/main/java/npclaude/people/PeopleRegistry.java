@@ -18,6 +18,8 @@ import npclaude.entity.EntityNPC;
 import npclaude.entity.NpcGender;
 import npclaude.family.Kinship;
 import npclaude.save.SaveUpgrades;
+import npclaude.world.WorldSystem;
+import npclaude.world.WorldSystems;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -135,6 +137,19 @@ public class PeopleRegistry extends SavedData {
 		this.setDirty();
 	}
 
+	/** Every minute, NPCs that have stopped ticking (unloaded with their chunk) are let go of. */
+	public static final WorldSystem UPKEEP = new WorldSystem() {
+		@Override
+		public int interval() {
+			return 1200;
+		}
+
+		@Override
+		public void tick(World world) {
+			get(world).loaded.values().removeIf(npc -> !isStillLoaded(world, npc));
+		}
+	};
+
 	/** The NPC with this id, if it's loaded in this world right now. */
 	@Nullable
 	public EntityNPC loaded(World world, UUID id) {
@@ -143,12 +158,16 @@ public class PeopleRegistry extends SavedData {
 			return null;
 		}
 
-		if (npc.removed || npc.world != world || world.getWorldTime() - npc.getLastTickTime() > LOADED_GRACE_TICKS) {
+		if (!isStillLoaded(world, npc)) {
 			this.loaded.remove(id);
 			return null;
 		}
 
 		return npc;
+	}
+
+	private static boolean isStillLoaded(World world, EntityNPC npc) {
+		return !npc.removed && npc.world == world && WorldSystems.ticks(world) - npc.getLastTickTime() <= LOADED_GRACE_TICKS;
 	}
 
 	/** The person with this id, created if new; name and gender are kept up to date. */

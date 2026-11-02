@@ -12,7 +12,8 @@
     "MobScorpionMixin",
     "MobSlimeMixin",
     "MobSpiderMixin",
-    "PathAccessor"
+    "PathAccessor",
+    "WorldTickMixin"
   ],
   "client": [
     "HudComponentCrosshairMixin"
