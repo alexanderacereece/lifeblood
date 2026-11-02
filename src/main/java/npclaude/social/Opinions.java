@@ -17,7 +17,7 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * What an NPC thinks of someone, from -100 to +100: its memories of them plus standing factors
- * (faction ties, family, and personality compatibility). One-directional. See docs/personality.md, section 4.
+ * (faction ties, family, and personality compatibility). One-directional. See docs/personality.md, "Opinions".
  */
 public final class Opinions {
 	/** At or above this, the NPC treats the person as an ally whatever the factions say. */

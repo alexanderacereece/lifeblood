@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
  * Kinds of things an NPC remembers. Each has an effect on its opinion of the person involved, an effect on its mood,
  * how long it lasts (in-game days), how many times it stacks, and how much each repeat counts compared to the one
  * before (half, by default; friendship-building memories add up more steadily).
- * See docs/personality.md, section 4.
+ * See docs/personality.md, "Opinions".
  */
 public enum MemoryType {
 	// About a person

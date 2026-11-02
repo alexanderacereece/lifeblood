@@ -17,7 +17,7 @@ import org.jetbrains.annotations.Nullable;
 /**
  * NPCs asking the player for words: now and then, chatting with an NPC ("How are you?") turns into "What would
  * you call a food you'd eat for breakfast?". It counts as one of the five chats a minute. The player types a word (and its plural, for nouns), then says whether it's just for this
- * NPC or something anyone could say. See docs/personality.md, section 9.
+ * NPC or something anyone could say. See docs/speech.md, "Word book".
  *
  * An NPC that likes you at least a little (20+) asks at most once a day, about a quarter of the times you chat
  * (more if curious or a chatterbox, less if taciturn), until it knows 15 words. With /npc limits off it asks half

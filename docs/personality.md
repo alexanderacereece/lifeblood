@@ -1,6 +1,4 @@
-# NPC personality, opinions and speech: design
-
-Status: design, not yet implemented. Numbers are starting points for playtesting, not final.
+# NPC personality and opinions
 
 An NPC's character is built from layers, each simple on its own:
 
@@ -11,15 +9,13 @@ An NPC's character is built from layers, each simple on its own:
 | Mood | A temporary shift from recent events | Yes, constantly |
 | Memories | Things that happened, each with an opinion effect | Yes, they fade |
 | Family | Parent, spouse and fiancé links; other kin derived | Rarely |
-| Food preferences | A like value for every food | No |
+| Tastes | A like value for every item, weather, biome and season | No |
 | Speech style | Surface voice: greetings, filler, tics, catchphrase | No |
 | Word book | Words the player taught, spreading between NPCs | Yes |
 
 These feed two systems: **opinions** (how NPCs regard each other and players) and **speech** (what they say and how).
 
----
-
-## 1. Trait axes
+## Trait axes
 
 Each axis runs from -1.0 to +1.0. By convention the conventionally "positive" pole is +, but neither side is better: an introverted or serious NPC is not a worse person, and the writing treats both sides with equal affection.
 
@@ -44,7 +40,7 @@ Lines are written against tiers, never exact values, so a moderate NPC never pul
 | Lean | 0.30 to 0.65 toward a pole | Neutral plus "lean" lines of that pole |
 | Strong | 0.65 or more toward a pole | Neutral, lean and "strong" lines of that pole |
 
-Tiers use the **effective** value (base plus mood, see section 3).
+Tiers use the **effective** value (base plus mood, see [mood](#mood)).
 
 ### Generation
 
@@ -92,9 +88,7 @@ Each axis is rolled from a bell curve centered on 0 (standard deviation about 0.
 - Voice: complaining about work versus talking about it with pride.
 - Opinions: hardworking NPCs dislike lazy ones, scaled by both values. Lazy NPCs don't care either way.
 
----
-
-## 2. Quirks
+## Quirks
 
 Discrete traits. Most come in opposing pairs, where most NPCs sit in the unmarked middle.
 
@@ -144,9 +138,9 @@ Discrete traits. Most come in opposing pairs, where most NPCs sit in the unmarke
 
 ### Singles
 
-- **Romantic:** falls for people faster and more often, courts more actively, comments on couples, hit harder by rejection and heartbreak. Anyone can take part in romance (section 5); this quirk makes it much more likely.
+- **Romantic:** falls for people faster and more often, courts more actively, comments on couples, hit harder by rejection and heartbreak. Anyone can take part in romance ([family](family.md)); this quirk makes it much more likely.
 - **Loyal:** much slower to sour on friends, family and faction. Defends them in fights even when timid. Being betrayed hits them extra hard.
-- **Glutton:** talks about food constantly, eats more often, food preferences matter twice as much to them (section 6).
+- **Glutton:** talks about food constantly, eats more often, food preferences matter twice as much to them ([tastes](#tastes)).
 - **Pious:** devout follower of the Cube God, a lighthearted in-world faith ("Thank the Cube God!", "Cube God help us"). Swears by it, keeps a routine. Dislikes crude people and liars.
 - **Curious:** asks questions, wanders to look at things, interested in your travels and items. Gets along with chatterboxes.
 - **Jealous:** resents friends spending time with others, envies others' wealth and partners. Opinion penalties toward rivals for the same person.
@@ -163,9 +157,7 @@ No other combination is known to be impossible yet. True impossibilities get add
 
 Everything else is left to chance until playtesting says otherwise.
 
----
-
-## 3. Mood
+## Mood
 
 A single value from -100 to +100 that reflects recent events, like RimWorld's mood.
 
@@ -177,9 +169,7 @@ A single value from -100 to +100 that reflects recent events, like RimWorld's mo
   - Work ethic: low mood pulls it down by up to 0.3.
 - The current mood is a dialogue fact too, so lines can react directly ("Sorry, I'm not myself today").
 
----
-
-## 4. Opinions
+## Opinions
 
 Every NPC has an opinion of other NPCs and players, from -100 to +100. It is the sum of **memories** and **standing factors**, and it is one-directional: A's opinion of B is separate from B's opinion of A.
 
@@ -305,7 +295,7 @@ Non-lethal fistfights between people who aren't hostile enough to kill each othe
 
 Rules:
 - Fists only. Weapons are put away.
-- Nobody can die (see section 7), and a brawler yields well before that, so an accident doesn't leave anyone at death's door. The fight ends when one brawler drops to their yield point:
+- Nobody can die (see [health modes](health.md)), and a brawler yields well before that, so an accident doesn't leave anyone at death's door. The fight ends when one brawler drops to their yield point:
   - 10 health normally (half of the maximum 20);
   - 15 for timid NPCs;
   - 5 for proud or competitive NPCs.
@@ -325,66 +315,7 @@ When two friendly NPCs talk, they may share a memory about a third person, at re
 
 Memories are stored per NPC, only for people they actually have memories about. Standing factors are computed when needed, so 30 NPCs don't create 900 stored relations.
 
----
-
-## 5. Family
-
-Only direct links are stored: **parent**, **spouse** and **fiancé**. Everything else is derived from the graph:
-- siblings share a parent;
-- grandparents are parents' parents;
-- aunts and uncles are parents' siblings;
-- cousins are children of aunts and uncles;
-- in-laws come through a spouse.
-
-Generated homesteads start with whole families already linked.
-
-### Romance
-
-The way new couples form over time, so settlements change instead of staying frozen as generated. Any NPC can take part; the romantic quirk makes it far more likely and faster. Who an NPC can be attracted to: the opposite gender by default, or the same with the **gay** quirk (10%) or any with the **bisexual** quirk (10%). These show on the profile like other quirks, don't count toward the three-quirk limit, and aren't inherited. Players don't set a gender, so anyone can fall for a player. Blood relatives never date.
-
-Stages, each needing high opinions on both sides (for the player, only the NPC's side counts; the player decides for themself):
-1. **Dating** at 70 or more. One asks; the other accepts if their opinion is high enough and they're attracted, and a refusal leaves a "turned me down" memory. NPCs check about once a minute, romantics three times as often.
-2. **Engaged** after 7 days of dating with both at 80 or more.
-3. **Married** after 5 days engaged, still at 80 or more. A wedding: everyone nearby gets a "went to a wedding" memory and some cheer.
-
-With the gift and chat pacing (section 4), that puts dating about two weeks into a friendship and a wedding a few weeks in.
-
-A partner whose opinion falls under 30 (dating) or 10 (engaged or married) breaks it off, leaving a "broke up with me" memory. A partner's death leaves the other widowed; they remember their late husband or wife.
-
-Partners and family warm opinions as a standing factor: spouse +30, fiancé +25, partner +20, parent or child +20, sibling +15, grandparent or grandchild +12, aunt, uncle, niece or nephew +8, cousin +6, in-laws +5. When someone dies, every relative grieves (most for a spouse, child or parent) and remembers who killed them, wherever they are.
-
-Family is stored at world level (`npclaude_family`), so relatives who are far away, unloaded or dead still count.
-
-### Children
-
-Married couples have children, which keeps settlements alive across generations. (Minecraft Comes Alive does something similar; this design is our own.)
-- A married couple at 80+ opinion, near each other, has about one child every ten in-game days, up to four, and not until the youngest is five days old. An NPC married to the player has children the same way.
-- A child is born beside its NPC parent, with a name from `assets/npclaude/names.txt`, its parents' faction and home, and family links set, so siblings, cousins and so on follow from the graph.
-- It starts at half size and grows to full size over 18 in-game years (1008 days in a world with 56-day years; a future game setting). `/npc grow` shows or sets it. Its head grows from three quarters of an adult's to full size over the same years, for child proportions.
-- A child stays near a parent who's around, NPC or player, catching up when they walk off.
-- Children inherit trait axes as a blend of both parents plus a random shift, and each parent quirk has a 30% chance to pass on (sometimes they get one of their own). Tastes are their own.
-- Looks: skin tone, hair color and eye color from one parent or the other, often a parent's hairstyle, eyes or mouth, and no facial hair. A young man may grow a beard on coming of age.
-- Children are invincible (section 7). They don't fight, brawl or date: they run from danger.
-- Not yet: playing, and helping with small tasks as they get older.
-
-### Ages and birthdays
-
-Everyone has a birth date. Adults without one (new or from before ages existed) get an age on a curve that peaks around 27 and tails off toward old age (18 to 85, most in their twenties to forties); children's come from their birth. No birthday is celebrated on the day someone is born. The profile shows their age and birthday ("born Summer 5"), following the world's own calendar of seasons. On their birthday an NPC is in a good mood, says so, and any gift counts double.
-
-Planned, not built yet:
-- **Dying of old age.** Past a certain age (somewhere in the 70s), a small and rising chance each year of dying peacefully, ideally at home. Family and friends grieve as for any death, without anyone to blame. Possibly a funeral, the way weddings gather people.
-- **An item that stops aging.** Given like the guardian amulet (its own locked slot, kept for good), it stops the NPC's age from advancing: no old age, and a child given one stays a child. Open questions: its recipe, whether it can be given to children at all, and whether it shows its effect on the profile.
-- **The player's own birthday.** The player picks it (a dialogue or a setting); NPCs who know it wish them a happy birthday, and close friends and family give a gift.
-
-### The player
-
-In conversation: "Would you go out with me?" (once they're at least a friend), and once together, "About us..." to propose, set the wedding, or break up, call it off or divorce. NPCs who want to ask the player out (or propose) say they'd like to talk; the next conversation opens with the question and Yes / No / Can I think about it. "Can I ask you something?" includes "Tell me about your family", and asking what they think of a relative starts with how they're related.
-
-The player can do everything NPCs can, with the player making their own choices on one side: dating, getting engaged, marrying, and having children with an NPC spouse. Dialogue gets options to ask someone out, propose, and break up. NPCs with high enough opinions of the player can also ask the player. The same opinion requirements apply to the NPC side; the player is free to decide.
-
----
-
-## 6. Tastes
+## Tastes
 
 Every NPC has a like value from -1.0 to +1.0 for every item in the game, every kind of weather, every biome and every season.
 
@@ -411,121 +342,7 @@ What it drives:
 - **Secret until heard.** The profile screen shows a love or hate as "?" until the player has heard the NPC talk about it, or seen its reaction to being given it.
 - **Speech words:** `[favorite_food]`, `[hated_food]`, `[favorite_thing]` and `[hated_thing]` (the things most their own: what they love or hate more than most people do, so a curious NPC's favorite may be a compass rather than a diamond), `[favorite_weather]`, `[favorite_biome]`, `[favorite_season]` and their hated versions.
 
----
-
-## 7. Health modes
-
-Three modes, replacing the current invulnerable flag:
-
-| Mode | Takes damage | Can die | Use |
-|---|---|---|---|
-| Mortal | yes | yes | The default |
-| Invincible | yes | no | Important characters, like Skyrim's essential NPCs |
-| Invulnerable | no | no | Debug only |
-
-An invincible NPC fights, gets hurt and flees like anyone else. Damage that would kill them instead leaves them at 1 health, knocked down for several seconds, after which they get up and recover. Enemies lose interest in a downed NPC.
-
-### Making someone invincible
-
-The player chooses who they want to keep safe: a spouse, children, friends, companions, allies. This is done with a **guardian amulet**, a craftable item that makes any NPC invincible while it's in their inventory.
-- **Gifted like any item.** You can give it to any NPC you could normally give gifts to, and they respond to it with their own lines (touched, flustered, suspicious of the gesture, and so on).
-- **Theirs to keep.** Once given, they keep it no matter what happens between you later. They can't die while carrying it, so it never drops.
-- **Gifts in general are consumed.** A gift doesn't go into the NPC's inventory, so it can't be taken back out of a follower's pack.
-- **A real cost.** The recipe should be expensive enough (gold and a diamond, for example) that you protect the people who matter, not everyone.
-- **Its own slot.** The amulet goes into a dedicated, locked slot in the NPC's inventory, so it takes up no pack space and can't be taken back. It isn't shown on the model: modular appearance (section 11) gives enough visual variety.
-- **Recipe:** string on top, a gold block in the middle, gold ingots around it.
-
-Children are the exception: they're invincible by default, with no amulet needed.
-
-Brawls use the same rule for everyone involved: nobody can be reduced below 1 health by a brawl, and dropping low makes them yield.
-
----
-
-## 8. Speech
-
-### Facts and rules
-
-When an NPC wants to speak, it builds a list of **facts** about the moment: the event, its own traits and tiers, quirks, mood, the listener and its opinion of them, faction relations, time of day, weather, its job, its memories about the listener, and so on.
-
-Each line has **criteria** on those facts. The line whose criteria match the most facts wins (ties broken at random, weighted toward lines not used recently). Generic lines are the fallback; specific lines override them automatically. A hand-crafted character is just lines with the criterion `name = X`.
-
-### Grammar
-
-Lines contain **symbols** that expand into one of several alternatives, which can contain more symbols. Alternatives can carry the same criteria as lines (trait tiers, quirks, facts).
-
-```
-greet        -> [hello] [comment]
-hello        -> Oh, hey [player]!          (manners: polite, lean)
-             |  You.                       (manners: rude, strong)
-             |  Hello.                     (neutral)
-comment      -> [harvest_talk]             (if: own farm failed)
-             |  Haven't had [food.a] in days.   (quirk: glutton)
-harvest_talk -> Wheat didn't take. Next year, though!     (outlook: optimist, lean)
-             |  Wheat's dead. Figures.                    (outlook: pessimist, strong)
-             |  Wheat didn't take this year.              (neutral)
-```
-
-Fact symbols come from the NPC's data: `[player]`, `[name]`, `[job]`, `[home]`, `[faction]`, `[enemy_faction]`, `[favorite_food]`, `[spouse]`, `[time_of_day]`, and so on.
-
-**Agreement.** Word symbols know their form (one item, plural or mass noun) and expand correctly:
-- `[food.a]`: "a pork chop", "some blackberries", "some bread"
-- `[food.the]`: "the pork chop", "the blackberries"
-- `[food.it]`: "it" or "them"
-- `[food.is]`: "is" or "are"
-- `.cap` capitalizes: `[food.it.cap] [food.is] the best.`
-
-**Repetition.** Each NPC remembers its recent lines and avoids them; recently used alternatives are weighted down.
-
-### Speech style
-
-A surface layer rolled per NPC, independent of personality, so two NPCs with the same traits still sound different. It supplies its own values for shared symbols and applies small transforms:
-- symbols: `[hello]`, `[goodbye]`, `[yes]`, `[no]`, `[exclaim]`, `[filler]`, `[address]` (what they call people: "friend", "mate", "sir");
-- a catchphrase, inserted occasionally;
-- transforms: dropped g's ("goin'"), trailing "...", "y'know" at the end, no capitals.
-
-Formality comes from the Speech axis; the rest is random. Because style supplies fragments rather than whole lines, it adds to the writing instead of multiplying it.
-
-### Chat
-
-Speech appears in chat as `<Name> line` within a hearing radius (about 24 blocks), for barks, direct messages to the player and conversations between NPCs. Each NPC has a bark cooldown (chatterbox shorter, taciturn longer), and there is a global rate limit so a 30-NPC battle doesn't flood chat.
-
----
-
-## 9. Word book
-
-NPCs occasionally ask the player for a new word: sometimes a chat ("How are you?") turns into "What would you call a food you'd eat for breakfast?", counting as one of the five chats a minute. Friendlier, curious and chatty NPCs ask more often. The player can answer or decline. The text box says what kind of word fits, with an example, and shows the words that come before it ("a(n) ___", "Welcome to ___", "I love ___"), and leading "a", "an", "the" or "some" are dropped from what's typed, so lines never say "a a squidbug".
-
-After learning a word, the NPC asks whether it's **just for them** or **something anyone could say**:
-- **Just for them:** a personal word, like their own catchphrase or their nickname for you. It never spreads.
-- **Anyone:** a general word. It spreads through conversations between NPCs who are at least friendly, so it travels through a town but not to strangers far away.
-
-Each word has a **category** that says exactly what it is, which keeps sentences coherent:
-
-| Category | Forms asked for | Example use |
-|---|---|---|
-| Food | one item / plural / mass, plus the other form if needed | "Haven't had [food.a] in days." |
-| Animal | singular and plural | "Saw [animal.a] by the river." |
-| Thing | singular and plural | "Lost my [thing] again." |
-| Place | name | "Ever been to [place]?" |
-| Surprised | text | "[exclaim]! Did you see that?" |
-| Angry, happy, sad, scared | text | said when they're mad, delighted, grieving or frightened |
-| Greeting | text | Used as their hello |
-| Farewell | text | Used as their goodbye |
-| Nickname for you | text | Used instead of your name |
-| Describing word | text | "That's [describe]." |
-| Activity | as a doing-word phrase ("rock skipping") | "Been [activity] lately?" |
-
-- **How often.** An NPC that likes you at least a little (20+) asks at most once a day, about a quarter of the times you talk to it (twice as often if curious or a chatterbox, half if taciturn), until it knows 15 words. With `/npc limits off` it asks every time.
-- **Spreading.** Each friendly NPC chat (both at 20+) has a 30% chance to pass on a general word the other doesn't know. Everyone remembers who they heard it from.
-- **In speech,** each NPC uses one known word per category in a line, as `[taught_food]`, `[taught_greeting]` and so on. A nickname you taught replaces your name about half the time.
-- **No fading.** Words stay until the player deletes them.
-- **No editing.** A word can only be deleted, never changed.
-- **The word book screen** lists every taught word: category, personal or general, who you taught it to, and how many NPCs know it. Deleting a word removes it from everyone. The **Word Book** item (a book and a feather) opens it; `/npc words` and `/npc words delete <id>` do the same by command.
-- **Per NPC**, a dialogue option ("What words do you know?") lists that NPC's six newest words and where they picked each one up; the word book has the rest.
-
----
-
-## 10. Archetype labels
+## Archetype labels
 
 A label for flavor and the inspect screen, taken from an NPC's most distinctive traits. Strong axes count by their strength; quirks count as 0.7.
 
@@ -577,96 +394,3 @@ Pairs:
 | Vengeful + Hothead | the Firebrand |
 | Loyal + Brave | the Guardian |
 | Humble + Hardworking | the Salt of the Earth |
-
----
-
-## 11. Appearance
-
-Generated NPCs are assembled from layers instead of using one fixed skin. Hand-made skins stay supported, for unique characters and anyone who wants them.
-
-### Layers
-
-Each layer is a 64x64 skin-format PNG. Fixed layers are drawn in full color and used as they are. Recolorable layers are recolored by palette swap (a gradient map), not by multiplying a tint, so dark colors keep their shading:
-
-| Pixel in a recolorable layer | Becomes |
-|---|---|
-| `#202020` | palette shade 1: deepest shadow, inner lines |
-| `#505050` | palette shade 2: shadow |
-| `#808080` | palette shade 3: mid shade |
-| `#B0B0B0` | palette shade 4: base color (most of the area) |
-| `#E0E0E0` | palette shade 5: highlight |
-| anything else | itself, unchanged |
-
-- Every color option (a hair color, a dye, a skin tone, an eye color) is a palette of five colors, darkest to lightest, defined in a small text file. Using the same five grays in every part means a palette looks the same on hair, shirts and pants.
-- Anything that isn't one of the five grays passes through untouched: pure white eye whites and black pupils on an eye layer (only the iris recolors), a brown belt on a recolorable shirt, a colored gem. So a part never needs splitting into two files just to keep a detail fixed.
-- Pixel art only: no soft brushes or anti-aliasing, so every pixel is either one of the five grays or meant to stay as drawn.
-
-| Layer | Recolorable? | Palette | Examples |
-|---|---|---|---|
-| Base | yes | skin tone | the body, in wide and slim arm versions |
-| Eyes | yes (iris only) | eye color | several eye shapes; whites and pupils stay as drawn |
-| Mouth | yes (the skin's palette) | skin tone | mouths and expressions; lips and shading in the grays |
-| Facial hair | yes | hair color | beards, moustaches |
-| Hair | yes | hair color | styles, using the outer layer for volume |
-| Tops | either | dye color, if recolorable | shirts, tunics, dresses, aprons |
-| Bottoms | either | dye color, if recolorable | trousers, skirts, shoes |
-| Accessories | no | | scarves, glasses, hats |
-
-Tops and bottoms are recolorable or fixed per item: plain clothes come in any dye color, while patterned or detailed ones keep their drawn colors.
-
-Layers are stacked in order and combined into a single texture per NPC, built once and cached by its exact combination. Two NPCs with identical looks share a texture. Rebuilding a 64x64 texture is cheap, so changing clothes costs almost nothing.
-
-Variety comes from multiplying a modest amount of art: a dozen hairstyles in many colors, a range of skin tones, and clothing in dye colors already gives millions of combinations.
-
-### Where they're from
-
-Every NPC has a homeland: the biome it was first seen in (a child's is where it was born). Skin tone leans on how warm that biome is. Skin palettes are listed palest first, and the climate picks a spot along that list: tundra and taiga toward the pale end, plains and forests in the middle, deserts, outbacks and rainforests toward the dark end. The pick is spread about 1.3 palettes either way, so any place still has a range. Children take their skin tone from a parent instead.
-
-The homeland also feeds speech: "Where are you from?" in the questions menu, remarks when the climate is colder or hotter than home ("I'm from the desert, I'm not built for this"), homesickness, and feeling at home on returning to their own biome.
-
-### Clothing that changes
-
-An NPC's look is split into **body** (skin, eyes, face, hair: fixed for life, except hair could grow or be cut later) and **outfits** (sets of clothing layers). NPCs change outfits with their job and schedule: work clothes for the farmer, an apron for the cook, nightclothes for sleeping, something nicer for a wedding. Armor still draws on top of everything, as it does now.
-
-### Inheritance
-
-Children inherit body traits: skin tone blended from both parents, hair and eye color from one or a blend, and a chance at a parent's hairstyle or face features. Families visibly look related.
-
-### The art
-
-Parts live in two places with the same layout: bundled with the mod (`assets/npclaude/parts/`) and in the game folder's `npc_parts/`, which can be added to without rebuilding (`/npc parts reload` picks up changes). Game-folder files win over bundled ones with the same name.
-
-- `<layer>/<name>.png`: a 64x64 skin-format part anyone can roll. Layer folders: `base`, `eyes`, `mouth`, `facial_hair`, `bottom`, `top`, `hair`, `accessory` (drawn in that order).
-- `<layer>/male/<name>.png`, `<layer>/female/<name>.png`: parts only rolled for that gender (a command can still put them on anyone).
-- `<name>_slim.png` beside `<name>.png`: the slim-armed version. The base part's arm width decides which one an NPC wears.
-- `palettes.txt`: `[skin]`, `[hair]`, `[eyes]`, `[dye]` groups of `name: #c1 #c2 #c3 #c4 #c5` lines, darkest to lightest. The mod ships defaults (8 skin tones, 12 hair colors, 8 eye colors, the 16 dye colors); a game-folder file adds to or overrides them.
-
-Whether a part is recolorable isn't declared anywhere: any of the five grays in it get recolored, and everything else is drawn as is. The mouth is recolored with the base's skin palette and facial hair with the hair's, so they always match. Old-style 64x32 parts work too: they're upgraded like old skins (left limbs mirrored from the right, and a completely filled hat area cleared).
-
-Random looks: every NPC without a skin file gets one from the parts available, rolled once (NPCs from before any parts existed get one when parts are added). Hair is almost always present (92% for men, 99% for women), facial hair 35% for men, an accessory 15%. Hair and facial hair share a color. A skin file set with `/npc skin` still wins over the look.
-
-## 12. Implementation order
-
-1. **Health modes:** mortal, invincible, invulnerable. Small, and brawls need it.
-2. **Traits, quirks and food preferences:** data, generation with the blacklist, NBT saving, commands to view and set them. Courage replaces bravery.
-3. **Memories, mood and opinions:** the memory catalog, standing factors, compatibility, and opinion replacing the personal relation in combat.
-4. **Speech engine:** facts, rules, grammar, agreement, anti-repetition, speech style, chat output. Lines live in data files, editable without rebuilding.
-5. **First writing pass:** greetings, farewells, combat barks, low health, idle comments, all with full neutral coverage.
-6. **Brawls.**
-7. **Word book:** NPCs asking, personal and general words, spreading, the book screen.
-8. **Modular appearance:** layers, tinting, outfits, the amulet showing.
-9. **Family graph**, then gossip, then romance (NPCs and the player), then children.
-
-## Settled
-
-- Pious NPCs follow the Cube God.
-- Sleeping NPCs do not count toward skipping the night.
-- Brawls exist, between hotheads and between NPCs who hate each other.
-- The player can date, marry and have children with NPCs, under the same rules as NPCs.
-- Children exist, grow up and are invincible by default.
-
-## Open questions
-
-- The guardian amulet's recipe.
-- Who draws the appearance layers beyond placeholders.
-- How long a child takes to grow up, and how children are drawn.
