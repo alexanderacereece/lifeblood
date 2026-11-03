@@ -29,6 +29,9 @@ Each axis runs from -1.0 to +1.0. By convention the conventionally "positive" po
 | Humor | Serious | Lighthearted |
 | Mercy | Vengeful | Forgiving |
 | Work ethic | Lazy | Hardworking |
+| Ambition (planned) | Content | Ambitious |
+
+Ambition is planned with [life choices](life-choices.md): ambitious NPCs want a better job, a bigger house, an office, and will leave for an opportunity; content ones are happy as they are.
 
 ### Intensity tiers
 
@@ -135,6 +138,10 @@ Discrete traits. Most come in opposing pairs, where most NPCs sit in the unmarke
 **Early bird / Night owl**
 - Early bird: wakes and starts work early, goes to bed early, grumpy if kept up.
 - Night owl: up late, sleeps in, more talkative at night.
+
+**Homebody / Wanderer** (planned, with [life choices](life-choices.md))
+- Homebody: strongly tied to home, rarely travels, homesick when away, slow to move even when unhappy.
+- Wanderer: restless, travels and comes back with stories, likelier to homestead or move on.
 
 ### Singles
 
