@@ -10,7 +10,7 @@ How the mod is put together, and where new systems plug in. Everything here is i
 |---|---|---|
 | `brain` | `ai/NpcBrain` | Picks the behavior to run each tick |
 | `navigator` | `ai/NpcNavigator` | Pathfinding and moving along paths |
-| `inventory` | `inventory/NpcInventory` | Hand, armor, pack and the amulet slot |
+| `inventory` | `inventory/NpcInventory` | Armor, hand and a 35-slot pack: as much as a player carries |
 | `personality` | `personality/NpcPersonality` | Trait axes, quirks and tastes |
 | `memories` | `social/NpcMemories` | What happened, feeding mood and opinions |
 | `relations` | `combat/NpcRelations` | Debug overrides of how it treats players |
@@ -41,6 +41,8 @@ Routines are in `ai/routine`. A `Schedule` is a list of blocks ("from 6, work; f
 **The register of people** (`people/PeopleRegistry`, saved as `npclaude_people`) has a record for everyone who has lived in the world: name, gender, birth, homeland, faction, where and when they were last seen, whether they're alive, their parents and partnerships. Records outlast entities, so anything that needs to reason about people who aren't loaded (relatives, rulers, voters, gossip) reads the register. NPCs check in as they tick. `loaded(world, id)` finds a loaded NPC by id without searching the world.
 
 **World systems** (`world/WorldSystems`) run on a per-world clock, whether or not any NPC is nearby. A `WorldSystem` has an interval and a `tick(world)`. Register it in `WorldSystems`. The first one keeps the register's list of loaded NPCs tidy. **Settlements, factions, elections, wars and trade between towns go here.** The clock counts steadily even when the time of day jumps (sleeping) or is frozen.
+
+**Ownership** (`ownership/`) records who placed each block, saved with each chunk (`ChunkOwners`, added to chunks by `ChunkMixin` and saved by `ChunkLoaderMixin`). `BlockOwners` is the way in: `ownerAt`, `mayUse`, and `placingAs(owner, action)` so blocks an NPC places are its own; `ItemStackMixin` does the same for players using an item on a block. `Ownership.shares` says who shares what someone owns. Items are owned by where they are: an NPC's inventory, or a container whose block someone owns.
 
 **Factions** (`combat/FactionRegistry`, saved as `npclaude_factions`) hold each faction's default stance, explicit relations between factions, and which faction each player has joined.
 

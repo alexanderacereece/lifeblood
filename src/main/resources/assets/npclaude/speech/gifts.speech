@@ -173,6 +173,34 @@ Two? Do you know something I don't? {paranoid, w=3}
 Give it to someone who needs it, [listener]. {generous, w=3}
 Oh, I'll take it! ...What? I can't have two? {greedy, w=3}
 
+# Their hands and pack are full, so they can't take it.
+== gift_full ==
+My hands are full, [listener]. Maybe later.
+I couldn't carry another thing.
+Where would I even put [item.it]?
+I'm carrying too much already.
+Ugh, I'm loaded down as it is. {lazy, w=2}
+Let me clear out my pack first. {hardworking, w=2}
+Oh, I'd love to, but I've no room! {extrovert, w=2}
+No room.                     {taciturn, w=3}
+I'll make room! ...No, I won't. Sorry. {greedy, w=3}
+
+# A second gift the same day: kept and used, but it doesn't move them like the first.
+== gift_again ==
+Another one? All right, thanks.
+I'll find a use for [item.it].
+More? You're keeping me well supplied.
+Thanks. I'll put [item.it] to use.
+That'll come in handy.       {hardworking, w=2}
+You're spoiling me.          {lighthearted, w=2}
+What's all this for?         {paranoid, w=3}
+I'll take whatever you're giving. {greedy, w=3}
+Oh, I'll share [item.it] around. {generous, w=3}
+Thank you, truly.            {polite, w=2}
+Put [item.it] with the rest. {taciturn, w=3}
+Still trying to win me over? {opinion=disliked, w=3}
+[item.cap]! Even better!     {taste=love, w=4}
+
 == brawl_cheap_shot ==
 It's over! What are you doing?!
 Oh, you want a real fight? Fine!

@@ -10,7 +10,7 @@ import npclaude.entity.EntityNPC;
 import npclaude.entity.FollowDistance;
 import npclaude.family.Kinship;
 import npclaude.family.Romance;
-import npclaude.item.NpcItems;
+import npclaude.ownership.Ownership;
 import npclaude.people.PeopleRegistry;
 import npclaude.social.MemoryType;
 import npclaude.social.Opinions;
@@ -74,14 +74,7 @@ public record NpcDialogue(String line, List<DialogueOption> options) {
 		})));
 		DialogueMenus.register(DialogueMenus.Menu.MAIN, 200, (npc, player, options) -> {
 			if (player.inventory.getCurrentItem() != null) {
-				options.add(new DialogueOption("Here, take this.", session -> {
-					if (SocialLimits.giftedToday(npc, player) && !NpcItems.isGuardianAmulet(player.inventory.getCurrentItem())) {
-						session.show(main(npc, player, narration("You've already given " + npc.nickname + " something today. That's probably enough for now.")));
-						return;
-					}
-
-					session.show(main(npc, player, NpcGifts.give(npc, player)));
-				}));
+				options.add(new DialogueOption("Here, take this.", session -> session.show(main(npc, player, NpcGifts.give(npc, player)))));
 			}
 		});
 		DialogueMenus.register(DialogueMenus.Menu.MAIN, 300, (npc, player, options) -> {
@@ -129,8 +122,12 @@ public record NpcDialogue(String line, List<DialogueOption> options) {
 		DialogueMenus.register(DialogueMenus.Menu.QUESTIONS, 500, (npc, player, options) -> options.add(new DialogueOption("Tell me about your family.",
 			session -> session.show(questions(npc, player, RomanceDialogue.describeFamily(npc, player))))));
 
-		DialogueMenus.register(DialogueMenus.Menu.PRACTICAL, 100, (npc, player, options) -> options.add(new DialogueOption("Let me see what you're carrying.",
-			DialogueSession::openInventory)));
+		// Only family who share what it owns (spouse, parents, children) can go through its things.
+		DialogueMenus.register(DialogueMenus.Menu.PRACTICAL, 100, (npc, player, options) -> {
+			if (Ownership.shares(npc, player)) {
+				options.add(new DialogueOption("Let me see what you're carrying.", DialogueSession::openInventory));
+			}
+		});
 		DialogueMenus.register(DialogueMenus.Menu.PRACTICAL, 200, (npc, player, options) -> {
 			if (npc.following.getLeader() == player) {
 				options.add(new DialogueOption("Follow distance: " + npc.following.getDistance().displayName(), session -> {

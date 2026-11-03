@@ -12,7 +12,7 @@ An NPC framework for Better Than Adventure 8.0.1: villagers with personalities, 
 | [appearance.md](appearance.md) | Parts, palettes, homelands, the art layout |
 | [palette_reference.html](palette_reference.html) | Swatches of every bundled palette |
 
-Planned, not built yet:
+Planned, not built yet (ownership is partly built):
 
 | Doc | Covers |
 |---|---|
@@ -40,7 +40,9 @@ Each step is useful on its own and proves the next:
 - Brawls exist, between hotheads and between NPCs who hate each other.
 - The player can date, marry and have children with NPCs, under the same rules as NPCs.
 - Children exist, grow up over 18 in-game years (a setting), and are invincible.
-- The guardian amulet: string, gold ingots and a block of gold, in its own locked slot.
+- The guardian amulet: string, gold ingots and a block of gold. It works from anywhere in an NPC's inventory.
+- NPCs carry as much as a player: 4 armor slots and 36 more. It's all theirs; gifts are kept, eaten, worn and used.
+- Only people who share what an NPC owns (spouse, parents, children) can open its inventory. There is no lending gear.
 - NPCs use the player's exact mechanics: health, speed, healing, ammo. No buffs.
 - Every new system comes with speech lines reacting to it.
 - Code that reads old saves is temporary, kept in one place, and goes at content 1.0.

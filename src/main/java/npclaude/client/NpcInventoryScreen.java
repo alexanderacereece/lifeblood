@@ -18,8 +18,8 @@ import org.joml.Math;
 import org.lwjgl.input.Keyboard;
 
 /**
- * The NPC's inventory, styled after the player's own inventory screen:
- * armor column and a live preview of the NPC on the left, hand slot and pack on the right.
+ * The NPC's inventory, styled after the player's own inventory screen: armor column and a live preview of the NPC,
+ * then its pack with the hand slot first on the bottom row, then the player's inventory.
  */
 @Environment(EnvType.CLIENT)
 public class NpcInventoryScreen extends ScreenContainerAbstract {
@@ -36,6 +36,7 @@ public class NpcInventoryScreen extends ScreenContainerAbstract {
 
 	public NpcInventoryScreen(Player player, EntityNPC npc, @Nullable Screen parent) {
 		super(new NpcMenu(player.inventory, npc));
+		this.ySize = NpcMenu.PLAYER_TOP + 82;
 		this.player = player;
 		this.npc = npc;
 		this.parent = parent;
@@ -84,9 +85,8 @@ public class NpcInventoryScreen extends ScreenContainerAbstract {
 
 	@Override
 	protected void drawGuiContainerForegroundLayer() {
-		this.drawStringNoShadow(this.fontRenderer, this.npc.nickname, 86, 6, LABEL_COLOR);
-		this.drawStringNoShadow(this.fontRenderer, "Inventory", 116, 16, LABEL_COLOR);
-		this.drawStringNoShadow(this.fontRenderer, "Hand", 86, 52, LABEL_COLOR);
+		this.drawStringNoShadow(this.fontRenderer, this.npc.nickname, 86, 8, LABEL_COLOR);
+		this.drawStringNoShadow(this.fontRenderer, "Inventory", 8, NpcMenu.PLAYER_TOP - 11, LABEL_COLOR);
 	}
 
 	@Override
@@ -96,8 +96,6 @@ public class NpcInventoryScreen extends ScreenContainerAbstract {
 		int x = (this.width - this.xSize) / 2;
 		int y = (this.height - this.ySize) / 2;
 		this.drawTexturedModalRect(x, y, 0, 0, this.xSize, this.ySize);
-		// The texture has no amulet slot, so borrow the hand slot's frame for it.
-		this.drawTexturedModalRect(x + 87, y + 25, 87, 61, 18, 18);
 		this.drawNpcPreview(x + 51, y + 75, partialTick);
 	}
 

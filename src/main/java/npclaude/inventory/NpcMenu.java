@@ -14,13 +14,17 @@ import npclaude.entity.EntityNPC;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * The NPC's inventory on top (laid out like the player inventory screen: armor column,
- * then hand slot and pack where crafting would be), the player's inventory below.
+ * The NPC's inventory on top, laid out like the player's own: armor column beside its preview, three rows of pack,
+ * and a bottom row that starts with the hand slot, like a hotbar. The player's inventory is below.
  * NPC slot indexes match {@link NpcInventory} indexes.
  */
 public class NpcMenu extends MenuAbstract {
 	private static final int PLAYER_START = NpcInventory.SIZE;
 	private static final int HOTBAR_START = PLAYER_START + 27;
+	/** How many pack slots share the bottom row with the hand. */
+	private static final int PACK_IN_HOTBAR = 8;
+	/** Where the player's inventory starts on the screen. */
+	public static final int PLAYER_TOP = 172;
 
 	public final EntityNPC npc;
 
@@ -31,29 +35,22 @@ public class NpcMenu extends MenuAbstract {
 			this.addSlot(new NpcArmorSlot(inventory, NpcInventory.ARMOR_START + i, 8, 8 + i * 18, HumanArmorShape.values()[i]));
 		}
 
-		this.addSlot(new Slot(inventory, NpcInventory.HAND_SLOT, 88, 62));
-		for (int y = 0; y < 3; y++) {
-			for (int x = 0; x < 3; x++) {
-				this.addSlot(new Slot(inventory, NpcInventory.PACK_START + x + y * 3, 116 + x * 18, 26 + y * 18));
-			}
+		this.addSlot(new Slot(inventory, NpcInventory.HAND_SLOT, 8, 142));
+		for (int i = 0; i < NpcInventory.PACK_SIZE; i++) {
+			int row = (i - PACK_IN_HOTBAR) / 9;
+			int x = i < PACK_IN_HOTBAR ? 26 + i * 18 : 8 + (i - PACK_IN_HOTBAR) % 9 * 18;
+			int y = i < PACK_IN_HOTBAR ? 142 : 84 + row * 18;
+			this.addSlot(new Slot(inventory, NpcInventory.PACK_START + i, x, y));
 		}
-
-		// Only a gift fills the amulet slot, and it's locked once filled.
-		this.addSlot(new Slot(inventory, NpcInventory.AMULET_SLOT, 88, 26) {
-			@Override
-			public boolean mayPlace(ItemStack stack) {
-				return false;
-			}
-		});
 
 		for (int y = 0; y < 3; y++) {
 			for (int x = 0; x < 9; x++) {
-				this.addSlot(new Slot(playerInventory, x + y * 9 + 9, 8 + x * 18, 84 + y * 18));
+				this.addSlot(new Slot(playerInventory, x + y * 9 + 9, 8 + x * 18, PLAYER_TOP + y * 18));
 			}
 		}
 
 		for (int i = 0; i < 9; i++) {
-			this.addSlot(new Slot(playerInventory, i, 8 + i * 18, 142));
+			this.addSlot(new Slot(playerInventory, i, 8 + i * 18, PLAYER_TOP + 58));
 		}
 	}
 
@@ -65,10 +62,6 @@ public class NpcMenu extends MenuAbstract {
 	/** Slots affected by "move all" style clicks: the clicked slot's own group. */
 	@Override
 	public IntList getMoveSlots(@NotNull InventoryAction action, @NotNull Slot slot, int target, Player player) {
-		if (slot.index == NpcInventory.AMULET_SLOT) {
-			return new IntArrayList();
-		}
-
 		if (slot.index < NpcInventory.HAND_SLOT) {
 			return this.getSlots(NpcInventory.ARMOR_START, NpcInventory.ARMOR_SIZE, false);
 		}
@@ -87,10 +80,6 @@ public class NpcMenu extends MenuAbstract {
 	/** Where shift-clicked items go: NPC items to the player; player items onto the NPC (armor to armor slots). */
 	@Override
 	public IntList getTargetSlots(@NotNull InventoryAction action, @NotNull Slot slot, int target, Player player) {
-		if (slot.index == NpcInventory.AMULET_SLOT) {
-			return new IntArrayList();
-		}
-
 		if (slot.index < PLAYER_START) {
 			return this.getSlots(PLAYER_START, 36, true);
 		}

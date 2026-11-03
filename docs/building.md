@@ -40,6 +40,19 @@ The NPC places blocks the way a player does: it stands where the game's own plac
 
 **Making it convincing:** arm swings and sounds, walking to the stockpile and carrying loads, stepping back to look at the work, a lunch break, quitting at dusk, and speech lines ("roof's going up tomorrow"). Coming across someone halfway through their house is part of the charm, so it should take a few in-game days.
 
+## Generated homesteads (next)
+
+The first use of prefabs, before any NPC builds: homesteads placed by world generation, with people already living there. A house placed by the world needs none of the honest-building machinery, so this comes first.
+
+- **Where:** occasionally, on fairly flat ground in the overworld, during the same decoration step that places dungeons. Each house stays inside the area being decorated, so generation never pulls in new chunks.
+- **The house:** a prefab fitted to the terrain (foundation filled, space above cleared), with swaps for the local wood, stone and colors. The household owns its blocks and chests ([ownership](ownership.md)), and the chests hold household goods.
+- **Who lives there.** Most are families, but not all:
+  - a family: a couple, often with children;
+  - a lone settler;
+  - someone who *had* someone: a widow or widower whose late spouse is in the register of people, sometimes with children, sometimes a grave nearby;
+  - friends or like-minded people who came out together, each with their own reasons (a shared faith, running from something, a fresh start).
+- **History:** real ages and birthdays, marriages and family links in the register, memories and opinions of each other, a homeland, and the homestead as home. They talk about how they came to live there.
+
 ## Towns rising and falling
 
 - **Growth.** A settlement puts down new construction sites on its free plots as it needs homes and workshops.

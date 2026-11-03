@@ -70,6 +70,7 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 		FactionCommands.addTo(npc);
 		FamilyCommands.addTo(npc);
 		LookCommands.addTo(npc);
+		OwnershipCommands.addTo(npc);
 		dispatcher.register(npc);
 	}
 }

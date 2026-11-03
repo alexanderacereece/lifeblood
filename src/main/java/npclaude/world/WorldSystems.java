@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 import net.minecraft.core.world.World;
+import npclaude.ownership.BlockOwners;
 import npclaude.people.PeopleRegistry;
 
 /**
@@ -36,6 +37,7 @@ public final class WorldSystems {
 			return;
 		}
 
+		BlockOwners.resetPlacers();
 		long tick = TICKS.merge(world, 1L, Long::sum);
 		for (WorldSystem system : SYSTEMS) {
 			if (tick % system.interval() == 0) {

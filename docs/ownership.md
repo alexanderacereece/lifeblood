@@ -1,6 +1,8 @@
-# Ownership and protection (planned)
+# Ownership and protection
 
-Not built yet. Keeping NPCs off the player's builds without claim commands, and the property records that crime and law will use. Numbers are starting points for playtesting.
+Keeping NPCs off the player's builds without claim commands, and the property records that crime and law will use. Numbers are starting points for playtesting.
+
+**Built:** block ownership records, item ownership by location, shared ownership in families, kept gifts, `/npc owner`. **Planned:** the protection buffers, which need NPCs that break and place blocks, and theft.
 
 ## New worlds only
 
@@ -9,12 +11,27 @@ NPClaude is designed to start with a new world. Builds from before it was added 
 ## Who placed what
 
 Every block placed by a player, an NPC or a settlement records its owner. Natural terrain belongs to nobody.
-- Breaking a block clears its record; an owner can give a block or a building away (later, with houses for sale).
-- Crops and trees grown from an owned seed or sapling belong to whoever planted it, so a player's farm and tree farm are protected too.
-- Stored sparsely, only for placed blocks, in the world's own save files, loaded with the area.
-- Owners are players, NPCs (by their entry in the register of people) or settlements, so it works in multiplayer.
+- A block someone places is theirs. While a player uses an item on a block, every block that appears because of it is theirs: both halves of a door or bed, farmland they till, a whole tree grown with bone meal.
+- Anything that clears a block (breaking it, fire, an explosion, leaves decaying) clears its record. Changes in place keep it: a furnace lighting up, dirt turning to grass, a door opening, paint on a block. Changing someone else's block never makes it yours.
+- A sapling grown naturally keeps its owner only where the sapling stood; the rest of the tree is nobody's. (Possibly later: the whole tree.)
+- Stored with each chunk, only for placed blocks, as compact number arrays, and loaded with the chunk.
+- Owners are players, NPCs or (later) settlements, all by id, so it works in multiplayer.
+- `/npc owner <x> <y> <z>` tells who owns a block.
 
-## Rules for NPCs
+## Items
+
+Items have no ownership tags, so nothing interferes with stacking or other mods. An item belongs to whoever holds it:
+- everything in an NPC's inventory is that NPC's;
+- everything in a container belongs to whoever owns the container's block;
+- the player's inventory, and the chests they placed, are theirs.
+
+NPCs carry as much as a player: 4 armor slots, the hand and 35 more. Gifts go into it and are theirs to eat, wear and use; they put on gifted armor if it's better than what they wear. If they have no room, they say so and don't take it. Only the first gift each day moves their opinion; later ones are kept and used, with a plain thanks.
+
+## Sharing
+
+Spouses, parents and children share what each of them owns, players and NPCs alike. So a player married into a family can open their spouse's inventory and their family's chests, and an NPC family shares its house. Everyone else, however friendly, can only give. There's no lending gear: equipping a companion means giving it to them, and it's theirs. (A divorce, breakup or death changes who shares, by itself.)
+
+## Rules for NPCs (planned)
 
 | Rule | Starting value |
 |---|---|
@@ -28,15 +45,17 @@ A **built-up area** is a chunk with at least 20 player-placed blocks, so a lone 
 
 The player's own town is the exception that matters: a settlement the player founds or invites NPCs into lets its NPCs build there, on plots the player allows (to be designed with settlements).
 
-## Property and crime
+## Property and crime (planned)
 
 The same records are what law needs:
 - Breaking or taking something someone owns is property damage or theft, seen by witnesses, leading to guards, fines and bounties (crime is planned on the roadmap).
 - It works both ways: breaking into an NPC's house or emptying their chest is a crime too.
+- Looting what a dead NPC dropped is theft from their family.
 - Hostile factions at war ignore the rules on purpose: raids, burning and looting are what war is.
 
 ## Open questions
 
-- Pistons moving owned blocks, and falling sand or gravel: does ownership follow?
+- Pistons moving owned blocks, and falling sand or gravel: does ownership follow? (Today it doesn't.)
 - Explosions: a creeper isn't anyone's crime, but whose fault is a player's TNT?
+- Whether grown-up children who've moved out still share with their parents.
 - An optional command to mark an area as protected, for edge cases only.

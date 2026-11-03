@@ -6,6 +6,9 @@
     "defaultRequire": 1
   },
   "mixins": [
+    "ChunkLoaderMixin",
+    "ChunkMixin",
+    "ItemStackMixin",
     "MobDeathMixin",
     "MobGhastMixin",
     "MobMonsterMixin",

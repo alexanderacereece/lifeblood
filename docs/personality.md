@@ -217,7 +217,7 @@ Mood-only memories (no opinion effect): ate food I like or hate (scaled by prefe
 
 ### Pacing
 
-Gifts are limited to one per NPC per in-game day, and chats to five per real-world minute (the guardian amulet doesn't count as a gift here). Both count for more because of it, and repeats add up steadily instead of halving:
+Only the first gift to an NPC each in-game day moves their opinion; later ones that day are kept and used but leave no memory. Chats are limited to five per real-world minute (the guardian amulet doesn't count as a gift here). Both count for more because of it, and repeats add up steadily instead of halving:
 - a gift is worth up to about +11 depending on how much they like it, lasting two weeks, up to 14 at once;
 - a chat is worth +2, lasting three days, up to 10 at once.
 

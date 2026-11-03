@@ -12,8 +12,10 @@ import npclaude.social.MemoryType;
 import npclaude.speech.Word;
 
 /**
- * Giving an NPC whatever the player is holding: it goes into the NPC's inventory, and the NPC remembers it,
- * fondly or not depending on how it feels about the item. Handing someone dirt is an insult.
+ * Giving an NPC whatever the player is holding: one of it goes into the NPC's inventory and is theirs from then on,
+ * to eat, wear or use. They remember the first gift of the day, fondly or not depending on how they feel about the
+ * item (handing someone dirt is an insult); later ones that day are kept, but don't move them. Since only people who
+ * share what an NPC owns can open its inventory, a gift can't be taken back and given again.
  */
 public final class NpcGifts {
 	/** Below this, a gift of junk or something gross is taken as an insult rather than a dud. */
@@ -31,18 +33,26 @@ public final class NpcGifts {
 
 		ItemStack gift = held.copy();
 		gift.stackSize = 1;
+		boolean food = Tastes.isFood(held.getItem());
+		Word word = food ? Word.ofFood(held.getItem()) : Word.ofItem(gift);
 		boolean amulet = NpcItems.isGuardianAmulet(gift);
-		if (amulet && !npc.inventory.giveAmulet(gift)) {
+		if (amulet && npc.inventory.hasAmulet()) {
 			String line = npc.voice.line("gift_amulet_already", player, null);
 			return line != null ? line : "I already have one. But thank you.";
 		}
 
+		if (!npc.inventory.addToPack(gift)) {
+			String line = npc.voice.line("gift_full", player, context -> context.word("item", word));
+			return line != null ? line : "My hands are full.";
+		}
+
+		npc.inventory.wearBetterArmor();
+		boolean first = amulet || !SocialLimits.giftedToday(npc, player);
 		if (!amulet) {
 			SocialLimits.recordGift(npc, player);
 		}
 
-		// Only one of the stack changes hands, and it's theirs now: gifts don't go into their inventory, so they
-		// can't be taken back out of it. (The amulet goes into its own locked slot.)
+		// Only one of the stack changes hands.
 		held.stackSize--;
 		if (held.stackSize <= 0) {
 			for (int slot = 0; slot < player.inventory.mainInventory.length; slot++) {
@@ -58,11 +68,15 @@ public final class NpcGifts {
 			return line != null ? line : "For me? I... thank you.";
 		}
 
+		float like = npc.personality.tastes.like(held.getItem());
+		if (!first) {
+			String line = npc.voice.line("gift_again", player, context -> context.word("item", word).fact("taste", Tastes.describe(like)));
+			return line != null ? line : "Thanks. I'll put it to use.";
+		}
+
 		// A gift on their birthday means more.
 		float birthday = npc.life.isBirthday() ? 2.0F : 1.0F;
 		ItemDefaults.Default defaults = ItemDefaults.of(held.getItem());
-		boolean food = Tastes.isFood(held.getItem());
-		float like = npc.personality.tastes.like(held.getItem());
 		boolean rude = (defaults.is(TasteCategory.JUNK) || defaults.is(TasteCategory.GROSS)) && like <= INSULT_LIKE;
 		if (food) {
 			float taste = Math.min(1.0F, Math.abs(like) * (npc.personality.has(Quirk.GLUTTON) ? 2.0F : 1.0F));
@@ -93,7 +107,6 @@ public final class NpcGifts {
 			npc.voice.reveal("hated_thing");
 		}
 
-		Word word = food ? Word.ofFood(held.getItem()) : Word.ofItem(gift);
 		String line = npc.voice.line("gift", player, context -> context.word("item", word).fact("kind", defaults.main().id())
 			.fact("taste", Tastes.describe(like)).fact("rude_gift", rude ? "yes" : "no")
 			.fact("surprising", Math.abs(like - defaults.base()) >= 0.6F ? "yes" : "no"));
