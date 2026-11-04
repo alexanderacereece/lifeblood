@@ -51,7 +51,7 @@ Each step is useful on its own and proves the next:
 - One new axis, ambition, plus the homebody and wanderer quirks, for life choices. No more than that.
 - NPCs choose by inclination among real options the world offers; balance shapes the options, not the NPC.
 - Building is honest: real materials, the player's reach and support rules, prefabs that keep every block detail.
-- Prefabs swap by convention, like skin parts: logs become the local wood, swappable stone the local stone, gray the primary color and light gray the secondary (a faction's colors for its buildings).
+- Prefabs swap by convention, like skin parts: logs and plain planks become the local wood, swappable stone the local stone, gray the primary color and light gray the secondary (a faction's colors for its buildings).
 - Every faction has a primary and a secondary color.
 - Mining stays honest; running out of ore is a story, not a problem. Unloaded areas run on ledgers measured from the real rules.
 
@@ -60,6 +60,12 @@ Each step is useful on its own and proves the next:
 - The age-stopping item: its recipe, whether children can be given one, and whether the profile shows it.
 - Whether symbols on banners and shields are doable, for faction colors.
 - How often a typical NPC makes a big life change.
+
+## Planned, noted for later
+
+- **Parenting:** both parents, NPC or player, shape who a child becomes, by nature at birth and by upbringing as it grows ([family](family.md#parenting-planned)).
+- **Player creation:** players choose their own axes, quirks and tastes, and can take a skin built from parts, so opinions and inheritance work for them as for NPCs ([family](family.md#player-creation-planned)).
+- **Generated factions:** settlers and raiders are placeholders until factions are generated with the world; nothing should depend on them existing.
 - Whether the player can talk an NPC into or out of a life choice.
 - What BTA's trommel yields, and whether sifting is worth a job.
 - Ownership edge cases: pistons, falling blocks, a player's TNT.

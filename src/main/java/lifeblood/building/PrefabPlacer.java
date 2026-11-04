@@ -59,8 +59,10 @@ public final class PrefabPlacer {
 					}
 
 					Block<?> saved = blocks[prefab.paletteIndexAt(x, y, z)];
-					Block<?> block = saved != null ? swaps.block(saved) : Blocks.AIR;
-					int meta = saved != null ? swaps.meta(block, BlockTurns.turn(block, prefab.metaAt(x, y, z), turns)) : 0;
+					WoodType.Placed placing = saved != null ? swaps.apply(saved, BlockTurns.turn(saved, prefab.metaAt(x, y, z), turns))
+						: new WoodType.Placed(Blocks.AIR, 0);
+					Block<?> block = placing.block();
+					int meta = placing.meta();
 					if (world.getTileEntity(pos) != null) {
 						world.removeTileEntity(pos);
 					}

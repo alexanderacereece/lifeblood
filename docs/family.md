@@ -39,6 +39,13 @@ Married couples have children, which keeps settlements alive across generations.
 - They sound their age: babies babble, then little kids, young teens and older teens each talk their own way, to their family most of all ([speech](speech.md#sounding-their-age)).
 - Not yet: playing, and helping with small tasks as they get older.
 
+### Parenting (planned)
+
+Who a child becomes should come from both parents, NPC or player, by nature and by upbringing:
+- **Nature:** at birth, axes, quirks and looks blend both parents, as now. With [player creation](#player-creation-planned), a player parent passes on their own chosen traits and looks the same way an NPC does.
+- **Upbringing:** while the child grows, the parents around it keep nudging who it becomes. Time spent with each parent, how they treat it (kind or harsh, present or absent), what they do together, and big events (a parent's death, a divorce, a move) shift its axes and can give or take quirks before it comes of age. A player parent shapes their child through the same things: talking, gifts, taking them along, being there or not.
+- Every part of it works the same whichever parent is the player, so a child raised by an NPC and a player is shaped by both.
+
 ## Ages and birthdays
 
 Everyone has a birth date. Adults without one (new or from before ages existed) get an age on a curve that peaks around 27 and tails off toward old age (18 to 85, most in their twenties to forties); children's come from their birth. No birthday is celebrated on the day someone is born. The profile shows their age and birthday ("born Summer 5"), following the world's own calendar of seasons. On their birthday an NPC is in a good mood, says so, and any gift counts double.
@@ -51,5 +58,12 @@ Planned, not built yet:
 ## The player
 
 In conversation: "Would you go out with me?" (once they're at least a friend), and once together, "About us..." to propose, set the wedding, or break up, call it off or divorce. NPCs who want to ask the player out (or propose) say they'd like to talk; the next conversation opens with the question and Yes / No / Can I think about it. "Can I ask you something?" includes "Tell me about your family", and asking what they think of a relative starts with how they're related.
+
+### Player creation (planned)
+
+When starting out, the player makes themselves the way an NPC is made, so everything that works between NPCs works with them too:
+- **Personality:** they choose their own trait axes, quirks and tastes (or roll them). NPCs then judge them by compatibility exactly as they judge each other: a crude, hotheaded player clashes with proper, zen NPCs; a pious one gets on with the devout.
+- **Looks:** they can replace their Minecraft skin with one built from skin parts and palettes, like an NPC's, so their "genetics" work like an NPC's and their children inherit their skin tone, hair, eyes and features.
+- It's optional: a player who skips it keeps their own skin and a neutral personality.
 
 The player can do everything NPCs can, with the player making their own choices on one side: dating, getting engaged, marrying, and having children with an NPC spouse. Dialogue gets options to ask someone out, propose, and break up. NPCs with high enough opinions of the player can also ask the player. The same opinion requirements apply to the NPC side; the player is free to decide.

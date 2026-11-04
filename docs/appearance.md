@@ -51,7 +51,7 @@ An NPC's look is split into **body** (skin, eyes, face, hair: fixed for life, ex
 
 ## Inheritance
 
-Children inherit body traits: skin tone, hair color and eye color each from one parent or the other, and often a parent's hairstyle, eyes or mouth. Families visibly look related. Children don't get a skin tone from their homeland's climate; their parents' does that.
+Children inherit body traits: skin tone, hair color and eye color each from one parent or the other, and often a parent's hairstyle, eyes or mouth. Families visibly look related. Children don't get a skin tone from their homeland's climate; their parents' does that. Planned: a player who builds their own look from parts ([player creation](family.md#player-creation-planned)) passes it on to their children the same way; a player with a plain Minecraft skin passes on nothing yet.
 
 ## The art
 

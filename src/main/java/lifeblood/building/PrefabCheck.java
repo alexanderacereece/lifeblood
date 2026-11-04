@@ -61,6 +61,8 @@ public final class PrefabCheck {
 	private static void countSwappable(Block<?> block, int meta, Map<String, Integer> counts) {
 		if (WoodType.of(block) != null) {
 			counts.merge("logs (local wood)", 1, Integer::sum);
+		} else if (WoodType.isPlainPlanks(block)) {
+			counts.merge("plain planks (local wood's planks)", 1, Integer::sum);
 		} else if (StoneFamily.of(block) != null) {
 			counts.merge("stone (local stone)", 1, Integer::sum);
 		} else if (Swaps.isPlaceholder(block, meta)) {

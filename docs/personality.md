@@ -47,6 +47,8 @@ Tiers use the **effective** value (base plus mood, see [mood](#mood)).
 
 ### Generation
 
+Planned: players choose or roll their own axes, quirks and tastes when they start ([player creation](family.md#player-creation-planned)), so compatibility works between NPCs and players exactly as between NPCs.
+
 Each axis is rolled from a bell curve centered on 0 (standard deviation about 0.4, clamped to ±1). About half of all values land in the neutral band, a third lean, and roughly one in six is strong. A typical NPC has one or two strong axes, which is what makes them recognizable.
 
 ### What each axis does

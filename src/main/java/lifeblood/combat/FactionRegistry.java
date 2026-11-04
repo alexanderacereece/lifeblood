@@ -25,7 +25,8 @@ import org.jetbrains.annotations.Nullable;
  * Unaffiliated people have no allegiances and regard everyone as neutral.
  *
  * New worlds start with settlers (default neutral) and raiders (default hostile: they attack anyone not of their own),
- * with an explicit war between the two. Factions can be added at any time, by commands now and by world generation later.
+ * with an explicit war between the two. These two are placeholders until factions are generated with the world:
+ * nothing should depend on them existing. Factions can be added at any time, by commands now and by world generation later.
  */
 public class FactionRegistry extends SavedData {
 	public static final String DATA_ID = "lifeblood_factions";
