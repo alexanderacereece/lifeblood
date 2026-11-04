@@ -1,6 +1,7 @@
 package lifeblood.command;
 
 import static lifeblood.command.CommandSupport.*;
+import static lifeblood.command.CommandTree.branch;
 
 import com.mojang.brigadier.arguments.ArgumentTypeString;
 import com.mojang.brigadier.builder.ArgumentBuilderLiteral;
@@ -32,7 +33,7 @@ import lifeblood.combat.FactionRegistry;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * /npc prefab: saving builds as prefabs and placing them, for making and testing the houses NPCs will live in.
+ * /lb prefab: saving builds as prefabs and placing them, for making and testing the houses NPCs will live in.
  *
  * - save &lt;name&gt; &lt;from&gt; &lt;to&gt;: stand in front of the build, looking at it; that side becomes its front.
  * - place &lt;name&gt; [faction &lt;faction&gt; | colors &lt;primary&gt; &lt;secondary&gt;]: places it a couple of blocks
@@ -51,31 +52,30 @@ final class PrefabCommands {
 	}
 
 	static void addTo(ArgumentBuilderLiteral<CommandSource> root) {
-		root
-			.then(literal("prefab")
-				.then(literal("list").executes(PrefabCommands::list))
-				.then(literal("save")
-					.then(argument("name", ArgumentTypeString.word())
-						.then(argument("from", ArgumentTypeVector3d.vec3d())
-							.then(argument("to", ArgumentTypeVector3d.vec3d()).executes(PrefabCommands::save)))))
-				.then(literal("place")
-					.then(argument("name", ArgumentTypeString.word()).suggests(PREFAB_NAMES)
-						.executes(c -> place(c, null))
-						.then(literal("faction")
-							.then(argument("faction", ArgumentTypeString.word()).suggests(FACTION_NAMES)
-								.executes(c -> place(c, FactionRegistry.get(c.getSource().getWorld()).getColors(requireFaction(c, "faction"))))))
-						.then(literal("colors")
-							.then(argument("primary", ArgumentTypeString.word()).suggests(COLOR_NAMES)
-								.then(argument("secondary", ArgumentTypeString.word()).suggests(COLOR_NAMES)
-									.executes(c -> place(c, new FactionColors(requireColor(c, "primary"), requireColor(c, "secondary")))))))))
-				.then(literal("undo").executes(PrefabCommands::undo))
-				.then(literal("check")
-					.then(argument("name", ArgumentTypeString.word()).suggests(PREFAB_NAMES).executes(PrefabCommands::check))));
+		root.then(branch("prefab", "Saving builds as prefabs and placing them, with wood, stone and colors that fit the place.")
+			.then(branch("prefab list", "The saved prefabs.").executes(PrefabCommands::list))
+			.then(branch("prefab save", "Saves the box between two corners; stand in front of the build looking at it, and that side is its front.")
+				.then(argument("name", ArgumentTypeString.word())
+					.then(argument("from", ArgumentTypeVector3d.vec3d())
+						.then(argument("to", ArgumentTypeVector3d.vec3d()).executes(PrefabCommands::save)))))
+			.then(branch("prefab place", "Places a prefab ahead of you, facing you, in your faction's colors, a faction's, or the ones given.")
+				.then(argument("name", ArgumentTypeString.word()).suggests(PREFAB_NAMES)
+					.executes(c -> place(c, null))
+					.then(branch("prefab place faction", "Paints it in a faction's colors.")
+						.then(argument("faction", ArgumentTypeString.word()).suggests(FACTION_NAMES)
+							.executes(c -> place(c, FactionRegistry.get(c.getSource().getWorld()).getColors(requireFaction(c, "faction"))))))
+					.then(branch("prefab place colors", "Paints it in the colors given: gray becomes the primary, light gray the secondary.")
+						.then(argument("primary", ArgumentTypeString.word()).suggests(COLOR_NAMES)
+							.then(argument("secondary", ArgumentTypeString.word()).suggests(COLOR_NAMES)
+								.executes(c -> place(c, new FactionColors(requireColor(c, "primary"), requireColor(c, "secondary")))))))))
+			.then(branch("prefab undo", "Puts back what your last placement covered.").executes(PrefabCommands::undo))
+			.then(branch("prefab check", "What a prefab holds, what will change with the place, and anything to fix.")
+				.then(argument("name", ArgumentTypeString.word()).suggests(PREFAB_NAMES).executes(PrefabCommands::check))));
 	}
 
 	private static int list(CommandContext<CommandSource> c) {
 		List<String> names = PrefabFiles.list();
-		return reply(c, names.isEmpty() ? "No prefabs saved yet. Build something and use /npc prefab save." : "Prefabs: " + String.join(", ", names) + ".");
+		return reply(c, names.isEmpty() ? "No prefabs saved yet. Build something and use /lb prefab save." : "Prefabs: " + String.join(", ", names) + ".");
 	}
 
 	private static int save(CommandContext<CommandSource> c) throws CommandSyntaxException {

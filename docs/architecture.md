@@ -23,7 +23,7 @@ How the mod is put together, and where new systems plug in. Everything here is i
 | `ownership` | Who placed each block, and who shares what |
 | `building` | Prefabs: saving, turning (`BlockTurns`), material and color swaps (`Swaps`, `WoodType`, `StoneFamily`), surveying a site (`LocalMaterials`), placing, the save check |
 | `world` | World systems: logic that runs per world on its own clock |
-| `command` | `/npc`, one class per area |
+| `command` | `/lb`, one class per area; admin and testing tools only |
 | `interaction` | The bridge from right-clicking an NPC to the screens |
 | `item` | The mod's items (guardian amulet, word book) |
 | `client` | Everything client-only: renderer, textures, screens |
@@ -82,7 +82,7 @@ Routines are in `ai/routine`. A `Schedule` is a list of blocks ("from 6, work; f
 
 Options act on the conversation through `DialogueSession`, which the client's dialogue screen implements. Option actions change the game directly. That works in single-player. For multiplayer, the session is where a message to the server would go: keep game logic in the option actions and out of the screens, and it stays a contained change.
 
-**Speech** is data: `assets/lifeblood/speech/*.speech`, one file per topic, with the format described at the top of `basics.speech`. Extra `.speech` files in the game folder's `npc_speech/` add lines without rebuilding (`/npc speech reload`). Facts and words a line can use are set in `speech/SpeechFacts` and per event. `SpeechFilesTest` checks every condition and `[reference]`: a new fact or word needs adding to its lists.
+**Speech** is data: `assets/lifeblood/speech/*.speech`, one file per topic, with the format described at the top of `basics.speech`. Extra `.speech` files in the game folder's `npc_speech/` add lines without rebuilding (`/lb reload speech`). Facts and words a line can use are set in `speech/SpeechFacts` and per event. `SpeechFilesTest` checks every condition and `[reference]`: a new fact or word needs adding to its lists.
 
 ## Saving and old saves
 
@@ -94,7 +94,12 @@ Each system saves its own data: parts into the NPC's compound, world registers a
 
 ## Commands
 
-`/npc` is assembled in `command/NpcCommand` from one class per area (`NpcBasicsCommands`, `PersonalityCommands`, `FactionCommands`, `FamilyCommands`, `LookCommands`, `OwnershipCommands`), sharing `CommandSupport` for suggestions, finding NPCs and replying. **A new area gets its own class** with an `addTo(root)` method.
+**Commands are tools, never the way to play.** Everything a player does happens through items, screens and NPCs; `/lb` is for admins, building content and testing. It's assembled in `command/LifebloodCommand` from one class per area (`NpcCommands`, `PersonalityCommands` for personality, tastes and social, `FamilyCommands` for family and words, `LookCommands`, `FactionCommands`, `PrefabCommands`, `ToolCommands` for owner, reload and debug), sharing `CommandSupport` for suggestions and replies. **A new area gets its own class** with an `addTo(root)` method.
+
+Rules every command follows:
+- **Made with `CommandTree.branch(path, description)`**, so typing any part of the tree on its own lists what's under it with descriptions (`/lb`, `/lb npc`, `/lb npc heal`), and vanilla `/help lb npc` works too.
+- **Vanilla's shape:** the verb, then who it's for, then values (`/lb npc heal <npcs>`, like `/heal <entities>`). Given who but no value, a command shows the current value (`/lb npc gender @e[type=lifeblood:npc]`), like `/gamerule`. Commands that change several NPCs reply per NPC, or with a count for many.
+- **Targets are `TargetArgument`s**: any vanilla selector (`@s`, `@p`, `@e[type=lifeblood:npc,name=Walter,limit=1,sort=nearest]`), an entity id, or a name (an NPC's, quoted if it has spaces, or a player's). Single targets refuse selectors that could match several, as vanilla does; a name shared by several NPCs picks the nearest.
 
 ## Tests
 

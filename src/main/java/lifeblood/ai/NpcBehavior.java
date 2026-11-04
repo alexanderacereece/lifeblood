@@ -38,7 +38,7 @@ public interface NpcBehavior {
 	default void load(CompoundTag tag) {
 	}
 
-	/** Short human-readable summary, shown by /npc list. */
+	/** Short human-readable summary, shown by /lb npc list. */
 	default String describe() {
 		return this.getId();
 	}

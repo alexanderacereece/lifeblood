@@ -7,6 +7,7 @@ Read this first, then [docs/README.md](docs/README.md) (what exists and what's d
 - **NPCs use the player's exact mechanics.** Same health, speed, healing, reach, digging speed, ammo, recipes. No buffs, no cheating, no magic placement.
 - **Frameworks before features.** A new kind of thing plugs into an existing registry or extension point; a new system gets its own package. Don't special-case.
 - **Look for the lines a change earns.** When NPCs would naturally notice or talk about something new, add speech lines for it in the right `.speech` file, across personalities. Don't force it: plumbing, commands and invisible systems often earn none.
+- **Nothing needs a command to play.** Every feature is reached through items, screens and NPCs. Commands (`/lb`) are only tools for admins, content and testing; a feature that only works by command isn't finished.
 - **Stay multiplayer-ready.** Game logic lives in common code, never in screens. Client-only code is under `client/` and `@Environment(EnvType.CLIENT)`.
 - **No old-save code for now.** Development worlds are disposable until the user says long-term testing worlds have started, so breaking save changes are fine and nothing converts old data. After that, code that reads older saves goes in one `save/SaveUpgrades` class and nowhere else, and is deleted at content 1.0.
 - **Lifeblood is for new worlds.** Nothing guesses about builds made before the mod was added.
@@ -15,7 +16,7 @@ Read this first, then [docs/README.md](docs/README.md) (what exists and what's d
 
 The goal: anyone, including an AI that has never seen the project, can find the code for a behavior, understand it, and fix it.
 
-- **Logical places.** One package per system (see the package table in `docs/architecture.md`). Per-NPC state is an `NpcPart`; world-wide state is a register saved as `SavedData`; periodic world logic is a `WorldSystem`; dialogue options are `DialogueMenus` contributors; commands are a class per area with `addTo(root)`.
+- **Logical places.** One package per system (see the package table in `docs/architecture.md`). Per-NPC state is an `NpcPart`; world-wide state is a register saved as `SavedData`; periodic world logic is a `WorldSystem`; dialogue options are `DialogueMenus` contributors; commands are a class per area with `addTo(root)`, built with `CommandTree.branch` and taking targets as `TargetArgument`s (see the commands section of `docs/architecture.md`).
 - **Reuse.** Use the existing helpers (`BlockOwners`, `Ownership`, `PrefabPlacer`, `Swaps`, `BlockTurns`, `Turns`, `Opinions`, `Kinship`, `PeopleRegistry`, `SpeechFacts`, `CommandSupport`, `NpcInventory`) instead of re-deriving things.
 - **Documented.** Every class has a doc comment saying what it is and how it fits. Constants say what they mean and their unit. Non-obvious rules get a comment saying *why*. Match the surrounding style: plain English, tabs, no abbreviations.
 - **Identifiable.** Names say what things are (`NpcBrawling`, `ChunkOwners`, `putAwayWeaponWhenSafe`). Mixins are named after their target and say why they exist.

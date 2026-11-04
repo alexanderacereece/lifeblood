@@ -3,7 +3,7 @@ package lifeblood.perf;
 import java.util.Locale;
 
 /**
- * Measures how much time NPCs take, in one-second windows, for /npc perf.
+ * Measures how much time NPCs take, in one-second windows, for /lb debug perf.
  * AI time includes everything an NPC decides in a tick; path search time is the part of it spent planning routes.
  */
 public final class NpcProfiler {

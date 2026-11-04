@@ -6,7 +6,7 @@ import lifeblood.social.Memory;
 
 /**
  * Pacing for making friends: one gift per NPC per in-game day, and five chats with an NPC per real-world minute.
- * Each one counts for more because of it. /npc limits off lifts both, for playtesting.
+ * Each one counts for more because of it. /lb debug limits off lifts both, for playtesting.
  */
 public final class SocialLimits {
 	private static final int CHATS_PER_MINUTE = 5;

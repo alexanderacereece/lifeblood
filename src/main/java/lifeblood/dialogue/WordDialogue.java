@@ -21,7 +21,7 @@ import org.jetbrains.annotations.Nullable;
  * NPC or something anyone could say. See docs/speech.md, "Word book".
  *
  * An NPC that likes you at least a little (20+) asks at most once a day, about a quarter of the times you chat
- * (more if curious or a chatterbox, less if taciturn), until it knows 15 words. With /npc limits off it asks half
+ * (more if curious or a chatterbox, less if taciturn), until it knows 15 words. With /lb debug limits off it asks half
  * the time, any day, for testing.
  */
 public final class WordDialogue {

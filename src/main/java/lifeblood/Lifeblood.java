@@ -4,7 +4,7 @@ import net.fabricmc.api.ModInitializer;
 import net.minecraft.core.entity.EntityDispatcher;
 import net.minecraft.core.net.command.CommandManager;
 import net.minecraft.core.util.collection.NamespaceID;
-import lifeblood.command.NpcCommand;
+import lifeblood.command.LifebloodCommand;
 import lifeblood.entity.EntityNPC;
 import lifeblood.item.NpcItems;
 import lifeblood.skin.NpcSkinFiles;
@@ -22,7 +22,7 @@ public class Lifeblood implements ModInitializer {
 	public void onInitialize() {
 		NpcConfig.load();
 		CommonEvents.BEFORE_GAME_START.listen(Key.of(MOD_ID), this::beforeGameStart);
-		CommandManager.registerCommand(new NpcCommand());
+		CommandManager.registerCommand(new LifebloodCommand());
 		NpcItems.init();
 		LOGGER.info("Lifeblood initialized. NPC skins folder: {}", NpcSkinFiles.getDirectory());
 	}

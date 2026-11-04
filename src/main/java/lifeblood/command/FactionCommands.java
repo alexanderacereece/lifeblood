@@ -1,6 +1,7 @@
 package lifeblood.command;
 
 import static lifeblood.command.CommandSupport.*;
+import static lifeblood.command.CommandTree.branch;
 
 import com.mojang.brigadier.arguments.ArgumentTypeString;
 import com.mojang.brigadier.builder.ArgumentBuilderLiteral;
@@ -10,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.net.command.CommandSource;
 import lifeblood.combat.FactionColors;
@@ -19,100 +21,94 @@ import lifeblood.combat.NpcFactions;
 import lifeblood.entity.EntityNPC;
 import lifeblood.social.Opinions;
 
-/** /npc subcommands: factions, their relations, and how NPCs treat you. */
+/** /lb faction: factions, their stances, relations, colors and members. How one NPC treats a player is /lb social stance. */
 final class FactionCommands {
 	static void addTo(ArgumentBuilderLiteral<CommandSource> root) {
-		root
-			.then(literal("faction")
-				.then(literal("list").executes(FactionCommands::listFactions))
-				.then(literal("create")
-					.then(argument("faction", ArgumentTypeString.word())
-						.executes(c -> createFaction(c, FactionRelation.NEUTRAL))
-						.then(argument("stance", ArgumentTypeString.word()).suggests(RELATION_NAMES)
-							.executes(c -> createFaction(c, requireRelation(c, "stance"))))))
-				.then(literal("delete")
-					.then(argument("faction", ArgumentTypeString.word()).suggests(FACTION_NAMES).executes(c -> {
+		root.then(branch("faction", "Factions: their stances, relations, colors and members.")
+			.then(branch("faction list", "Every faction, how it stands toward others, and its players.").executes(FactionCommands::listFactions))
+			.then(branch("faction create", "Makes a faction, with its stance toward anyone without an explicit relation (neutral if left out).")
+				.then(argument("faction", ArgumentTypeString.word())
+					.executes(c -> createFaction(c, FactionRelation.NEUTRAL))
+					.then(argument("stance", ArgumentTypeString.word()).suggests(RELATION_NAMES)
+						.executes(c -> createFaction(c, requireRelation(c, "stance"))))))
+			.then(branch("faction delete", "Removes a faction; its players become unaffiliated, its NPCs still stand together.")
+				.then(argument("faction", ArgumentTypeString.word()).suggests(FACTION_NAMES).executes(c -> {
+					String faction = requireFaction(c, "faction");
+					FactionRegistry.get(c.getSource().getWorld()).remove(faction);
+					return reply(c, "Deleted the " + faction + ". Their players are unaffiliated; their NPCs still stand together.");
+				})))
+			.then(branch("faction default", "Shows or sets a faction's stance toward anyone without an explicit relation.")
+				.then(argument("faction", ArgumentTypeString.word()).suggests(FACTION_NAMES)
+					.executes(c -> {
 						String faction = requireFaction(c, "faction");
-						FactionRegistry.get(c.getSource().getWorld()).remove(faction);
-						return reply(c, "Deleted the " + faction + ". Their players are unaffiliated; their NPCs still stand together.");
-					})))
-				.then(literal("default")
-					.then(argument("faction", ArgumentTypeString.word()).suggests(FACTION_NAMES)
-						.executes(c -> {
-							String faction = requireFaction(c, "faction");
-							FactionRelation stance = FactionRegistry.get(c.getSource().getWorld()).getDefault(faction);
-							return reply(c, "The " + faction + " are " + describe(stance) + " toward anyone without an explicit relation.");
-						})
-						.then(argument("stance", ArgumentTypeString.word()).suggests(RELATION_NAMES).executes(c -> {
-							String faction = requireFaction(c, "faction");
-							FactionRelation stance = requireRelation(c, "stance");
-							FactionRegistry.get(c.getSource().getWorld()).setDefault(faction, stance);
-							return reply(c, "The " + faction + " are now " + describe(stance) + " toward anyone without an explicit relation.");
-						}))))
-				.then(literal("colors")
-					.then(argument("faction", ArgumentTypeString.word()).suggests(FACTION_NAMES)
-						.executes(c -> {
-							String faction = requireFaction(c, "faction");
-							FactionColors colors = FactionRegistry.get(c.getSource().getWorld()).getColors(faction);
-							return reply(c, "The " + faction + "'s colors are " + FactionColors.nameOf(colors.primary()) + " and "
-								+ FactionColors.nameOf(colors.secondary()) + ".");
-						})
-						.then(argument("primary", ArgumentTypeString.word()).suggests(COLOR_NAMES)
-							.then(argument("secondary", ArgumentTypeString.word()).suggests(COLOR_NAMES).executes(c -> {
-								String faction = requireFaction(c, "faction");
-								FactionColors colors = new FactionColors(requireColor(c, "primary"), requireColor(c, "secondary"));
-								FactionRegistry.get(c.getSource().getWorld()).setColors(faction, colors);
-								return reply(c, "The " + faction + "'s colors are now " + FactionColors.nameOf(colors.primary()) + " and "
-									+ FactionColors.nameOf(colors.secondary()) + ".");
-							})))))
-				.then(literal("relation")
-					.then(argument("a", ArgumentTypeString.word()).suggests(FACTION_NAMES)
-						.then(argument("b", ArgumentTypeString.word()).suggests(FACTION_NAMES)
-							.executes(FactionCommands::showFactionRelation)
-							.then(argument("relation", ArgumentTypeString.word()).suggests(RELATION_OR_DEFAULT_NAMES).executes(c -> {
-								String a = requireFaction(c, "a");
-								String b = requireFaction(c, "b");
-								if (a.equals(b)) {
-									throw error("A faction is always allied with itself.");
-								}
-
-								FactionRelation relation = requireRelationOrDefault(c, "relation");
-								FactionRegistry.get(c.getSource().getWorld()).setExplicit(a, b, relation);
-								if (relation == null) {
-									return reply(c, "The " + a + " and the " + b + " now treat each other by their default stances.");
-								}
-
-								return reply(c, "The " + a + " and the " + b + " are now " + describe(relation) + ".");
-							})))))
-				.then(literal("set")
-					.then(npcArgument()
-						.then(argument("faction", ArgumentTypeString.word()).suggests(FACTION_OR_NONE_NAMES).executes(c -> {
-							EntityNPC npc = findNpc(c);
-							String faction = requireFactionOrNone(c, "faction");
-							npc.setFaction(faction);
-							return reply(c, faction != null ? npc.nickname + " has joined the " + faction + "." : npc.nickname + " is now unaffiliated.");
-						}))))
-				.then(literal("join")
-					.then(argument("faction", ArgumentTypeString.word()).suggests(FACTION_OR_NONE_NAMES).executes(c -> {
-						Player player = requirePlayer(c.getSource());
-						String faction = requireFactionOrNone(c, "faction");
-						FactionRegistry.get(c.getSource().getWorld()).setPlayerFaction(player.uuid, faction);
-						return reply(c, faction != null ? "You have joined the " + faction + "." : "You are now unaffiliated.");
+						FactionRelation stance = FactionRegistry.get(c.getSource().getWorld()).getDefault(faction);
+						return reply(c, "The " + faction + " are " + describe(stance) + " toward anyone without an explicit relation.");
+					})
+					.then(argument("stance", ArgumentTypeString.word()).suggests(RELATION_NAMES).executes(c -> {
+						String faction = requireFaction(c, "faction");
+						FactionRelation stance = requireRelation(c, "stance");
+						FactionRegistry.get(c.getSource().getWorld()).setDefault(faction, stance);
+						return reply(c, "The " + faction + " are now " + describe(stance) + " toward anyone without an explicit relation.");
 					}))))
-			.then(literal("relation")
-				.then(npcArgument()
-					.executes(FactionCommands::showPersonalRelation)
-					.then(argument("relation", ArgumentTypeString.word()).suggests(RELATION_OR_DEFAULT_NAMES).executes(c -> {
-						Player player = requirePlayer(c.getSource());
-						EntityNPC npc = findNpc(c);
-						FactionRelation relation = requireRelationOrDefault(c, "relation");
-						npc.relations.set(player, relation);
-						if (relation == null) {
-							return reply(c, npc.nickname + " now sees you as its faction does: " + describePersonal(NpcFactions.regard(npc, player)) + ".");
+			.then(branch("faction relation", "Shows or sets how two factions treat each other; default removes the explicit relation.")
+				.then(argument("a", ArgumentTypeString.word()).suggests(FACTION_NAMES)
+					.then(argument("b", ArgumentTypeString.word()).suggests(FACTION_NAMES)
+						.executes(FactionCommands::showFactionRelation)
+						.then(argument("relation", ArgumentTypeString.word()).suggests(RELATION_OR_DEFAULT_NAMES).executes(c -> {
+							String a = requireFaction(c, "a");
+							String b = requireFaction(c, "b");
+							if (a.equals(b)) {
+								throw error("A faction is always allied with itself.");
+							}
+
+							FactionRelation relation = requireRelationOrDefault(c, "relation");
+							FactionRegistry.get(c.getSource().getWorld()).setExplicit(a, b, relation);
+							if (relation == null) {
+								return reply(c, "The " + a + " and the " + b + " now treat each other by their default stances.");
+							}
+
+							return reply(c, "The " + a + " and the " + b + " are now " + describe(relation) + ".");
+						})))))
+			.then(branch("faction colors", "Shows or sets a faction's primary and secondary colors, used on its buildings.")
+				.then(argument("faction", ArgumentTypeString.word()).suggests(FACTION_NAMES)
+					.executes(c -> {
+						String faction = requireFaction(c, "faction");
+						FactionColors colors = FactionRegistry.get(c.getSource().getWorld()).getColors(faction);
+						return reply(c, "The " + faction + "'s colors are " + FactionColors.nameOf(colors.primary()) + " and "
+							+ FactionColors.nameOf(colors.secondary()) + ".");
+					})
+					.then(argument("primary", ArgumentTypeString.word()).suggests(COLOR_NAMES)
+						.then(argument("secondary", ArgumentTypeString.word()).suggests(COLOR_NAMES).executes(c -> {
+							String faction = requireFaction(c, "faction");
+							FactionColors colors = new FactionColors(requireColor(c, "primary"), requireColor(c, "secondary"));
+							FactionRegistry.get(c.getSource().getWorld()).setColors(faction, colors);
+							return reply(c, "The " + faction + "'s colors are now " + FactionColors.nameOf(colors.primary()) + " and "
+								+ FactionColors.nameOf(colors.secondary()) + ".");
+						})))))
+			.then(branch("faction join", "Puts NPCs or players in a faction, or none to leave theirs.")
+				.then(peopleArgument("targets")
+					.then(argument("faction", ArgumentTypeString.word()).suggests(FACTION_OR_NONE_NAMES).executes(c -> {
+						String faction = requireFactionOrNone(c, "faction");
+						FactionRegistry registry = FactionRegistry.get(c.getSource().getWorld());
+						List<Entity> targets = getPeople(c, "targets");
+						for (Entity target : targets) {
+							if (target instanceof EntityNPC npc) {
+								npc.setFaction(faction);
+							} else if (target instanceof Player player) {
+								registry.setPlayerFaction(player.uuid, faction);
+							}
+
+							if (targets.size() <= 3) {
+								reply(c, faction != null ? nameOf(target) + " has joined the " + faction + "." : nameOf(target) + " is now unaffiliated.");
+							}
 						}
 
-						return reply(c, npc.nickname + " is now " + describePersonal(relation) + ".");
-					}))));
+						if (targets.size() > 3) {
+							reply(c, faction != null ? targets.size() + " have joined the " + faction + "." : targets.size() + " are now unaffiliated.");
+						}
+
+						return targets.size();
+					})))));
 	}
 
 	private static int listFactions(CommandContext<CommandSource> c) {
@@ -169,38 +165,6 @@ final class FactionCommands {
 
 		return reply(c, "No explicit relation: the " + a + " are " + describe(registry.regard(a, b)) + " toward the " + b
 			+ ", who are " + describe(registry.regard(b, a)) + " toward them (their default stances).");
-	}
-
-	private static int showPersonalRelation(CommandContext<CommandSource> c) throws CommandSyntaxException {
-		Player player = requirePlayer(c.getSource());
-		EntityNPC npc = findNpc(c);
-		FactionRelation personal = npc.relations.get(player);
-		FactionRelation overall = NpcFactions.regard(npc, player);
-		float opinion = Opinions.of(npc, player);
-		String member = npc.getFaction() != null ? "one of the " + npc.getFaction() : "someone unaffiliated";
-		String reason;
-		if (personal != null) {
-			reason = "set by command";
-		} else if (opinion >= Opinions.ALLY_THRESHOLD || opinion <= Opinions.hostileThreshold(npc)) {
-			reason = "because its opinion of you is " + Math.round(opinion);
-		} else {
-			reason = "as " + member + ", toward someone " + factionLabel(FactionRegistry.get(c.getSource().getWorld()).getPlayerFaction(player.uuid));
-		}
-
-		reply(c, npc.nickname + " is " + describePersonal(overall) + " (" + reason + ").");
-		if (overall == FactionRelation.HOSTILE && !player.getGamemode().hasHostileMobs()) {
-			reply(c, "You're in a game mode monsters ignore, so " + npc.nickname + " won't attack you either.");
-		}
-
-		return 1;
-	}
-
-	private static String describePersonal(FactionRelation relation) {
-		return switch (relation) {
-			case ALLY -> "your ally";
-			case NEUTRAL -> "neutral toward you";
-			case HOSTILE -> "hostile toward you";
-		};
 	}
 
 	private FactionCommands() {

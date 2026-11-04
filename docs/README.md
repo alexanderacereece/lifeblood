@@ -46,6 +46,7 @@ Each step is useful on its own and proves the next:
 - NPCs use the player's exact mechanics: health, speed, healing, ammo. No buffs.
 - New systems get speech lines where NPCs would naturally talk about them, never forced.
 - No code reads old saves while development worlds are disposable. Once long-term worlds start, it lives in one place and goes at content 1.0.
+- Nothing needs a command to play: everything is reached through items, screens and NPCs. Commands are admin and testing tools, all under `/lb`.
 - The build stays ready for multiplayer where that doesn't get in the way of the main vision.
 - Lifeblood is meant to start with a new world; builds from before it was added aren't protected.
 - One new axis, ambition, plus the homebody and wanderer quirks, for life choices. No more than that.
@@ -65,6 +66,7 @@ Each step is useful on its own and proves the next:
 
 - **Parenting:** both parents, NPC or player, shape who a child becomes, by nature at birth and by upbringing as it grows ([family](family.md#parenting-planned)).
 - **Player creation:** players choose their own axes, quirks and tastes, and can take a skin built from parts, so opinions and inheritance work for them as for NPCs ([family](family.md#player-creation-planned)).
+- **Reachable without commands:** NPCs only enter the world by `/lb npc summon` or being born until generated homesteads place them; players join factions only by command until faction membership happens through NPCs and play; player creation will be a screen.
 - **Generated factions:** settlers and raiders are placeholders until factions are generated with the world; nothing should depend on them existing.
 - Whether the player can talk an NPC into or out of a life choice.
 - What BTA's trommel yields, and whether sifting is worth a job.

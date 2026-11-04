@@ -223,7 +223,7 @@ Only the first gift to an NPC each in-game day moves their opinion; later ones t
 - a gift is worth up to about +11 depending on how much they like it, lasting two weeks, up to 14 at once;
 - a chat is worth +2, lasting three days, up to 10 at once.
 
-Checkpoints: a daily liked gift plus some chatting makes most NPCs friends (50) in about three days, and close friends (80+) in about two weeks, which is where romance should become possible. `/npc limits off` lifts both limits for playtesting.
+Checkpoints: a daily liked gift plus some chatting makes most NPCs friends (50) in about three days, and close friends (80+) in about two weeks, which is where romance should become possible. `/lb debug limits off` lifts both limits for playtesting.
 
 ### Standing factors
 
@@ -294,7 +294,7 @@ Combat: opinion overrides the faction only at the extremes.
 - At -60 or less, the NPC treats them as hostile. Hotheads turn hostile at -45, zen NPCs at -80.
 - In between, the faction decides, as it does now.
 
-The existing `/npc relation` command stays as a debug override, implemented as a strong permanent memory.
+The existing `/lb social stance` command stays as a debug override, implemented as a strong permanent memory.
 
 ### Brawls
 

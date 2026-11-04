@@ -15,7 +15,7 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * Puts a {@link Prefab} into the world all at once, turned and with its materials swapped. This is how the world
- * itself places a build (generated homesteads, the /npc prefab command); NPCs building by hand will place block by
+ * itself places a build (generated homesteads, the /lb prefab command); NPCs building by hand will place block by
  * block under the player's rules instead (see docs/building.md).
  *
  * Blocks are written without neighbor updates, so nothing falls, pops off or reshapes while the build is half placed,

@@ -1,6 +1,7 @@
 package lifeblood.command;
 
 import static lifeblood.command.CommandSupport.*;
+import static lifeblood.command.CommandTree.branch;
 
 import com.mojang.brigadier.arguments.ArgumentTypeString;
 import com.mojang.brigadier.builder.ArgumentBuilderLiteral;
@@ -10,82 +11,62 @@ import java.io.File;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import net.minecraft.core.Global;
 import net.minecraft.core.net.command.CommandSource;
 import lifeblood.appearance.Appearance;
 import lifeblood.appearance.AppearanceLayer;
 import lifeblood.appearance.PartCatalog;
-import lifeblood.client.AppearanceTextures;
-import lifeblood.client.NpcSkins;
 import lifeblood.entity.EntityNPC;
 import lifeblood.entity.SkinModel;
 import lifeblood.skin.NpcSkinFiles;
 
-/** /npc subcommands: how NPCs look: skin files, appearance parts and palettes. */
+/** /lb look: how NPCs look: appearance parts, palettes and skin files. Reloading them is under /lb reload. */
 final class LookCommands {
 	static void addTo(ArgumentBuilderLiteral<CommandSource> root) {
-		root
-			.then(literal("skin")
-				.then(npcArgument()
-					.then(argument("skin", ArgumentTypeString.word())
-						.suggests(SKIN_NAMES)
-						.executes(c -> setSkin(c, SkinModel.AUTO))
-						.then(argument("model", ArgumentTypeString.word())
-							.suggests(SKIN_MODELS)
-							.executes(c -> {
-								String modelName = ArgumentTypeString.getString(c, "model");
-								SkinModel model = SkinModel.byName(modelName);
-								if (model == null) {
-									throw error("Unknown skin model '" + modelName + "'. Use auto, wide or slim.");
-								}
-
-								return setSkin(c, model);
-							})))))
-			.then(literal("look")
-				.then(npcArgument()
-					.executes(LookCommands::describeLook)
-					.then(literal("randomize").executes(c -> {
-						EntityNPC npc = findNpc(c);
+		root.then(branch("look", "How NPCs look: appearance parts, palettes and skin files.")
+			.then(branch("look show", "The parts and colors an NPC's look is built from.")
+				.then(npcArgument("npc").executes(LookCommands::describeLook)))
+			.then(branch("look randomize", "Gives NPCs a new random look from the parts available.")
+				.then(npcsArgument("npcs").executes(c -> {
+					List<EntityNPC> npcs = getNpcs(c, "npcs");
+					for (EntityNPC npc : npcs) {
 						npc.setAppearance(Appearance.random(PartCatalog.get(), npc.getGender(), npc.getRandom(), npc.life.getHomeWarmth()));
 						if (npc.getAppearance().isEmpty()) {
 							throw error("There are no base parts yet. Put some in " + new File(PartCatalog.getDirectory(), "base"));
 						}
 
-						reply(c, npc.nickname + " has a new look.");
 						if (!npc.getSkin().isEmpty()) {
-							reply(c, "It has a skin file set, which shows instead. /npc skin " + npc.nickname + " default to use the look.");
+							reply(c, npc.nickname + " has a skin file set, which shows instead; /lb look skin " + npc.nickname + " none uses the look.");
 						}
+					}
 
-						return 1;
-					}))
+					return replyEach(c, npcs, name -> name + " has a new look.", "%d NPCs have a new look.");
+				})))
+			.then(branch("look set", "Puts a part (or none) on one layer of an NPC's look, with a palette, e.g. hair bob auburn.")
+				.then(npcArgument("npc")
 					.then(argument("layer", ArgumentTypeString.word()).suggests(LAYER_NAMES)
 						.then(argument("part", ArgumentTypeString.word()).suggests(PART_NAMES)
 							.executes(c -> setLook(c, ""))
 							.then(argument("palette", ArgumentTypeString.word()).suggests(PALETTE_NAMES)
 								.executes(c -> setLook(c, ArgumentTypeString.getString(c, "palette"))))))))
-			.then(literal("parts")
-				.executes(LookCommands::listParts)
-				.then(literal("reload").executes(c -> {
-					PartCatalog catalog = PartCatalog.reload();
-					if (!Global.isServer) {
-						AppearanceTextures.reload();
-					}
+			.then(branch("look skin", "Gives NPCs a whole skin file from npc_skins (or none, to show their look), with arm width.")
+				.then(npcsArgument("npcs")
+					.then(argument("skin", ArgumentTypeString.word()).suggests(SKIN_OR_NONE_NAMES)
+						.executes(c -> setSkin(c, SkinModel.AUTO))
+						.then(argument("model", ArgumentTypeString.word()).suggests(SKIN_MODELS).executes(c -> {
+							String modelName = ArgumentTypeString.getString(c, "model");
+							SkinModel model = SkinModel.byName(modelName);
+							if (model == null) {
+								throw error("Unknown skin model '" + modelName + "'. Use auto, wide or slim.");
+							}
 
-					return reply(c, "Loaded " + catalog.partCount() + " parts and " + catalog.paletteCount() + " palettes.");
-				})))
-			.then(literal("skins")
-				.executes(LookCommands::listSkins)
-				.then(literal("reload").executes(c -> {
-					if (!Global.isServer) {
-						NpcSkins.reload();
-					}
-
-					return reply(c, "NPC skins will be reloaded from " + NpcSkinFiles.getDirectory());
-				})));
+							return setSkin(c, model);
+						})))))
+			.then(branch("look parts", "Lists the appearance parts and palettes.").executes(LookCommands::listParts))
+			.then(branch("look skins", "Lists the skin files.").executes(LookCommands::listSkins)));
 	}
 
 	private static int describeLook(CommandContext<CommandSource> c) throws CommandSyntaxException {
-		EntityNPC npc = findNpc(c);
+		EntityNPC npc = getNpc(c, "npc");
 		Appearance appearance = Appearance.decode(npc.getAppearance());
 		if (appearance.isEmpty()) {
 			return reply(c, npc.nickname + " has no look built from parts" + (npc.getSkin().isEmpty() ? "." : " (it uses the skin '" + npc.getSkin() + "')."));
@@ -102,9 +83,9 @@ final class LookCommands {
 		return 1;
 	}
 
-	/** /npc look <npc> <layer> <part|none> [palette]: hair and facial hair keep sharing a color. */
+	/** /lb look set &lt;npc&gt; &lt;layer&gt; &lt;part|none&gt; [palette]: hair and facial hair keep sharing a color. */
 	private static int setLook(CommandContext<CommandSource> c, String palette) throws CommandSyntaxException {
-		EntityNPC npc = findNpc(c);
+		EntityNPC npc = getNpc(c, "npc");
 		AppearanceLayer layer = AppearanceLayer.byName(ArgumentTypeString.getString(c, "layer"));
 		if (layer == null) {
 			throw error("Unknown layer. Layers: base, eyes, mouth, facial_hair, bottom, top, hair, accessory.");
@@ -151,16 +132,20 @@ final class LookCommands {
 	}
 
 	private static int setSkin(CommandContext<CommandSource> c, SkinModel model) throws CommandSyntaxException {
-		EntityNPC npc = findNpc(c);
-		String skin = ArgumentTypeString.getString(c, "skin");
-		npc.setSkin(skin);
-		npc.setSkinModel(model);
-		String message = npc.nickname + " now uses skin '" + skin + "' (" + model.name().toLowerCase(Locale.ROOT) + " arms).";
-		if (!NpcSkinFiles.exists(skin)) {
-			message += " Note: " + skin + ".png is not in " + NpcSkinFiles.getDirectory();
+		String given = ArgumentTypeString.getString(c, "skin");
+		String skin = given.equalsIgnoreCase(NONE_KEYWORD) ? "" : given;
+		List<EntityNPC> npcs = getNpcs(c, "npcs");
+		for (EntityNPC npc : npcs) {
+			npc.setSkin(skin);
+			npc.setSkinModel(model);
 		}
 
-		return reply(c, message);
+		if (!skin.isEmpty() && !NpcSkinFiles.exists(skin)) {
+			reply(c, "Note: " + skin + ".png is not in " + NpcSkinFiles.getDirectory());
+		}
+
+		String what = skin.isEmpty() ? "shows its look from parts again" : "now uses the skin '" + skin + "' (" + model.name().toLowerCase(Locale.ROOT) + " arms)";
+		return replyEach(c, npcs, name -> name + " " + what + ".", "%d NPCs: " + what + ".");
 	}
 
 	private static int listSkins(CommandContext<CommandSource> c) {

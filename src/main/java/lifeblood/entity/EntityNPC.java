@@ -98,7 +98,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	public final NpcNavigator navigator = new NpcNavigator(this);
 	public final NpcInventory inventory = new NpcInventory(this);
 	public final NpcPersonality personality = new NpcPersonality();
-	/** Debug overrides of how the NPC regards individual players, set by /npc relation; they beat opinions and factions. */
+	/** Debug overrides of how the NPC regards individual players, set by /lb social stance; they beat opinions and factions. */
 	public final NpcRelations relations = new NpcRelations();
 	public final NpcMemories memories = new NpcMemories();
 	public final NpcVoice voice = new NpcVoice(this);

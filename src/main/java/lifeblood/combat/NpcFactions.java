@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * How an NPC regards another person, combining every layer:
- * 1. a debug override set by /npc relation (players only) beats everything;
+ * 1. a debug override set by /lb social stance (players only) beats everything;
  * 2. its opinion of them, at the extremes: a close enough friend is an ally, a bitter enough enemy is hostile;
  * 3. otherwise its faction decides (see {@link FactionRegistry#regard}), with players counting as members of
  *    whatever faction they joined.

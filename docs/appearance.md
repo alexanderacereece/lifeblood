@@ -55,7 +55,7 @@ Children inherit body traits: skin tone, hair color and eye color each from one 
 
 ## The art
 
-Parts live in two places with the same layout: bundled with the mod (`assets/lifeblood/parts/`) and in the game folder's `npc_parts/`, which can be added to without rebuilding (`/npc parts reload` picks up changes). Game-folder files win over bundled ones with the same name.
+Parts live in two places with the same layout: bundled with the mod (`assets/lifeblood/parts/`) and in the game folder's `npc_parts/`, which can be added to without rebuilding (`/lb reload parts` picks up changes). Game-folder files win over bundled ones with the same name.
 
 - `<layer>/<name>.png`: a 64x64 skin-format part anyone can roll. Layer folders: `base`, `eyes`, `mouth`, `facial_hair`, `bottom`, `top`, `outfit`, `hair`, `accessory` (drawn in that order).
 - `<layer>/male/<name>.png`, `<layer>/female/<name>.png`: parts only rolled for that gender (a command can still put them on anyone).
@@ -64,4 +64,4 @@ Parts live in two places with the same layout: bundled with the mod (`assets/lif
 
 Whether a part is recolorable isn't declared anywhere: any of the five grays in it get recolored, and everything else is drawn as is. The mouth is recolored with the base's skin palette and facial hair with the hair's, so they always match. Old-style 64x32 parts work too: they're upgraded like old skins (left limbs mirrored from the right, and a completely filled hat area cleared).
 
-Random looks: every NPC without a skin file gets one from the parts available, rolled once (NPCs from before any parts existed get one when parts are added). Hair is almost always present (92% for men, 99% for women), facial hair 35% for men, an accessory 15%. Hair and facial hair share a color. A skin file set with `/npc skin` still wins over the look.
+Random looks: every NPC without a skin file gets one from the parts available, rolled once (NPCs from before any parts existed get one when parts are added). Hair is almost always present (92% for men, 99% for women), facial hair 35% for men, an accessory 15%. Hair and facial hair share a color. A skin file set with `/lb look skin` still wins over the look.

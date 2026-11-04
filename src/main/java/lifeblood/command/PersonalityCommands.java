@@ -1,6 +1,7 @@
 package lifeblood.command;
 
 import static lifeblood.command.CommandSupport.*;
+import static lifeblood.command.CommandTree.branch;
 
 import com.mojang.brigadier.arguments.ArgumentTypeInteger;
 import com.mojang.brigadier.arguments.ArgumentTypeString;
@@ -18,7 +19,9 @@ import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.item.Item;
 import net.minecraft.core.item.ItemStack;
 import net.minecraft.core.net.command.CommandSource;
-import lifeblood.dialogue.SocialLimits;
+import lifeblood.combat.FactionRegistry;
+import lifeblood.combat.FactionRelation;
+import lifeblood.combat.NpcFactions;
 import lifeblood.entity.EntityNPC;
 import lifeblood.personality.NpcPersonality;
 import lifeblood.personality.Quirk;
@@ -30,24 +33,31 @@ import lifeblood.social.Memory;
 import lifeblood.social.MemoryType;
 import lifeblood.social.Opinions;
 import lifeblood.speech.SpeechFacts;
-import lifeblood.speech.SpeechLibrary;
 
-/** /npc subcommands: personality, tastes, opinions, mood, memories and speech. */
+/**
+ * Who NPCs are and how they feel:
+ * - /lb personality: trait axes and quirks;
+ * - /lb tastes: loves and hates (foods, things, weather, places, seasons);
+ * - /lb social: opinions, mood, memories, and how an NPC treats someone.
+ */
 final class PersonalityCommands {
+	private PersonalityCommands() {
+	}
+
 	static void addTo(ArgumentBuilderLiteral<CommandSource> root) {
-		root
-			.then(literal("personality")
-				.then(npcArgument()
-					.executes(PersonalityCommands::showPersonality)
-					.then(literal("randomize").executes(c -> {
-						EntityNPC npc = findNpc(c);
-						npc.personality.randomize(npc.getRandom());
-						reply(c, npc.nickname + " is someone new.");
-						return showPersonality(c);
-					}))
+		root.then(branch("personality", "Trait axes and quirks.")
+			.then(branch("personality show", "An NPC's trait axes, quirks and strongest tastes.")
+				.then(npcArgument("npc").executes(PersonalityCommands::showPersonality)))
+			.then(branch("personality randomize", "Rolls NPCs a whole new personality.")
+				.then(npcsArgument("npcs").executes(c -> {
+					List<EntityNPC> npcs = getNpcs(c, "npcs");
+					npcs.forEach(npc -> npc.personality.randomize(npc.getRandom()));
+					return replyEach(c, npcs, name -> name + " is someone new.", "%d NPCs are someone new.");
+				})))
+			.then(branch("personality set", "Sets a trait axis from -100 (the first pole) to 100 (the second), e.g. courage 80.")
+				.then(npcsArgument("npcs")
 					.then(argument("axis", ArgumentTypeString.word()).suggests(AXIS_NAMES)
 						.then(argument("value", ArgumentTypeInteger.integer(-100, 100)).executes(c -> {
-							EntityNPC npc = findNpc(c);
 							String name = ArgumentTypeString.getString(c, "axis");
 							TraitAxis axis = TraitAxis.byName(name);
 							if (axis == null) {
@@ -55,121 +65,129 @@ final class PersonalityCommands {
 							}
 
 							int value = c.getArgument("value", Integer.class);
-							npc.personality.set(axis, value / 100.0F);
-							return reply(c, npc.nickname + "'s " + axis.displayName() + " is now " + describeAxis(npc.personality, axis) + ".");
+							List<EntityNPC> npcs = getNpcs(c, "npcs");
+							for (EntityNPC npc : npcs) {
+								npc.personality.set(axis, value / 100.0F);
+							}
+
+							return replyEach(c, npcs, npc -> npc + "'s " + axis.displayName() + " is now " + value + ".",
+								"%d NPCs' " + axis.displayName() + " is now " + value + ".");
 						})))))
-			.then(literal("quirk")
-				.then(npcArgument()
-					.then(literal("add")
+			.then(branch("personality quirk", "Gives or takes away quirks.")
+				.then(branch("personality quirk add", "Gives NPCs a quirk, if it doesn't clash with one they have.")
+					.then(npcsArgument("npcs")
 						.then(argument("quirk", ArgumentTypeString.word()).suggests(QUIRK_NAMES).executes(c -> {
-							EntityNPC npc = findNpc(c);
 							Quirk quirk = requireQuirk(c);
-							if (npc.personality.has(quirk)) {
-								throw error(npc.nickname + " is already " + quirk.displayName() + ".");
+							int changed = 0;
+							for (EntityNPC npc : getNpcs(c, "npcs")) {
+								if (npc.personality.has(quirk)) {
+									reply(c, npc.nickname + " is already " + quirk.displayName() + ".");
+								} else if (!npc.personality.addQuirk(quirk)) {
+									reply(c, npc.personality.getQuirks().size() >= NpcPersonality.MAX_QUIRKS
+										? npc.nickname + " already has " + NpcPersonality.MAX_QUIRKS + " quirks."
+										: quirk.displayName() + " clashes with " + npc.nickname + "'s " + quirk.getOpposite().displayName() + ".");
+								} else {
+									reply(c, npc.nickname + " is now " + quirk.displayName() + ".");
+									changed++;
+								}
 							}
 
-							if (!npc.personality.addQuirk(quirk)) {
-								throw error(npc.personality.getQuirks().size() >= NpcPersonality.MAX_QUIRKS
-									? npc.nickname + " already has " + NpcPersonality.MAX_QUIRKS + " quirks."
-									: quirk.displayName() + " clashes with " + quirk.getOpposite().displayName() + ".");
-							}
-
-							return reply(c, npc.nickname + " is now " + quirk.displayName() + ".");
-						})))
-					.then(literal("remove")
+							return changed;
+						}))))
+				.then(branch("personality quirk remove", "Takes a quirk away from NPCs.")
+					.then(npcsArgument("npcs")
 						.then(argument("quirk", ArgumentTypeString.word()).suggests(QUIRK_NAMES).executes(c -> {
-							EntityNPC npc = findNpc(c);
 							Quirk quirk = requireQuirk(c);
-							if (!npc.personality.removeQuirk(quirk)) {
-								throw error(npc.nickname + " isn't " + quirk.displayName() + ".");
+							int changed = 0;
+							for (EntityNPC npc : getNpcs(c, "npcs")) {
+								if (npc.personality.removeQuirk(quirk)) {
+									reply(c, npc.nickname + " is no longer " + quirk.displayName() + ".");
+									changed++;
+								} else {
+									reply(c, npc.nickname + " isn't " + quirk.displayName() + ".");
+								}
 							}
 
-							return reply(c, npc.nickname + " is no longer " + quirk.displayName() + ".");
-						})))))
-			.then(literal("likes")
-				.then(npcArgument()
-					.executes(PersonalityCommands::showLikes)
-					.then(literal("reveal").executes(c -> {
-						EntityNPC npc = findNpc(c);
-						npc.voice.revealAll();
-						return reply(c, npc.nickname + "'s loves and hates now show on their profile.");
-					}))))
-			.then(literal("like")
-				.then(npcArgument()
+							return changed;
+						}))))));
+
+		root.then(branch("tastes", "What NPCs love and hate.")
+			.then(branch("tastes show", "An NPC's loves and hates in full, and what it thinks of what you're holding.")
+				.then(npcArgument("npc").executes(PersonalityCommands::showTastes)))
+			.then(branch("tastes reveal", "Shows NPCs' loves and hates on their profiles without having to hear about them.")
+				.then(npcsArgument("npcs").executes(c -> {
+					List<EntityNPC> npcs = getNpcs(c, "npcs");
+					npcs.forEach(npc -> npc.voice.revealAll());
+					return replyEach(c, npcs, name -> name + "'s loves and hates now show on their profile.", "%d NPCs' loves and hates now show.");
+				})))
+			.then(branch("tastes item", "Shows or sets, -100 to 100, what an NPC thinks of the item you're holding.")
+				.then(npcArgument("npc")
 					.executes(c -> {
-						EntityNPC npc = findNpc(c);
+						EntityNPC npc = getNpc(c, "npc");
 						Item item = requireHeldItem(c);
-						return reply(c, npc.nickname + " " + describeLike(npc.personality.tastes.like(item)) + " " + itemName(item)
-							+ " (" + Math.round(npc.personality.tastes.like(item) * 100) + ").");
+						float like = npc.personality.tastes.like(item);
+						return reply(c, npc.nickname + " " + describeLike(like) + " " + itemName(item) + " (" + Math.round(like * 100) + ").");
 					})
-					.then(argument("like", ArgumentTypeInteger.integer(-100, 100)).executes(c -> {
-						EntityNPC npc = findNpc(c);
+					.then(argument("value", ArgumentTypeInteger.integer(-100, 100)).executes(c -> {
+						EntityNPC npc = getNpc(c, "npc");
 						Item item = requireHeldItem(c);
-						npc.personality.tastes.set(item, c.getArgument("like", Integer.class) / 100.0F);
+						npc.personality.tastes.set(item, c.getArgument("value", Integer.class) / 100.0F);
 						return reply(c, npc.nickname + " now " + describeLike(npc.personality.tastes.like(item)) + " " + itemName(item) + ".");
-					}))
-					.then(surroundingsLike(Surroundings.Kind.WEATHER))
-					.then(surroundingsLike(Surroundings.Kind.BIOME))
-					.then(surroundingsLike(Surroundings.Kind.SEASON))))
-			.then(literal("opinion")
-				.then(npcArgument()
+					}))))
+			.then(surroundingsTaste(Surroundings.Kind.WEATHER))
+			.then(surroundingsTaste(Surroundings.Kind.BIOME))
+			.then(surroundingsTaste(Surroundings.Kind.SEASON)));
+
+		root.then(branch("social", "Opinions, mood, memories, and how NPCs treat people.")
+			.then(branch("social opinion", "What an NPC thinks of someone (you, if no one is given), and why.")
+				.then(npcArgument("npc")
 					.executes(c -> showOpinion(c, requirePlayer(c.getSource())))
-					.then(argument("target", ArgumentTypeString.string()).suggests(TARGET_NAMES)
-						.executes(c -> showOpinion(c, findTarget(c))))))
-			.then(literal("mood")
-				.then(npcArgument().executes(PersonalityCommands::showMood)))
-			.then(literal("remember")
-				.then(npcArgument()
+					.then(personArgument("about").executes(c -> showOpinion(c, getPerson(c, "about"))))))
+			.then(branch("social mood", "An NPC's mood and the memories behind it.")
+				.then(npcArgument("npc").executes(PersonalityCommands::showMood)))
+			.then(branch("social remember", "Gives NPCs a memory, about someone (you, if no one is given) if it's that kind.")
+				.then(npcsArgument("npcs")
 					.then(argument("memory", ArgumentTypeString.word()).suggests(MEMORY_NAMES)
 						.executes(c -> addMemory(c, requirePlayer(c.getSource())))
-						.then(argument("target", ArgumentTypeString.string()).suggests(TARGET_NAMES)
-							.executes(c -> addMemory(c, findTarget(c)))))))
-			.then(literal("forget")
-				.then(npcArgument()
+						.then(personArgument("about").executes(c -> addMemory(c, getPerson(c, "about")))))))
+			.then(branch("social forget", "Wipes NPCs' memories, or only those about someone.")
+				.then(npcsArgument("npcs")
 					.executes(c -> {
-						EntityNPC npc = findNpc(c);
-						npc.memories.clear();
-						return reply(c, npc.nickname + " has forgotten everything.");
+						List<EntityNPC> npcs = getNpcs(c, "npcs");
+						npcs.forEach(npc -> npc.memories.clear());
+						return replyEach(c, npcs, name -> name + " has forgotten everything.", "%d NPCs have forgotten everything.");
 					})
-					.then(argument("target", ArgumentTypeString.string()).suggests(TARGET_NAMES).executes(c -> {
-						EntityNPC npc = findNpc(c);
-						Entity target = findTarget(c);
-						UUID id = Opinions.idOf(target);
+					.then(personArgument("about").executes(c -> {
+						Entity about = getPerson(c, "about");
+						UUID id = Opinions.idOf(about);
+						List<EntityNPC> npcs = getNpcs(c, "npcs");
 						if (id != null) {
-							npc.memories.forget(id);
+							npcs.forEach(npc -> npc.memories.forget(id));
 						}
 
-						return reply(c, npc.nickname + " has forgotten everything about " + nameOf(target) + ".");
+						return replyEach(c, npcs, name -> name + " has forgotten everything about " + nameOf(about) + ".",
+							"%d NPCs have forgotten everything about " + nameOf(about) + ".");
 					}))))
-			.then(literal("say")
-				.then(npcArgument()
-					.then(argument("symbol", ArgumentTypeString.word()).executes(c -> {
-						EntityNPC npc = findNpc(c);
-						String symbol = ArgumentTypeString.getString(c, "symbol");
-						String line = npc.voice.line(symbol, c.getSource().getSender(), null);
-						if (line == null) {
-							throw error(npc.nickname + " has nothing to say for '" + symbol + "' right now.");
-						}
+			.then(branch("social stance", "Shows or forces how NPCs treat a player: ally, neutral, hostile, or default to undo.")
+				.then(npcsArgument("npcs")
+					.then(personArgument("player")
+						.executes(PersonalityCommands::showStance)
+						.then(argument("stance", ArgumentTypeString.word()).suggests(RELATION_OR_DEFAULT_NAMES).executes(c -> {
+							if (!(getPerson(c, "player") instanceof Player player)) {
+								throw error("Stances are toward players; between NPCs it's their opinions and factions.");
+							}
 
-						npc.voice.sayAloud(line);
-						return 1;
-					}))))
-			.then(literal("limits")
-				.executes(c -> reply(c, "Gift and chat limits are " + (SocialLimits.isEnabled() ? "on" : "off") + "."))
-				.then(literal("on").executes(c -> {
-					SocialLimits.setEnabled(true);
-					return reply(c, "Gift and chat limits are on: one gift per NPC a day, five chats a minute.");
-				}))
-				.then(literal("off").executes(c -> {
-					SocialLimits.setEnabled(false);
-					return reply(c, "Gift and chat limits are off (until you turn them back on or restart).");
-				})))
-			.then(literal("speech")
-				.then(literal("reload").executes(c -> reply(c, "Loaded " + SpeechLibrary.reload() + " speech lines."))));
+							FactionRelation relation = requireRelationOrDefault(c, "stance");
+							List<EntityNPC> npcs = getNpcs(c, "npcs");
+							npcs.forEach(npc -> npc.relations.set(player, relation));
+							String label = relation == null ? "back to treating " + player.username + " by faction and opinion"
+								: describe(relation) + " toward " + player.username;
+							return replyEach(c, npcs, npc -> npc + " is now " + label + ".", "%d NPCs are now " + label + ".");
+						}))))));
 	}
 
 	private static int showPersonality(CommandContext<CommandSource> c) throws CommandSyntaxException {
-		EntityNPC npc = findNpc(c);
+		EntityNPC npc = getNpc(c, "npc");
 		NpcPersonality personality = npc.personality;
 		reply(c, npc.nickname + "'s personality:");
 		for (TraitAxis axis : TraitAxis.values()) {
@@ -193,7 +211,6 @@ final class PersonalityCommands {
 		Item hatedThing = personality.tastes.hatedThing();
 		reply(c, "- loves " + (favoriteThing != null ? itemName(favoriteThing) : "nothing in particular") + "; hates "
 			+ (hatedThing != null ? itemName(hatedThing) : "nothing in particular"));
-
 		return 1;
 	}
 
@@ -205,8 +222,8 @@ final class PersonalityCommands {
 		return Math.round(value * 100) + ", " + amount;
 	}
 
-	private static int showLikes(CommandContext<CommandSource> c) throws CommandSyntaxException {
-		EntityNPC npc = findNpc(c);
+	private static int showTastes(CommandContext<CommandSource> c) throws CommandSyntaxException {
+		EntityNPC npc = getNpc(c, "npc");
 		Tastes tastes = npc.personality.tastes;
 		List<Item> foods = tastes.rankedFoods();
 		List<Item> things = tastes.rankedThings();
@@ -237,7 +254,8 @@ final class PersonalityCommands {
 		return 1;
 	}
 
-	private static ArgumentBuilderLiteral<CommandSource> surroundingsLike(Surroundings.Kind kind) {
+	/** /lb tastes weather|biome|season &lt;npc&gt; &lt;key&gt; [value]. */
+	private static ArgumentBuilderLiteral<CommandSource> surroundingsTaste(Surroundings.Kind kind) {
 		SuggestionProvider<CommandSource> keys = (c, builder) -> {
 			for (String key : Surroundings.table(kind).keySet()) {
 				builder.suggest(key);
@@ -245,20 +263,21 @@ final class PersonalityCommands {
 
 			return builder.buildFuture();
 		};
-		return literal(kind.id())
-			.then(argument("key", ArgumentTypeString.word()).suggests(keys)
-				.executes(c -> {
-					EntityNPC npc = findNpc(c);
-					String key = ArgumentTypeString.getString(c, "key");
-					float like = npc.personality.tastes.like(kind, key);
-					return reply(c, npc.nickname + " " + describeLike(like) + " " + Surroundings.displayName(key) + " (" + Math.round(like * 100) + ").");
-				})
-				.then(argument("like", ArgumentTypeInteger.integer(-100, 100)).executes(c -> {
-					EntityNPC npc = findNpc(c);
-					String key = ArgumentTypeString.getString(c, "key");
-					npc.personality.tastes.set(kind, key, c.getArgument("like", Integer.class) / 100.0F);
-					return reply(c, npc.nickname + " now " + describeLike(npc.personality.tastes.like(kind, key)) + " " + Surroundings.displayName(key) + ".");
-				})));
+		return branch("tastes " + kind.id(), "Shows or sets, -100 to 100, what an NPC thinks of a " + kind.id() + ".")
+			.then(npcArgument("npc")
+				.then(argument("key", ArgumentTypeString.word()).suggests(keys)
+					.executes(c -> {
+						EntityNPC npc = getNpc(c, "npc");
+						String key = ArgumentTypeString.getString(c, "key");
+						float like = npc.personality.tastes.like(kind, key);
+						return reply(c, npc.nickname + " " + describeLike(like) + " " + Surroundings.displayName(key) + " (" + Math.round(like * 100) + ").");
+					})
+					.then(argument("value", ArgumentTypeInteger.integer(-100, 100)).executes(c -> {
+						EntityNPC npc = getNpc(c, "npc");
+						String key = ArgumentTypeString.getString(c, "key");
+						npc.personality.tastes.set(kind, key, c.getArgument("value", Integer.class) / 100.0F);
+						return reply(c, npc.nickname + " now " + describeLike(npc.personality.tastes.like(kind, key)) + " " + Surroundings.displayName(key) + ".");
+					}))));
 	}
 
 	private static String summarize(EntityNPC npc, List<Item> items) {
@@ -270,14 +289,14 @@ final class PersonalityCommands {
 		return String.join(", ", parts);
 	}
 
-	private static int showOpinion(CommandContext<CommandSource> c, Entity target) throws CommandSyntaxException {
-		EntityNPC npc = findNpc(c);
-		if (target == npc) {
+	private static int showOpinion(CommandContext<CommandSource> c, Entity about) throws CommandSyntaxException {
+		EntityNPC npc = getNpc(c, "npc");
+		if (about == npc) {
 			throw error(npc.nickname + " doesn't keep an opinion of itself.");
 		}
 
-		Opinions.Opinion opinion = Opinions.explain(npc, target);
-		reply(c, String.format(Locale.ROOT, "%s's opinion of %s: %d (%s)", npc.nickname, nameOf(target), Math.round(opinion.value()),
+		Opinions.Opinion opinion = Opinions.explain(npc, about);
+		reply(c, String.format(Locale.ROOT, "%s's opinion of %s: %d (%s)", npc.nickname, nameOf(about), Math.round(opinion.value()),
 			opinion.label().displayName()));
 		for (Map.Entry<String, Float> part : opinion.parts().entrySet()) {
 			reply(c, String.format(Locale.ROOT, "- %s: %+d", part.getKey(), Math.round(part.getValue())));
@@ -287,7 +306,7 @@ final class PersonalityCommands {
 	}
 
 	private static int showMood(CommandContext<CommandSource> c) throws CommandSyntaxException {
-		EntityNPC npc = findNpc(c);
+		EntityNPC npc = getNpc(c, "npc");
 		long now = c.getSource().getWorld().getWorldTime();
 		float mood = npc.memories.mood(npc.personality, now);
 		reply(c, String.format(Locale.ROOT, "%s's mood: %d (%s)", npc.nickname, Math.round(mood), SpeechFacts.moodLabel(mood)));
@@ -301,22 +320,54 @@ final class PersonalityCommands {
 		return 1;
 	}
 
-	private static int addMemory(CommandContext<CommandSource> c, Entity target) throws CommandSyntaxException {
-		EntityNPC npc = findNpc(c);
+	private static int addMemory(CommandContext<CommandSource> c, Entity about) throws CommandSyntaxException {
 		String name = ArgumentTypeString.getString(c, "memory");
 		MemoryType type = MemoryType.byName(name);
 		if (type == null) {
 			throw error("Unknown memory '" + name + "'.");
 		}
 
-		if (type.isAboutSomeone() && Opinions.idOf(target) == null) {
+		if (type.isAboutSomeone() && Opinions.idOf(about) == null) {
 			throw error("That memory needs a person to be about.");
 		}
 
-		npc.remember(type, type.isAboutSomeone() ? target : null, 1.0F);
-		return reply(c, npc.nickname + " remembers: " + type.description + (type.isAboutSomeone() ? " (" + nameOf(target) + ")" : "") + ".");
+		List<EntityNPC> npcs = getNpcs(c, "npcs");
+		npcs.forEach(npc -> npc.remember(type, type.isAboutSomeone() ? about : null, 1.0F));
+		String what = type.description + (type.isAboutSomeone() ? " (" + nameOf(about) + ")" : "");
+		return replyEach(c, npcs, npc -> npc + " remembers: " + what + ".", "%d NPCs remember: " + what + ".");
 	}
 
-	private PersonalityCommands() {
+	private static int showStance(CommandContext<CommandSource> c) throws CommandSyntaxException {
+		if (!(getPerson(c, "player") instanceof Player player)) {
+			throw error("Stances are toward players; between NPCs it's their opinions and factions.");
+		}
+
+		List<EntityNPC> npcs = getNpcs(c, "npcs");
+		for (EntityNPC npc : npcs) {
+			showStance(c, npc, player);
+		}
+
+		return npcs.size();
+	}
+
+	private static void showStance(CommandContext<CommandSource> c, EntityNPC npc, Player player) {
+
+		FactionRelation personal = npc.relations.get(player);
+		FactionRelation overall = NpcFactions.regard(npc, player);
+		float opinion = Opinions.of(npc, player);
+		String member = npc.getFaction() != null ? "one of the " + npc.getFaction() : "someone unaffiliated";
+		String reason;
+		if (personal != null) {
+			reason = "set by command";
+		} else if (opinion >= Opinions.ALLY_THRESHOLD || opinion <= Opinions.hostileThreshold(npc)) {
+			reason = "because its opinion of " + player.username + " is " + Math.round(opinion);
+		} else {
+			reason = "as " + member + ", toward someone " + factionLabel(FactionRegistry.get(c.getSource().getWorld()).getPlayerFaction(player.uuid));
+		}
+
+		reply(c, npc.nickname + " is " + describe(overall) + " toward " + player.username + " (" + reason + ").");
+		if (overall == FactionRelation.HOSTILE && !player.getGamemode().hasHostileMobs()) {
+			reply(c, player.username + " is in a game mode monsters ignore, so " + npc.nickname + " won't attack them either.");
+		}
 	}
 }

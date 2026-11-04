@@ -23,4 +23,4 @@ To play it in a normal Babric install, copy `build/libs/lifeblood-*.jar` into th
 
 ## Commands
 
-Everything is under `/npc` (summon, look, personality, family, factions, ownership, prefabs and debugging tools); type `/npc` in game for the list.
+Nothing in Lifeblood needs a command to play: everything is done with items, screens and the NPCs themselves. The commands are tools for admins, making content and testing, all under `/lb`, grouped into categories (`npc`, `personality`, `tastes`, `social`, `family`, `look`, `faction`, `prefab`, `words`, `owner`, `reload`, `debug`). Type `/lb`, or any part of a command, to list what's under it. Targets take vanilla selectors like `@s` and `@e[type=lifeblood:npc,name=Walter]`, or an NPC's name.

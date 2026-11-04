@@ -38,24 +38,25 @@ import lifeblood.social.MemoryType;
 import lifeblood.social.Opinions;
 import org.jetbrains.annotations.Nullable;
 
-/** What the /npc subcommands share: argument suggestions, finding NPCs and targets, and replying. */
+/** What the /lb commands share: arguments and their suggestions, finding NPCs and people, and replying. */
 final class CommandSupport {
 	static final String NONE_KEYWORD = "none";
 	static final String DEFAULT_KEYWORD = "default";
-
-	static final SuggestionProvider<CommandSource> NPC_NAMES = (c, builder) -> {
-		for (EntityNPC npc : getNpcs(c.getSource().getWorld())) {
-			builder.suggest(ArgumentTypeString.escapeIfRequired(npc.nickname));
-		}
-
-		return builder.buildFuture();
-	};
 
 	static final SuggestionProvider<CommandSource> SKIN_NAMES = (c, builder) -> {
 		for (String skin : NpcSkinFiles.list()) {
 			builder.suggest(skin);
 		}
 
+		return builder.buildFuture();
+	};
+
+	static final SuggestionProvider<CommandSource> SKIN_OR_NONE_NAMES = (c, builder) -> {
+		for (String skin : NpcSkinFiles.list()) {
+			builder.suggest(skin);
+		}
+
+		builder.suggest(NONE_KEYWORD);
 		return builder.buildFuture();
 	};
 
@@ -90,19 +91,6 @@ final class CommandSupport {
 		}
 
 		builder.suggest(NONE_KEYWORD);
-		return builder.buildFuture();
-	};
-
-	static final SuggestionProvider<CommandSource> TARGET_NAMES = (c, builder) -> {
-		builder.suggest("@s");
-		for (Player player : c.getSource().getWorld().players) {
-			builder.suggest(player.username);
-		}
-
-		for (EntityNPC npc : getNpcs(c.getSource().getWorld())) {
-			builder.suggest(ArgumentTypeString.escapeIfRequired(npc.nickname));
-		}
-
 		return builder.buildFuture();
 	};
 
@@ -233,27 +221,6 @@ final class CommandSupport {
 		return String.format(Locale.ROOT, "%.0f %.0f %.0f", pos[0], pos[1], pos[2]);
 	}
 
-	/** Resolves a target like vanilla /teleport: @s is you, otherwise an NPC's name or a player's name. */
-	static Entity findTarget(CommandContext<CommandSource> c) throws CommandSyntaxException {
-		String name = ArgumentTypeString.getString(c, "target");
-		if (name.equals("@s")) {
-			return requirePlayer(c.getSource());
-		}
-
-		for (EntityNPC npc : getNpcs(c.getSource().getWorld())) {
-			if (npc.nickname.equalsIgnoreCase(name)) {
-				return findNpcNamed(c, name);
-			}
-		}
-
-		Player player = c.getSource().getWorld().getPlayerEntityByName(name);
-		if (player == null) {
-			throw error("No NPC or player named '" + name + "'.");
-		}
-
-		return player;
-	}
-
 	static String nameOf(Entity entity) {
 		if (entity instanceof EntityNPC npc) {
 			return npc.nickname;
@@ -367,34 +334,6 @@ final class CommandSupport {
 		return npcs;
 	}
 
-	/** Finds the NPC named in the "npc" argument; with duplicates, the nearest one wins. */
-	static EntityNPC findNpc(CommandContext<CommandSource> c) throws CommandSyntaxException {
-		return findNpcNamed(c, ArgumentTypeString.getString(c, "npc"));
-	}
-
-	static EntityNPC findNpcNamed(CommandContext<CommandSource> c, String name) throws CommandSyntaxException {
-		Player player = c.getSource().getSender();
-		EntityNPC best = null;
-		double bestDistance = Double.MAX_VALUE;
-		for (EntityNPC npc : getNpcs(c.getSource().getWorld())) {
-			if (!npc.nickname.equalsIgnoreCase(name)) {
-				continue;
-			}
-
-			double distance = player != null ? npc.distanceToSqr(player) : 0.0;
-			if (distance < bestDistance) {
-				best = npc;
-				bestDistance = distance;
-			}
-		}
-
-		if (best == null) {
-			throw error("No loaded NPC named '" + name + "'. Try /npc list.");
-		}
-
-		return best;
-	}
-
 	static Player requirePlayer(CommandSource source) throws CommandSyntaxException {
 		Player player = source.getSender();
 		if (player == null) {
@@ -421,8 +360,65 @@ final class CommandSupport {
 		return ArgumentBuilderRequired.argument(name, type);
 	}
 
-	static ArgumentBuilderRequired<CommandSource, String> npcArgument() {
-		return CommandSupport.<String>argument("npc", ArgumentTypeString.string()).suggests(NPC_NAMES);
+	/** An argument for one or more NPCs: a selector (@e[type=lifeblood:npc]...) or an NPC's name. */
+	static ArgumentBuilderRequired<CommandSource, TargetArgument.Selection> npcsArgument(String name) {
+		return argument(name, TargetArgument.npcs());
+	}
+
+	/** An argument for exactly one NPC. */
+	static ArgumentBuilderRequired<CommandSource, TargetArgument.Selection> npcArgument(String name) {
+		return argument(name, TargetArgument.npc());
+	}
+
+	/** An argument for exactly one person, NPC or player (@s for yourself). */
+	static ArgumentBuilderRequired<CommandSource, TargetArgument.Selection> personArgument(String name) {
+		return argument(name, TargetArgument.person());
+	}
+
+	/** An argument for one or more people, NPCs and players. */
+	static ArgumentBuilderRequired<CommandSource, TargetArgument.Selection> peopleArgument(String name) {
+		return argument(name, TargetArgument.people());
+	}
+
+	/** The people a {@link #peopleArgument} names. */
+	static List<Entity> getPeople(CommandContext<CommandSource> c, String name) throws CommandSyntaxException {
+		return c.getArgument(name, TargetArgument.Selection.class).resolve(c.getSource());
+	}
+
+	/** The NPCs a {@link #npcsArgument} names. */
+	static List<EntityNPC> getNpcs(CommandContext<CommandSource> c, String name) throws CommandSyntaxException {
+		List<EntityNPC> npcs = new ArrayList<>();
+		for (Entity entity : c.getArgument(name, TargetArgument.Selection.class).resolve(c.getSource())) {
+			npcs.add((EntityNPC) entity);
+		}
+
+		return npcs;
+	}
+
+	/** The NPC a {@link #npcArgument} names. */
+	static EntityNPC getNpc(CommandContext<CommandSource> c, String name) throws CommandSyntaxException {
+		return (EntityNPC) c.getArgument(name, TargetArgument.Selection.class).resolve(c.getSource()).get(0);
+	}
+
+	/** The person a {@link #personArgument} names. */
+	static Entity getPerson(CommandContext<CommandSource> c, String name) throws CommandSyntaxException {
+		return c.getArgument(name, TargetArgument.Selection.class).resolve(c.getSource()).get(0);
+	}
+
+	/**
+	 * Replies about each NPC a command changed, or with a count when there are many, like vanilla's "Healed 12 entities".
+	 * The message for one NPC is given its name.
+	 */
+	static int replyEach(CommandContext<CommandSource> c, List<EntityNPC> npcs, java.util.function.Function<String, String> one, String many) {
+		if (npcs.size() <= 3) {
+			for (EntityNPC npc : npcs) {
+				reply(c, one.apply(npc.nickname));
+			}
+		} else {
+			reply(c, String.format(Locale.ROOT, many, npcs.size()));
+		}
+
+		return npcs.size();
 	}
 
 	private CommandSupport() {

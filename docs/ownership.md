@@ -2,7 +2,7 @@
 
 Keeping NPCs off the player's builds without claim commands, and the property records that crime and law will use. Numbers are starting points for playtesting.
 
-**Built:** block ownership records, item ownership by location, shared ownership in families, kept gifts, `/npc owner`. **Planned:** the protection buffers, which need NPCs that break and place blocks, and theft.
+**Built:** block ownership records, item ownership by location, shared ownership in families, kept gifts, `/lb owner`. **Planned:** the protection buffers, which need NPCs that break and place blocks, and theft.
 
 ## New worlds only
 
@@ -16,7 +16,7 @@ Every block placed by a player, an NPC or a settlement records its owner. Natura
 - A sapling grown naturally keeps its owner only where the sapling stood; the rest of the tree is nobody's. (Possibly later: the whole tree.)
 - Stored with each chunk, only for placed blocks, as compact number arrays, and loaded with the chunk.
 - Owners are players, NPCs or (later) settlements, all by id, so it works in multiplayer.
-- `/npc owner <x> <y> <z>` tells who owns a block.
+- `/lb owner <x> <y> <z>` tells who owns a block.
 
 ## Items
 
