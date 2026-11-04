@@ -1,6 +1,8 @@
 package npclaude.speech;
 
 import com.mojang.nbt.tags.CompoundTag;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -11,6 +13,7 @@ import java.util.function.Consumer;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.util.helper.MathHelper;
+import npclaude.entity.AgeStage;
 import npclaude.entity.EntityNPC;
 import npclaude.personality.Quirk;
 import npclaude.personality.Surroundings;
@@ -47,11 +50,15 @@ public class NpcVoice {
 	private static final long GLOBAL_GAP = 20L;
 	private static final long REPLY_DELAY = 40L;
 	/** Events where a catchphrase can slip in. */
+	/** How many of its latest lines it remembers having said. */
+	private static final int RECENT_LINES = 8;
 	private static final Set<String> CASUAL = Set.of("greet", "idle", "smalltalk", "chat_open", "chat_reply", "dialogue_open");
 
 	private static long lastAnyLine = Long.MIN_VALUE / 2;
 
 	public final SpeechStyle style = new SpeechStyle();
+	/** Its latest lines (up to {@link #RECENT_LINES}), to tell its own words from text put together in code. */
+	private final Deque<String> recentLines = new ArrayDeque<>();
 	private final EntityNPC npc;
 	/** When each line was last said, so they don't repeat. */
 	private final Map<String, Long> usedLines = new HashMap<>();
@@ -92,6 +99,15 @@ public class NpcVoice {
 		}
 
 		this.learnFrom(context);
+		this.recentLines.addFirst(line);
+		while (this.recentLines.size() > RECENT_LINES) {
+			this.recentLines.removeLast();
+		}
+
+		// Babies just babble: no catchphrases or speech style yet.
+		if (this.npc.life.getStage() == AgeStage.BABY) {
+			return line;
+		}
 
 		float catchphraseChance = this.npc.personality.has(Quirk.CHATTERBOX) ? 0.2F : 0.1F;
 		if (CASUAL.contains(event) && !this.style.getCatchphrase().isEmpty() && this.npc.getRandom().nextFloat() < catchphraseChance
@@ -100,6 +116,18 @@ public class NpcVoice {
 		}
 
 		return this.style.apply(line, this.npc.getRandom());
+	}
+
+	/**
+	 * What a baby says in place of text that didn't come from its own speech (a reply put together in code, like a
+	 * list of its family): babble. Anyone older, and the baby's own lines, pass through.
+	 */
+	public String asSpoken(String text, @Nullable Entity listener) {
+		if (this.npc.life.getStage() != AgeStage.BABY || this.recentLines.contains(text)) {
+			return text;
+		}
+
+		return this.lineOr("babble", listener, "Ba!", null);
 	}
 
 	/** A line for this event, or the fallback if nothing fits. */

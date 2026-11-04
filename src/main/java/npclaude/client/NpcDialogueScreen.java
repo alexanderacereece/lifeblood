@@ -61,7 +61,7 @@ public class NpcDialogueScreen extends Screen implements DialogueSession {
 		this.npc = npc;
 		this.player = player;
 		this.dialogue = dialogue;
-		this.npcLine = dialogue.line();
+		this.npcLine = this.spoken(dialogue.line());
 	}
 
 	@Override
@@ -198,15 +198,21 @@ public class NpcDialogueScreen extends Screen implements DialogueSession {
 
 	@Override
 	public void say(String line) {
-		this.npcLine = line;
+		this.npcLine = this.spoken(line);
 		this.layout();
 	}
 
 	@Override
 	public void show(NpcDialogue dialogue) {
 		this.dialogue = dialogue;
-		this.npcLine = dialogue.line();
+		this.npcLine = this.spoken(dialogue.line());
 		this.layout();
+	}
+
+	/** The NPC's line as it would really say it (a baby babbles); narration is left alone. */
+	private String spoken(String line) {
+		boolean narration = !line.isEmpty() && line.charAt(0) == NpcDialogue.NARRATION;
+		return narration ? line : this.npc.voice.asSpoken(line, this.player);
 	}
 
 	@Override
