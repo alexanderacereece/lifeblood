@@ -41,6 +41,8 @@ The outing leaves memories: what they did, what they found, who they met. They t
 
 A traveler can be asked where they're going and why, what they've seen, and later to travel together or to trade. Lines react to the kind of outing, how it's going (lost, hurt, loaded with loot) and how far from home they are. Every kind of outing gets lines where NPCs would naturally talk about it.
 
+How well a traveler hunts, fights or finds its way is its [skill](skills.md), and outings are where most of it grows.
+
 ## What it needs first
 
 - **[Generated homesteads](building.md#generated-homesteads-next)**, so there are homes to set out from and come back to.

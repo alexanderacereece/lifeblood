@@ -20,6 +20,7 @@ Planned, not built yet (ownership and building are partly built):
 | [life-choices.md](life-choices.md) | NPCs choosing jobs, journeys, moves, homesteads and offices; the ambition axis |
 | [work.md](work.md) | Jobs, block actions, real item chains, storage, honest mining |
 | [ownership.md](ownership.md) | Who placed what, protecting player builds, property for crime and law |
+| [skills.md](skills.md) | Archery and melee as real AI skill (aim, timing, footwork), where skill comes from and how it grows |
 | [travelers.md](travelers.md) | Wanderers, adventurers, hunters, gatherers and long trips: NPCs out in the world |
 | [unloaded.md](unloaded.md) | Keeping the world alive where nobody is watching |
 
@@ -63,6 +64,7 @@ Each step is useful on its own and proves the next:
 - Building is honest: real materials, the player's reach and support rules, prefabs that keep every block detail.
 - Prefabs swap by convention, like skin parts: logs and plain planks become the local wood, swappable stone the local stone, gray the primary color and light gray the secondary (a faction's colors for its buildings).
 - Every faction has a primary and a secondary color.
+- Skills are behavior, not bonuses: they change an NPC's decisions and precision, never damage, speed or other rules.
 - Mining stays honest; running out of ore is a story, not a problem. Unloaded areas run on ledgers measured from the real rules.
 
 ## Open questions
@@ -73,6 +75,7 @@ Each step is useful on its own and proves the next:
 
 ## Planned, noted for later
 
+- **Skills:** archery and melee change how well an NPC fights, never the rules; from its history, age, aptitude and family, and grown by doing ([skills](skills.md)). Today every NPC fights like a veteran.
 - **Parenting:** both parents, NPC or player, shape who a child becomes, by nature at birth and by upbringing as it grows ([family](family.md#parenting-planned)).
 - **Player creation:** players choose their own axes, quirks and tastes, and can take a skin built from parts, so opinions and inheritance work for them as for NPCs ([family](family.md#player-creation-planned)).
 - **Reachable without commands:** NPCs only enter the world by `/lb npc summon` or being born until generated homesteads place them; players join factions only by command until faction membership happens through NPCs and play; player creation will be a screen.
