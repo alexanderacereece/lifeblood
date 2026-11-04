@@ -22,7 +22,6 @@ How the mod is put together, and where new systems plug in. Everything here is i
 | `skin` | Whole-skin files from `npc_skins/` |
 | `ownership` | Who placed each block, and who shares what |
 | `world` | World systems: logic that runs per world on its own clock |
-| `save` | Reading old saves (temporary, see below) |
 | `command` | `/npc`, one class per area |
 | `interaction` | The bridge from right-clicking an NPC to the screens |
 | `item` | The mod's items (guardian amulet, word book) |
@@ -86,7 +85,7 @@ Options act on the conversation through `DialogueSession`, which the client's di
 
 ## Saving and old saves
 
-Each system saves its own data: parts into the NPC's compound, world registers as `SavedData`. Everything that reads older saves lives in `save/SaveUpgrades`, which rewrites old data into the current format before the normal loading code sees it. It's temporary by design: **delete the class and its calls** once old development worlds no longer matter (planned for the content 1.0, before any public release).
+Each system saves its own data: parts into the NPC's compound, world registers as `SavedData`. Nothing converts older saves right now: development worlds are disposable, so formats change freely. NPCs save a `DataVersion` so that, once long-term worlds exist, a `save/SaveUpgrades` class can rewrite old data into the current format before the normal loading code sees it. That class would be temporary by design and deleted at content 1.0.
 
 ## Settings
 

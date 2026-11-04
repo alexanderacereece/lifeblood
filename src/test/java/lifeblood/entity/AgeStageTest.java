@@ -1,6 +1,7 @@
 package lifeblood.entity;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.junit.jupiter.api.Test;
 
@@ -21,5 +22,15 @@ class AgeStageTest {
 		assertEquals(AgeStage.TEEN, atAge(17.9F));
 		assertEquals(AgeStage.ADULT, AgeStage.of(1.0F));
 		assertEquals("young_teen", AgeStage.YOUNG_TEEN.id());
+	}
+
+	@Test
+	void stagesAreFoundByTheirIds() {
+		for (AgeStage stage : AgeStage.values()) {
+			assertEquals(stage, AgeStage.byId(stage.id()));
+		}
+
+		assertNull(AgeStage.byId(""));
+		assertNull(AgeStage.byId("elder"));
 	}
 }

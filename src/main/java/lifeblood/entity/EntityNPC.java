@@ -41,7 +41,6 @@ import lifeblood.people.PeopleRegistry;
 import lifeblood.perf.NpcProfiler;
 import lifeblood.personality.NpcPersonality;
 import lifeblood.personality.Quirk;
-import lifeblood.save.SaveUpgrades;
 import lifeblood.social.Brawl;
 import lifeblood.social.MemoryType;
 import lifeblood.social.NpcMemories;
@@ -59,8 +58,11 @@ import org.joml.primitives.AABBd;
  * The display name is the vanilla nickname, which BTA already draws as a name tag.
  */
 public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmorShape>, IItemHolding {
-	/** Bump when the saved format changes, and convert older data in {@link SaveUpgrades}. */
-	public static final int DATA_VERSION = 2;
+	/**
+	 * Saved with every NPC so a future change of format can tell old data apart. Bump it when the format changes; until
+	 * long-term worlds exist, old development saves are simply not converted (see CLAUDE.md).
+	 */
+	public static final int DATA_VERSION = 3;
 	private static final String SAVE_KEY = "Lifeblood";
 	static final int DATA_SKIN = 20;
 	static final int DATA_SKIN_MODEL = 21;
@@ -863,7 +865,6 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		}
 
 		CompoundTag npc = tag.getCompound(SAVE_KEY);
-		SaveUpgrades.npc(npc);
 		try {
 			if (npc.containsKey("Uuid")) {
 				this.uuid = UUID.fromString(npc.getString("Uuid"));

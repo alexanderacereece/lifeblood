@@ -6,9 +6,9 @@ Read this first, then [docs/README.md](docs/README.md) (what exists and what's d
 
 - **NPCs use the player's exact mechanics.** Same health, speed, healing, reach, digging speed, ammo, recipes. No buffs, no cheating, no magic placement.
 - **Frameworks before features.** A new kind of thing plugs into an existing registry or extension point; a new system gets its own package. Don't special-case.
-- **Every new system ships with speech lines** reacting to it, in the right `.speech` file.
+- **Look for the lines a change earns.** When NPCs would naturally notice or talk about something new, add speech lines for it in the right `.speech` file, across personalities. Don't force it: plumbing, commands and invisible systems often earn none.
 - **Stay multiplayer-ready.** Game logic lives in common code, never in screens. Client-only code is under `client/` and `@Environment(EnvType.CLIENT)`.
-- **Old-save code is temporary.** Anything that reads older saves goes in `save/SaveUpgrades` and nowhere else; it gets deleted at content 1.0.
+- **No old-save code for now.** Development worlds are disposable until the user says long-term testing worlds have started, so breaking save changes are fine and nothing converts old data. After that, code that reads older saves goes in one `save/SaveUpgrades` class and nowhere else, and is deleted at content 1.0.
 - **Lifeblood is for new worlds.** Nothing guesses about builds made before the mod was added.
 
 ## Code standards

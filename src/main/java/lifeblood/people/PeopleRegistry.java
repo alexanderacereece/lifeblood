@@ -17,7 +17,6 @@ import net.minecraft.core.world.saveddata.SavedData;
 import lifeblood.entity.EntityNPC;
 import lifeblood.entity.NpcGender;
 import lifeblood.family.Kinship;
-import lifeblood.save.SaveUpgrades;
 import lifeblood.world.WorldSystem;
 import lifeblood.world.WorldSystems;
 import org.jetbrains.annotations.Nullable;
@@ -105,11 +104,7 @@ public class PeopleRegistry extends SavedData {
 	public static PeopleRegistry get(World world) {
 		PeopleRegistry registry = (PeopleRegistry) world.getSavedData(PeopleRegistry.class, DATA_ID);
 		if (registry == null) {
-			registry = SaveUpgrades.oldPeopleRegistry(world);
-			if (registry == null) {
-				registry = new PeopleRegistry(DATA_ID);
-			}
-
+			registry = new PeopleRegistry(DATA_ID);
 			world.setSavedData(DATA_ID, registry);
 			registry.setDirty();
 		}

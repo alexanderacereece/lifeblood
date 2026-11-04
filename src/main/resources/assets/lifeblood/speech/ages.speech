@@ -819,3 +819,129 @@ No... [victim]...
 Not [victim]...
 Whoever did this will pay.   {vengeful, w=2}
 Cube God keep you, [victim]. {pious}
+
+# ===============================================================================================================
+# Speech styles for the young: what they call people, a catchphrase, and a filler word, picked when an NPC reaches
+# each stage and picked again as it grows (SpeechStyle). Babies have none. Keep a plain line in each so every young
+# speaker gets something of their age, never an adult's style.
+
+== style_address.child ==
+friend
+friend                       {polite}
+buddy                        {extrovert}
+pal                          {lighthearted}
+stranger                     {introvert}
+best friend                  {extrovert+, w=0.5}
+silly                        {lighthearted, rude}
+dummy                        {rude}
+
+== style_catchphrase.child ==
+Okay.
+Uh-huh.
+That's what I think.
+Yay!                         {optimist}
+Boo.                         {pessimist}
+Pinky promise!               {honest}
+Cross my heart.              {honest}
+I'm not lying!               {liar, w=2}
+Race you!                    {competitive, w=2}
+No fair!                     {competitive}
+I'm hungry.                  {glutton, w=2}
+Can I keep it?               {animal_lover, w=2}
+Why?                         {curious, w=2}
+I'm telling!                 {nosy, w=2}
+Mine!                        {greedy, w=2}
+Sharing is caring.           {generous, w=2}
+Am not!                      {hothead, w=2}
+Monsters are real.           {paranoid, w=2}
+I know everything.           {proud, w=2}
+Cube God sees everything.    {pious, w=2}
+I'm brave!                   {brave}
+I wasn't scared.             {timid}
+Shh.                         {introvert}
+Boop.                        {lighthearted}
+Do I have to?                {lazy}
+I can help!                  {hardworking}
+
+== style_filler.child ==
+um
+and um
+I think
+kinda                        {lighthearted}
+or something                 {!proper}
+
+== style_address.young_teen ==
+friend
+buddy
+dude                         {!proper}
+stranger                     {introvert}
+loser                        {rude}
+nerd                         {rude, lighthearted}
+genius                       {rude}
+
+== style_catchphrase.young_teen ==
+Whatever.
+Ugh.                         {pessimist}
+That's so unfair.
+No way!                      {extrovert}
+Totally.                     {optimist}
+Like, seriously.             {crude}
+So random.                   {lighthearted}
+I'm not a kid.               {proud, w=2}
+Called it.                   {proud}
+Dare you.                    {competitive, w=2}
+Swear on the Cube God.       {pious, w=2}
+For real.                    {honest, w=2}
+I'm not even lying.          {liar, w=2}
+Bored.                       {lazy, w=2}
+Weird.                       {curious, w=2}
+Don't tell anyone.           {nosy}
+Can we eat yet?              {glutton, w=2}
+Don't touch my stuff.        {greedy}
+Not scared.                  {brave}
+Leave me alone.              {introvert}
+Shut up.                     {hothead, rude}
+
+== style_filler.young_teen ==
+like
+I guess
+or whatever                  {!proper}
+honestly                     {!liar}
+literally                    {extrovert}
+
+== style_address.teen ==
+friend
+pal
+dude                         {!proper}
+mate                         {crude}
+stranger                     {introvert}
+genius                       {rude}
+chief                        {lighthearted}
+my friend                    {proper, polite}
+
+== style_catchphrase.teen ==
+Fair enough.
+Whatever.                    {lazy}
+Not my problem.              {lazy}
+Big plans.                   {hardworking, w=2}
+One day, you'll see.         {optimist, w=2}
+Typical.                     {pessimist, w=2}
+No offense.                  {rude}
+Just being honest.           {honest, w=2}
+Trust me.                    {liar, w=2}
+Bet.                         {competitive, w=2}
+Cube God keep us.            {pious, w=2}
+Don't start.                 {hothead, w=2}
+Easy.                        {zen, w=2}
+Heh.                         {lighthearted}
+Hm.                          {introvert}
+Watch yourself.              {paranoid, w=2}
+Can't wait to get out of here. {curious}
+Someday.                     {romantic}
+
+== style_filler.teen ==
+I guess
+honestly                     {!liar}
+or whatever                  {!proper}
+y'know                       {!proper}
+probably

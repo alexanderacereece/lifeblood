@@ -27,7 +27,8 @@
 # Word modifiers: .a .the .s .it .is .this .cap
 
 # ---------------------------------------------------------------------------------------------------------------
-# Speech style pools: rolled once per NPC.
+# Speech style pools for adults; the young have their own versions at the end of ages.speech. Picked once per
+# age stage (see SpeechStyle).
 
 == style_address ==
 friend

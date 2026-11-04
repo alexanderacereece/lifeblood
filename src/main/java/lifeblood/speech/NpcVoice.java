@@ -49,9 +49,9 @@ public class NpcVoice {
 	/** Between any two lines from any NPCs, so a crowd doesn't flood the chat. */
 	private static final long GLOBAL_GAP = 20L;
 	private static final long REPLY_DELAY = 40L;
-	/** Events where a catchphrase can slip in. */
 	/** How many of its latest lines it remembers having said. */
 	private static final int RECENT_LINES = 8;
+	/** Events where a catchphrase can slip in. */
 	private static final Set<String> CASUAL = Set.of("greet", "idle", "smalltalk", "chat_open", "chat_reply", "dialogue_open");
 
 	private static long lastAnyLine = Long.MIN_VALUE / 2;
@@ -85,6 +85,8 @@ public class NpcVoice {
 	public String line(String event, @Nullable Entity listener, @Nullable Consumer<SpeechContext> extras) {
 		if (!this.style.isRolled()) {
 			this.style.roll(this.npc, this.npc.getRandom());
+		} else if (!this.style.fitsAge(this.npc)) {
+			this.style.growInto(this.npc, this.npc.getRandom());
 		}
 
 		SpeechContext context = SpeechFacts.build(this.npc, listener);

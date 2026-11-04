@@ -52,6 +52,8 @@ A surface layer rolled per NPC, independent of personality, so two NPCs with the
 
 Formality comes from the Speech axis; the rest is random. Because style supplies fragments rather than whole lines, it adds to the writing instead of multiplying it.
 
+The habits (dropped g's, trailing off) are for life, but the words grow up with the NPC. Address, catchphrase and filler are picked for the NPC's age stage from the stage versions of the style symbols in `ages.speech` (a little kid says "Pinky promise!" and calls you "buddy"; a young teen says "Whatever."), and picked again each time it reaches a new stage. Babies have none. About a quarter of teenagers keep their catchphrase into adulthood.
+
 ### Chat
 
 Speech appears in chat as `<Name> line` within a hearing radius (about 24 blocks), for barks, direct messages to the player and conversations between NPCs. Each NPC has a bark cooldown (chatterbox shorter, taciturn longer), and there is a global rate limit so a 30-NPC battle doesn't flood chat.

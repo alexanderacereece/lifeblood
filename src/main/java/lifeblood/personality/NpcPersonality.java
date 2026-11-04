@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import lifeblood.save.SaveUpgrades;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -170,7 +169,6 @@ public class NpcPersonality {
 	 * added since, say) keeps its rolled value.
 	 */
 	public void load(CompoundTag tag) {
-		SaveUpgrades.personality(tag);
 		CompoundTag axisTag = tag.getCompound("Axes");
 		for (TraitAxis axis : TraitAxis.values()) {
 			if (axisTag.containsKey(axis.id())) {

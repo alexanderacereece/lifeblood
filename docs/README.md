@@ -44,8 +44,8 @@ Each step is useful on its own and proves the next:
 - NPCs carry as much as a player: 4 armor slots and 36 more. It's all theirs; gifts are kept, eaten, worn and used.
 - Only people who share what an NPC owns (spouse, parents, children) can open its inventory. There is no lending gear.
 - NPCs use the player's exact mechanics: health, speed, healing, ammo. No buffs.
-- Every new system comes with speech lines reacting to it.
-- Code that reads old saves is temporary, kept in one place, and goes at content 1.0.
+- New systems get speech lines where NPCs would naturally talk about them, never forced.
+- No code reads old saves while development worlds are disposable. Once long-term worlds start, it lives in one place and goes at content 1.0.
 - The build stays ready for multiplayer where that doesn't get in the way of the main vision.
 - Lifeblood is meant to start with a new world; builds from before it was added aren't protected.
 - One new axis, ambition, plus the homebody and wanderer quirks, for life choices. No more than that.
