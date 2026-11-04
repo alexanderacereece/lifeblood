@@ -29,12 +29,13 @@ class SpeechFilesTest {
 		"health", "recovering", "has_faction", "has_enemy", "address", "catchphrase", "victim", "kind", "taste", "wet", "outside", "season",
 		"biome", "weather_like", "season_like", "biome_like", "rude_gift", "surprising", "surprising_thing", "relation", "fighting_you",
 		"in_combat", "about", "other_type", "is_favorite", "brawling", "forfeit", "friend_fighting", "relationship", "listener_kin", "age",
-		"baby_gender", "word_prompt", "word_category", "personal", "birthday", "climate", "home_climate", "home_biome", "at_home", "unprovoked");
+		"baby_gender", "word_prompt", "word_category", "personal", "birthday", "climate", "home_climate", "home_biome", "at_home", "unprovoked",
+		"to_partner", "listener_age");
 	private static final Set<String> WORDS = Set.of("favorite_food", "hated_food", "faction", "enemy_faction", "enemy", "food", "item",
 		"favorite_thing", "hated_thing", "weather_word", "biome_word", "season_word", "favorite_weather", "hated_weather", "favorite_biome",
 		"hated_biome", "favorite_season", "hated_season", "other", "animal", "brawler", "other_brawler", "partner", "baby", "word",
 		"taught_food", "taught_animal", "taught_thing", "taught_place", "taught_exclamation", "taught_greeting", "taught_farewell",
-		"taught_describe", "taught_activity", "taught_angry", "taught_happy", "taught_sad", "taught_scared", "home_biome");
+		"taught_describe", "taught_activity", "taught_angry", "taught_happy", "taught_sad", "taught_scared", "home_biome", "kin_call");
 	private static final Pattern REFERENCE = Pattern.compile("\\[([a-z_0-9]+)(?:\\.[a-z]+)*]");
 
 	private record Line(String where, String text) {

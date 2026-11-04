@@ -40,6 +40,7 @@ import npclaude.inventory.NpcInventory;
 import npclaude.people.PeopleRegistry;
 import npclaude.perf.NpcProfiler;
 import npclaude.personality.NpcPersonality;
+import npclaude.personality.Quirk;
 import npclaude.save.SaveUpgrades;
 import npclaude.social.Brawl;
 import npclaude.social.MemoryType;
@@ -71,6 +72,10 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	static final int DATA_GENDER = 25;
 	/** A conversation ends if the player walks further away than this. */
 	private static final float TALK_DISTANCE = 8.0F;
+	/** How long a conversation outlasts its screen closing, for the next screen to pick it up (half a second). */
+	private static final int TALK_HANDOFF_TICKS = 10;
+	/** How long after a fight the weapon stays out (15 seconds). */
+	private static final int WEAPON_AWAY_TICKS = 300;
 	/** Ticks between melee hits; players can click faster, monsters wait 20. */
 	private static final int MELEE_COOLDOWN = 15;
 	private static final double MELEE_REACH = 2.5;
@@ -124,6 +129,10 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private int lookTicks;
 	@Nullable
 	private Player talkingTo;
+	/** When a conversation whose screen closed ends, unless another of its screens opens first; 0 if none. */
+	private int talkEndsAt;
+	/** When it last fought, to put its weapon away once things have been calm for a while. */
+	private int lastFightTick;
 	/** Null when unaffiliated. */
 	@Nullable
 	private String faction;
@@ -162,8 +171,10 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	@Override
 	protected void updateAI() {
 		long start = System.nanoTime();
-		if (this.talkingTo != null && (this.talkingTo.removed || this.talkingTo.distanceTo(this) > TALK_DISTANCE)) {
+		if (this.talkingTo != null && (this.talkingTo.removed || this.talkingTo.distanceTo(this) > TALK_DISTANCE
+			|| this.talkEndsAt > 0 && this.tickCount >= this.talkEndsAt)) {
 			this.talkingTo = null;
+			this.talkEndsAt = 0;
 		}
 
 		// Mid-conversation the NPC stands still and faces the player; its behaviors resume afterwards.
@@ -174,6 +185,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 			this.brain.tick();
 		}
 
+		this.putAwayWeaponWhenSafe();
 		super.updateAI();
 		this.navigator.tick();
 		// Applied after the vanilla idle AI, which would otherwise spin the head randomly.
@@ -371,6 +383,17 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 
 	public void setTalkingTo(@Nullable Player player) {
 		this.talkingTo = player;
+		this.talkEndsAt = 0;
+	}
+
+	/**
+	 * A conversation screen with this player closed. The NPC waits a moment before going back to what it was doing,
+	 * so moving between the conversation's screens (inventory, profile, typing a word) doesn't let it walk off.
+	 */
+	public void endTalkSoon(Player player) {
+		if (this.talkingTo == player) {
+			this.talkEndsAt = this.tickCount + TALK_HANDOFF_TICKS;
+		}
 	}
 
 	// Combat
@@ -448,6 +471,19 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	/** True if anything carried hits harder than a bare fist (bows don't count). */
 	public boolean hasMeleeWeapon() {
 		return this.inventory.findSlot(stack -> !(stack.getItem() instanceof ItemBow) && stack.getDamageVsEntity(this) > 1) >= 0;
+	}
+
+	/**
+	 * Once there's been no fighting for a while, puts a weapon in hand away, like a player would. Paranoid NPCs keep
+	 * theirs out.
+	 */
+	private void putAwayWeaponWhenSafe() {
+		if (this.brain.getActive() instanceof CombatBehavior || this.brawling.isBrawling()) {
+			this.lastFightTick = this.tickCount;
+		} else if (this.tickCount - this.lastFightTick > WEAPON_AWAY_TICKS && (this.tickCount + this.id) % 20 == 0
+			&& !this.eating.isEating() && !this.personality.has(Quirk.PARANOID)) {
+			this.putAwayWeapon();
+		}
 	}
 
 	/** Moves a held weapon into the pack (if there's room), like putting it away for a fistfight. */

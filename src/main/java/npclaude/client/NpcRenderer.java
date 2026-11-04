@@ -128,9 +128,16 @@ public class NpcRenderer extends MobRendererBipedArmored<EntityNPC> {
 		return this.models.computeIfAbsent(localId, id -> Cache.getModelForEntity(PLAYER_MODELS, id));
 	}
 
+	/** Set while drawing an NPC as a paper doll in a screen, which shows no name tag or health bar. */
+	public static boolean drawingPreview;
+
 	/** Draws the name tag as usual, then a health bar above it if the viewer is looking at this NPC and it isn't hostile to them. */
 	@Override
 	protected void renderSpecials(@NotNull TessellatorGeneral tessellator, @NotNull EntityNPC entity, double x, double y, double z) {
+		if (drawingPreview) {
+			return;
+		}
+
 		super.renderSpecials(tessellator, entity, x, y, z);
 		Player viewer = Minecraft.getMinecraft().thePlayer;
 		if (viewer != null && !entity.removed && entity.getHealth() > 0 && NpcFactions.regard(entity, viewer) != FactionRelation.HOSTILE && isLookingAt(viewer, entity)) {

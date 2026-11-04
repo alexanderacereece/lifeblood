@@ -12,7 +12,9 @@ import npclaude.combat.FactionRegistry;
 import npclaude.combat.FactionRelation;
 import npclaude.combat.NpcFactions;
 import npclaude.entity.EntityNPC;
+import npclaude.entity.NpcGender;
 import npclaude.family.Kinship;
+import npclaude.family.Romance;
 import npclaude.people.PeopleRegistry;
 import npclaude.words.WordBook;
 import npclaude.words.WordCategory;
@@ -123,8 +125,10 @@ public final class SpeechFacts {
 	}
 
 	/**
-	 * relationship (single/dating/engaged/married/widowed) with the partner's name as [partner], and listener_kin:
-	 * what the listener is to the speaker (spouse, partner, fiance, parent, child, sibling, cousin...) or "none".
+	 * relationship (single/dating/engaged/married/widowed) with the partner's name as [partner], to_partner (yes when
+	 * the listener is that partner, so they aren't told about themself), listener_kin: what the listener is to the
+	 * speaker (spouse, partner, fiance, parent, child, sibling, cousin...) or "none", listener_age (child/adult), and
+	 * [kin_call]: what the speaker calls them (Mom, Dad, Grandma, Grandpa, or their name).
 	 */
 	private static void addFamily(EntityNPC npc, @Nullable Entity listener, SpeechContext context) {
 		PeopleRegistry family = PeopleRegistry.get(npc.world);
@@ -140,6 +144,29 @@ public final class SpeechFacts {
 		UUID listenerId = listener != null ? Opinions.idOf(listener) : null;
 		Kinship kin = listenerId != null ? Kinship.of(family, npc.getUuid(), listenerId) : null;
 		context.fact("listener_kin", kin != null ? kin.id() : "none");
+		context.fact("to_partner", partnership != null && listenerId != null && partnership.other(npc.getUuid()).equals(listenerId) ? "yes" : "no");
+		context.fact("listener_age", listener instanceof EntityNPC other && other.life.isChild() ? "child" : "adult");
+		if (listener != null) {
+			context.word("kin_call", Word.name(kinCall(kin, listener, listenerId != null ? family.find(listenerId) : null)));
+		}
+	}
+
+	/** What someone calls a relative to their face: Mom and Dad, Grandma and Grandpa; anyone else by name. */
+	private static String kinCall(@Nullable Kinship kin, Entity listener, @Nullable PeopleRegistry.Person person) {
+		NpcGender gender = Romance.genderOf(listener);
+		if (gender == null && person != null) {
+			gender = person.gender;
+		}
+
+		if (kin == Kinship.PARENT && gender != null) {
+			return gender == NpcGender.FEMALE ? "Mom" : "Dad";
+		}
+
+		if (kin == Kinship.GRANDPARENT && gender != null) {
+			return gender == NpcGender.FEMALE ? "Grandma" : "Grandpa";
+		}
+
+		return Opinions.nameOf(listener);
 	}
 
 	/**

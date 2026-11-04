@@ -63,9 +63,7 @@ public class NpcInventoryScreen extends ScreenContainerAbstract {
 	@Override
 	public void removed() {
 		super.removed();
-		if (this.npc.getTalkingTo() == this.player) {
-			this.npc.setTalkingTo(null);
-		}
+		this.npc.endTalkSoon(this.player);
 	}
 
 	@Override
@@ -130,7 +128,12 @@ public class NpcInventoryScreen extends ScreenContainerAbstract {
 		EntityRenderer.renderShadows = false;
 		GLRenderer.globalGetNormalTransformMatrix().scale(1.0F, -1.0F, 1.0F);
 		GLRenderer.setLightmapCoord2i(15, 15);
-		EntityRendererDispatcher.instance.renderEntityPreviewWithPosYaw(GLRenderer.getTessellator(), npc, 0.0, 0.0, 0.0, 0.0F, partialTick);
+		NpcRenderer.drawingPreview = true;
+		try {
+			EntityRendererDispatcher.instance.renderEntityPreviewWithPosYaw(GLRenderer.getTessellator(), npc, 0.0, 0.0, 0.0, 0.0F, partialTick);
+		} finally {
+			NpcRenderer.drawingPreview = false;
+		}
 		EntityRenderer.renderShadows = true;
 		npc.yBodyRot = yBodyRot;
 		npc.yBodyRotO = yBodyRotO;

@@ -23,6 +23,12 @@ Oh, I'll pass [item.it] on to someone who needs [item.it] more. {generous}
 Thank you, [listener]. Truly. {opinion=friend, polite}
 Aw, [listener]. You're the best. {opinion=close_friend}
 Hm. Trying to buy my good opinion? {opinion=disliked}
+For me? Thank you, [kin_call]! {age=child, listener_kin=parent, w=10}
+You're the best, [kin_call]! {age=child, listener_kin=parent, taste=love, w=10}
+You didn't have to, [kin_call]. {age=adult, listener_kin=parent, w=6}
+Aw, you got me something?    {listener_kin=child, w=8}
+I'll keep it forever.        {listener_kin=child, sentimental, w=8}
+Thank you, love.             {listener_kin=spouse, w=6}
 
 # How much they like it, whatever it is
 [item.cap]! I love [item.it]! {taste=love, w=4}
@@ -200,6 +206,8 @@ Thank you, truly.            {polite, w=2}
 Put [item.it] with the rest. {taciturn, w=3}
 Still trying to win me over? {opinion=disliked, w=3}
 [item.cap]! Even better!     {taste=love, w=4}
+More? Thanks, [kin_call]!    {age=child, listener_kin=parent, w=8}
+You spoil me, love.          {listener_kin=spouse, w=6}
 
 == brawl_cheap_shot ==
 It's over! What are you doing?!

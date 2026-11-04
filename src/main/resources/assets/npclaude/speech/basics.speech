@@ -10,6 +10,7 @@
 # relation (ally/neutral/hostile: how they'd treat the listener in a fight),
 # age (child/adult), birthday (yes on their birthday), relationship (single/dating/engaged/married/widowed), listener_kin (what the listener is to them: spouse, fiance,
 # partner, parent, child, sibling, grandparent, grandchild, aunt_uncle, niece_nephew, cousin, ..._in_law, or none),
+# to_partner (yes when the listener is their partner), listener_age (child/adult),
 # leader (yes/no), time (morning/day/evening/night), weather (clear/rain/snow/storm/fog/blood_rain), wet (yes when
 # it's coming down on them), outside, season (spring/summer/fall/winter), biome (plains, desert, tundra...),
 # climate (cold/mild/hot here), home_climate, home_biome and at_home (where they're from and whether they're there),
@@ -17,7 +18,7 @@
 # health (fine/hurt/low), recovering (yes/no), has_faction, has_enemy, address, catchphrase.
 # Words: taught_food, taught_animal, taught_thing, taught_place, taught_exclamation, taught_greeting,
 # taught_farewell, taught_describe, taught_activity, taught_angry, taught_happy, taught_sad, taught_scared (words
-# players taught them), partner, favorite_food, hated_food, favorite_thing, hated_thing, weather_word, biome_word, season_word,
+# players taught them), partner, kin_call (Mom, Dad, Grandma, Grandpa, or the listener's name), favorite_food, hated_food, favorite_thing, hated_thing, weather_word, biome_word, season_word,
 # favorite_weather, hated_weather, favorite_biome, hated_biome, favorite_season, hated_season, home_biome, faction,
 # enemy_faction, and per event: enemy, food, item.
 # Gifts add kind (food/valuable/junk/gross/material/tool/weapon/armor/flower/plant/curio/music/decor/dangerous/

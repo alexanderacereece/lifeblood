@@ -96,6 +96,9 @@ public final class Appearance {
 		return new Appearance(choices);
 	}
 
+	private static final String MUTED_PREFIX = "muted_";
+	/** How often clothes get a muted dye rather than a bright one. */
+	private static final float MUTED_CHANCE = 0.75F;
 	/** How widely skin tones spread around the one most usual for a climate, in palettes. */
 	private static final float SKIN_SPREAD = 1.3F;
 
@@ -129,6 +132,7 @@ public final class Appearance {
 
 			String palette = layer.paletteGroup == null ? "" : "hair".equals(layer.paletteGroup) ? hairColor
 				: layer == AppearanceLayer.BASE ? pickSkin(catalog.paletteNames("skin"), random, warmth)
+				: "dye".equals(layer.paletteGroup) ? pickDye(catalog.paletteNames("dye"), random)
 				: pick(catalog.paletteNames(layer.paletteGroup), random, "");
 			choices.put(layer, new Choice(pick(parts, random, ""), palette));
 		}
@@ -215,6 +219,15 @@ public final class Appearance {
 
 		double spot = warmth * (skins.size() - 1) + random.nextGaussian() * SKIN_SPREAD;
 		return skins.get((int) Math.max(0, Math.min(skins.size() - 1, Math.round(spot))));
+	}
+
+	/** Clothes are usually muted: a muted dye (named "muted_...") most of the time, a bright one now and then. */
+	private static String pickDye(List<String> dyes, Random random) {
+		List<String> muted = dyes.stream().filter(name -> name.startsWith(MUTED_PREFIX)).toList();
+		List<String> bright = dyes.stream().filter(name -> !name.startsWith(MUTED_PREFIX)).toList();
+		boolean wantMuted = random.nextFloat() < MUTED_CHANCE;
+		List<String> from = wantMuted && !muted.isEmpty() || bright.isEmpty() ? muted : bright;
+		return pick(from, random, "");
 	}
 
 	private static String pick(List<String> options, Random random, String fallback) {

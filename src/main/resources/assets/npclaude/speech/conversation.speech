@@ -52,6 +52,21 @@ Oh, hey. Didn't see you there. {timid}
 [hello] Make it quick.       {rude}
 [hello] Make it quick, I'm working. {hardworking, rude}
 Oh good, an excuse to stop working. {lazy, lighthearted}
+# Family: children and their parents, siblings, grandparents
+[kin_call]! Guess what I did today! {age=child, listener_kin=parent, w=8}
+[kin_call]! Look, look, look! {age=child, listener_kin=parent, extrovert, w=8}
+[kin_call], can we go home? I'm sleepy. {age=child, listener_kin=parent, time=night, w=12}
+Hi, [kin_call].              {age=adult, listener_kin=parent, w=8}
+Oh, [kin_call]! Good to see you. {age=adult, listener_kin=parent, w=6}
+There you are, [listener]. Staying out of trouble? {listener_kin=child, w=8}
+Hey, sweetheart.             {listener_kin=child, listener_age=child, w=8}
+[listener]! Come here, you.  {listener_kin=child, extrovert, w=6}
+How's my favorite kid? Don't tell the others. {listener_kin=child, lighthearted, w=6}
+There's my grown-up [listener]. {listener_kin=child, listener_age=adult, w=6}
+Oh. It's you.                {listener_kin=sibling, w=4}
+Hey, trouble.                {listener_kin=sibling, w=6}
+[kin_call]! Did you bring anything? {age=child, listener_kin=grandparent, w=10}
+There's my grandbaby!        {listener_kin=grandchild, w=8}
 
 == smalltalk_short ==
 How's it going?
@@ -86,6 +101,16 @@ Not now... I'm still sore all over. {recovering=yes}
 Make it quick, I've got work to do. {hardworking}
 Oh, thank the Cube. A break.  {lazy, pious}
 Oh, thank goodness. A break.  {lazy}
+What is it, [kin_call]?      {age=child, listener_kin=parent, w=8}
+Am I in trouble?             {age=child, listener_kin=parent, w=6}
+I didn't do it!              {age=child, listener_kin=parent, lighthearted, w=6}
+Yes, [kin_call]?             {age=adult, listener_kin=parent, w=6}
+What is it, [listener]?      {listener_kin=child, w=6}
+Something on your mind, sweetheart? {listener_kin=child, listener_age=child, w=8}
+Need something, kiddo?       {listener_kin=child, w=6}
+What's up?                   {listener_kin=sibling, w=5}
+Yes, dear?                   {listener_kin=spouse, w=6}
+What is it, love?            {listener_kin=spouse, w=5}
 
 == smalltalk ==
 Another year older. Feels about the same. {birthday=yes, w=6}
@@ -175,12 +200,12 @@ Be gentle with the animals, would you? {animal_lover}
 People who hurt animals... I don't trust them. {animal_lover, serious}
 If I could, I'd live in [favorite_biome.the]. I love the smell of it. {w=0.3}
 I've had a rough time lately. {mood=bad}
-[partner] and I are doing well, thanks for asking. Well, you didn't ask. {relationship=married, w=1.5}
+[partner] and I are doing well, thanks for asking. Well, you didn't ask. {relationship=married, to_partner=no, w=1.5}
 Married life suits me.       {relationship=married, optimist, w=1.5}
-Married life is... an adjustment. {relationship=married, pessimist, w=1.5}
-I can't stop thinking about [partner]. {relationship=dating, romantic, w=3}
-[partner] and I have been seeing each other. Don't tell anyone. {relationship=dating, w=1.5}
-I'm getting married! Did you hear? {relationship=engaged, w=2.5}
+Married life is... an adjustment. {relationship=married, to_partner=no, pessimist, w=1.5}
+I can't stop thinking about [partner]. {relationship=dating, to_partner=no, romantic, w=3}
+[partner] and I have been seeing each other. Don't tell anyone. {relationship=dating, to_partner=no, w=1.5}
+I'm getting married! Did you hear? {relationship=engaged, to_partner=no, w=2.5}
 Wedding plans. So many wedding plans. {relationship=engaged, hardworking, w=2}
 I still set two plates out, some nights. {relationship=widowed, sentimental, w=2}
 I miss them every day.       {relationship=widowed, w=1}
@@ -241,6 +266,32 @@ I met a talking sheep once. Honest. {liar}
 I'd never lie to you.        {honest}
 You look good today. Really. {romantic}
 Do you ever think about settling down? {romantic}
+[kin_call], when I grow up can I have a sword? {age=child, listener_kin=parent, w=10}
+I was good today. Mostly.    {age=child, listener_kin=parent, w=10}
+Can we have [favorite_food.s] for dinner? Please? {age=child, listener_kin=parent, w=10}
+I love you, [kin_call].      {age=child, listener_kin=parent, w=8}
+Tell me a story later?       {age=child, listener_kin=parent, time=evening, w=12}
+Why do I have to go to bed when you don't? {age=child, listener_kin=parent, time=night, w=12}
+I'm not scared of the dark. You can leave the torch on, though. {age=child, listener_kin=parent, timid, w=12}
+Can I have a puppy? A wolf puppy? {age=child, listener_kin=parent, animal_lover, w=12}
+You raised me well, you know. {age=adult, listener_kin=parent, sentimental, w=8}
+Don't worry about me, [kin_call]. I'm fine. {age=adult, listener_kin=parent, w=8}
+Are you looking after yourself, [kin_call]? {age=adult, listener_kin=parent, w=6}
+Remember when I was little? Feels like forever ago. {age=adult, listener_kin=parent, w=6}
+Have you eaten? You look thin. {listener_kin=child, w=8}
+Have you been good?          {listener_kin=child, listener_age=child, w=8}
+Stay where I can see you, all right? {listener_kin=child, listener_age=child, w=8}
+I'm proud of you, you know.  {listener_kin=child, w=6}
+You're growing up so fast.   {listener_kin=child, listener_age=child, sentimental, w=10}
+You never visit enough.      {listener_kin=child, listener_age=adult, w=6}
+Met anyone nice lately? Just asking. {listener_kin=child, listener_age=adult, nosy, w=8}
+What should we have for dinner? {listener_kin=spouse, w=6}
+The house feels empty when you're out. {listener_kin=spouse, w=5}
+Don't stay out too late, love. {listener_kin=spouse, w=5}
+Remember when we used to fight over everything? We still do. {listener_kin=sibling, w=6}
+You were always the favorite. {listener_kin=sibling, jealous, w=8}
+[kin_call], tell me about the old days! {age=child, listener_kin=grandparent, w=8}
+Grandchildren are the best part of getting old. {listener_kin=grandchild, w=8}
 
 # ---------------------------------------------------------------------------------------------------------------
 # The conversation menu
@@ -356,6 +407,11 @@ Can't let you go alone.      {loyal, w=2}
 The Cube God guide our steps. {pious}
 Ha! Let's see what's out there. {lighthearted}
 If we must.                  {pessimist}
+Really? I can come? Yay!     {age=child, listener_kin=parent, w=10}
+Anywhere with you, [kin_call]. {listener_kin=parent, w=6}
+Of course I'll come, [listener]. {listener_kin=child, w=6}
+I'll keep you safe.          {listener_kin=child, brave, w=6}
+Where you go, I go.          {listener_kin=spouse, w=6}
 
 == follow_refuse ==
 I don't think so.
@@ -373,6 +429,10 @@ How do I know you won't lead me into a trap? {paranoid, w=2}
 I'm in no shape to go anywhere. {recovering=yes, w=5}
 Hell no.                     {crude, opinion=disliked}
 Maybe some other time.       {polite}
+[kin_call], I'm too tired.   {age=child, listener_kin=parent, w=8}
+Sorry, [kin_call]. Not today. {listener_kin=parent, w=6}
+Not today, sweetheart.       {listener_kin=child, w=6}
+Not today, love.             {listener_kin=spouse, w=6}
 
 == follow_stop ==
 All right. I'll head home.
@@ -405,6 +465,9 @@ At your service.             {polite, proper}
 Make it quick.               {rude}
 Practical stuff. My favorite. {hardworking}
 Ugh, practical stuff.        {lazy}
+What do you need, [kin_call]? {listener_kin=parent, w=5}
+What do you need, love?      {listener_kin=spouse, w=5}
+What is it, kiddo?           {listener_kin=child, w=5}
 
 == farewell ==
 Bye.
@@ -421,6 +484,16 @@ Already? Aw.                 {extrovert}
 See you, [address].
 [taught_farewell]!           {w=3}
 [taught_farewell], [listener]. {w=3}
+Bye, [kin_call]! Come back soon! {age=child, listener_kin=parent, w=10}
+Do you have to go?           {age=child, listener_kin=parent, w=10}
+Love you, [kin_call].        {listener_kin=parent, w=6}
+Take care of yourself, [kin_call]. {age=adult, listener_kin=parent, w=6}
+Be careful out there, sweetheart. {listener_kin=child, w=8}
+Don't stay out after dark!   {listener_kin=child, listener_age=child, w=8}
+Love you, kiddo.             {listener_kin=child, w=6}
+See you at home, love.       {listener_kin=spouse, w=8}
+Come home safe.              {listener_kin=spouse, w=6}
+Later. Don't do anything I wouldn't. {listener_kin=sibling, w=5}
 
 # ---------------------------------------------------------------------------------------------------------------
 # Trying to talk to them mid-fight, or when they're out to get you. fighting_you=yes when you're who they're

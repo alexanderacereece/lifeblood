@@ -8,6 +8,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.ButtonElement;
 import net.minecraft.client.gui.Screen;
 import net.minecraft.client.gui.TextFieldElement;
+import npclaude.dialogue.DialogueSession;
 import npclaude.dialogue.TextRequest;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.input.Keyboard;
@@ -46,6 +47,11 @@ public class TextEntryScreen extends Screen {
 	@Override
 	public void init() {
 		Keyboard.enableRepeatEvents(true);
+		// Typing a reply is still part of the conversation: the NPC keeps waiting.
+		if (this.parentScreen instanceof DialogueSession session) {
+			session.getNpc().setTalkingTo(session.getPlayer());
+		}
+
 		this.buttons.clear();
 		int centerX = this.width / 2;
 		int centerY = this.height / 2;
@@ -80,6 +86,9 @@ public class TextEntryScreen extends Screen {
 	@Override
 	public void removed() {
 		Keyboard.enableRepeatEvents(false);
+		if (this.parentScreen instanceof DialogueSession session) {
+			session.getNpc().endTalkSoon(session.getPlayer());
+		}
 	}
 
 	@Override

@@ -176,9 +176,7 @@ public class NpcDialogueScreen extends Screen implements DialogueSession {
 
 	@Override
 	public void removed() {
-		if (this.npc.getTalkingTo() == this.player) {
-			this.npc.setTalkingTo(null);
-		}
+		this.npc.endTalkSoon(this.player);
 	}
 
 	@Override
