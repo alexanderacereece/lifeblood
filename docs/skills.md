@@ -55,6 +55,7 @@ Skills grow by doing, with real practice counting the most:
 - **Teaching:** a skilled parent, friend or mentor speeds it up, and a player can be one, by fighting alongside them.
 - **Diminishing returns:** the first steps come fast, mastery takes a long time, and aptitude sets how far anyone gets.
 - **Rust:** a skill left unused for a long time slips a little, never below where practice took it a long time ago.
+- **Real time:** an in-game year (56 days) counts as a real year, as for growing up. Going from novice to decent takes about what it would for a person: a year or two of steady practice (56 to 112 in-game days), and mastery most of a decade. Someone who practices every day gets there sooner than someone who picks up a bow now and then.
 
 ## Making it part of who they are
 
@@ -84,4 +85,3 @@ Building, farming and the like stay rules plus time, unless a real behavior turn
 
 - How many skills there are, in the end; few and meaningful is the aim.
 - Whether the profile ever shows numbers, or only words.
-- How quickly a novice becomes decent with steady practice; to be tuned in the playtest.

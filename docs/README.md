@@ -64,10 +64,13 @@ Each step is useful on its own and proves the next:
 - Building is honest: real materials, the player's reach and support rules, prefabs that keep every block detail.
 - Prefabs swap by convention, like skin parts: logs and plain planks become the local wood, swappable stone the local stone, gray the primary color and light gray the secondary (a faction's colors for its buildings).
 - Every faction has a primary and a secondary color.
+- **Time is real time, counted in in-game years.** One in-game year (56 days by default, the world's calendar) stands for a real year in every time-based mechanic, as growing up already does (18 years): skills, towns founding and falling, faction relations, elections, and the rest. Things take as long as they would for real people.
 - Skills are behavior, not bonuses: they change an NPC's decisions and precision, never damage, speed or other rules.
 - Mining stays honest; running out of ore is a story, not a problem. Unloaded areas run on ledgers measured from the real rules.
 
 ## Open questions
+
+- Romance and children predate the real-time rule and run faster: dating to engagement in 7 days (about six weeks), engagement to marriage in 5 (about a month), and a child about every ten days (about five a year). Whether to slow them to real time, or keep them quick for play.
 
 - The age-stopping item: its recipe, whether children can be given one, and whether the profile shows it.
 - Whether symbols on banners and shields are doable, for faction colors.
