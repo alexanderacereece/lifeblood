@@ -6,7 +6,7 @@ Keeping NPCs off the player's builds without claim commands, and the property re
 
 ## New worlds only
 
-NPClaude is designed to start with a new world. Builds from before it was added have no owner on record and are not protected; there are no guesses about which blocks look man-made, which would be finicky and hard to test.
+Lifeblood is designed to start with a new world. Builds from before it was added have no owner on record and are not protected; there are no guesses about which blocks look man-made, which would be finicky and hard to test.
 
 ## Who placed what
 

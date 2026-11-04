@@ -55,7 +55,7 @@ Children inherit body traits: skin tone, hair color and eye color each from one 
 
 ## The art
 
-Parts live in two places with the same layout: bundled with the mod (`assets/npclaude/parts/`) and in the game folder's `npc_parts/`, which can be added to without rebuilding (`/npc parts reload` picks up changes). Game-folder files win over bundled ones with the same name.
+Parts live in two places with the same layout: bundled with the mod (`assets/lifeblood/parts/`) and in the game folder's `npc_parts/`, which can be added to without rebuilding (`/npc parts reload` picks up changes). Game-folder files win over bundled ones with the same name.
 
 - `<layer>/<name>.png`: a 64x64 skin-format part anyone can roll. Layer folders: `base`, `eyes`, `mouth`, `facial_hair`, `bottom`, `top`, `outfit`, `hair`, `accessory` (drawn in that order).
 - `<layer>/male/<name>.png`, `<layer>/female/<name>.png`: parts only rolled for that gender (a command can still put them on anyone).

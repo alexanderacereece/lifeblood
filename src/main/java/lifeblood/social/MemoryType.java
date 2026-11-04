@@ -1,0 +1,124 @@
+package lifeblood.social;
+
+import java.util.Locale;
+import org.jetbrains.annotations.Nullable;
+
+/**
+ * Kinds of things an NPC remembers. Each has an effect on its opinion of the person involved, an effect on its mood,
+ * how long it lasts (in-game days), how many times it stacks, and how much each repeat counts compared to the one
+ * before (half, by default; friendship-building memories add up more steadily).
+ * See docs/personality.md, "Opinions".
+ */
+public enum MemoryType {
+	// About a person
+	SAVED_MY_LIFE("saved my life", 30, 10, 60, 3),
+	FOUGHT_BESIDE_ME("fought beside me", 8, 0, 10, 5),
+	// Gifts (one a day) and chats (five a minute) are the steady way to make friends: a daily gift they like plus
+	// some chatting makes most NPCs friends (50) in about three days, and close friends (80+) in about two weeks.
+	/** Scaled by how much the NPC likes the gift. */
+	GAVE_ME_A_GIFT("gave me a gift", 8, 3, 14, 14, false, 0.9F),
+	/** Scaled by how much the NPC likes the food. */
+	GAVE_ME_FOOD_I_LIKE("gave me food I like", 12, 5, 14, 14, false, 0.9F),
+	GAVE_ME_FOOD_I_HATE("gave me food I hate", -3, -2, 3, 3),
+	/** Something the NPC doesn't like; truly rude gifts (dirt) count as an insult instead. */
+	GAVE_ME_JUNK("gave me junk", -3, -2, 3, 3),
+	/** Given a guardian amulet: someone wants them kept safe. */
+	GAVE_ME_AN_AMULET("gave me a guardian amulet", 25, 8, 60, 1),
+	/** Asked out and turned down. Stings, mostly. */
+	TURNED_ME_DOWN("turned me down", -5, -8, 5, 2, true),
+	BROKE_UP_WITH_ME("broke up with me", -20, -20, 20, 2),
+	HAD_A_NICE_CHAT("had a nice chat", 2, 2, 3, 10, false, 1.0F),
+	TAUGHT_ME_A_WORD("taught me a word", 2, 0, 3, 5),
+	INSULTED_ME("insulted me", -8, -3, 4, 5, true),
+	HIT_ME("hit me", -12, -5, 3, 5),
+	/** Only animal lovers keep this one. */
+	KILLED_AN_ANIMAL("killed an animal", -4, 0, 2, 5),
+	BEAT_ME_IN_A_BRAWL("beat me in a brawl", -5, -5, 10, 3, true),
+	/** Scaled up when it came out of nowhere. */
+	PICKED_A_FIGHT_WITH_ME("picked a fight with me", -6, -2, 7, 3),
+	/** After a brawl: getting it out of their system. Usually outweighs the brawl's own bad memories. */
+	CLEARED_THE_AIR("cleared the air", 8, 2, 5, 2),
+	/** Competitive losers respect whoever beat them. */
+	BEAT_ME_FAIR_AND_SQUARE("beat me fair and square", 8, 0, 10, 2),
+	FLED_AND_LEFT_ME("fled and left me", -15, 0, 15, 3),
+	LIED_TO_ME("lied to me", -20, 0, 20, 3),
+	STOLE_FROM_ME("stole from me", -25, -5, 30, 3),
+	ATTACKED_MY_HOME("attacked my home", -30, -10, 40, 3),
+	KILLED_A_FRIEND("killed a friend", -40, -15, 80, 3),
+	KILLED_FAMILY("killed family", -70, -30, 200, 3),
+	KILLED_MY_SPOUSE_OR_CHILD("killed my spouse or child", -100, -40, 400, 3),
+
+	// Mood only
+	/** Scaled by how much the NPC likes the food. */
+	ATE_FOOD_I_LIKE("ate food I like", 0, 6, 0.25F, 3),
+	ATE_FOOD_I_HATE("ate food I hate", 0, -4, 0.25F, 3),
+	SLEPT_IN_A_BED("slept in a bed", 0, 4, 1, 1),
+	SLEPT_OUTSIDE("slept outside", 0, -4, 1, 1),
+	/** Scaled by how much the NPC likes the weather it's out in. */
+	ENJOYED_THE_WEATHER("enjoyed the weather", 0, 3, 0.25F, 3),
+	MISERABLE_WEATHER("miserable weather", 0, -3, 0.25F, 3),
+	/** Scaled by how much the NPC likes the biome it's in; refreshed while it stays. */
+	LIKES_IT_HERE("likes it here", 0, 4, 0.1F, 1),
+	HATES_IT_HERE("hates it here", 0, -4, 0.1F, 1),
+	SAW_AN_ANIMAL_DIE("saw an animal die", 0, -3, 0.5F, 3),
+	SAW_A_DEATH("saw a death", 0, -6, 2, 3),
+	A_FRIEND_DIED("a friend died", 0, -20, 10, 3),
+	FAMILY_DIED("family died", 0, -30, 20, 3),
+	MY_BIRTHDAY("my birthday", 0, 10, 1, 1),
+	HAD_A_CHILD("had a child", 0, 25, 10, 2),
+	STARTED_DATING("started dating", 0, 10, 5, 1),
+	GOT_ENGAGED("got engaged", 0, 15, 7, 1),
+	WENT_TO_A_WEDDING("went to a wedding", 0, 6, 2, 2),
+	GOT_MARRIED("got married", 0, 30, 10, 1),
+	WON_A_FIGHT("won a fight", 0, 4, 1, 3),
+	LOST_A_FIGHT("lost a fight", 0, -5, 1, 3),
+	NEARLY_DIED("nearly died", 0, -15, 2, 2);
+
+	public final String description;
+	public final int opinion;
+	public final int mood;
+	public final float days;
+	public final int stackLimit;
+	/** Hurts pride: proud NPCs feel it twice as much. */
+	public final boolean pride;
+	/** Each repeat about the same person counts this much of the one before. */
+	public final float falloff;
+
+	MemoryType(String description, int opinion, int mood, float days, int stackLimit) {
+		this(description, opinion, mood, days, stackLimit, false);
+	}
+
+	MemoryType(String description, int opinion, int mood, float days, int stackLimit, boolean pride) {
+		this(description, opinion, mood, days, stackLimit, pride, 0.5F);
+	}
+
+	MemoryType(String description, int opinion, int mood, float days, int stackLimit, boolean pride, float falloff) {
+		this.falloff = falloff;
+		this.description = description;
+		this.opinion = opinion;
+		this.mood = mood;
+		this.days = days;
+		this.stackLimit = stackLimit;
+		this.pride = pride;
+	}
+
+	/** Whether this memory is about a particular person (otherwise it only affects mood). */
+	public boolean isAboutSomeone() {
+		return this.opinion != 0;
+	}
+
+	public String id() {
+		return this.name().toLowerCase(Locale.ROOT);
+	}
+
+	@Nullable
+	public static MemoryType byName(String name) {
+		for (MemoryType type : values()) {
+			if (type.id().equalsIgnoreCase(name)) {
+				return type;
+			}
+		}
+
+		return null;
+	}
+}

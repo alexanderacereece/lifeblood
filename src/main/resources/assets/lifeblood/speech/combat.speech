@@ -1,0 +1,153 @@
+# Lifeblood speech: combat. The format and every fact and word are described in basics.speech.
+
+# ---------------------------------------------------------------------------------------------------------------
+# Combat barks. [enemy] is who or what they're fighting.
+
+== fight ==
+[exclaim] [enemy.a.cap]!
+Here comes [enemy.a]!
+I'll handle this!            {brave}
+Come on, then!               {brave, !polite}
+Stand back!                  {brave, polite}
+For the [faction]!           {has_faction=yes, brave}
+Oh no, oh no, oh no...       {timid}
+Why is it always me?         {timid, pessimist}
+Watch out, [enemy.a]!        {!brave}
+Cube God, guide my arm!      {pious, brave}
+You picked the wrong fight!  {proud}
+Watch and learn.             {competitive}
+I've been waiting for this.  {vengeful}
+Not again...                 {lazy}
+To arms!                     {proper, brave}
+Get 'em!                     {crude}
+Come here, you bastard!      {crude+, brave}
+Oh, hell.                    {crude, timid}
+Right. Somebody's getting hurt. {hothead}
+You want a fight? You've got one, damn it! {hothead, crude}
+
+== flee ==
+[taught_scared]! Run!          {w=4}
+[taught_scared]!               {w=3}
+Run!
+I'm out of here!
+Nope! Nope!                  {lighthearted}
+Too many! Fall back!         {brave}
+Help!                        {timid}
+Cube God save me!            {pious}
+Every one for themselves!    {!polite}
+Retreat! Retreat!            {proper}
+Oh, hell no!                 {crude}
+Screw this!                  {crude+}
+I can't do this!             {timid, pessimist}
+Run! Don't look back!        {polite}
+
+== low_health ==
+[taught_scared]! I'm hurt!    {w=4}
+I'm hurt!
+I'm hurt bad!
+Can't take much more of this!
+Ugh... that hurt.
+Is that all you've got?      {brave, proud}
+Just a scratch!              {brave, optimist}
+I don't want to die here!    {timid}
+This is it, isn't it?        {pessimist}
+Somebody help!               {!brave}
+Cube God, not yet...         {pious}
+Damn it, that hurt!          {crude}
+Bloody hell...               {crude+}
+
+== victory ==
+[taught_happy]!               {w=3}
+[taught_happy]! Got it!       {w=3}
+Got it!
+Down it goes.
+Ha! Next!                    {brave}
+That's how it's done!        {proud}
+Phew. That was close.        {timid}
+That'll teach you.           {vengeful}
+Rest in peace, [enemy].      {forgiving}
+The Cube God provides.       {pious}
+One less [enemy] in the world. {serious}
+That's one for me.           {competitive}
+Keep up, [address].          {competitive, rude}
+
+== hit_by_friend ==
+[taught_angry]! Watch it!     {w=4}
+[taught_angry], [listener]!    {w=3}
+Hey! Watch it!
+Ow! What was that for?
+Careful!
+Do that again and see what happens. {rude}
+Hey! I'm on your side!       {opinion=friendly}
+Ow! [listener]!              {opinion=friend}
+That's going on my list, [listener]. {vengeful}
+I'll forget that, just this once. {forgiving}
+Was that really necessary?   {proper}
+Oi! Knock it off!            {crude}
+What the hell, [listener]?   {crude}
+Do that again. I dare you.   {hothead, w=2}
+
+# ---------------------------------------------------------------------------------------------------------------
+# Being downed, getting up, and rescue
+
+== downed ==
+[taught_sad]...               {w=3}
+Agh!
+Ugh...
+I'm down!
+Not... like... this...       {lighthearted}
+So... tired...               {lazy}
+Cube God...                  {pious}
+Tell my [favorite_food] I loved [favorite_food.it]... {glutton, lighthearted, w=2}
+I'll... get you... for this... {vengeful}
+Help...                      {timid}
+Ah, damn...                  {crude}
+
+== get_up ==
+I'm... I'm all right.
+Ow. Ow. Ow.
+I need to lie down somewhere softer. Home.
+That's it, I'm going home.
+I'll be fine. Just need some rest.
+Still alive. Barely.         {pessimist}
+Ha! Can't keep me down!      {optimist}
+Thank the Cube God.          {pious}
+I'll remember that one.      {vengeful}
+
+== thanks_saved ==
+You saved my life, [listener]!
+I owe you one, [listener]. A big one.
+Thank you. I mean it.        {serious}
+I thought I was done for. Thank you, [listener]. {timid}
+I had it handled! ...But thanks. {proud}
+Thank the Cube God, and thank you. {pious}
+I won't forget this, [listener]. {sentimental, w=2}
+I'm in your debt.            {proper}
+You're a lifesaver, literally. {lighthearted}
+
+== grief ==
+[taught_sad]... [victim]...   {w=3}
+No... [victim]...
+[victim]! No!
+Not [victim]...
+[victim]... Cube God keep you. {pious}
+Whoever did this will pay.   {vengeful, w=2}
+Why does this always happen? {pessimist}
+Rest well, [victim].         {forgiving}
+
+# ---------------------------------------------------------------------------------------------------------------
+# Eating
+
+== eat ==
+Mm.
+Food.
+[food.cap]! My favorite!     {taste=love, w=3}
+Mmm, [food].                 {taste=like, w=2}
+Not bad.                     {taste=like}
+[food.cap]. It's food.       {taste=meh, w=2}
+Ugh. [food.cap]. If I must.  {taste=dislike, w=2}
+I hate [food]. Hate it.      {taste=hate, w=3}
+Bleh.                        {taste=hate}
+Food, glorious food!         {glutton, w=2}
+Thank the Cube God for [food]. {pious}
+Om nom nom.                  {lighthearted}

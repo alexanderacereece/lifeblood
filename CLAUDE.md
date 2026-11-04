@@ -1,4 +1,4 @@
-# Working on NPClaude
+# Working on Lifeblood
 
 Read this first, then [docs/README.md](docs/README.md) (what exists and what's decided) and [docs/architecture.md](docs/architecture.md) (where everything lives). The design docs in `docs/` are the source of truth for how each system behaves; the code's class comments say how it's done.
 
@@ -9,7 +9,7 @@ Read this first, then [docs/README.md](docs/README.md) (what exists and what's d
 - **Every new system ships with speech lines** reacting to it, in the right `.speech` file.
 - **Stay multiplayer-ready.** Game logic lives in common code, never in screens. Client-only code is under `client/` and `@Environment(EnvType.CLIENT)`.
 - **Old-save code is temporary.** Anything that reads older saves goes in `save/SaveUpgrades` and nowhere else; it gets deleted at content 1.0.
-- **NPClaude is for new worlds.** Nothing guesses about builds made before the mod was added.
+- **Lifeblood is for new worlds.** Nothing guesses about builds made before the mod was added.
 
 ## Code standards
 
@@ -23,7 +23,7 @@ The goal: anyone, including an AI that has never seen the project, can find the 
 
 ## Speech files
 
-`src/main/resources/assets/npclaude/speech/*.speech`, one per topic; the format, facts and words are listed at the top of `basics.speech`. Young speakers use age versions of symbols in `ages.speech` (`greet.child`). A new fact or word set in `speech/SpeechFacts` (or per event) must be added to the lists in `SpeechFilesTest`, which checks every condition and `[reference]`.
+`src/main/resources/assets/lifeblood/speech/*.speech`, one per topic; the format, facts and words are listed at the top of `basics.speech`. Young speakers use age versions of symbols in `ages.speech` (`greet.child`). A new fact or word set in `speech/SpeechFacts` (or per event) must be added to the lists in `SpeechFilesTest`, which checks every condition and `[reference]`.
 
 ## Checking a change
 

@@ -1,5 +1,5 @@
 @echo off
-rem Builds NPClaude and starts the dev copy of BTA with the mod loaded.
+rem Builds Lifeblood and starts the dev copy of BTA with the mod loaded.
 rem Double-click this file, or run it from a terminal. The first start takes a minute.
 for /d %%D in ("C:\Program Files\Eclipse Adoptium\jdk-21*") do set "JAVA_HOME=%%D"
 if not defined JAVA_HOME (

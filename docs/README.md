@@ -1,4 +1,4 @@
-# NPClaude design
+# Lifeblood design
 
 An NPC framework for Better Than Adventure 8.0.1: villagers with personalities, opinions, families and their own way of talking, built so they can eventually live out their own days. Numbers throughout are starting points for playtesting, not final.
 
@@ -47,7 +47,7 @@ Each step is useful on its own and proves the next:
 - Every new system comes with speech lines reacting to it.
 - Code that reads old saves is temporary, kept in one place, and goes at content 1.0.
 - The build stays ready for multiplayer where that doesn't get in the way of the main vision.
-- NPClaude is meant to start with a new world; builds from before it was added aren't protected.
+- Lifeblood is meant to start with a new world; builds from before it was added aren't protected.
 - One new axis, ambition, plus the homebody and wanderer quirks, for life choices. No more than that.
 - NPCs choose by inclination among real options the world offers; balance shapes the options, not the NPC.
 - Building is honest: real materials, the player's reach and support rules, prefabs that keep every block detail.

@@ -1,0 +1,821 @@
+# Lifeblood speech: how the young sound. The format and every fact and word are described in basics.speech.
+#
+# A symbol with an age stage after a dot ("greet.child") replaces the plain one for speakers at that stage:
+#   baby        0-2   babbling and baby talk. Anything without a .baby version comes out of "babble".
+#   child       3-9   little kids
+#   young_teen  10-15 early teens
+#   teen        16-17 late teens
+# If nothing in the stage's version fits, the plain symbol is used (except for babies), so keep plain lines in each.
+# The age fact holds the stage (baby/child/young_teen/teen/adult), and so does listener_age for who they talk to.
+
+# ===============================================================================================================
+# Babies (0-2)
+
+== babble ==
+Ba!
+Ba-ba-ba.
+Da!
+Goo.
+Gah!
+Bwah!
+Mmm-ba.
+Ah-ah-ah!
+Pbbbt.
+Eee!
+Heehee!                      {lighthearted, w=2}
+Hee! Ba!                     {extrovert, w=2}
+...                          {introvert, w=2}
+Mm.                          {taciturn, w=2}
+Hnnh.                        {serious, w=2}
+Nuh!                         {rude, w=2}
+Waaah!                       {mood=bad, w=3}
+Waaah!                       {pessimist, w=1.5}
+Hic.                         {w=0.5}
+Nom nom.                     {glutton, w=3}
+Doggy!                       {animal_lover, w=2}
+[kin_call]!                  {listener_kin=parent, w=6}
+[kin_call]! [kin_call]!      {listener_kin=parent, extrovert, w=6}
+Up! Up!                      {listener_kin=parent, w=5}
+Uh-oh.                       {w=0.7}
+Wha dat?                     {curious, w=3}
+No!                          {hothead, w=2}
+
+== greet.baby ==
+[babble]
+Hi!                          {extrovert, w=2}
+Hiii!                        {opinion=friend, w=2}
+...                          {opinion=neutral, timid, w=3}
+Waaah!                       {opinion=disliked, w=3}
+[kin_call]!                  {listener_kin=parent, w=8}
+Up! Up!                      {listener_kin=parent, w=6}
+Ba! Ba!                      {listener_kin=sibling, w=4}
+
+== farewell.baby ==
+Bye-bye!
+Ba-bye.
+Bye!                         {extrovert}
+Nooo!                        {listener_kin=parent, w=6}
+Waaah!                       {listener_kin=parent, timid, w=6}
+
+== gift.baby ==
+Ooh!
+Mine!
+Ba! Ba!
+Nom.                         {kind=food, w=3}
+Nom nom nom!                 {kind=food, taste=love, w=4}
+Bleh!                        {kind=food, taste=hate, w=4}
+Bleh!                        {rude_gift=yes, w=6}
+Pretty!                      {taste=love, w=3}
+Mine! Mine!                  {greedy, w=3}
+Ta!                          {polite, w=3}
+
+== gift_again.baby ==
+Mine!
+Ooh!
+More!                        {greedy, w=3}
+
+== gift_full.baby ==
+Nuh!
+Bwah!
+
+== flee.baby ==
+Waaah!
+WAAAH!
+[kin_call]!                  {w=3}
+
+== grief.baby ==
+Waaah...
+...
+Waaah!
+
+== birthday.baby ==
+Ba!
+Cake?                        {glutton, w=4}
+Heehee!
+
+# ===============================================================================================================
+# Little kids (3-9)
+
+== greet.child ==
+Hi! Hi! Hello!               {w=2}
+Hi!
+Hello!
+Wanna play?                  {w=2}
+Hi! Wanna see a trick?       {lighthearted}
+Hi! I'm [name]!              {extrovert, opinion=neutral, w=2}
+Hi... I'm not s'posed to talk to strangers. {opinion=neutral, timid, w=3}
+...Hi.                       {introvert, w=2}
+Hi! Are you a hero?          {curious, w=2}
+Mom! Dad! ...Oh, it's you. Hi. {w=0.6}
+Did you bring snacks?        {glutton, w=2}
+Go away.                     {opinion=disliked, w=2}
+You're mean.                 {opinion=disliked, w=2}
+I don't like you.            {opinion=disliked, rude, w=3}
+Hiii, [listener]!            {opinion=friend, w=3}
+[listener]! [listener]! Play with me! {opinion=close_friend, w=3}
+Good morning!                {time=morning, polite}
+It's raining! Wanna jump in puddles? {weather=rain, lighthearted, w=3}
+It's snowing! It's snowing!  {weather=snow, w=4}
+Is the storm gonna get us?   {weather=storm, timid, w=4}
+You're back! You're back!    {listener_kin=parent, w=10}
+Hi! I missed you!            {listener_kin=parent, w=10}
+[kin_call]! Guess what I did today! {listener_kin=parent, w=8}
+[kin_call]! Look, look, look! {listener_kin=parent, extrovert, w=8}
+[kin_call], can we go home? I'm sleepy. {listener_kin=parent, time=night, w=12}
+[kin_call]! Did you bring anything? {listener_kin=grandparent, w=10}
+Ugh. It's you.               {listener_kin=sibling, w=6}
+Wanna play? You can be the monster. {listener_kin=sibling, w=6}
+
+== smalltalk_short.child ==
+Wanna play?
+I'm bored.
+Guess what!
+Look at this!
+I'm hungry.                  {glutton}
+Shh. I'm hiding.             {timid}
+
+== dialogue_open.child ==
+What?
+Yeah?
+Huh?
+Is it a game?                {lighthearted, w=2}
+Am I in trouble?             {timid, w=2}
+I didn't do it!              {liar, w=3}
+What do you want?            {rude}
+Yes please?                  {polite}
+Okay!                        {extrovert}
+...                          {taciturn, w=2}
+I'm not s'posed to talk to strangers. {opinion=neutral, timid, w=3}
+What is it, [kin_call]?      {listener_kin=parent, w=8}
+Am I in trouble?             {listener_kin=parent, w=6}
+I didn't do it!              {listener_kin=parent, lighthearted, w=6}
+What? I'm busy.              {listener_kin=sibling, w=6}
+
+== smalltalk.child ==
+When I grow up I'm gonna be the strongest person ever. {w=1.5}
+Do you know any games? I know lots of games.
+I'm not tired. I'm NOT.      {time=evening, w=2}
+Why is the sky up there?     {curious, w=2}
+Why is grass green? Why? Why? {curious, w=2}
+Where do creepers come from? {curious, w=2}
+I found a bug! I named it Steve. {lighthearted, w=2}
+Mom says I can't go past the trees.
+Are you a grown-up? You look like a grown-up.
+I'm gonna eat all the [favorite_food.s] when I'm big. {glutton, w=2}
+[favorite_food.cap] is the best food in the whole world. {glutton, w=2}
+I'm hiding. Don't tell anyone. {timid, w=2}
+I'm not scared of anything. Except spiders. {brave, w=2}
+I'm scared of the dark.      {timid, w=2}
+I can run super fast. Watch! {competitive, w=2}
+I'm faster than everybody.   {competitive, w=2}
+I'm the best at hide-and-seek. Nobody ever finds me. {proud, w=2}
+I drew you a picture. Well, I drew a picture. It's in the dirt. {generous, w=2}
+You can have my rock. It's my best rock. {generous, w=2}
+That's mine. And that's mine. And that. {greedy, w=2}
+I saw a wolf! A real one! It was THIS big. {liar, w=2}
+I saw a wolf! I wanna pet it! {animal_lover, w=3}
+I'm gonna have a hundred pets. {animal_lover, w=2}
+I said a prayer to the Cube God for a puppy. {pious, w=2}
+The Cube God can see everything. Even under the bed. {pious, w=2}
+Did you hear? Somebody kissed somebody! {nosy, w=2}
+What's in your pockets?      {nosy, w=2}
+I'm gonna marry someone really nice one day. {romantic, w=2}
+Ew, kissing.                 {!romantic, w=0.6}
+I don't wanna do chores.     {lazy, w=2}
+I helped! I helped a lot!    {hardworking, w=2}
+I'm not mad. I'm just stomping. {hothead, w=2}
+That's not FAIR!             {hothead, w=2}
+I can sit really still. Like a rock. {zen, w=2}
+Knock knock! ...You're supposed to say "who's there". {lighthearted, w=2}
+Hehe. You talk funny.        {rude, lighthearted, w=2}
+Please and thank you!        {polite, w=2}
+I know a bad word. I'm not gonna say it. {crude, w=2}
+Poop.                        {crude, lighthearted, w=2}
+It's gonna rain forever, isn't it? {weather=rain, pessimist, w=2}
+I love the rain!             {weather=rain, weather_like=love, w=2}
+Can we build a snowman?      {weather=snow, w=3}
+Is it my birthday yet?       {w=0.5}
+I miss [home_biome.the].     {at_home=no, w=0.6}
+[kin_call], when I grow up can I have a sword? {listener_kin=parent, w=10}
+I was good today. Mostly.    {listener_kin=parent, w=10}
+Can we have [favorite_food.s] for dinner? Please? {listener_kin=parent, w=10}
+I love you, [kin_call].      {listener_kin=parent, w=8}
+Tell me a story later?       {listener_kin=parent, time=evening, w=12}
+Why do I have to go to bed when you don't? {listener_kin=parent, time=night, w=12}
+I'm not scared of the dark. You can leave the torch on, though. {listener_kin=parent, timid, w=12}
+Can I have a puppy? A wolf puppy? {listener_kin=parent, animal_lover, w=12}
+[kin_call], tell me about the old days! {listener_kin=grandparent, w=8}
+You're the best, [kin_call]. Don't tell Mom and Dad I said that. {listener_kin=grandparent, w=6}
+I'm telling on you.          {listener_kin=sibling, w=8}
+You're not the boss of me.   {listener_kin=sibling, w=8}
+
+== about_me.child ==
+I'm [name]! I'm a big kid.
+I'm [name]. I like [favorite_thing.s].
+I like [favorite_food.s] and running and bugs. {w=1.5}
+I'm gonna be a hero when I grow up. {brave, w=2}
+I don't like talking about me. {introvert, w=2}
+I'm the smartest kid ever.   {proud, w=2}
+I'm just a kid.              {humble, w=2}
+Why do you wanna know?       {paranoid, w=2}
+
+== where_from.child ==
+Here!                        {at_home=yes, w=3}
+[home_biome.the.cap]. It's the best. {w=2}
+[home_biome.the.cap]! Have you been there? {extrovert, w=2}
+Um... [home_biome.the]?
+Mom says [home_biome.the]. {w=0.6}
+
+== questions_open.child ==
+Okay!
+What?
+Is it a quiz? I'm good at quizzes. {competitive, w=2}
+Ask me anything! I know everything. {proud, w=2}
+...Okay.                     {timid}
+
+== practical_open.child ==
+Huh?
+What do you need?
+I can help! I'm a good helper. {hardworking, w=2}
+
+== never_mind.child ==
+Okay!
+Okay...
+Huh?
+You're weird.                {rude}
+
+== follow_accept.child ==
+Yay! An adventure!
+Okay! Wait for me!
+Can we go to the river?      {curious}
+Do I have to walk the whole way? {lazy, w=2}
+I'll protect you!            {brave, w=2}
+I'm scared... but okay.      {timid, w=2}
+Really? I can come? Yay!     {listener_kin=parent, w=10}
+
+== follow_refuse.child ==
+I'm not s'posed to go with strangers. {opinion=neutral, w=3}
+No! I'm playing.
+My legs are tired.           {lazy, w=2}
+No way. You're mean.         {opinion=disliked, w=3}
+[kin_call], I'm too tired.   {listener_kin=parent, w=8}
+
+== follow_stop.child ==
+Aww.
+Okay. Bye!
+But I wasn't done!           {extrovert}
+That was fun!                {lighthearted}
+
+== farewell.child ==
+Bye!
+Bye-bye!
+See ya!
+Bye! Come back and play!     {extrovert, w=2}
+...Bye.                      {introvert}
+Bye, [listener]!             {opinion=friend, w=2}
+Good!                        {opinion=disliked, rude, w=2}
+Bye, [kin_call]! Come back soon! {listener_kin=parent, w=10}
+Do you have to go?           {listener_kin=parent, w=10}
+Love you, [kin_call]!        {listener_kin=parent, w=6}
+
+== gift.child ==
+For me? Wow!
+Thank you!
+Ooh! What is it?
+Is it [item.a]? It IS!       {taste=love, w=2}
+[item.cap]! I LOVE [item.it]! {taste=love, w=3}
+Ew. [item.cap].              {taste=hate, w=3}
+Ew! Gross!                   {rude_gift=yes, w=6}
+I'm gonna keep [item.it] forever. {sentimental, w=2}
+Can I have another one?      {greedy, w=3}
+Thank you very much.         {polite, w=2}
+I'll share [item.it]!        {generous, w=3}
+Is it a trick?               {paranoid, w=2}
+Is it my birthday?           {birthday=no, w=0.5}
+It IS my birthday! You remembered! {birthday=yes, w=8}
+For me? Thank you, [kin_call]! {listener_kin=parent, w=10}
+You're the best, [kin_call]! {listener_kin=parent, taste=love, w=10}
+
+== gift_again.child ==
+More? Yay!
+Thank you!
+Is it all for me?            {greedy, w=2}
+More? Thanks, [kin_call]!    {listener_kin=parent, w=8}
+
+== gift_full.child ==
+My hands are full!
+I can't carry any more!
+Can you hold [item.it] for me? {w=0.7}
+
+== birthday.child ==
+It's my birthday! I'm a whole year bigger!
+I'm a whole year bigger!     {w=2}
+Is there cake? There has to be cake. {glutton, w=3}
+Everybody! It's my BIRTHDAY! {extrovert, w=3}
+Did you get me a present?    {greedy, w=3}
+It's my birthday... {introvert, w=2}
+
+== idle_thought.child ==
+I'm bored.
+La la la...
+I wonder what bugs eat.      {curious, w=2}
+I'm hungry.                  {glutton, w=2}
+One, two, three... ready or not! {lighthearted, w=2}
+I want a puppy.              {animal_lover, w=2}
+Is it dinnertime yet?        {w=0.6}
+
+== chat_open.child ==
+Hey! Wanna play?
+[listener]! Look what I found!
+[listener], tag! You're it!  {lighthearted, w=2}
+[listener], wanna see my bug? {curious, w=2}
+Guess what, [listener]!      {extrovert, w=2}
+[listener]! Look what I found! {listener_kin=parent, w=8}
+[kin_call], can I go play?   {listener_kin=parent, w=10}
+[kin_call], I'm hungry.      {listener_kin=parent, w=8}
+[kin_call], carry me?        {listener_kin=parent, lazy, w=8}
+[kin_call]! Tell me a story! {listener_kin=grandparent, w=10}
+You're it! No tag-backs!     {listener_kin=sibling, w=8}
+That's MINE.                 {listener_kin=sibling, greedy, w=8}
+Wanna play?                  {listener_age=child, w=6}
+Wanna be best friends?       {listener_age=child, extrovert, w=6}
+The baby's being loud again. {listener_age=baby, w=6}
+Whoa. You're like, a big kid. {listener_age=young_teen, w=4}
+
+== chat_reply.child ==
+Okay!
+Nuh-uh!
+Yeah-huh!
+Can I play too?              {extrovert}
+You're silly.                {lighthearted}
+...                          {introvert}
+I'm telling!                 {nosy, w=2}
+Okay, [kin_call]!            {listener_kin=parent, w=10}
+Do I HAVE to?                {listener_kin=parent, w=8}
+But I'm not tired!           {listener_kin=parent, time=night, w=10}
+I'm telling Mom and Dad!     {listener_kin=sibling, w=8}
+Okay! Let's play!            {listener_age=child, w=6}
+
+== flee.child ==
+Help! Help!
+[kin_call]! Help!            {w=1.5}
+Run!
+I'm scared!                  {timid, w=2}
+Monster! MONSTER!            {w=1.5}
+
+== grief.child ==
+[victim]? Wake up...
+I want [victim]...
+Why won't [victim] get up?
+[victim]!
+
+== ask_word.child ==
+What's a word for... [word_prompt]
+Hey! [word_prompt]
+I'm learning words! [word_prompt] {w=2}
+
+== word_learned.child ==
+[word.cap]! [word.cap]! [word.cap]!
+[word.cap]. That's a good word.
+I'm gonna say [word] all day. {lighthearted, w=2}
+[word.cap]... I'll remember.  {introvert}
+
+# ===============================================================================================================
+# Young teens (10-15)
+
+== greet.young_teen ==
+Hey.
+Oh. Hi.
+Hi.
+Hey! What's up?              {extrovert, w=2}
+...Hey.                      {introvert, w=2}
+Oh, hello. Good to see you.  {polite, w=2}
+What do you want?            {rude, w=2}
+Ugh. Hi.                     {pessimist, w=2}
+Hey! Wanna race?             {competitive, w=2}
+Hey, [listener]!             {opinion=friend, w=2}
+[listener]! Finally, someone fun. {opinion=close_friend, w=3}
+Oh. It's you.                {opinion=disliked, w=3}
+Morning. I guess.            {time=morning, lazy, w=2}
+Hi, [kin_call].              {listener_kin=parent, w=8}
+Oh. Hi, [kin_call]. You're not gonna embarrass me, right? {listener_kin=parent, introvert, w=8}
+[kin_call]! Can I go out later? {listener_kin=parent, extrovert, w=6}
+Hey, [kin_call]!             {listener_kin=grandparent, w=8}
+What do YOU want?            {listener_kin=sibling, w=6}
+
+== smalltalk_short.young_teen ==
+Whatever.
+I'm bored.
+It's fine, I guess.
+This is so boring.           {lazy}
+Cool.                        {lighthearted}
+
+== dialogue_open.young_teen ==
+Yeah?
+What?
+What's up?
+Um. Hi?                      {introvert, w=2}
+Am I in trouble?             {timid, w=2}
+What now?                    {rude, w=2}
+Yes?                         {polite}
+Make it quick, I'm doing something. {hardworking, w=2}
+...                          {taciturn, w=2}
+Yeah, [kin_call]?            {listener_kin=parent, w=8}
+I already did my chores. Mostly. {listener_kin=parent, lazy, w=8}
+What did I do?               {listener_kin=parent, w=6}
+
+== smalltalk.young_teen ==
+Nobody ever lets me do anything.
+I'm not a little kid anymore, you know.
+Everything's so boring around here.
+I'm gonna be a knight one day. Or a smith. Or both. {brave, w=2}
+I want to see everything out there. Every biome. {curious, w=2}
+Did you know creepers are scared of cats? I read that somewhere. {curious, w=2}
+I can beat anyone in a race. Anyone. {competitive, w=2}
+I'm the best at sword practice. With sticks. {competitive, proud, w=2}
+I don't need help. I can do it myself. {proud, w=2}
+I'm not good at much.        {humble, pessimist, w=2}
+Everything's gonna work out. Probably. {optimist, w=2}
+Nothing ever works out.      {pessimist, w=2}
+I just wanna sleep all day.  {lazy, w=2}
+I've been practicing every day. I'm getting good. {hardworking, w=2}
+Don't tell anyone, but I'm kind of scared of the dark still. {timid, w=2}
+I fought a zombie once. Well, I threw a rock at it. {brave, lighthearted, w=2}
+I think I like someone. Don't tell. {romantic, w=3}
+Who do you think is the cutest in town? Just wondering. {romantic, nosy, w=3}
+Did you hear what happened? Everyone's talking about it. {nosy, w=2}
+I don't care what anybody thinks. {detached, w=2}
+That's so unfair. Nothing's fair. {hothead, w=2}
+I could eat [favorite_food.s] every single day. {glutton, w=2}
+I want a wolf so bad.        {animal_lover, w=2}
+I pray every night. Is that weird? {pious, w=2}
+I swear that's what happened. {liar, w=2}
+I'd never lie. Lying's stupid. {honest, w=2}
+I've got a secret. You'll never guess. {lighthearted, w=2}
+Why do grown-ups always say "you'll understand when you're older"? {curious, w=2}
+Mind your own business.      {rude, introvert, w=2}
+That's so cool!              {extrovert, w=2}
+I'm saving up for a sword. A real one. {greedy, w=2}
+I gave my lunch to a kid who didn't have any. {generous, w=2}
+I miss [home_biome.the]. Sort of. {at_home=no, w=0.6}
+[kin_call], can I stay out after dark? Just once? {listener_kin=parent, w=10}
+I'm not a baby, [kin_call]. {listener_kin=parent, w=10}
+Can I have my own room? Or my own house? {listener_kin=parent, proud, w=8}
+[kin_call], can I have a sword? A real one this time? {listener_kin=parent, brave, w=10}
+Do I HAVE to?                {listener_kin=parent, lazy, w=10}
+Thanks for... you know. Everything. {listener_kin=parent, sentimental, w=8}
+[kin_call], what was it like when you were my age? {listener_kin=grandparent, w=8}
+Stay out of my stuff.        {listener_kin=sibling, w=8}
+
+== about_me.young_teen ==
+I'm [name]. That's it.
+What's there to say? I'm [name].
+I like [favorite_thing.s]. That's about it.
+I'm gonna do something big one day. You'll see. {proud, w=2}
+I'm nobody special.          {humble, w=2}
+Why? Who's asking?           {paranoid, w=2}
+Ugh, do I have to?           {lazy, w=2}
+
+== where_from.young_teen ==
+Here. Obviously.             {at_home=yes, w=3}
+[home_biome.the.cap].
+[home_biome.the.cap]. I don't really remember it. {at_home=no, w=1.5}
+[home_biome.the.cap]. It's boring there. {pessimist, w=2}
+
+== questions_open.young_teen ==
+Sure.
+I guess.
+What?
+Is this gonna take long?     {lazy, w=2}
+Okay, but I'm not telling you everything. {paranoid, w=2}
+
+== practical_open.young_teen ==
+Okay. What?
+What do you need?
+Do I get paid?               {greedy, w=2}
+
+== never_mind.young_teen ==
+Okay...
+Whatever.
+Weird.                       {rude}
+Oh. Okay.                    {polite}
+
+== follow_accept.young_teen ==
+Finally! Let's go!
+Sure. Anything's better than here.
+Can I hold the sword?        {brave, w=2}
+I guess. If I have to.       {lazy, w=2}
+Okay. But I'm a little scared. {timid, w=2}
+Seriously? I can come?       {listener_kin=parent, w=8}
+
+== follow_refuse.young_teen ==
+No thanks.
+I'm busy.
+Nah.
+I'm not allowed. Stupid rules. {opinion=neutral, w=2}
+Not with you.                {opinion=disliked, w=3}
+Not today, [kin_call].       {listener_kin=parent, w=6}
+
+== follow_stop.young_teen ==
+Fine.
+Okay. See ya.
+Already? That's so unfair.   {hothead, w=2}
+
+== farewell.young_teen ==
+Bye.
+See ya.
+Later.
+Bye! See you around!         {extrovert, w=2}
+Finally.                     {opinion=disliked, w=3}
+Bye, [listener].             {opinion=friend, w=2}
+Bye, [kin_call].             {listener_kin=parent, w=8}
+Do I have to go home now?    {listener_kin=parent, lazy, w=6}
+
+== gift.young_teen ==
+Oh. Thanks.
+For me? Cool.
+Thanks!
+Whoa! [item.cap]! Thanks!    {taste=love, w=3}
+Um. Thanks, I guess.         {taste=dislike, w=3}
+What am I supposed to do with [item.this]? {taste=hate, w=3}
+Is this a joke?              {rude_gift=yes, w=6}
+Thank you. Really.           {polite, w=2}
+Cool. Got anything else?     {greedy, w=3}
+Why are you giving me stuff? {paranoid, w=2}
+I'll keep it. Forever, probably. {sentimental, w=2}
+You remembered my birthday?  {birthday=yes, w=8}
+Thanks, [kin_call].          {listener_kin=parent, w=8}
+You're the best, [kin_call]. {listener_kin=grandparent, taste=love, w=8}
+
+== gift_again.young_teen ==
+More? Cool.
+Thanks.
+I'll take it.                {greedy, w=2}
+
+== gift_full.young_teen ==
+I can't carry all this.
+My pack's full.
+Ugh, I'm carrying too much already. {lazy, w=2}
+
+== birthday.young_teen ==
+It's my birthday. Don't make it weird.
+Another year. Finally.
+It's my birthday! Anyone? No? {pessimist, w=3}
+Do I get anything good this year? {greedy, w=3}
+I'm practically a grown-up now. {proud, w=3}
+
+== idle_thought.young_teen ==
+So bored.
+Ugh.
+I wonder what's past the hills. {curious, w=2}
+One day I'm getting out of here. {proud, w=2}
+I'm starving.                {glutton, w=2}
+
+== chat_open.young_teen ==
+Hey, [listener].
+[listener]! Did you hear?    {nosy, w=2}
+[listener], wanna race?      {competitive, w=2}
+[listener]. This is boring. Say something interesting. {lazy, w=2}
+[kin_call], can I go out later? {listener_kin=parent, w=10}
+[kin_call], everyone else gets to. {listener_kin=parent, w=8}
+Stay out of my stuff.        {listener_kin=sibling, w=10}
+Ugh. Go away, kid.           {listener_age=child, w=6}
+Hey. Wanna go explore?       {listener_age=young_teen, w=6}
+
+== chat_reply.young_teen ==
+Yeah.
+Whatever.
+No way.
+That's so cool!              {extrovert}
+Seriously?                   {curious}
+...                          {introvert}
+Fine, [kin_call].            {listener_kin=parent, w=10}
+Ugh. Okay.                   {listener_kin=parent, w=8}
+I know, [kin_call]. You've said. {listener_kin=parent, w=8}
+Whatever.                    {listener_kin=sibling, w=8}
+
+== flee.young_teen ==
+Run!
+Help!
+Nope! Nope!                  {lighthearted}
+I'm getting help!            {brave, w=2}
+[kin_call]!                  {timid, w=2}
+
+== grief.young_teen ==
+No... [victim]...
+[victim]! No!
+This isn't fair...
+I'll get whoever did this.   {vengeful, w=2}
+
+== ask_word.young_teen ==
+Weird question. [word_prompt]
+Hey, help me out. [word_prompt]
+[word_prompt]
+
+== word_learned.young_teen ==
+[word.cap]. Cool.
+[word.cap]? Okay, I like that.
+[word.cap]. Nobody else knows that one. {proud, w=2}
+
+# ===============================================================================================================
+# Late teens (16-17)
+
+== greet.teen ==
+Hey.
+Hi there.
+Oh, hey.
+Hey! Good to see you.        {extrovert, w=2}
+...Hi.                       {introvert, w=2}
+Hello. How are you?          {polite, w=2}
+What.                        {rude, w=2}
+Hey. Can't talk long, I'm working. {hardworking, w=2}
+Hey, [listener].             {opinion=friend, w=2}
+[listener]! There you are.   {opinion=close_friend, w=3}
+Oh. You.                     {opinion=disliked, w=3}
+Hey, [kin_call].             {listener_kin=parent, w=8}
+Hi, [kin_call]. I was just heading out. {listener_kin=parent, extrovert, w=6}
+Hi, [kin_call]!              {listener_kin=grandparent, w=8}
+Hey, pest.                   {listener_kin=sibling, w=6}
+
+== smalltalk_short.teen ==
+Not bad.
+Same old.
+Could be worse.              {optimist}
+Could be better.             {pessimist}
+Busy.                        {hardworking}
+
+== dialogue_open.teen ==
+Yeah?
+What's up?
+What can I do for you?       {polite, w=2}
+Make it quick.               {rude, w=2}
+Hm?                          {introvert}
+Yeah, [kin_call]?            {listener_kin=parent, w=8}
+I know, I know. I'll do it later. {listener_kin=parent, lazy, w=8}
+
+== smalltalk.teen ==
+Almost grown. Then I can do whatever I want.
+Soon I'll be on my own. I can't wait.
+Sometimes I don't know what I want to do with my life.
+I want to see the world before I settle down. {curious, w=2}
+I'm going to make something of myself. You'll see. {proud, w=3}
+Honestly? I'd be happy just staying here forever. {humble, w=1.5}
+I've been learning a trade. It's harder than it looks. {hardworking, w=2}
+Work, work, work. Is this what being grown up is? {lazy, w=2}
+I've been training. I could hold my own in a fight now. {brave, w=2}
+I don't think I'd ever be brave enough to fight anything. {timid, w=2}
+There's someone I like. I just don't know how to say it. {romantic, w=3}
+I'm not looking for romance. Not yet. {!romantic, w=0.6}
+Everyone expects so much of me. {pessimist, w=2}
+Things are looking up, I think. {optimist, w=2}
+I don't need anyone's help.  {proud, w=2}
+I'm still figuring things out. {humble, w=2}
+Everyone in this town knows everyone's business. Speaking of which... {nosy, w=2}
+I keep to myself, mostly.    {introvert, w=2}
+I've been thinking a lot about the Cube God lately. {pious, w=2}
+I want to be the best at something. Anything. {competitive, w=2}
+I'm saving up. For what? You'll see. {greedy, w=2}
+I don't let things get to me anymore. {zen, w=2}
+People keep telling me to calm down. I AM calm. {hothead, w=2}
+I could go for [favorite_food.a] right now. {glutton, w=2}
+I'd love a dog of my own. Well, a wolf. {animal_lover, w=2}
+I remember [home_biome.the]. A little. {at_home=no, w=0.6}
+[kin_call], I'm almost grown. You have to let me go sometime. {listener_kin=parent, w=10}
+Don't worry so much, [kin_call]. I can look after myself. {listener_kin=parent, w=10}
+Thanks for putting up with me, [kin_call]. {listener_kin=parent, sentimental, w=8}
+I was thinking... maybe I'll build my own place one day. {listener_kin=parent, proud, w=8}
+Can I borrow your sword, [kin_call]? I'll bring it back. Probably. {listener_kin=parent, lighthearted, w=8}
+[kin_call], how did you know what you wanted to do with your life? {listener_kin=parent, w=8}
+You always made the best [favorite_food.s], [kin_call]. {listener_kin=grandparent, w=8}
+Remember when we used to fight all the time? Okay, we still do. {listener_kin=sibling, w=8}
+
+== about_me.teen ==
+I'm [name]. Still figuring out the rest.
+Not much to tell yet. Give me a few years.
+I like [favorite_thing.s]. And I'm good at... I'm working on it. {w=1.5}
+I'm going to be somebody. {proud, w=2}
+I'm nobody special. Not yet. {humble, w=2}
+Why? What have you heard?    {paranoid, w=2}
+
+== where_from.teen ==
+Here. Grew up here.          {at_home=yes, w=3}
+[home_biome.the.cap].
+[home_biome.the.cap]. I was little when we left. {at_home=no, w=1.5}
+[home_biome.the.cap]. I'll go back one day. {at_home=no, sentimental, w=2}
+
+== questions_open.teen ==
+Sure.
+Go ahead.
+Ask away.
+Depends what you're asking.  {paranoid, w=2}
+
+== practical_open.teen ==
+What do you need?
+Sure. What is it?
+Is there pay in it?          {greedy, w=2}
+
+== never_mind.teen ==
+Okay.
+Never mind, then.
+Right.
+
+== follow_accept.teen ==
+Let's go.
+Sure, I'm in.
+Finally, something interesting! {curious, w=2}
+I'll watch your back.        {brave, w=2}
+Fine. But I'm not carrying everything. {lazy, w=2}
+Really? You'd take me along, [kin_call]? {listener_kin=parent, w=8}
+
+== follow_refuse.teen ==
+Not today.
+I've got things to do.
+No thanks.
+Not with you.                {opinion=disliked, w=3}
+I'm not a kid anymore. I don't have to. {proud, w=2}
+Can't, [kin_call]. I promised I'd be somewhere. {listener_kin=parent, w=6}
+
+== follow_stop.teen ==
+All right.
+Fair enough.
+Already? Fine.               {hothead}
+
+== farewell.teen ==
+See you.
+Later.
+Take care.
+See you around, [listener].  {opinion=friend, w=2}
+Bye. Finally.                {opinion=disliked, rude, w=3}
+Bye, [kin_call]. I'll be back before dark. Probably. {listener_kin=parent, w=8}
+Love you, [kin_call].        {listener_kin=parent, sentimental, w=6}
+
+== gift.teen ==
+Thanks.
+Oh! For me? Thanks.
+That's really nice of you.   {polite, w=2}
+[item.cap]? I love [item.it]! {taste=love, w=3}
+Huh. [item.cap]. Thanks?     {taste=dislike, w=3}
+Is this a joke?              {rude_gift=yes, w=6}
+What's the catch?            {paranoid, w=2}
+I'll put [item.it] to good use. {hardworking, w=2}
+I'll keep it. Always.        {sentimental, w=2}
+On my birthday? Thanks!      {birthday=yes, w=8}
+Thanks, [kin_call].          {listener_kin=parent, w=8}
+You didn't have to, [kin_call]. {listener_kin=parent, polite, w=8}
+
+== gift_again.teen ==
+More? Thanks.
+I'll find a use for [item.it].
+You're spoiling me.          {lighthearted, w=2}
+
+== gift_full.teen ==
+I've got no room.
+My pack's full, sorry.
+
+== birthday.teen ==
+It's my birthday. Almost grown.
+Another year. Not long now.
+It's my birthday! Don't make a fuss. Okay, make a little fuss. {lighthearted, w=3}
+I'm practically an adult.    {proud, w=3}
+Birthdays make me think about the future. {sentimental, w=3}
+
+== idle_thought.teen ==
+Hm.
+What am I going to do with my life?
+One day I'll have a place of my own. {proud, w=2}
+I could use a nap.           {lazy, w=2}
+I wonder what's out there.   {curious, w=2}
+
+== chat_open.teen ==
+Hey, [listener].
+[listener], got a minute?
+[listener]! You hear the news? {nosy, w=2}
+[listener], what are you doing later? {extrovert, w=2}
+[kin_call], I've been thinking about my future. {listener_kin=parent, w=10}
+[kin_call], I'm not a kid anymore. {listener_kin=parent, w=8}
+Don't wait up, [kin_call].   {listener_kin=parent, extrovert, w=8}
+Hey, kid. Be careful out there. {listener_age=child, w=6}
+
+== chat_reply.teen ==
+Yeah, sure.
+Huh. Maybe.
+No way.
+Ha!                          {lighthearted}
+If you say so.               {pessimist}
+...                          {introvert}
+I know, [kin_call].          {listener_kin=parent, w=10}
+Thanks, [kin_call]. Really.  {listener_kin=parent, sentimental, w=8}
+Sure, kid.                   {listener_age=child, w=6}
+
+== flee.teen ==
+Run!
+Get out of here!
+Too many! Back!              {brave}
+Help!                        {timid}
+
+== grief.teen ==
+No... [victim]...
+[victim]! No!
+Not [victim]...
+Whoever did this will pay.   {vengeful, w=2}
+Cube God keep you, [victim]. {pious}

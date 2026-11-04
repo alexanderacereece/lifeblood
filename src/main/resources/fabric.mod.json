@@ -1,9 +1,9 @@
 {
 	"schemaVersion": 1,
-	"id": "npclaude",
+	"id": "lifeblood",
 	"version": "${version}",
-	"name": "NPClaude",
-	"description": "A framework for NPCs in Better Than Adventure.",
+	"name": "Lifeblood",
+	"description": "Villagers with personalities, families, voices and lives of their own, for Better Than Adventure.",
 	"authors": [
 		"alexa"
 	],
@@ -16,14 +16,14 @@
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"npclaude.NPClaude"
+			"lifeblood.Lifeblood"
 		],
 		"client": [
-			"npclaude.client.NPClaudeClient"
+			"lifeblood.client.LifebloodClient"
 		]
 	},
 	"mixins": [
-		"npclaude.mixins.json"
+		"lifeblood.mixins.json"
 	],
 	"depends": {
 		"fabricloader": ">=${fabricloader}",

@@ -1,0 +1,35 @@
+# Lifeblood speech: words. The format and every fact and word are described in basics.speech.
+
+# ---------------------------------------------------------------------------------------------------------------
+# The word book. [word_prompt] is the question (a full sentence); [word] the word they just learned.
+
+== ask_word ==
+[word_prompt]
+Can I ask you something odd? [word_prompt]
+I've been wondering... [word_prompt]
+Ooh, quick question! [word_prompt]   {extrovert, w=2}
+Help me out. [word_prompt]           {rude, w=2}
+You seem clever. [word_prompt]       {polite, w=2}
+I collect words, you know. [word_prompt] {curious, w=3}
+
+== word_whose ==
+[word.cap]. Is that just for me, or something anyone could say?
+[word.cap]! Is that our word, or can I tell people?
+Can I share [word], or is it just ours? {nosy, w=3}
+[word.cap]... I like it. Just mine, or everyone's? {w=1}
+
+== word_learned ==
+[word.cap]. I like it!
+[word.cap]! I'll remember that.
+[word.cap]. Ha! What a word.         {lighthearted, w=2}
+[word.cap]. Very proper.             {proper, w=2}
+[word.cap]... got it. Thanks.        {introvert, w=2}
+[word.cap]. Our secret, then.        {personal=yes, w=3}
+I'm going to tell EVERYONE about [word]. {personal=no, nosy, w=4}
+I'm going to tell everyone about [word]. {personal=no, extrovert, w=3}
+Fine. [word.cap]. Can I go now?      {rude, w=2}
+
+== no_words ==
+I don't know any special words. Teach me one sometime?
+Words? Just the usual ones.
+Nothing fancy. Teach me something!   {curious, w=3}

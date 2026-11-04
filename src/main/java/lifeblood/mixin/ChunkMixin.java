@@ -1,0 +1,32 @@
+package lifeblood.mixin;
+
+import net.minecraft.core.world.chunk.Chunk;
+import net.minecraft.core.world.pos.ChunkTilePosc;
+import lifeblood.ownership.BlockOwners;
+import lifeblood.ownership.ChunkOwners;
+import lifeblood.ownership.OwnedChunk;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+/** Gives every chunk its ownership records, and keeps them up to date as blocks change. */
+@Mixin(value = Chunk.class, remap = false)
+public abstract class ChunkMixin implements OwnedChunk {
+	@Unique
+	private final ChunkOwners lifeblood$owners = new ChunkOwners();
+
+	@Override
+	public ChunkOwners lifeblood$owners() {
+		return this.lifeblood$owners;
+	}
+
+	@Inject(method = "setBlockIdData(Lnet/minecraft/core/world/pos/ChunkTilePosc;IIZ)Z", at = @At("HEAD"))
+	private void lifeblood$trackOwner(ChunkTilePosc pos, int id, int data, boolean raw, CallbackInfoReturnable<Boolean> cir) {
+		if (pos.inBounds()) {
+			Chunk chunk = (Chunk) (Object) this;
+			BlockOwners.onBlockChanging(chunk, pos.x(), pos.y(), pos.z(), chunk.getBlockId(pos), id);
+		}
+	}
+}

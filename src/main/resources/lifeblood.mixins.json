@@ -1,0 +1,24 @@
+{
+  "required": true,
+  "package": "lifeblood.mixin",
+  "compatibilityLevel": "JAVA_${java}",
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "mixins": [
+    "ChunkLoaderMixin",
+    "ChunkMixin",
+    "ItemStackMixin",
+    "MobDeathMixin",
+    "MobGhastMixin",
+    "MobMonsterMixin",
+    "MobScorpionMixin",
+    "MobSlimeMixin",
+    "MobSpiderMixin",
+    "PathAccessor",
+    "WorldTickMixin"
+  ],
+  "client": [
+    "HudComponentCrosshairMixin"
+  ]
+}

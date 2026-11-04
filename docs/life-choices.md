@@ -36,7 +36,7 @@ Then:
 - **Pressure builds over time.** A job nobody takes grows more appealing (as if the pay rises). A crowded town makes moving or homesteading more tempting. This evens things out without hard caps.
 - **Big, permanent moves need a reason.** Leaving town takes a push (restlessness with no ties, a grudge, heartbreak, crowding) and something to go to. Spouses and children are strong anchors; a family moves together or not at all.
 - **Safety nets, not the main control.** A per-settlement limit on how many can leave in a year, so a town can't empty overnight by bad luck.
-- **Settings** in `config/npclaude.cfg` for the main dials, for tuning.
+- **Settings** in `config/lifeblood.cfg` for the main dials, for tuning.
 
 ## The choices
 
