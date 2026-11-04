@@ -2,6 +2,34 @@
 
 How the mod is put together, and where new systems plug in. Everything here is in `src/main/java/npclaude/`.
 
+## Packages
+
+| Package | What's in it |
+|---|---|
+| `ai` | The brain (`NpcBrain`), saved behaviors (`NpcBehaviors`), the navigator; `ai/behavior` holds follow, stay, go to, wander, recover; `ai/routine` holds schedules |
+| `nav` | The pathfinder: the world as walkable spaces (`NavGrid`), the search, paths, the shared per-tick budget |
+| `entity` | `EntityNPC` and its parts (life, health, eating, social, awareness, following, brawling), plus small enums (gender, age stage, health mode) |
+| `inventory` | What an NPC carries, and the inventory screen's slots |
+| `personality` | Trait axes, quirks, tastes, item defaults, surroundings (climate, biome likes) |
+| `social` | Memories, opinions, compatibility, brawls, reactions to deaths |
+| `family` | Kinship, romance, children, the calendar (ages, birthdays) |
+| `people` | The register of everyone who has lived in the world |
+| `combat` | Fighting, archery, threat, targeting, factions and relations |
+| `dialogue` | Conversation menus and their options: gifts, romance, words, chat limits |
+| `speech` | The speech engine, the line library, facts for lines, speech styles, the voice |
+| `words` | The word book: words players teach |
+| `appearance` | Looks from parts and palettes, slim arms |
+| `skin` | Whole-skin files from `npc_skins/` |
+| `ownership` | Who placed each block, and who shares what |
+| `world` | World systems: logic that runs per world on its own clock |
+| `save` | Reading old saves (temporary, see below) |
+| `command` | `/npc`, one class per area |
+| `interaction` | The bridge from right-clicking an NPC to the screens |
+| `item` | The mod's items (guardian amulet, word book) |
+| `client` | Everything client-only: renderer, textures, screens |
+| `mixin` | Changes to BTA classes, each named after its target |
+| `perf`, `util` | Profiling and small shared helpers |
+
 ## The NPC
 
 `entity/EntityNPC` is the entity. It does only what every mob must: moving, fighting, being hurt, equipment, saving. Everything else lives in parts it holds:
@@ -66,8 +94,8 @@ Each system saves its own data: parts into the NPC's compound, world registers a
 
 ## Commands
 
-`/npc` is assembled in `command/NpcCommand` from one class per area (`NpcBasicsCommands`, `PersonalityCommands`, `FactionCommands`, `FamilyCommands`, `LookCommands`), sharing `CommandSupport` for suggestions, finding NPCs and replying. **A new area gets its own class** with an `addTo(root)` method.
+`/npc` is assembled in `command/NpcCommand` from one class per area (`NpcBasicsCommands`, `PersonalityCommands`, `FactionCommands`, `FamilyCommands`, `LookCommands`, `OwnershipCommands`), sharing `CommandSupport` for suggestions, finding NPCs and replying. **A new area gets its own class** with an `addTo(root)` method.
 
 ## Tests
 
-`./gradlew test` runs the unit tests in `src/test/java`. They cover pure logic: the calendar, kinship, appearance encoding, words, save upgrades, the register of people, schedules, and the speech files. Tests run with the default config, without a world.
+`./gradlew test` runs the unit tests in `src/test/java`. They cover pure logic: the calendar, kinship, age stages, appearance encoding, slim arms, words, save upgrades, the register of people, schedules, ownership records, and the speech files. Tests run with the default config, without a world.

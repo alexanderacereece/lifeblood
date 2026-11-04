@@ -27,7 +27,7 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * Married couples have children, so settlements carry on across generations. A child inherits a blend of its
- * parents' personalities and looks, takes their faction and home, grows up over 20 in-game days, and is kept safe
+ * parents' personalities and looks, takes their faction and home, grows up over 18 in-game years (yearsToGrowUp), and is kept safe
  * (invincible, never fights) until then.
  *
  * A married couple at 80+ opinion, together and nearby, has about one child every ten in-game days, up to four,
