@@ -17,10 +17,10 @@ Needs JDK 21 to build (the mod itself targets Java 17, which BTA runs on).
 ./gradlew runServer    # dedicated server
 ```
 
-The dev game folder is `run/`. NPC skins go in `run/npc_skins/`, appearance parts in `run/npc_parts/`, extra speech files in `run/npc_speech/`, and settings in `run/config/lifeblood.cfg`.
+The dev game folder is `run/`. NPC skins go in `run/npc_skins/`, appearance parts in `run/npc_parts/`, extra speech files in `run/npc_speech/`, saved prefabs in `run/npc_prefabs/`, and settings in `run/config/lifeblood.cfg`.
 
 To play it in a normal Babric install, copy `build/libs/lifeblood-*.jar` into the instance's `mods/` folder (with the game closed), and copy `npc_parts/` and `npc_skins/` into the instance's game folder.
 
 ## Commands
 
-Everything is under `/npc` (summon, look, personality, family, factions, ownership and debugging tools); type `/npc` in game for the list.
+Everything is under `/npc` (summon, look, personality, family, factions, ownership, prefabs and debugging tools); type `/npc` in game for the list.

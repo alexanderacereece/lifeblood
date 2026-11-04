@@ -12,6 +12,7 @@ import java.util.Locale;
 import java.util.Map;
 import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.net.command.CommandSource;
+import lifeblood.combat.FactionColors;
 import lifeblood.combat.FactionRegistry;
 import lifeblood.combat.FactionRelation;
 import lifeblood.combat.NpcFactions;
@@ -48,6 +49,22 @@ final class FactionCommands {
 							FactionRegistry.get(c.getSource().getWorld()).setDefault(faction, stance);
 							return reply(c, "The " + faction + " are now " + describe(stance) + " toward anyone without an explicit relation.");
 						}))))
+				.then(literal("colors")
+					.then(argument("faction", ArgumentTypeString.word()).suggests(FACTION_NAMES)
+						.executes(c -> {
+							String faction = requireFaction(c, "faction");
+							FactionColors colors = FactionRegistry.get(c.getSource().getWorld()).getColors(faction);
+							return reply(c, "The " + faction + "'s colors are " + FactionColors.nameOf(colors.primary()) + " and "
+								+ FactionColors.nameOf(colors.secondary()) + ".");
+						})
+						.then(argument("primary", ArgumentTypeString.word()).suggests(COLOR_NAMES)
+							.then(argument("secondary", ArgumentTypeString.word()).suggests(COLOR_NAMES).executes(c -> {
+								String faction = requireFaction(c, "faction");
+								FactionColors colors = new FactionColors(requireColor(c, "primary"), requireColor(c, "secondary"));
+								FactionRegistry.get(c.getSource().getWorld()).setColors(faction, colors);
+								return reply(c, "The " + faction + "'s colors are now " + FactionColors.nameOf(colors.primary()) + " and "
+									+ FactionColors.nameOf(colors.secondary()) + ".");
+							})))))
 				.then(literal("relation")
 					.then(argument("a", ArgumentTypeString.word()).suggests(FACTION_NAMES)
 						.then(argument("b", ArgumentTypeString.word()).suggests(FACTION_NAMES)

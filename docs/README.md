@@ -10,15 +10,15 @@ An NPC framework for Better Than Adventure 8.0.1: villagers with personalities, 
 | [health.md](health.md) | Health modes, being downed, the guardian amulet |
 | [speech.md](speech.md) | The speech engine, grammar, speech styles, the word book |
 | [appearance.md](appearance.md) | Parts, palettes, homelands, the art layout |
+| [building.md](building.md) | Prefabs (built): saving, turning, material and color swaps; NPC building and towns (planned) |
 | [palette_reference.html](palette_reference.html) | Swatches of every bundled palette |
 
-Planned, not built yet (ownership is partly built):
+Planned, not built yet (ownership and building are partly built):
 
 | Doc | Covers |
 |---|---|
 | [life-choices.md](life-choices.md) | NPCs choosing jobs, journeys, moves, homesteads and offices; the ambition axis |
 | [work.md](work.md) | Jobs, block actions, real item chains, storage, honest mining |
-| [building.md](building.md) | Prefabs, the authoring check, honest construction, towns growing and decaying |
 | [ownership.md](ownership.md) | Who placed what, protecting player builds, property for crime and law |
 | [unloaded.md](unloaded.md) | Keeping the world alive where nobody is watching |
 
@@ -30,7 +30,7 @@ Each step is useful on its own and proves the next:
 1. **Block actions** by the player's rules, and **ownership records**, so NPCs can touch the world without touching your builds.
 2. **Job steps and storage:** one NPC who chops trees, replants, and stores logs in a chest proves the chain.
 3. **Jobs and life choices**, with the ambition axis and the homebody and wanderer quirks.
-4. **Prefabs and the authoring check**, then **construction sites**: a homesteader building a house.
+4. **Prefabs** (built) and the full authoring check, then **construction sites**: a homesteader building a house. Generated homesteads come first, since the world places them all at once.
 5. **Life while unloaded**, alongside generated settlements.
 
 ## Settled
@@ -51,6 +51,8 @@ Each step is useful on its own and proves the next:
 - One new axis, ambition, plus the homebody and wanderer quirks, for life choices. No more than that.
 - NPCs choose by inclination among real options the world offers; balance shapes the options, not the NPC.
 - Building is honest: real materials, the player's reach and support rules, prefabs that keep every block detail.
+- Prefabs swap by convention, like skin parts: logs become the local wood, swappable stone the local stone, gray the primary color and light gray the secondary (a faction's colors for its buildings).
+- Every faction has a primary and a secondary color.
 - Mining stays honest; running out of ore is a story, not a problem. Unloaded areas run on ledgers measured from the real rules.
 
 ## Open questions

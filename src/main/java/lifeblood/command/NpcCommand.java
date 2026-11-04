@@ -71,6 +71,7 @@ public class NpcCommand implements CommandManager.CommandRegistry {
 		FamilyCommands.addTo(npc);
 		LookCommands.addTo(npc);
 		OwnershipCommands.addTo(npc);
+		PrefabCommands.addTo(npc);
 		dispatcher.register(npc);
 	}
 }

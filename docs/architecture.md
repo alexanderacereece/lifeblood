@@ -21,6 +21,7 @@ How the mod is put together, and where new systems plug in. Everything here is i
 | `appearance` | Looks from parts and palettes, slim arms |
 | `skin` | Whole-skin files from `npc_skins/` |
 | `ownership` | Who placed each block, and who shares what |
+| `building` | Prefabs: saving, turning (`BlockTurns`), material and color swaps (`Swaps`, `WoodType`, `StoneFamily`), surveying a site (`LocalMaterials`), placing, the save check |
 | `world` | World systems: logic that runs per world on its own clock |
 | `command` | `/npc`, one class per area |
 | `interaction` | The bridge from right-clicking an NPC to the screens |
@@ -71,7 +72,7 @@ Routines are in `ai/routine`. A `Schedule` is a list of blocks ("from 6, work; f
 
 **Ownership** (`ownership/`) records who placed each block, saved with each chunk (`ChunkOwners`, added to chunks by `ChunkMixin` and saved by `ChunkLoaderMixin`). `BlockOwners` is the way in: `ownerAt`, `mayUse`, and `placingAs(owner, action)` so blocks an NPC places are its own; `ItemStackMixin` does the same for players using an item on a block. `Ownership.shares` says who shares what someone owns. Items are owned by where they are: an NPC's inventory, or a container whose block someone owns.
 
-**Factions** (`combat/FactionRegistry`, saved as `lifeblood_factions`) hold each faction's default stance, explicit relations between factions, and which faction each player has joined.
+**Factions** (`combat/FactionRegistry`, saved as `lifeblood_factions`) hold each faction's default stance, its colors (`FactionColors`: primary and secondary), explicit relations between factions, and which faction each player has joined.
 
 **The word book** (`words/WordBook`, saved as `lifeblood_words`) holds every word players have taught.
 
@@ -97,4 +98,4 @@ Each system saves its own data: parts into the NPC's compound, world registers a
 
 ## Tests
 
-`./gradlew test` runs the unit tests in `src/test/java`. They cover pure logic: the calendar, kinship, age stages, appearance encoding, slim arms, words, save upgrades, the register of people, schedules, ownership records, and the speech files. Tests run with the default config, without a world.
+`./gradlew test` runs the unit tests in `src/test/java`. They cover pure logic: the calendar, kinship, age stages, appearance encoding, slim arms, words, the register of people, schedules, ownership records, prefab data, turning (positions, directions and every facing rule going full circle), faction colors, and the speech files. Tests run with the default config, without a world.

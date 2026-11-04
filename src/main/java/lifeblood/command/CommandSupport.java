@@ -18,9 +18,12 @@ import net.minecraft.core.item.Item;
 import net.minecraft.core.item.ItemStack;
 import net.minecraft.core.net.command.CommandSource;
 import net.minecraft.core.net.command.helpers.DoubleCoordinates;
+import net.minecraft.core.util.helper.DyeColor;
 import net.minecraft.core.world.World;
 import lifeblood.appearance.AppearanceLayer;
 import lifeblood.appearance.PartCatalog;
+import lifeblood.building.PrefabFiles;
+import lifeblood.combat.FactionColors;
 import lifeblood.combat.FactionRegistry;
 import lifeblood.combat.FactionRelation;
 import lifeblood.entity.EntityNPC;
@@ -174,6 +177,22 @@ final class CommandSupport {
 		return builder.buildFuture();
 	};
 
+	static final SuggestionProvider<CommandSource> COLOR_NAMES = (c, builder) -> {
+		for (DyeColor color : DyeColor.values()) {
+			builder.suggest(FactionColors.nameOf(color));
+		}
+
+		return builder.buildFuture();
+	};
+
+	static final SuggestionProvider<CommandSource> PREFAB_NAMES = (c, builder) -> {
+		for (String prefab : PrefabFiles.list()) {
+			builder.suggest(prefab);
+		}
+
+		return builder.buildFuture();
+	};
+
 	static final SuggestionProvider<CommandSource> SKIN_MODELS = (c, builder) -> {
 		for (SkinModel model : SkinModel.values()) {
 			builder.suggest(model.name().toLowerCase(Locale.ROOT));
@@ -200,7 +219,12 @@ final class CommandSupport {
 	}
 
 	static double[] position(CommandContext<CommandSource> c) throws CommandSyntaxException {
-		DoubleCoordinates position = c.getArgument("position", DoubleCoordinates.class);
+		return position(c, "position");
+	}
+
+	/** A position argument with another name, as {x, y, z}. */
+	static double[] position(CommandContext<CommandSource> c, String argument) throws CommandSyntaxException {
+		DoubleCoordinates position = c.getArgument(argument, DoubleCoordinates.class);
 		CommandSource source = c.getSource();
 		return new double[]{position.getX(source), position.getY(source, true), position.getZ(source)};
 	}
@@ -301,6 +325,17 @@ final class CommandSupport {
 	@Nullable
 	static String requireFactionOrNone(CommandContext<CommandSource> c, String argument) throws CommandSyntaxException {
 		return ArgumentTypeString.getString(c, argument).equalsIgnoreCase(NONE_KEYWORD) ? null : requireFaction(c, argument);
+	}
+
+	/** A dye color argument by name ("red", "lightblue", "light_gray"...). */
+	static DyeColor requireColor(CommandContext<CommandSource> c, String argument) throws CommandSyntaxException {
+		String name = ArgumentTypeString.getString(c, argument);
+		DyeColor color = FactionColors.byName(name);
+		if (color == null) {
+			throw error("There's no color called " + name + ".");
+		}
+
+		return color;
 	}
 
 	static FactionRelation requireRelation(CommandContext<CommandSource> c, String argument) throws CommandSyntaxException {

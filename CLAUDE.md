@@ -16,7 +16,7 @@ Read this first, then [docs/README.md](docs/README.md) (what exists and what's d
 The goal: anyone, including an AI that has never seen the project, can find the code for a behavior, understand it, and fix it.
 
 - **Logical places.** One package per system (see the package table in `docs/architecture.md`). Per-NPC state is an `NpcPart`; world-wide state is a register saved as `SavedData`; periodic world logic is a `WorldSystem`; dialogue options are `DialogueMenus` contributors; commands are a class per area with `addTo(root)`.
-- **Reuse.** Use the existing helpers (`BlockOwners`, `Ownership`, `Opinions`, `Kinship`, `PeopleRegistry`, `SpeechFacts`, `CommandSupport`, `NpcInventory`) instead of re-deriving things.
+- **Reuse.** Use the existing helpers (`BlockOwners`, `Ownership`, `PrefabPlacer`, `Swaps`, `BlockTurns`, `Turns`, `Opinions`, `Kinship`, `PeopleRegistry`, `SpeechFacts`, `CommandSupport`, `NpcInventory`) instead of re-deriving things.
 - **Documented.** Every class has a doc comment saying what it is and how it fits. Constants say what they mean and their unit. Non-obvious rules get a comment saying *why*. Match the surrounding style: plain English, tabs, no abbreviations.
 - **Identifiable.** Names say what things are (`NpcBrawling`, `ChunkOwners`, `putAwayWeaponWhenSafe`). Mixins are named after their target and say why they exist.
 - **Docs move with the code.** A change that alters behavior updates its design doc, `docs/architecture.md` if structure changed, and the settled/open lists in `docs/README.md`, in the same commit.

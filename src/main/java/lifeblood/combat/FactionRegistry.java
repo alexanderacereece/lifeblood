@@ -9,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Pattern;
+import net.minecraft.core.util.helper.DyeColor;
 import net.minecraft.core.world.World;
 import net.minecraft.core.world.saveddata.SavedData;
 import org.jetbrains.annotations.Nullable;
@@ -36,6 +37,8 @@ public class FactionRegistry extends SavedData {
 	private final Map<String, FactionRelation> factions = new LinkedHashMap<>();
 	/** Explicit relations between two different factions, keyed by both ids in alphabetical order. */
 	private final Map<String, FactionRelation> relations = new LinkedHashMap<>();
+	/** Each faction's colors; see {@link FactionColors}. */
+	private final Map<String, FactionColors> colors = new LinkedHashMap<>();
 	/** Which faction each player has joined. */
 	private final Map<UUID, String> players = new LinkedHashMap<>();
 
@@ -58,6 +61,8 @@ public class FactionRegistry extends SavedData {
 	private void addStartingFactions() {
 		this.factions.put(SETTLERS, FactionRelation.NEUTRAL);
 		this.factions.put(RAIDERS, FactionRelation.HOSTILE);
+		this.colors.put(SETTLERS, FactionColors.SETTLERS);
+		this.colors.put(RAIDERS, FactionColors.RAIDERS);
 		this.relations.put(key(SETTLERS, RAIDERS), FactionRelation.HOSTILE);
 		this.setDirty();
 	}
@@ -81,6 +86,7 @@ public class FactionRegistry extends SavedData {
 		}
 
 		this.factions.put(faction, defaultStance);
+		this.colors.put(faction, FactionColors.forNewFaction(faction));
 		this.setDirty();
 		return true;
 	}
@@ -91,6 +97,7 @@ public class FactionRegistry extends SavedData {
 			return false;
 		}
 
+		this.colors.remove(faction);
 		this.relations.keySet().removeIf(key -> key.startsWith(faction + "|") || key.endsWith("|" + faction));
 		this.players.values().removeIf(faction::equals);
 		this.setDirty();
@@ -104,6 +111,23 @@ public class FactionRegistry extends SavedData {
 	public void setDefault(String faction, FactionRelation stance) {
 		if (this.factions.containsKey(faction)) {
 			this.factions.put(faction, stance);
+			this.setDirty();
+		}
+	}
+
+	/** A faction's colors; a faction without saved colors gets the ones its name picks. */
+	public FactionColors getColors(String faction) {
+		FactionColors saved = this.colors.get(faction);
+		if (saved != null) {
+			return saved;
+		}
+
+		return faction.equals(SETTLERS) ? FactionColors.SETTLERS : faction.equals(RAIDERS) ? FactionColors.RAIDERS : FactionColors.forNewFaction(faction);
+	}
+
+	public void setColors(String faction, FactionColors colors) {
+		if (this.factions.containsKey(faction)) {
+			this.colors.put(faction, colors);
 			this.setDirty();
 		}
 	}
@@ -203,16 +227,21 @@ public class FactionRegistry extends SavedData {
 		this.factions.clear();
 		this.relations.clear();
 		this.players.clear();
+		this.colors.clear();
 		for (Tag<?> entry : tag.getListOrDefault("Factions", new ListTag())) {
 			if (entry instanceof CompoundTag faction) {
 				String id = faction.getString("Id");
 				FactionRelation stance = FactionRelation.byName(faction.getString("Default"));
 				if (stance == null) {
-					// Saved before default stances existed: raiders were the aggressive faction.
-					stance = id.equals(RAIDERS) ? FactionRelation.HOSTILE : FactionRelation.NEUTRAL;
+					stance = FactionRelation.NEUTRAL;
 				}
 
 				this.factions.put(id, stance);
+				DyeColor primary = FactionColors.byName(faction.getStringOrDefault("Primary", ""));
+				DyeColor secondary = FactionColors.byName(faction.getStringOrDefault("Secondary", ""));
+				if (primary != null && secondary != null) {
+					this.colors.put(id, new FactionColors(primary, secondary));
+				}
 			}
 		}
 
@@ -243,6 +272,9 @@ public class FactionRegistry extends SavedData {
 			CompoundTag entry = new CompoundTag();
 			entry.putString("Id", faction.getKey());
 			entry.putString("Default", faction.getValue().id());
+			FactionColors colors = this.getColors(faction.getKey());
+			entry.putString("Primary", FactionColors.nameOf(colors.primary()));
+			entry.putString("Secondary", FactionColors.nameOf(colors.secondary()));
 			factionList.addTag(entry);
 		}
 
