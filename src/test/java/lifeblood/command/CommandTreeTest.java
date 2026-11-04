@@ -84,7 +84,8 @@ class CommandTreeTest {
 	@Test
 	void targetsTakeSelectorsAndNames() {
 		for (String command : new String[] {"lb npc heal @s", "lb npc heal @e", "lb npc heal Walter", "lb npc heal \"Walter White\"",
-			"lb npc teleport Walter 10 64 -3", "lb npc teleport Walter @p", "lb social opinion Walter @s", "lb faction join @a settlers"}) {
+			"lb npc teleport Walter 10 64 -3", "lb npc teleport Walter @p", "lb social opinion Walter @s", "lb faction join @a settlers",
+			"lb npc summon random", "lb npc summon random 5 settlers", "lb npc summon \"Walter White\" raiders"}) {
 			ParseResults<CommandSource> parsed = dispatcher.parse(command, source);
 			assertTrue(parsed.getExceptions().isEmpty() && !parsed.getReader().canRead(), command + " didn't parse: " + parsed.getExceptions());
 		}

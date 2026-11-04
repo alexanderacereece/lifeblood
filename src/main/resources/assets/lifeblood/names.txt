@@ -1,4 +1,4 @@
-# Names given to children born in the world, by gender. One per line.
+# Names given to NPCs by gender, one per line: children born in the world, and NPCs summoned without a name.
 [male]
 Aldric
 Arlo

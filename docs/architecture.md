@@ -13,7 +13,7 @@ How the mod is put together, and where new systems plug in. Everything here is i
 | `personality` | Trait axes, quirks, tastes, item defaults, surroundings (climate, biome likes) |
 | `social` | Memories, opinions, compatibility, brawls, reactions to deaths |
 | `family` | Kinship, romance, children, the calendar (ages, birthdays) |
-| `people` | The register of everyone who has lived in the world |
+| `people` | The register of everyone who has lived in the world, and the name pool (`NamePool`, from `names.txt`) |
 | `combat` | Fighting, archery, threat, targeting, factions and relations |
 | `dialogue` | Conversation menus and their options: gifts, romance, words, chat limits |
 | `speech` | The speech engine, the line library, facts for lines, speech styles, the voice |

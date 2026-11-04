@@ -8,8 +8,10 @@ import com.mojang.brigadier.arguments.ArgumentTypeString;
 import com.mojang.brigadier.builder.ArgumentBuilderLiteral;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Random;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.EntityDispatcher;
 import net.minecraft.core.entity.player.Player;
@@ -25,6 +27,7 @@ import lifeblood.entity.EntityNPC;
 import lifeblood.entity.HealthMode;
 import lifeblood.entity.NpcGender;
 import lifeblood.family.Children;
+import lifeblood.people.NamePool;
 import lifeblood.skin.NpcSkinFiles;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3dc;
@@ -34,16 +37,27 @@ import org.joml.Vector3dc;
  * plus orders (go to, follow, stay, wander, free), gender, how hard they are to kill, growing up, and saying a line.
  */
 final class NpcCommands {
+	/** The most NPCs one random summon makes. */
+	private static final int MAX_RANDOM_AMOUNT = 20;
+	/** How widely randomly summoned NPCs are spread around you, in blocks across. */
+	private static final double RANDOM_SPREAD = 6.0;
+
 	private NpcCommands() {
 	}
 
 	static void addTo(ArgumentBuilderLiteral<CommandSource> root) {
 		root.then(branch("npc", "Making NPCs and telling them what to do.")
 			.then(branch("npc summon", "Summons an NPC where you stand, with a skin file of its name if there is one.")
+				.then(branch("npc summon random", "Summons NPCs with random genders and names from the name pool, like children born in the world.")
+					.executes(c -> summonRandom(c, 1, null))
+					.then(argument("amount", ArgumentTypeInteger.integer(1, MAX_RANDOM_AMOUNT))
+						.executes(c -> summonRandom(c, c.getArgument("amount", Integer.class), null))
+						.then(argument("faction", ArgumentTypeString.word()).suggests(FACTION_OR_NONE_NAMES)
+							.executes(c -> summonRandom(c, c.getArgument("amount", Integer.class), requireFactionOrNone(c, "faction"))))))
 				.then(argument("name", ArgumentTypeString.string())
-					.executes(c -> summon(c, null))
+					.executes(c -> summonNamed(c, null))
 					.then(argument("faction", ArgumentTypeString.word()).suggests(FACTION_OR_NONE_NAMES)
-						.executes(c -> summon(c, requireFactionOrNone(c, "faction"))))))
+						.executes(c -> summonNamed(c, requireFactionOrNone(c, "faction"))))))
 			.then(branch("npc list", "Every loaded NPC: what it's doing and where.").executes(NpcCommands::list))
 			.then(branch("npc remove", "Removes NPCs from the world, like /kill but without dying.")
 				.then(npcsArgument("npcs").executes(c -> {
@@ -184,14 +198,8 @@ final class NpcCommands {
 		return npcs.size();
 	}
 
-	/** faction: null means the default. */
-	private static int summon(CommandContext<CommandSource> c, @Nullable String faction) throws CommandSyntaxException {
-		CommandSource source = c.getSource();
-		Vector3dc pos = source.getCoordinates(false);
-		if (pos == null) {
-			throw error("You must be in a world to summon an NPC.");
-		}
-
+	/** /lb npc summon &lt;name&gt; [faction]: faction null means the default. */
+	private static int summonNamed(CommandContext<CommandSource> c, @Nullable String faction) throws CommandSyntaxException {
 		String name = ArgumentTypeString.getString(c, "name").trim();
 		if (name.isEmpty() || name.length() > 32) {
 			throw error("NPC names must be 1 to 32 characters long.");
@@ -200,6 +208,44 @@ final class NpcCommands {
 		// A skin file with the same name as the NPC is used if there is one; otherwise it's built from parts.
 		String fromName = name.toLowerCase(Locale.ROOT).replace(' ', '_');
 		String skin = NpcSkinFiles.exists(fromName) ? fromName : "";
+		// A first guess, changeable with /lb npc gender: slim-armed skins are usually female characters. Without a skin
+		// the NPC is built from appearance parts, and either is equally likely.
+		NpcGender gender = skin.isEmpty() ? null : NpcSkinFiles.isSlim(skin) ? NpcGender.FEMALE : NpcGender.MALE;
+		EntityNPC npc = summon(c, name, gender, skin, faction, 0.0, 0.0);
+		return reply(c, "Summoned " + name + ", " + factionLabel(npc.getFaction()) + (skin.isEmpty() ? "." : " (skin '" + skin + "')."));
+	}
+
+	/** /lb npc summon random [amount] [faction]: NPCs with names from the name pool, spread out a little. */
+	private static int summonRandom(CommandContext<CommandSource> c, int amount, @Nullable String faction) throws CommandSyntaxException {
+		List<String> names = new ArrayList<>();
+		Random random = c.getSource().getWorld().rand;
+		for (int i = 0; i < amount; i++) {
+			NpcGender gender = random.nextBoolean() ? NpcGender.FEMALE : NpcGender.MALE;
+			String name = NamePool.pick(gender, random);
+			// The first stands where you are; the rest around you, so they don't all spawn inside each other.
+			double offsetX = i == 0 ? 0.0 : (random.nextDouble() - 0.5) * RANDOM_SPREAD;
+			double offsetZ = i == 0 ? 0.0 : (random.nextDouble() - 0.5) * RANDOM_SPREAD;
+			EntityNPC npc = summon(c, name, gender, "", faction, offsetX, offsetZ);
+			names.add(name + " (" + npc.getGender().displayName().toLowerCase(Locale.ROOT) + ")");
+		}
+
+		String factionText = faction != null ? ", of the " + faction : "";
+		reply(c, "Summoned " + String.join(", ", names) + factionText + ".");
+		return amount;
+	}
+
+	/**
+	 * Makes an NPC where the command was run, offset by the given blocks. Gender null picks one at random; skin "" builds
+	 * the look from parts; faction null means the default.
+	 */
+	private static EntityNPC summon(CommandContext<CommandSource> c, String name, @Nullable NpcGender gender, String skin,
+		@Nullable String faction, double offsetX, double offsetZ) throws CommandSyntaxException {
+		CommandSource source = c.getSource();
+		Vector3dc pos = source.getCoordinates(false);
+		if (pos == null) {
+			throw error("You must be in a world to summon an NPC.");
+		}
+
 		World world = source.getWorld();
 		EntityNPC npc = EntityDispatcher.getInstance().createEntityInWorld(EntityNPC.class, world);
 		if (npc == null) {
@@ -208,17 +254,10 @@ final class NpcCommands {
 
 		Player player = source.getSender();
 		double feet = player != null ? pos.y() - player.heightOffset : pos.y();
-		npc.moveTo(pos.x(), feet, pos.z(), player != null ? player.yRot : 0.0F, 0.0F);
+		npc.moveTo(pos.x() + offsetX, feet, pos.z() + offsetZ, player != null ? player.yRot : 0.0F, 0.0F);
 		npc.setNickname(name);
 		npc.setSkin(skin);
-		// A first guess, changeable with /lb npc gender: slim-armed skins are usually female characters. Without a skin
-		// the NPC is built from appearance parts, and either is equally likely.
-		if (skin.isEmpty()) {
-			npc.setGender(npc.getRandom().nextBoolean() ? NpcGender.FEMALE : NpcGender.MALE);
-		} else {
-			npc.setGender(NpcSkinFiles.isSlim(skin) ? NpcGender.FEMALE : NpcGender.MALE);
-		}
-
+		npc.setGender(gender != null ? gender : npc.getRandom().nextBoolean() ? NpcGender.FEMALE : NpcGender.MALE);
 		npc.rollAppearanceIfNeeded();
 		if (faction != null) {
 			npc.setFaction(faction);
@@ -228,7 +267,7 @@ final class NpcCommands {
 		npc.setHomeHere();
 		npc.spawnInit();
 		world.entityJoinedWorld(npc);
-		return reply(c, "Summoned " + name + ", " + factionLabel(npc.getFaction()) + (skin.isEmpty() ? "." : " (skin '" + skin + "')."));
+		return npc;
 	}
 
 	private static int goTo(CommandContext<CommandSource> c, double x, double y, double z, String where) throws CommandSyntaxException {

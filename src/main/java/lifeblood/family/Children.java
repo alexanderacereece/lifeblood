@@ -1,25 +1,16 @@
 package lifeblood.family;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.EnumMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 import net.minecraft.core.entity.EntityDispatcher;
 import net.minecraft.core.entity.Mob;
 import net.minecraft.core.entity.player.Player;
-import net.minecraft.core.lang.I18n;
-import lifeblood.Lifeblood;
 import lifeblood.appearance.Appearance;
 import lifeblood.appearance.PartCatalog;
 import lifeblood.entity.EntityNPC;
 import lifeblood.entity.NpcGender;
+import lifeblood.people.NamePool;
 import lifeblood.people.PeopleRegistry;
 import lifeblood.social.Memory;
 import lifeblood.social.MemoryType;
@@ -38,8 +29,6 @@ public final class Children {
 	private static final float MIN_DAYS_BETWEEN = 5.0F;
 	/** Per romance check (once a minute): about one child every ten in-game days. */
 	public static final float BIRTH_CHANCE = 0.005F;
-
-	private static Map<NpcGender, List<String>> names;
 
 	private Children() {
 	}
@@ -77,7 +66,7 @@ public final class Children {
 		NpcGender gender = random.nextBoolean() ? NpcGender.FEMALE : NpcGender.MALE;
 		EntityNPC npcParent = otherParent instanceof EntityNPC other ? other : null;
 		child.moveTo(parent.x, parent.y, parent.z, random.nextFloat() * 360.0F, 0.0F);
-		child.setNickname(pickName(gender, random));
+		child.setNickname(NamePool.pick(gender, random));
 		child.setGender(gender);
 		child.personality.inherit(parent.personality, npcParent != null ? npcParent.personality : null, random);
 		child.setAppearance(Appearance.inherit(PartCatalog.get(), gender, Appearance.decode(parent.getAppearance()),
@@ -113,44 +102,5 @@ public final class Children {
 	public static void cameOfAge(EntityNPC npc) {
 		npc.setAppearance(Appearance.decode(npc.getAppearance()).cameOfAge(PartCatalog.get(), npc.getGender(), npc.getRandom()));
 		npc.voice.bark("grown_up", null, null, true);
-	}
-
-	private static String pickName(NpcGender gender, Random random) {
-		if (names == null) {
-			names = loadNames();
-		}
-
-		List<String> options = names.getOrDefault(gender, List.of());
-		return options.isEmpty() ? (gender == NpcGender.MALE ? "Tom" : "Ann") : options.get(random.nextInt(options.size()));
-	}
-
-	/** assets/lifeblood/names.txt: [male] and [female] sections, one name per line. */
-	private static Map<NpcGender, List<String>> loadNames() {
-		Map<NpcGender, List<String>> result = new EnumMap<>(NpcGender.class);
-		try (InputStream stream = I18n.getResourceAsStream("/assets/lifeblood/names.txt")) {
-			if (stream == null) {
-				return result;
-			}
-
-			BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8));
-			NpcGender section = null;
-			String line;
-			while ((line = reader.readLine()) != null) {
-				line = line.strip();
-				if (line.isEmpty() || line.startsWith("#")) {
-					continue;
-				}
-
-				if (line.startsWith("[") && line.endsWith("]")) {
-					section = NpcGender.byName(line.substring(1, line.length() - 1));
-				} else if (section != null) {
-					result.computeIfAbsent(section, g -> new ArrayList<>()).add(line);
-				}
-			}
-		} catch (IOException e) {
-			Lifeblood.LOGGER.warn("Could not read the name list", e);
-		}
-
-		return result;
 	}
 }
