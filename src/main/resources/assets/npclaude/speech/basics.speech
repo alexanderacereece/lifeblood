@@ -8,9 +8,9 @@
 #
 # Facts: name, listener, listener_type (player/npc), opinion (enemy/disliked/neutral/friendly/friend/close_friend),
 # relation (ally/neutral/hostile: how they'd treat the listener in a fight),
-# age (child/adult), birthday (yes on their birthday), relationship (single/dating/engaged/married/widowed), listener_kin (what the listener is to them: spouse, fiance,
+# age (baby 0-2, child 3-9, young_teen 10-15, teen 16-17, adult; see ages.speech), birthday (yes on their birthday), relationship (single/dating/engaged/married/widowed), listener_kin (what the listener is to them: spouse, fiance,
 # partner, parent, child, sibling, grandparent, grandchild, aunt_uncle, niece_nephew, cousin, ..._in_law, or none),
-# to_partner (yes when the listener is their partner), listener_age (child/adult),
+# to_partner (yes when the listener is their partner), listener_age (the listener's age stage),
 # leader (yes/no), time (morning/day/evening/night), weather (clear/rain/snow/storm/fog/blood_rain), wet (yes when
 # it's coming down on them), outside, season (spring/summer/fall/winter), biome (plains, desert, tundra...),
 # climate (cold/mild/hot here), home_climate, home_biome and at_home (where they're from and whether they're there),

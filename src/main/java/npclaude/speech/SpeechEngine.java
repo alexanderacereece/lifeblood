@@ -13,11 +13,19 @@ import org.jetbrains.annotations.Nullable;
 /**
  * Turns a symbol into a sentence: picks one of its lines that fits the moment, then fills in every [name] inside it,
  * recursively. More specific lines (more conditions) are more likely; lines the NPC used recently are much less likely.
+ *
+ * Young speakers sound their age: a symbol with a version for their age stage ("greet.child", "smalltalk.teen") is
+ * spoken from that version instead, falling back to the plain symbol only if nothing in it fits. Babies only ever
+ * babble: anything without a ".baby" version comes out of "babble".
  */
 public final class SpeechEngine {
 	private static final Pattern TOKEN = Pattern.compile("\\[([a-z_0-9]+)((?:\\.[a-z]+)*)]");
 	private static final Pattern LONE_I = Pattern.compile("(?<![\\p{L}'])i(?=[\\s'.,!?;:]|$)");
 	private static final int MAX_DEPTH = 8;
+	private static final String ADULT = "adult";
+	private static final String BABY = "baby";
+	/** What babies say when a symbol has no baby version. */
+	private static final String BABBLE = "babble";
 	private static final int MAX_TRIES = 6;
 	/** Each satisfied condition makes a line this many times more likely. */
 	private static final float SPECIFICITY_BONUS = 2.0F;
@@ -49,6 +57,21 @@ public final class SpeechEngine {
 	 */
 	@Nullable
 	public static String speak(String symbol, SpeechContext context, Map<String, Long> used, long now, Random random) {
+		String stage = context.fact("age");
+		boolean baby = BABY.equals(stage);
+		String variant = stage != null && !ADULT.equals(stage) ? symbol + "." + stage : null;
+		if (variant != null && SpeechLibrary.has(variant)) {
+			try {
+				return tidy(expandSymbol(variant, context, used, now, random, 0));
+			} catch (Missing missing) {
+				if (baby) {
+					return null;
+				}
+			}
+		} else if (baby) {
+			symbol = BABBLE;
+		}
+
 		try {
 			return tidy(expandSymbol(symbol, context, used, now, random, 0));
 		} catch (Missing missing) {

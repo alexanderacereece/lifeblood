@@ -58,6 +58,11 @@ public final class NpcLife implements NpcPart {
 		return this.npc.getEntityData().getByte(EntityNPC.DATA_GROWTH) / 100.0F;
 	}
 
+	/** Where it is in growing up (baby, little kid, young teen, older teen, adult), for how it talks. */
+	public AgeStage getStage() {
+		return AgeStage.of(this.getGrowth());
+	}
+
 	public boolean isChild() {
 		return this.npc.getEntityData().getByte(EntityNPC.DATA_GROWTH) < 100;
 	}

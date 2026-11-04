@@ -35,6 +35,14 @@ Fact symbols come from the NPC's data: `[player]`, `[name]`, `[job]`, `[home]`, 
 
 **Repetition.** Each NPC remembers its recent lines and avoids them; recently used alternatives are weighted down.
 
+### Sounding their age
+
+Young NPCs talk like their age, all the time. Growing up is split into stages: **baby** (0–2), **child** (3–9), **young teen** (10–15) and **teen** (16–17), on the same 18-year scale as growing up (so it follows `yearsToGrowUp`). The `age` fact holds the stage, and `listener_age` the listener's.
+
+A symbol can have a version per stage, written `greet.child` or `smalltalk.teen`, in `ages.speech`. A young speaker uses its stage's version instead of the plain symbol, and only falls back to the plain one if nothing in its version fits. Babies only babble: any symbol without a `.baby` version comes out of `babble`, and babies never ask for words. Kids and teens have their own versions of greetings, small talk, opening and closing a conversation, questions about themselves, following, gifts, birthdays, idle thoughts, chats with other NPCs, running away and grief, with lines for the axes and quirks and for talking to parents, grandparents and siblings (`[kin_call]` is Mom, Dad, Grandma or Grandpa).
+
+Grown-ups talk to the young differently too: in chats between NPCs, parents fuss over their children by stage (cooing at babies, chores and curfews for young teens, the future for older teens), and other adults talk down to little kids.
+
 ### Speech style
 
 A surface layer rolled per NPC, independent of personality, so two NPCs with the same traits still sound different. It supplies its own values for shared symbols and applies small transforms:

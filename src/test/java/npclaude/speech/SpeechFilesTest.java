@@ -64,6 +64,22 @@ class SpeechFilesTest {
 			}
 		}
 
+		// Age versions ("greet.child") must be for a real stage and stand in for a real symbol.
+		for (String symbol : symbols.keySet()) {
+			int dot = symbol.indexOf('.');
+			if (dot > 0) {
+				String stage = symbol.substring(dot + 1);
+				if (!Set.of("baby", "child", "young_teen", "teen").contains(stage)) {
+					problems.add(symbol + ": unknown age stage " + stage);
+				}
+
+				if (!symbols.containsKey(symbol.substring(0, dot))) {
+					problems.add(symbol + ": no plain " + symbol.substring(0, dot) + " to stand in for");
+				}
+			}
+		}
+
+		assertTrue(symbols.containsKey("babble"), "babies need babble");
 		assertTrue(symbols.size() > 50, "only " + symbols.size() + " symbols");
 		assertEquals(List.of(), problems);
 	}

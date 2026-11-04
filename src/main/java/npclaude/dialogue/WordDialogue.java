@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import net.minecraft.core.entity.player.Player;
+import npclaude.entity.AgeStage;
 import npclaude.entity.EntityNPC;
 import npclaude.personality.Quirk;
 import npclaude.social.Memory;
@@ -35,7 +36,8 @@ public final class WordDialogue {
 	/** A chat that turns into asking for a word, if the NPC feels like asking now. */
 	@Nullable
 	static NpcDialogue maybeAsk(EntityNPC npc, Player player) {
-		if (npc.life.isChild() && npc.getRandom().nextFloat() < 0.5F || Opinions.of(npc, player) < 20.0F) {
+		// Babies can't ask for words yet; kids ask less often.
+		if (npc.life.getStage() == AgeStage.BABY || npc.life.isChild() && npc.getRandom().nextFloat() < 0.5F || Opinions.of(npc, player) < 20.0F) {
 			return null;
 		}
 

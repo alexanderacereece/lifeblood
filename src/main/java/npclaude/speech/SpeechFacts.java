@@ -62,7 +62,7 @@ public final class SpeechFacts {
 
 		addFamily(npc, listener, context);
 		addTaughtWords(npc, listener, context);
-		context.fact("age", npc.life.isChild() ? "child" : "adult");
+		context.fact("age", npc.life.getStage().id());
 		context.fact("birthday", npc.life.isBirthday() ? "yes" : "no");
 		context.fact("time", timeOfDay(npc));
 		addSurroundings(npc, context);
@@ -127,7 +127,7 @@ public final class SpeechFacts {
 	/**
 	 * relationship (single/dating/engaged/married/widowed) with the partner's name as [partner], to_partner (yes when
 	 * the listener is that partner, so they aren't told about themself), listener_kin: what the listener is to the
-	 * speaker (spouse, partner, fiance, parent, child, sibling, cousin...) or "none", listener_age (child/adult), and
+	 * speaker (spouse, partner, fiance, parent, child, sibling, cousin...) or "none", listener_age (their age stage), and
 	 * [kin_call]: what the speaker calls them (Mom, Dad, Grandma, Grandpa, or their name).
 	 */
 	private static void addFamily(EntityNPC npc, @Nullable Entity listener, SpeechContext context) {
@@ -145,7 +145,7 @@ public final class SpeechFacts {
 		Kinship kin = listenerId != null ? Kinship.of(family, npc.getUuid(), listenerId) : null;
 		context.fact("listener_kin", kin != null ? kin.id() : "none");
 		context.fact("to_partner", partnership != null && listenerId != null && partnership.other(npc.getUuid()).equals(listenerId) ? "yes" : "no");
-		context.fact("listener_age", listener instanceof EntityNPC other && other.life.isChild() ? "child" : "adult");
+		context.fact("listener_age", listener instanceof EntityNPC other ? other.life.getStage().id() : "adult");
 		if (listener != null) {
 			context.word("kin_call", Word.name(kinCall(kin, listener, listenerId != null ? family.find(listenerId) : null)));
 		}

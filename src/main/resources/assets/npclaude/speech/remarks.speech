@@ -117,6 +117,42 @@ Morning, [listener]. Praise the Cube. {pious, time=morning}
 [listener]! I was just thinking about you. {romantic, opinion=friend}
 Oh. [listener].              {opinion=disliked}
 What are you looking at, [listener]? {opinion=disliked, rude}
+# Family, and grown-ups talking to the young
+[listener], there you are, love. {listener_kin=spouse, w=8}
+[listener], what should we have for dinner? {listener_kin=spouse, w=6}
+Did you sleep all right, love? {listener_kin=spouse, time=morning, w=8}
+[listener], come here a minute. I missed you. {listener_kin=spouse, romantic, w=8}
+[listener]! Is that my baby? Is that my baby? {listener_kin=child, listener_age=baby, w=12}
+Who's a happy little one? You are! {listener_kin=child, listener_age=baby, w=10}
+Shh, shh. It's all right, little one. {listener_kin=child, listener_age=baby, serious, w=8}
+[listener], have you eaten? {listener_kin=child, listener_age=child, w=10}
+Stay where I can see you, [listener]. {listener_kin=child, listener_age=child, w=10}
+[listener], careful! Not so close to the water! {listener_kin=child, listener_age=child, timid, w=10}
+You're growing up so fast, [listener]. {listener_kin=child, listener_age=child, sentimental, w=10}
+Have you been good today, [listener]? {listener_kin=child, listener_age=child, w=8}
+[listener], did you finish your chores? {listener_kin=child, listener_age=young_teen, w=10}
+[listener], be home before dark. I mean it. {listener_kin=child, listener_age=young_teen, w=10}
+Don't roll your eyes at me, [listener]. {listener_kin=child, listener_age=young_teen, w=8}
+[listener], I'm proud of you. Even if you don't want to hear it. {listener_kin=child, listener_age=young_teen, sentimental, w=8}
+[listener], you're almost grown. Where does the time go? {listener_kin=child, listener_age=teen, w=10}
+[listener], have you thought about what you want to do with yourself? {listener_kin=child, listener_age=teen, w=10}
+[listener], you'll always have a home here. You know that. {listener_kin=child, listener_age=teen, sentimental, w=8}
+[listener]! You never visit enough. {listener_kin=child, listener_age=adult, w=8}
+[listener], met anyone nice lately? Just asking. {listener_kin=child, listener_age=adult, nosy, w=8}
+I'm proud of you, [listener]. {listener_kin=child, listener_age=adult, w=6}
+There's my grandbaby!        {listener_kin=grandchild, w=10}
+[listener], come tell your grandparent everything. {listener_kin=grandchild, extrovert, w=8}
+[listener], how are you keeping? {listener_kin=parent, w=8}
+Don't work too hard, [listener]. {listener_kin=parent, w=6}
+[listener], remember when we were kids? {listener_kin=sibling, w=8}
+Hey, [listener]. Still the favorite, I see. {listener_kin=sibling, jealous, w=8}
+Aww, look at you!            {listener_age=baby, w=6}
+Hello, little one.           {listener_age=baby, w=6}
+Hello there, little one.     {listener_age=child, w=4}
+Run along now, [listener]. {listener_age=child, rude, w=4}
+Staying out of trouble, kid? {listener_age=young_teen, w=3}
+Shouldn't you be helping your folks, [listener]? {listener_age=young_teen, hardworking, w=4}
+[listener], you're nearly grown. Got any plans? {listener_age=teen, w=3}
 
 == chat_reply ==
 Not bad, you?
@@ -140,6 +176,19 @@ Hm. If you say so.           {opinion=disliked}
 Mmh. Food. Yes.              {glutton}
 Better than this weather.    {weather_like=hate}
 Same as the weather. Lovely. {weather_like=love}
+Of course, love.             {listener_kin=spouse, w=8}
+Whatever you like, dear.     {listener_kin=spouse, polite, w=6}
+Not now, love.               {listener_kin=spouse, introvert, w=4}
+Yes, sweetie.                {listener_kin=child, listener_age=baby, w=10}
+Yes, sweetie. Gently now.    {listener_kin=child, listener_age=child, w=10}
+Okay, okay. Show me.         {listener_kin=child, listener_age=child, w=10}
+We'll see.                   {listener_kin=child, listener_age=young_teen, w=8}
+Because I said so.           {listener_kin=child, listener_age=young_teen, rude, w=8}
+I know. I just worry.        {listener_kin=child, listener_age=teen, w=8}
+I know, [listener]. I know.  {listener_kin=parent, w=6}
+Ha. Sure you are.            {listener_kin=sibling, w=6}
+That's lovely, little one.   {listener_age=child, polite, w=4}
+Mm-hm. Run along.            {listener_age=child, w=3}
 
 # ---------------------------------------------------------------------------------------------------------------
 # The world around them: said when the weather turns, the season changes, or they walk into a new biome.
