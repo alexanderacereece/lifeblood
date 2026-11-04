@@ -44,7 +44,7 @@ Then:
 |---|---|---|
 | A job | depends on the job (see [work](work.md)) | Children lean toward a parent's trade and can apprentice. |
 | Changing jobs | ambitious, unhappy at work | Losing a job forces a choice. |
-| A journey | wanderer, curious, brave | Goes somewhere and comes back with stories and memories. |
+| A journey | wanderer, curious, brave | Goes somewhere and comes back with stories and memories ([travelers](travelers.md)). |
 | Moving to another settlement | wanderer, ambitious, a grudge or heartbreak at home | Needs an opening or a relative there. |
 | Homesteading | wanderer, brave, introvert, ambitious | Picks land and builds a home ([building](building.md)). |
 | Running for office | ambitious, proud, competitive, extrovert | Wins by opinions (democracy) or appointment, per government. |

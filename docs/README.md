@@ -20,9 +20,18 @@ Planned, not built yet (ownership and building are partly built):
 | [life-choices.md](life-choices.md) | NPCs choosing jobs, journeys, moves, homesteads and offices; the ambition axis |
 | [work.md](work.md) | Jobs, block actions, real item chains, storage, honest mining |
 | [ownership.md](ownership.md) | Who placed what, protecting player builds, property for crime and law |
+| [travelers.md](travelers.md) | Wanderers, adventurers, hunters, gatherers and long trips: NPCs out in the world |
 | [unloaded.md](unloaded.md) | Keeping the world alive where nobody is watching |
 
 The roadmap (what's built and what's next, including settlements and factions) is a separate page.
+
+## Next: the first playtest
+
+The aim is a world to play in and feel the mod's pace: a mix of NPCs living in places and NPCs showing up on their own, out doing things.
+1. **Prefabs** (built).
+2. **Generated homesteads:** families, lone settlers, widows and friends already living there ([building](building.md#generated-homesteads-next)).
+3. **Block actions**, the smallest set travelers need: breaking and placing by the player's rules ([work](work.md#the-pieces)).
+4. **Travelers and adventures:** wanderers passing through, adventurers in caves and ruins, hunters, gatherers and long trips ([travelers](travelers.md)).
 
 ## Build order for working life
 
