@@ -236,6 +236,11 @@ public final class SpeechFacts {
 		}
 	}
 
+	/** Whether it's in the biome it comes from right now. */
+	static boolean isAtHome(EntityNPC npc) {
+		return npc.life.getHomeBiome().equals(Surroundings.placeAt(npc.world, npc.x, npc.y, npc.z));
+	}
+
 	/** "storm" reads as "storms" when talked about in general, "plains" is plural, "rain" can't be counted. */
 	private static Word surroundingsWord(String key) {
 		String name = Surroundings.displayName(key);

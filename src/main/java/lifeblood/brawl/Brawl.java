@@ -6,6 +6,8 @@ import net.minecraft.core.entity.Mob;
 import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.util.helper.MathHelper;
 import lifeblood.entity.EntityNPC;
+import lifeblood.event.BrawlEndedEvent;
+import lifeblood.event.LifeEvents;
 import lifeblood.personality.Quirk;
 import lifeblood.personality.TraitAxis;
 import lifeblood.social.MemoryType;
@@ -158,6 +160,7 @@ public final class Brawl {
 		this.over = true;
 		Mob winner = this.opponentOf(loser);
 		this.release(true);
+		LifeEvents.post(new BrawlEndedEvent(winner, loser, forfeit));
 		if (loser instanceof EntityNPC npc) {
 			npc.remember(MemoryType.BEAT_ME_IN_A_BRAWL, winner, 1.0F);
 			npc.remember(MemoryType.LOST_A_FIGHT, null, 1.0F);

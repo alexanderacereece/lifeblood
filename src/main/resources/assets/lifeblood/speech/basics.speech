@@ -4,7 +4,8 @@
 # Each "== name ==" is a symbol; each line under it is one way to say it. [name] fills in another symbol, a fact
 # or a word. Braces at the end hold conditions: a pole (polite, polite+ for strongly), a quirk (glutton), a fact
 # (time=night), any of them negated with "!", and w=2 to make a line more likely. Lines with more conditions are
-# picked more often when they fit, so every symbol keeps plain lines as a fallback.
+# picked more often when they fit, so every symbol keeps plain lines as a fallback. [name?] is an optional piece:
+# said with the speaker's chattiness as its chance, and left out if nothing fits (see topics.speech).
 #
 # Facts: name (their given name), family_name, birth_family_name (the one they were born with), married_name (yes
 # when they took a spouse's family name), listener, listener_type (player/npc), opinion (enemy/disliked/neutral/friendly/friend/close_friend),

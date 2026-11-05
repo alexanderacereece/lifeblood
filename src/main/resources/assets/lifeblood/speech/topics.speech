@@ -1,0 +1,197 @@
+# Lifeblood speech: topics, built from beats. The format and every fact and word are described in basics.speech.
+#
+# A remark on a topic is up to three beats: a reaction, then a detail or reason, then a turn to the listener. The
+# last two are optional ([weather_detail?]): chatty speakers usually say them, quiet ones rarely, so the same lines
+# give "Rain again." from one NPC and "Rain again. Good for the crops, I suppose. You staying dry?" from another.
+# Write every beat so it reads on its own and after any other beat of its topic.
+#
+# Chats between NPCs stay on one topic (see ChatTopics): the opener speaks from chat_open_<topic>, and the other
+# answers from chat_reply_<topic>, with its own facts (its own tastes, its own home).
+
+# ---------------------------------------------------------------------------------------------------------------
+# The weather
+
+== weather_react ==
+Nice day.                    {weather=clear, time=day}
+Lovely day for it.           {weather=clear, time=day, weather_like=love, w=2}
+Not a cloud in the sky.      {weather=clear, time=day}
+Too bright out.              {weather=clear, weather_like=hate, w=2}
+Clear night.                 {weather=clear, time=night}
+Look at those stars.         {weather=clear, time=night, sentimental, w=2}
+Fine morning.                {weather=clear, time=morning}
+Rain again.                  {weather=rain}
+Still raining.               {weather=rain}
+Ah, rain.                    {weather=rain, weather_like=love, w=2}
+More rain. Wonderful.        {weather=rain, weather_like=hate, w=2}
+Wet one today.               {weather=rain}
+Some storm.                  {weather=storm}
+Hear that thunder?           {weather=storm}
+What a storm!                {weather=storm, weather_like=love, w=2}
+I don't like the sound of that thunder. {weather=storm, timid, w=2}
+Snowing again.               {weather=snow}
+Look at that snow!           {weather=snow, weather_like=love, w=2}
+Snow. Again.                 {weather=snow, weather_like=hate, w=2}
+Thick fog today.             {weather=fog}
+Can't see a thing in this fog. {weather=fog}
+Red rain.                    {weather=blood_rain}
+The sky's bleeding again.    {weather=blood_rain, w=2}
+
+== weather_detail ==
+Good for the crops, I suppose. {weather=rain}
+Everything smells clean after. {weather=rain, weather_like=love, w=2}
+Everything smells clean after. {weather=rain, weather_like=like}
+My boots haven't been dry in days. {weather=rain, weather_like=dislike}
+My boots haven't been dry in days. {weather=rain, weather_like=hate}
+I'm soaked to the bone.      {weather=rain, wet=yes, w=2}
+Nice to be under a roof for once. {weather=rain, outside=no}
+The Cube God waters the world. {weather=rain, pious, w=2}
+Makes you feel alive, a storm like this. {weather=storm, weather_like=love, w=2}
+I'll be glad when it's passed. {weather=storm, weather_like=dislike}
+I'll be glad when it's passed. {weather=storm, weather_like=hate}
+Lightning struck a tree near here once. Split it right down the middle. {weather=storm, w=0.5}
+The Cube God's in a mood.    {weather=storm, pious, w=2}
+Everything goes quiet when it snows. {weather=snow, weather_like=love}
+Everything goes quiet when it snows. {weather=snow, introvert}
+My fingers are numb already. {weather=snow, weather_like=dislike}
+My fingers are numb already. {weather=snow, weather_like=hate}
+We don't get snow like this where I'm from. {weather=snow, home_climate=hot, w=2}
+Anything could be out there in this. {weather=fog, paranoid, w=2}
+Nobody bothers you in the fog. {weather=fog, weather_like=love}
+I keep walking into things.  {weather=fog, lighthearted}
+That can't be a good sign.   {weather=blood_rain}
+Somebody's done something to deserve this. {weather=blood_rain, pious, w=2}
+Days like this, I want to be outside. {weather=clear, weather_like=love}
+Days like this, I want to be outside. {weather=clear, weather_like=like}
+Too hot to do anything.      {weather=clear, climate=hot}
+Cold, though.                {weather=clear, climate=cold}
+Won't last, mind.            {weather=clear, pessimist, w=2}
+Can't stay nice forever.     {weather=clear, pessimist}
+Good day for getting things done. {weather=clear, time=day, hardworking, w=2}
+Good day for a nap in the sun. {weather=clear, time=day, lazy, w=2}
+I could watch the sky all night. {weather=clear, time=night, sentimental}
+Not my kind of weather.      {weather_like=dislike}
+Not my kind of weather.      {weather_like=hate}
+Just my kind of weather.     {weather_like=love}
+I don't mind it.             {weather_like=meh}
+
+== weather_ask ==
+You staying dry?             {weather=rain}
+You like the rain?           {weather=rain, curious}
+Keep your head down out there. {weather=storm}
+Stay warm, all right?        {weather=snow, polite}
+Stay warm, all right?        {weather=snow, sentimental}
+Stay close in this fog.      {weather=fog, brave}
+What do you make of it?
+Think it'll last?
+You feel it too?             {extrovert}
+How are you holding up?      {polite}
+Lovely, isn't it?            {weather_like=love}
+
+# Answering someone who brought up the weather, with your own feelings about it.
+== weather_reply ==
+Tell me about it.            {weather_like=hate}
+Tell me about it.            {weather_like=dislike}
+I don't mind it, honestly.   {weather_like=meh}
+I like it, myself.           {weather_like=like}
+I love it.                   {weather_like=love}
+It is what it is.            {serious}
+Mm.                          {taciturn, w=2}
+Could be worse.              {optimist}
+Could be better.             {pessimist}
+Weather's weather.
+
+== chat_open_weather ==
+[listener]. [weather_react] [weather_detail?] [weather_ask?]
+[weather_react] [weather_detail?] [weather_ask?]
+
+== chat_reply_weather ==
+[weather_reply] [weather_detail?]
+
+# ---------------------------------------------------------------------------------------------------------------
+# Food
+
+== food_react ==
+I'm starving.                {glutton, w=2}
+I could eat.
+I've been thinking about [favorite_food.s] all day. {w=1.5}
+I've been craving [favorite_food.a]. {glutton, w=2}
+Is it just me, or is it nearly dinnertime? {time=evening}
+Breakfast. Most important meal there is. {time=morning, glutton}
+
+== food_detail ==
+Nothing beats [favorite_food.a] after a long day.
+[favorite_food.cap] [favorite_food.is] the best thing there is. {w=0.8}
+You know what I can't stand? [hated_food.s.cap]. {w=0.8}
+Don't ever offer me [hated_food.a]. I mean it. {w=0.6}
+My stomach's been growling since noon. {glutton}
+Haven't had a proper meal in days. {pessimist}
+A good meal fixes most things. {optimist}
+I'd eat it every day if I could. {glutton}
+The Cube God gives us bread. We ought to be thankful. {pious}
+
+== food_ask ==
+You eaten yet?
+What about you?
+What's your favorite?        {curious}
+You any good at cooking?     {curious}
+Want to share something?     {polite}
+
+== food_reply ==
+Don't get me started.        {glutton, w=2}
+Me? I'd go for [favorite_food.a]. {w=1.5}
+Now you've made me hungry.
+I'm not fussy.               {humble}
+I'm not fussy. Anything but [hated_food.s]. {w=0.8}
+Food is food.                {serious}
+Mm.                          {taciturn, w=2}
+
+== chat_open_food ==
+[listener]! [food_react] [food_detail?] [food_ask?]
+[food_react] [food_detail?] [food_ask?]
+
+== chat_reply_food ==
+[food_reply] [food_detail?]
+
+# ---------------------------------------------------------------------------------------------------------------
+# Home, and the place they're in
+
+== home_react ==
+I miss [home_biome.the].     {at_home=no}
+I've been thinking about [home_biome.the]. {at_home=no}
+Some days I wonder why I ever left [home_biome.the]. {at_home=no, sentimental, w=2}
+Nothing like home.           {at_home=yes}
+Good to be home.             {at_home=yes, w=1.5}
+I could never leave [home_biome.the]. {at_home=yes, sentimental}
+
+== home_detail ==
+The air's different there.   {at_home=no}
+We'd never put up with cold like this back home. {at_home=no, home_climate=hot, climate=cold, w=3}
+Back home it never gets this hot. {at_home=no, home_climate=cold, climate=hot, w=3}
+This place is all right, I suppose. {at_home=no, biome_like=meh}
+This place is growing on me. {at_home=no, biome_like=like}
+This place is growing on me. {at_home=no, biome_like=love}
+I don't know how anyone lives here. {at_home=no, biome_like=hate}
+I know every path around here. {at_home=yes}
+My family's always been here. {at_home=yes, w=0.8}
+Born here, and I'll die here, Cube God willing. {at_home=yes, pious}
+
+== home_ask ==
+Where are you from?
+Ever been there?             {at_home=no}
+Do you ever miss home?       {sentimental}
+Are you from around here?    {curious}
+
+== home_reply ==
+I'm from [home_biome.the], myself. {at_home=no, w=2}
+Me, I miss [home_biome.the]. {at_home=no}
+I never left [home_biome.the]. {at_home=yes, w=2}
+Home's wherever I'm standing. {lighthearted}
+I don't think about it much. {serious}
+Mm.                          {taciturn, w=2}
+
+== chat_open_home ==
+[listener]. [home_react] [home_detail?] [home_ask?]
+[home_react] [home_detail?] [home_ask?]
+
+== chat_reply_home ==
+[home_reply] [home_detail?]

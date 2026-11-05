@@ -156,6 +156,7 @@ The event hub: what happens in the world (deaths, births, real attacks, gifts, c
 
 - [`AttackedEvent`](../src/main/java/lifeblood/event/AttackedEvent.java): An NPC was attacked for real and hurt: not a brawl punch or a friend's shove (those are sorted out first).
 - [`BirthEvent`](../src/main/java/lifeblood/event/BirthEvent.java): A child was born, to two NPCs or to an NPC and a player.
+- [`BrawlEndedEvent`](../src/main/java/lifeblood/event/BrawlEndedEvent.java): A brawl ended with a winner: the loser gave in, or walked away (forfeit).
 - [`DeathEvent`](../src/main/java/lifeblood/event/DeathEvent.java): Someone or something died: any mob, players and NPCs included, just before it's removed.
 - [`GiftEvent`](../src/main/java/lifeblood/event/GiftEvent.java): A player gave an NPC something, and the NPC took it.
 - [`LifeEvents`](../src/main/java/lifeblood/event/LifeEvents.java): The event hub: something happens (a death, a birth, a hit, a gift, a couple changing), the code where it happens posts an event, and every system that cares has subscribed to it.
@@ -192,6 +193,17 @@ Following a player: the order itself, how closely, when an NPC leaves, and watch
 - [`FollowingSetup`](../src/main/java/lifeblood/following/FollowingSetup.java): The follow order, and followers heading home when the player they follow dies.
 - [`FollowPlayerBehavior`](../src/main/java/lifeblood/following/FollowPlayerBehavior.java): Walks after a player, teleporting to them when left too far behind.
 - [`NpcFollowing`](../src/main/java/lifeblood/following/NpcFollowing.java): Following a player: whether it will, how closely, leaving when it falls out with them, and keeping an eye on what they get up to.
+
+## `gossip`
+
+News and gossip: what happens in the world becomes news, people near it and the family of those involved know at once, and it travels by word of mouth in chats, coloring opinions of whoever it's about.
+
+- [`Gossip`](../src/main/java/lifeblood/gossip/Gossip.java): How news starts and what hearing it does.
+- [`GossipRegister`](../src/main/java/lifeblood/gossip/GossipRegister.java): The news of one world and who has heard each piece, saved with the world (BTA SavedData).
+- [`GossipSetup`](../src/main/java/lifeblood/gossip/GossipSetup.java): News: what happens becomes news (see Gossip), and NPCs pass it on in chats (see GossipTopics).
+- [`GossipTopics`](../src/main/java/lifeblood/gossip/GossipTopics.java): Passing news on: the "news" chat topic (fresh news the listener hasn't heard), the "old_news" one ("remember when...", for big news that's no longer fresh), and telling a player who asks.
+- [`News`](../src/main/java/lifeblood/gossip/News.java): One piece of news: what kind, who it's about (and who else), when it happened, and the names to tell it with, kept so it can still be told once they're gone.
+- [`NewsKind`](../src/main/java/lifeblood/gossip/NewsKind.java): Kinds of news people pass on.
 
 ## `health`
 
@@ -303,6 +315,8 @@ Feelings about people: memories, opinions, compatibility, and dealings with part
 
 What NPCs say: the line library read from .speech files, the facts lines can use, speech styles, and the voice.
 
+- [`ChatTopic`](../src/main/java/lifeblood/speech/ChatTopic.java): Something two NPCs can chat about: the weather, food, home, the news.
+- [`ChatTopics`](../src/main/java/lifeblood/speech/ChatTopics.java): The topics NPCs chat about: the built-in ones (the weather, food, home, and general chat, which includes family), plus any another system registers from its setup.
 - [`Condition`](../src/main/java/lifeblood/speech/Condition.java): One requirement on a line in a speech file, written in the braces at its end: a pole ("polite": leaning that way or more, "polite+": strongly), a quirk ("glutton"), or a fact ("time=night").
 - [`NpcVoice`](../src/main/java/lifeblood/speech/NpcVoice.java): An NPC's voice: its speech style, what it said recently, and when it speaks up on its own, whether greeting players, remarking on things, or chatting with other NPCs.
 - [`SpeechContext`](../src/main/java/lifeblood/speech/SpeechContext.java): Everything a line can depend on at the moment an NPC speaks: who's speaking and to whom, the facts of the moment ("time" = "night"), and the words lines can mention ([favorite_food]).

@@ -98,6 +98,9 @@ public class PeopleRegistry extends SavedData {
 	private final Map<UUID, Person> people = new LinkedHashMap<>();
 	/** NPCs loaded right now, by id. Not saved; NPCs add themselves as they tick (see {@link #seen}). */
 	private final Map<UUID, EntityNPC> loaded = new HashMap<>();
+	/** The world this register belongs to, for the events it posts. Not saved; set whenever it's fetched. */
+	@Nullable
+	private World world;
 	/** Each person's partnership, if they're in one (both partners map to the same object). */
 	private final Map<UUID, Partnership> partnerships = new HashMap<>();
 
@@ -114,6 +117,7 @@ public class PeopleRegistry extends SavedData {
 			registry.setDirty();
 		}
 
+		registry.world = world;
 		return registry;
 	}
 
@@ -282,7 +286,7 @@ public class PeopleRegistry extends SavedData {
 		this.partnerships.put(first, partnership);
 		this.partnerships.put(second, partnership);
 		this.setDirty();
-		LifeEvents.post(new PartnershipEvent(first, second, Stage.DATING.name().toLowerCase(Locale.ROOT)));
+		LifeEvents.post(new PartnershipEvent(this.world, first, second, Stage.DATING.name().toLowerCase(Locale.ROOT)));
 		return true;
 	}
 
@@ -293,7 +297,7 @@ public class PeopleRegistry extends SavedData {
 			partnership.stage = stage;
 			partnership.since = now;
 			this.setDirty();
-			LifeEvents.post(new PartnershipEvent(partnership.first, partnership.second, stage.name().toLowerCase(Locale.ROOT)));
+			LifeEvents.post(new PartnershipEvent(this.world, partnership.first, partnership.second, stage.name().toLowerCase(Locale.ROOT)));
 		}
 	}
 
@@ -304,7 +308,7 @@ public class PeopleRegistry extends SavedData {
 			this.partnerships.remove(partnership.first);
 			this.partnerships.remove(partnership.second);
 			this.setDirty();
-			LifeEvents.post(new PartnershipEvent(partnership.first, partnership.second, null));
+			LifeEvents.post(new PartnershipEvent(this.world, partnership.first, partnership.second, null));
 		}
 	}
 

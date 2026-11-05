@@ -47,6 +47,9 @@ public enum MemoryType {
 	KILLED_A_FRIEND("killed a friend", -40, -15, 80, 3),
 	KILLED_FAMILY("killed family", -70, -30, 200, 3),
 	KILLED_MY_SPOUSE_OR_CHILD("killed my spouse or child", -100, -40, 400, 3),
+	// Hearsay: what people heard about someone, given at a quarter of the weight of seeing it (see gossip/Gossip).
+	HEARD_THEY_HURT_SOMEONE("heard they hurt someone", -12, 0, 3, 5),
+	HEARD_THEY_KILLED_SOMEONE("heard they killed someone", -40, 0, 30, 3),
 
 	// Mood only
 	/** Scaled by how much the NPC likes the food. */

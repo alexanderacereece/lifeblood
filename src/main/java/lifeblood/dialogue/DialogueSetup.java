@@ -1,9 +1,12 @@
 package lifeblood.dialogue;
 
+import java.util.function.Consumer;
 import lifeblood.combat.CombatStyle;
 import lifeblood.following.FollowDistance;
+import lifeblood.gossip.GossipTopics;
 import lifeblood.ownership.Ownership;
 import lifeblood.social.MemoryType;
+import lifeblood.speech.SpeechContext;
 
 /**
  * Puts the built-in options into the conversation menus, in steps of 100 so others can slot in between: chatting,
@@ -26,6 +29,11 @@ public final class DialogueSetup {
 			// Sometimes the chat turns into asking for a new word.
 			NpcDialogue word = WordDialogue.maybeAsk(npc, player);
 			session.show(word != null ? word : NpcDialogue.main(npc, player, NpcDialogue.say(npc, player, "smalltalk", "Fine.")));
+		})));
+		DialogueMenus.register(DialogueMenus.Menu.MAIN, 150, (npc, player, options) -> options.add(new DialogueOption("Heard any news?", session -> {
+			Consumer<SpeechContext> news = GossipTopics.tellPlayer(npc, player);
+			String line = news != null ? npc.voice.line("news_tell", player, news) : null;
+			session.show(NpcDialogue.main(npc, player, line != null ? line : NpcDialogue.say(npc, player, "news_none", "Nothing new.")));
 		})));
 		DialogueMenus.register(DialogueMenus.Menu.MAIN, 200, (npc, player, options) -> {
 			if (player.inventory.getCurrentItem() != null) {

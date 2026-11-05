@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 import net.minecraft.core.entity.Entity;
 import lifeblood.entity.EntityNPC;
+import lifeblood.personality.Quirk;
 import lifeblood.personality.TraitAxis;
 import org.jetbrains.annotations.Nullable;
 
@@ -18,6 +19,10 @@ public class SpeechContext {
 	private static final float MOOD_OUTLOOK_SHIFT = 0.6F;
 	/** A bad mood makes people this much shorter with others and less keen to work. */
 	private static final float MOOD_MANNERS_SHIFT = 0.3F;
+	/** Chattiness: the chance of saying each optional piece of a line, before personality, mood and listener. */
+	private static final float BASE_CHATTINESS = 0.45F;
+	private static final float MIN_CHATTINESS = 0.05F;
+	private static final float MAX_CHATTINESS = 0.95F;
 
 	private final EntityNPC speaker;
 	@Nullable
@@ -72,6 +77,31 @@ public class SpeechContext {
 
 	public Set<String> mentioned() {
 		return this.mentioned;
+	}
+
+	/**
+	 * How much it says right now, 0 to 1: the chance of each optional piece of a line ([detail?]). Sociable people
+	 * and chatterboxes say more, the taciturn little; a bad mood or a listener it dislikes makes it shorter, and
+	 * friends get a bit more.
+	 */
+	public float chattiness() {
+		return chattiness(this.speaker.personality.get(TraitAxis.SOCIABILITY), this.speaker.personality.has(Quirk.CHATTERBOX),
+			this.speaker.personality.has(Quirk.TACITURN), this.mood, this.fact("opinion"));
+	}
+
+	static float chattiness(float sociability, boolean chatterbox, boolean taciturn, float mood, @Nullable String opinion) {
+		float chance = BASE_CHATTINESS + 0.25F * sociability + (chatterbox ? 0.3F : 0.0F) - (taciturn ? 0.35F : 0.0F);
+		if (mood < -30.0F) {
+			chance -= 0.15F;
+		}
+
+		if ("enemy".equals(opinion) || "disliked".equals(opinion)) {
+			chance -= 0.2F;
+		} else if ("friend".equals(opinion) || "close_friend".equals(opinion)) {
+			chance += 0.1F;
+		}
+
+		return Math.max(MIN_CHATTINESS, Math.min(MAX_CHATTINESS, chance));
 	}
 
 	/**

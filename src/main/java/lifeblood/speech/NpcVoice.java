@@ -70,6 +70,9 @@ public class NpcVoice implements NpcPart {
 	@Nullable
 	private EntityNPC replyTo;
 	private long replyAt;
+	/** What the chat it's about to answer is about, and that chat (see ChatTopic). */
+	private String replyTopic = ChatTopics.GENERAL;
+	private ChatTopic.Exchange replyExchange = ChatTopic.PLAIN;
 
 	/** Loves and hates the player has heard about; see {@link #isRevealed}. */
 	private final Set<String> revealed = new HashSet<>();
@@ -191,7 +194,10 @@ public class NpcVoice implements NpcPart {
 			this.replyTo = null;
 			if (!partner.removed && partner.distanceTo(this.npc) < CHAT_PARTNER_RANGE * 2) {
 				this.npc.setLookTarget(partner, 60);
-				this.bark("chat_reply", partner, null, true);
+				ChatTopic.Exchange exchange = this.replyExchange;
+				if (!this.bark("chat_reply_" + this.replyTopic, partner, exchange::reply, true)) {
+					this.bark("chat_reply", partner, null, true);
+				}
 			}
 
 			return;
@@ -260,9 +266,18 @@ public class NpcVoice implements NpcPart {
 			this.nextChat = now + CHAT_COOLDOWN;
 			partner.voice.nextChat = now + CHAT_COOLDOWN;
 			this.npc.setLookTarget(partner, 80);
-			if (this.bark("chat_open", partner, null, true)) {
+			// Pick something to talk about; the reply stays on it. With nothing to say on it, it's just a general chat.
+			ChatTopics.Picked topic = ChatTopics.pick(this.npc, partner, this.npc.getRandom());
+			boolean onTopic = !topic.id().equals(ChatTopics.GENERAL) && this.bark("chat_open_" + topic.id(), partner, topic.exchange()::opening, true);
+			if (onTopic || this.bark("chat_open", partner, null, true)) {
 				partner.voice.replyTo = this.npc;
 				partner.voice.replyAt = now + REPLY_DELAY;
+				partner.voice.replyTopic = onTopic ? topic.id() : ChatTopics.GENERAL;
+				partner.voice.replyExchange = onTopic ? topic.exchange() : ChatTopic.PLAIN;
+				if (onTopic) {
+					topic.exchange().said();
+				}
+
 				if (opinion > -20.0F && Opinions.of(partner, this.npc) > -20.0F) {
 					this.npc.remember(MemoryType.HAD_A_NICE_CHAT, partner, 1.0F);
 					partner.remember(MemoryType.HAD_A_NICE_CHAT, this.npc, 1.0F);

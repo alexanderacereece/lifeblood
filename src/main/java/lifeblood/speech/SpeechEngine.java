@@ -14,12 +14,17 @@ import org.jetbrains.annotations.Nullable;
  * Turns a symbol into a sentence: picks one of its lines that fits the moment, then fills in every [name] inside it,
  * recursively. More specific lines (more conditions) are more likely; lines the NPC used recently are much less likely.
  *
+ * Optional pieces, written [name?], make lines longer or shorter by who's talking: each is said with the speaker's
+ * chattiness as its chance (see SpeechContext#chattiness), and left out, never failing the line, if nothing fits.
+ * A remark built as "[weather_react] [weather_detail?] [weather_ask?]" is one sentence from a quiet NPC and three from
+ * a chatterbox.
+ *
  * Young speakers sound their age: a symbol with a version for their age stage ("greet.child", "smalltalk.teen") is
  * spoken from that version instead, falling back to the plain symbol only if nothing in it fits. Babies only ever
  * babble: anything without a ".baby" version comes out of "babble".
  */
 public final class SpeechEngine {
-	private static final Pattern TOKEN = Pattern.compile("\\[([a-z_0-9]+)((?:\\.[a-z]+)*)]");
+	private static final Pattern TOKEN = Pattern.compile("\\[([a-z_0-9]+)((?:\\.[a-z]+)*)(\\?)?]");
 	private static final Pattern LONE_I = Pattern.compile("(?<![\\p{L}'])i(?=[\\s'.,!?;:]|$)");
 	private static final int MAX_DEPTH = 8;
 	private static final String ADULT = "adult";
@@ -162,7 +167,16 @@ public final class SpeechEngine {
 			result.append(text, last, matcher.start());
 			String name = matcher.group(1);
 			List<String> modifiers = matcher.group(2).isEmpty() ? List.of() : Arrays.asList(matcher.group(2).substring(1).split("\\."));
-			result.append(resolve(name, modifiers, context, used, now, random, depth));
+			if (matcher.group(3) == null) {
+				result.append(resolve(name, modifiers, context, used, now, random, depth));
+			} else if (random.nextFloat() < context.chattiness()) {
+				try {
+					result.append(resolve(name, modifiers, context, used, now, random, depth));
+				} catch (Missing missing) {
+					// An optional piece that doesn't fit is just left out.
+				}
+			}
+
 			last = matcher.end();
 		}
 

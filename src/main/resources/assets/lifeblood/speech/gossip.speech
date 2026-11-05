@@ -1,0 +1,171 @@
+# Lifeblood speech: news and gossip. The format and every fact and word are described in basics.speech.
+#
+# Facts: news (dating, engagement, wedding, breakup, birth, death, killing, attack, brawl), exaggerated (yes when the
+# story grew in the telling), firsthand (yes if the teller saw it or it's their family; only for the one telling it),
+# subject_opinion and other_opinion (what the speaker thinks of those involved). Words: subject (who it's about),
+# other (the other person), baby (a newborn's name), source (who told the teller, when it's second-hand).
+# Built from beats like topics.speech: a lead-in, the news, and the speaker's take on it, the last optional.
+
+# ---------------------------------------------------------------------------------------------------------------
+# Telling it
+
+== chat_open_news ==
+[listener]! [news_lead] [news_item] [news_take?]
+[listener]. [news_item] [news_take?] {taciturn}
+
+== news_tell ==
+[news_lead] [news_item] [news_take?]
+[news_item] [news_take?]     {taciturn, w=2}
+
+== news_lead ==
+Did you hear?
+Have you heard?
+You'll never guess.          {extrovert}
+Oh, have I got news for you. {nosy, w=3}
+Come here, come here.        {nosy, w=2}
+Don't tell anyone I told you. {nosy, w=2}
+I probably shouldn't say, but... {polite}
+Big news.                    {lighthearted}
+Not to gossip, but...        {humble}
+
+== news_item ==
+[subject] and [other] are courting. {news=dating, exaggerated=no}
+[subject]'s been seeing [other]. {news=dating, exaggerated=no}
+[subject] and [other] are courting. Can't keep their hands off each other, I hear. {news=dating, exaggerated=yes, w=3}
+[subject] and [other] are engaged! {news=engagement, exaggerated=no}
+[subject] asked [other] to marry them, and they said yes! {news=engagement, exaggerated=no}
+[subject] and [other] are engaged. Got down on one knee in front of everyone, I hear. {news=engagement, exaggerated=yes, w=3}
+[subject] and [other] got married! {news=wedding, exaggerated=no}
+[subject] and [other] tied the knot. {news=wedding, exaggerated=no}
+[subject] and [other] got married. Already expecting, too, if you ask me. {news=wedding, exaggerated=yes, w=3}
+[subject] and [other] split up. {news=breakup, exaggerated=no}
+It's over between [subject] and [other]. {news=breakup, exaggerated=no}
+[subject] and [other] split up. Screaming at each other in the street, they were. {news=breakup, exaggerated=yes, w=3}
+[subject] and [other] had a baby! [baby], they called it. {news=birth, exaggerated=no}
+There's a new little one: [baby]. [subject] and [other]'s. {news=birth, exaggerated=no}
+[subject] and [other] had a baby. Twins, almost! {news=birth, exaggerated=yes, w=3}
+[subject] died.              {news=death, exaggerated=no}
+We lost [subject].           {news=death, exaggerated=no}
+[subject] passed.            {news=death, exaggerated=no, polite}
+[subject] died. Nobody knows how, and nobody's saying. {news=death, exaggerated=yes, w=3}
+[subject] killed [other].    {news=killing, exaggerated=no}
+[other] is dead. [subject] did it. {news=killing, exaggerated=no}
+[subject] killed [other]. In cold blood, they say. Laughed about it after. {news=killing, exaggerated=yes, w=3}
+[subject] attacked [other]. Out of nowhere. {news=attack, exaggerated=no}
+[subject] went for [other], for no reason at all. {news=attack, exaggerated=no}
+[subject] nearly beat [other] to death! {news=attack, exaggerated=yes, w=3}
+[subject] and [other] got into a scrap. [subject] won. {news=brawl, exaggerated=no}
+[subject] beat [other] in a fistfight. {news=brawl, exaggerated=no}
+[subject] knocked [other] out cold with one punch! {news=brawl, exaggerated=yes, w=3}
+
+# The teller's take on it: how they found out, and what they think.
+== news_take ==
+I saw it myself.             {firsthand=yes, w=0.6}
+I heard it from [source].    {firsthand=no, w=0.6}
+[source] told me. So it must be true. {firsthand=no, liar, w=0.8}
+[source] told me, so take it with a grain of salt. {firsthand=no, honest, w=0.8}
+Good for them.               {news=dating}
+Good for them.               {news=engagement}
+Isn't it lovely?             {news=wedding, romantic, w=2}
+Isn't it lovely?             {news=engagement, romantic, w=2}
+About time, too.             {news=wedding}
+Give it a year.              {news=wedding, pessimist, w=2}
+Poor [other]. They could do better. {news=dating, subject_opinion=disliked, w=2}
+Poor [other]. They could do better. {news=wedding, subject_opinion=disliked, w=2}
+Can't say I'm surprised.     {news=breakup}
+Poor [subject].              {news=breakup, subject_opinion=friend, w=2}
+Poor [subject].              {news=breakup, subject_opinion=close_friend, w=2}
+Good riddance, if you ask me. {news=breakup, other_opinion=disliked, rude, w=2}
+Babies everywhere these days. {news=birth, lighthearted}
+A new little one. Makes you hopeful. {news=birth, optimist}
+The Cube God bless that child. {news=birth, pious, w=2}
+They were a good one.        {news=death, subject_opinion=friend, w=2}
+They were a good one.        {news=death, subject_opinion=close_friend, w=2}
+Cube God rest them.          {news=death, pious, w=2}
+It comes for us all.         {news=death, serious}
+I'd keep away from [subject] if I were you. {news=killing}
+Poor [other].                {news=killing}
+Someone ought to do something about [subject]. {news=killing, brave, w=2}
+Lock your doors tonight.     {news=killing, timid, w=2}
+Cube God judge them.         {news=killing, pious, w=2}
+Watch yourself around [subject]. {news=attack}
+Doesn't surprise me one bit. {news=attack, subject_opinion=disliked, w=2}
+Doesn't surprise me one bit. {news=attack, subject_opinion=enemy, w=2}
+Poor [other]. Are they all right? {news=attack, polite}
+Wish I'd seen it.            {news=brawl, extrovert}
+Grown folk, fighting like children. {news=brawl, serious, w=2}
+Serves [other] right.        {news=brawl, other_opinion=disliked, w=2}
+I'd like to see [subject] try that with me. {news=brawl, competitive, w=2}
+
+# ---------------------------------------------------------------------------------------------------------------
+# Hearing it
+
+== chat_reply_news ==
+[news_reaction] [news_take?]
+
+== news_reaction ==
+No! Really?
+I don't believe it.
+Well, I never.
+Huh.                         {taciturn, w=3}
+Tell me everything!          {nosy, w=3}
+You shouldn't spread stories, you know. {honest, w=2}
+Is that so.                  {detached, w=2}
+How wonderful!               {news=wedding}
+How wonderful!               {news=engagement}
+How wonderful!               {news=birth}
+Oh no.                       {news=death, w=2}
+Oh no. Poor [subject].       {news=death, subject_opinion=friend, w=3}
+Oh no. Poor [subject].       {news=death, subject_opinion=close_friend, w=3}
+[subject]? I can't believe it. {news=killing, w=2}
+[subject]? I can't believe it. {news=attack}
+I always knew [subject] was trouble. {news=attack, subject_opinion=disliked, w=3}
+I always knew [subject] was trouble. {news=killing, subject_opinion=disliked, w=3}
+That's not like [subject] at all. {news=attack, subject_opinion=friend, w=3}
+That's not like [subject] at all. {news=killing, subject_opinion=friend, w=3}
+Ha! Good for [subject].      {news=brawl, w=2}
+Oh dear. They seemed so happy. {news=breakup, w=2}
+That sounds made up.         {exaggerated=yes, w=2}
+That sounds made up.         {exaggerated=yes, paranoid, w=3}
+
+# ---------------------------------------------------------------------------------------------------------------
+# Old news: big things from a while back, remembered together.
+
+== chat_open_old_news ==
+[listener]. [old_news_item] [old_news_take?]
+[old_news_item] [old_news_take?]
+
+== old_news_item ==
+Remember [subject] and [other]'s wedding? {news=wedding}
+I was just thinking about [subject] and [other]'s wedding. {news=wedding, sentimental}
+Remember when [subject] and [other]'s little [baby] was born? {news=birth}
+I still think about [subject] sometimes. {news=death}
+I miss [subject].            {news=death, subject_opinion=friend, w=2}
+I miss [subject].            {news=death, subject_opinion=close_friend, w=2}
+I'll never forget what [subject] did to [other]. {news=killing}
+
+== old_news_take ==
+Feels like yesterday.        {sentimental}
+Where does the time go?
+Those were good days.        {news=wedding}
+Those were good days.        {news=birth}
+Cube God rest them.          {news=death, pious}
+Some things you don't forgive. {news=killing}
+
+== chat_reply_old_news ==
+How could I forget?
+Feels like yesterday.        {sentimental, w=2}
+Mm.                          {taciturn, w=3}
+Me too.                      {news=death, w=2}
+I'd rather not talk about that. {news=killing, w=2}
+
+# ---------------------------------------------------------------------------------------------------------------
+# A player asking for news, with nothing to tell.
+
+== news_none ==
+Nothing new.
+Quiet lately.
+Not a thing. Boring, isn't it? {nosy, w=2}
+I keep to myself.            {introvert}
+If I hear anything, you'll be the first to know. {polite}
+Nothing worth repeating.     {honest}

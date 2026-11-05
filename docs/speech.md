@@ -35,6 +35,28 @@ Word symbols come from the NPC's data: `[name]`, `[faction]`, `[enemy_faction]`,
 
 **Repetition.** Each NPC remembers its recent lines and avoids them; recently used alternatives are weighted down.
 
+### Longer lines
+
+A remark on a topic is built from up to three **beats**: a reaction, a detail or reason, and a turn to the listener ("Rain again. Good for the crops, I suppose. You staying dry?"). The last two are optional pieces, written `[weather_detail?]`: each is said with the speaker's **chattiness** as its chance, and simply left out if nothing fits. Chattiness starts at 45%, rises with sociability (up to 25 points) and the chatterbox quirk (30), falls with the taciturn quirk (35), a bad mood (15) or a listener they dislike (20), rises a little for friends (10), and stays between 5% and 95%. So the same lines make a quiet NPC say one sentence and a chatty one three, and a remark is always one chat message.
+
+The beats for the weather, food and home are in `topics.speech`; idle remarks and small talk with the player use them alongside their one-liners. Every beat is written to read on its own and after any other beat of its topic.
+
+### Chats between NPCs
+
+The NPC who starts a chat picks a **topic**, and the other answers on the same topic, with its own facts: its own tastes, its own home, its own opinion of whoever the news is about. Built-in topics (`speech/ChatTopics`): the weather, food (often, for gluttons), home (mostly away from it), and general chat, which holds the family and age lines. Other systems add topics from their setup: gossip adds fresh news and old news. A topic's lines are `chat_open_<topic>` and `chat_reply_<topic>`; a topic with nothing to say right now (no news to tell) is skipped, and general chat is always there to fall back on.
+
+### Gossip
+
+Things that happen become **news** (`gossip/`): couples dating, getting engaged, marrying or splitting up, births, deaths, killings, attacks out of nowhere (not enemies, not in the middle of a fight), and brawls. Everyone near where it happened knows it first-hand, and so do those involved and their families, wherever they are (it's kept in the world's register, `lifeblood_gossip`, not in each NPC). After that it travels by word of mouth:
+- In NPC chats, the "news" topic passes on the biggest, newest piece the listener hasn't heard. Nosy NPCs bring news up three times as often, the taciturn less than half as often. Everyone remembers who told them ("I heard it from Tom").
+- Nobody tells people news about themselves, and nobody spreads shameful news (an attack, a killing) about a friend.
+- News is fresh for a real month (a twelfth of an in-game year). After that, only big news (weddings, births, deaths, killings) comes up again, now and then, as "remember when" (more often for the sentimental).
+- **Reputation.** Hearing that someone attacked or killed a person lowers the hearer's opinion of them by a quarter of what seeing it would: "heard they hurt someone", "heard they killed someone", or, if the victim was their friend or family, the same memory a witness would get, at a quarter of the weight (an attack on a friend counts double). So treating one person badly costs you with the whole town, the player included.
+- **Liars** dress stories up half the time they pass one on ("knocked him out cold with one punch!"). An exaggerated story stays exaggerated as it travels, and counts half again as much against whoever it's about. Lines know it (`exaggerated`), and some listeners say it sounds made up.
+- **The player** can ask anyone "Heard any news?" and hear the freshest piece they haven't heard yet.
+
+Lines are in `gossip.speech`, with the facts `news`, `exaggerated`, `firsthand`, `subject_opinion` and `other_opinion`, and the words `subject`, `other`, `baby` and `source`.
+
 ### Sounding their age
 
 Young NPCs talk like their age, all the time. Growing up is split into stages: **baby** (0–2), **child** (3–9), **young teen** (10–15) and **teen** (16–17), on the same 18-year scale as growing up (so it follows `yearsToGrowUp`). The `age` fact holds the stage, and `listener_age` the listener's.

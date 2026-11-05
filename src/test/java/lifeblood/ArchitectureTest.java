@@ -199,7 +199,7 @@ class ArchitectureTest {
 	static final List<List<String>> LAYERS = List.of(
 		List.of("util", "perf", "world", "lifeblood.Mod", "lifeblood.NpcConfig"),
 		List.of("entity", "event", "nav", "inventory", "item", "ai", "lifeblood.ClientHooks"),
-		List.of("personality", "social", "faction", "family", "people", "appearance", "health", "ownership", "speech", "words"),
+		List.of("personality", "social", "faction", "family", "people", "appearance", "health", "ownership", "speech", "words", "gossip"),
 		List.of("combat", "brawl", "following", "building"),
 		List.of("dialogue"),
 		List.of("command", "client", "mixin", "lifeblood.Lifeblood", "lifeblood.Systems"));
@@ -301,7 +301,7 @@ class ArchitectureTest {
 
 	/** The calls that wire something into the mod. They belong in setup classes only, so lifeblood.Systems lists all wiring. */
 	private static final Pattern REGISTRATION = Pattern.compile(
-		"\\b(NpcBehaviors\\.register(?:Instinct)?|Routines\\.register(?:Activity|Schedule)|WorldSystems\\.register|DialogueMenus\\.register|LifeEvents\\.listen)\\(");
+		"\\b(NpcBehaviors\\.register(?:Instinct)?|Routines\\.register(?:Activity|Schedule)|WorldSystems\\.register|DialogueMenus\\.register|ChatTopics\\.register|LifeEvents\\.listen)\\(");
 
 	@Test
 	void wiringHappensInSetupClasses() {

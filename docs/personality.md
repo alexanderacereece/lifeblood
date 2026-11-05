@@ -220,8 +220,10 @@ The catalog (the exact numbers live in `social/MemoryType`; durations are in-gam
 | Killed a friend | -40 | -15 | 80 days | 3 |
 | Killed family | -70 | -30 | 200 days | 3 |
 | Killed my spouse or child | -100 | -40 | 400 days | 3 |
+| Heard they hurt someone | -12, at a quarter: -3 | | 3 days | 5 |
+| Heard they killed someone | -40, at a quarter: -10 | | 30 days | 3 |
 
-Not all of these happen yet: lying, stealing and attacking homes wait for gossip, ownership and settlements.
+Not all of these happen yet: lying, stealing and attacking homes wait for crime, ownership and settlements. The two "heard" memories come from [gossip](speech.md#gossip), always at a quarter of their weight (half again if the story was exaggerated); hearing that a friend or relative was killed gives the witness's memory (killed a friend, family, spouse or child) at a quarter.
 
 Mood-only memories (no opinion effect): ate food I like or hate, slept in a bed or outside, enjoyed or was miserable in the weather, likes or hates it here, saw an animal die, saw a death, a friend or family member died, their birthday, had a child, started dating, got engaged, went to a wedding, got married, won or lost a fight, nearly died.
 
@@ -322,9 +324,9 @@ Rules:
 - Whoever is challenged remembers who picked the fight. Afterwards both sides usually "clear the air", which mostly outweighs the brawl's bad memories.
 - Not yet: bystanders joining in or breaking it up (for now they just comment).
 
-### Gossip (later)
+### Gossip
 
-When two friendly NPCs talk, they may share a memory about a third person, at reduced strength (about 30%, full for gullible listeners, weaker for paranoid and detached ones). Liars may share invented ones. This is how a reputation spreads through a town without reaching strangers 1000 blocks away.
+News travels by word of mouth in NPC chats, and hearing that someone attacked or killed a person colors the hearer's opinion of them at a quarter of the weight of seeing it; liars embellish. This is how a reputation spreads through a town without reaching strangers 1000 blocks away. Details in [speech](speech.md#gossip). Not yet: gullible or paranoid listeners believing more or less, and outright invented stories.
 
 ### Storage
 

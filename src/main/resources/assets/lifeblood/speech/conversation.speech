@@ -90,6 +90,10 @@ Yes, dear?                   {listener_kin=spouse, w=6}
 What is it, love?            {listener_kin=spouse, w=5}
 
 == smalltalk ==
+# Longer answers, built from beats (see topics.speech): short from quiet NPCs, longer from chatty ones.
+[weather_react] [weather_detail?] [weather_ask?] {w=4}
+[food_react] [food_detail?] [food_ask?] {w=2}
+[home_react] [home_detail?] [home_ask?] {w=1.5}
 Another year older. Feels about the same. {birthday=yes, w=6}
 It's my birthday! Did you get me anything? {birthday=yes, greedy, w=10}
 It's my birthday! Did you get me anything? {birthday=yes, lighthearted, w=6}

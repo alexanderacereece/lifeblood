@@ -6,6 +6,7 @@ import lifeblood.combat.CombatSetup;
 import lifeblood.dialogue.DialogueSetup;
 import lifeblood.family.FamilySetup;
 import lifeblood.following.FollowingSetup;
+import lifeblood.gossip.GossipSetup;
 import lifeblood.health.HealthSetup;
 import lifeblood.ownership.OwnershipSetup;
 import lifeblood.people.PeopleSetup;
@@ -32,9 +33,10 @@ public final class Systems {
 		registered = true;
 		// World systems run in this order each tick: leftover placers are forgotten before anything else runs.
 		OwnershipSetup.register();
-		// Death listeners run in this order: people react while a widow's marriage still stands, then the register
-		// records the death (ending it).
+		// Death listeners run in this order: people react and the news reaches the family while a widow's marriage
+		// still stands, then the register records the death (ending it).
 		SocialSetup.register();
+		GossipSetup.register();
 		PeopleSetup.register();
 		AiSetup.register();
 		FollowingSetup.register();

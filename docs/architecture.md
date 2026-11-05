@@ -33,7 +33,8 @@ Four layers, each finer than the last. Read down only as far as you need:
 | `faction` | Factions, their colors and relations, and how an NPC regards a person (`NpcFactions`) |
 | `inventory` | What an NPC carries, and its menu |
 | `dialogue` | Conversations (`NpcConversation`), their menus and options: gifts, romance, words, chat limits |
-| `speech` | The speech engine, the line library, facts for lines, speech styles, the voice |
+| `speech` | The speech engine, the line library, facts for lines, speech styles, the voice, chat topics (`ChatTopics`) |
+| `gossip` | News: what becomes news, who knows it, passing it on in chats and to players, and what hearing it does |
 | `words` | The word book: words players teach |
 | `appearance` | An NPC's looks (`NpcLooks`): parts and palettes, hair color and graying (`HairColor`), who clothes are for (`Wearer`), whole skin files, slim arms |
 | `ownership` | Who placed each block, and who shares what |
@@ -53,7 +54,7 @@ Packages are stacked in layers. A package may use its own layer and the ones bel
 |---|---|---|
 | 1. Foundations | `util`, `perf`, `world`, `Mod`, `NpcConfig` | Time, world systems, the log and settings |
 | 2. The NPC | `entity`, `event`, `nav`, `inventory`, `item`, `ai`, `ClientHooks` | The entity, its brain and movement, what it carries, the event hub |
-| 3. Who they are | `personality`, `social`, `faction`, `family`, `people`, `appearance`, `health`, `ownership`, `speech`, `words` | Character, feelings, family and the register of people, looks, body, property, voice |
+| 3. Who they are | `personality`, `social`, `faction`, `family`, `people`, `appearance`, `health`, `ownership`, `speech`, `words`, `gossip` | Character, feelings, family and the register of people, looks, body, property, voice, news |
 | 4. What they do | `combat`, `brawl`, `following`, `building` | Systems that act in the world |
 | 5. Conversation | `dialogue` | Talking with the player, which draws on everything |
 | 6. Tools and sides | `command`, `client`, `mixin`, `Lifeblood`, `Systems` | Wiring, screens, hooks into BTA, `/lb` |
@@ -69,16 +70,17 @@ When a lower package needs something to happen above it, turn the dependency aro
 
 ## Wiring: setups and events
 
-**Setups.** Everything a system brings, it registers in its own setup class (`FamilySetup`, `CombatSetup`...): behaviors and instincts (`ai/NpcBehaviors`), activities and schedules (`ai/routine/Routines`), world systems (`world/WorldSystems`), dialogue options (`dialogue/DialogueMenus`) and event listeners. `lifeblood/Systems` calls every setup in one ordered list, which is the one place to see everything wired into the mod. The order matters only where it says so (world systems run in registration order; death listeners too).
+**Setups.** Everything a system brings, it registers in its own setup class (`FamilySetup`, `CombatSetup`...): behaviors and instincts (`ai/NpcBehaviors`), activities and schedules (`ai/routine/Routines`), world systems (`world/WorldSystems`), dialogue options (`dialogue/DialogueMenus`), chat topics (`speech/ChatTopics`) and event listeners. `lifeblood/Systems` calls every setup in one ordered list, which is the one place to see everything wired into the mod. The order matters only where it says so (world systems run in registration order; death listeners too).
 
 **Events** (`event/LifeEvents`). When something happens that other systems may care about, the code where it happens posts an event, and systems that care listen from their setup. A new system reacts to the world without editing anyone else's code.
 
 | Event | Posted when | Listened to by |
 |---|---|---|
-| `DeathEvent` | Any mob dies (`MobDeathMixin`) | `social` (witnesses, grief), `people` (records the death), `following` (followers go home) |
-| `BirthEvent` | A child is born (`family/Children`) | Nothing yet |
-| `PartnershipEvent` | A couple starts dating, gets engaged, marries or splits (`people/PeopleRegistry`) | Nothing yet |
-| `AttackedEvent` | An NPC is attacked for real (`combat/NpcAttackers`) | Nothing yet |
+| `DeathEvent` | Any mob dies (`MobDeathMixin`) | `social` (witnesses, grief), `gossip` (news), `people` (records the death), `following` (followers go home) |
+| `BirthEvent` | A child is born (`family/Children`) | `gossip` (news) |
+| `PartnershipEvent` | A couple starts dating, gets engaged, marries or splits (`people/PeopleRegistry`) | `gossip` (news) |
+| `AttackedEvent` | An NPC is attacked for real (`combat/NpcAttackers`) | `gossip` (news of an attack out of nowhere) |
+| `BrawlEndedEvent` | A brawl ends with a winner (`brawl/Brawl`) | `gossip` (news) |
 | `GiftEvent` | An NPC takes a gift (`dialogue/NpcGifts`) | Nothing yet |
 
 Use an event when others should react to something; call directly when one system asks another for something. A new kind of event is a record in `event/` and a row in this table.
@@ -96,6 +98,7 @@ Use an event when others should react to something; call directly when one syste
 | Reacting to something that happens elsewhere | A listener on an event, from the system's setup; a new kind of event is a record in `event/` |
 | Something to say in conversation | A `DialogueMenus` option, registered from `dialogue/DialogueSetup` (or the setup of a system above dialogue) |
 | Lines NPCs say | A `.speech` file, with facts in `speech/SpeechFacts` |
+| Something NPCs chat about | A `ChatTopic`, registered with `speech/ChatTopics` from the system's setup, with `chat_open_<id>` and `chat_reply_<id>` lines |
 | A command | A branch in the area's class in `command/`, or a new area class |
 | A screen | `client/`, opened through a hook in `ClientHooks` |
 | A hook into BTA | A thin mixin in `mixin/` that calls the system's own code |

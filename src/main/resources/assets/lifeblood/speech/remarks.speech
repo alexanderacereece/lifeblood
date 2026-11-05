@@ -8,6 +8,10 @@
 [idle_thought] [catchphrase]  {w=0.3}
 
 == idle_thought ==
+# Longer remarks, built from beats (see topics.speech): short from quiet NPCs, longer from chatty ones.
+[weather_react] [weather_detail?] [weather_ask?] {w=4}
+[food_react] [food_detail?]  {w=1.5}
+[home_react] [home_detail?]  {at_home=no, w=1.5}
 I miss [home_biome.the] sometimes. {at_home=no, w=0.4}
 I wonder how things are back in [home_biome.the]. {at_home=no, w=0.3}
 Nothing like [home_biome.the]. Nothing. {at_home=no, biome_like=dislike, w=0.6}
