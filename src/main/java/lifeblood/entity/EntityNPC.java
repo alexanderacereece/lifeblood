@@ -443,7 +443,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		}
 
 		boolean wasBadlyHurt = this.isBadlyHurt();
-		Entity source = attacker instanceof Projectile projectile && projectile.owner != null ? projectile.owner : attacker;
+		Entity source = Persons.behind(attacker);
 		boolean armed = attacker instanceof Projectile || this.attackers.isArmed(source);
 		NpcBrawling.Hit hit = this.brawling.classify(source, armed, type);
 		if (hit == NpcBrawling.Hit.IGNORED) {

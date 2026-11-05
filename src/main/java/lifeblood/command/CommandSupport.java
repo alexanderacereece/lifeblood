@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.function.Function;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.item.Item;
@@ -409,7 +410,7 @@ final class CommandSupport {
 	 * Replies about each NPC a command changed, or with a count when there are many, like vanilla's "Healed 12 entities".
 	 * The message for one NPC is given its name.
 	 */
-	static int replyEach(CommandContext<CommandSource> c, List<EntityNPC> npcs, java.util.function.Function<String, String> one, String many) {
+	static int replyEach(CommandContext<CommandSource> c, List<EntityNPC> npcs, Function<String, String> one, String many) {
 		if (npcs.size() <= 3) {
 			for (EntityNPC npc : npcs) {
 				reply(c, one.apply(npc.nickname));

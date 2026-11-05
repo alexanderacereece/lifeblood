@@ -22,6 +22,7 @@ import net.minecraft.core.item.ItemStack;
 import net.minecraft.core.util.helper.DamageType;
 import net.minecraft.core.util.helper.MathHelper;
 import lifeblood.entity.EntityNPC;
+import lifeblood.entity.Persons;
 import lifeblood.faction.FactionRelation;
 import lifeblood.faction.NpcFactions;
 import lifeblood.health.HealthMode;
@@ -127,7 +128,7 @@ public final class ThreatAssessment {
 	 */
 	@Nullable
 	public static FactionRelation relationTo(EntityNPC npc, Mob mob) {
-		return mob instanceof EntityNPC || mob instanceof Player ? NpcFactions.regard(npc, mob) : null;
+		return Persons.isPerson(mob) ? NpcFactions.regard(npc, mob) : null;
 	}
 
 	/**
@@ -180,7 +181,7 @@ public final class ThreatAssessment {
 
 	/** Enemy NPCs and players are rated like allies are: by their fighting strength. */
 	private static double threatOf(Mob mob) {
-		if (mob instanceof EntityNPC || mob instanceof Player) {
+		if (Persons.isPerson(mob)) {
 			return strengthOf(mob);
 		}
 

@@ -285,10 +285,6 @@ public class CombatBehavior implements NpcBehavior {
 		this.fleeing = false;
 	}
 
-	public boolean isFleeing() {
-		return this.fleeing;
-	}
-
 	@Override
 	public String describe() {
 		return this.fleeing ? "fleeing" : "fighting";

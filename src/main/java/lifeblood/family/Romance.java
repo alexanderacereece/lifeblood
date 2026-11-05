@@ -75,23 +75,31 @@ public final class Romance {
 		return (kin == null || !kin.blood) && npc.personality.attraction().allows(npc.getGender(), genderOf(other));
 	}
 
-	public static float daysTogether(PeopleRegistry.Partnership partnership, long now) {
-		return (now - partnership.since) / (float) Calendar.TICKS_PER_DAY;
-	}
-
 	/** How long a couple has been at its current stage, in in-game years. */
 	public static float yearsTogether(PeopleRegistry.Partnership partnership, World world, long now) {
-		return (now - partnership.since) / (float) Calendar.ticksPerYear(world);
+		return yearsTogether(partnership, Calendar.yearDays(world), now);
+	}
+
+	public static float yearsTogether(PeopleRegistry.Partnership partnership, int yearDays, long now) {
+		return (now - partnership.since) / (float) Calendar.ticksPerYear(yearDays);
 	}
 
 	/** Whether a couple has dated long enough to get engaged. */
 	public static boolean datedLongEnough(PeopleRegistry.Partnership partnership, World world, long now) {
-		return yearsTogether(partnership, world, now) >= DATING_YEARS;
+		return datedLongEnough(partnership, Calendar.yearDays(world), now);
+	}
+
+	public static boolean datedLongEnough(PeopleRegistry.Partnership partnership, int yearDays, long now) {
+		return yearsTogether(partnership, yearDays, now) >= DATING_YEARS;
 	}
 
 	/** Whether a couple has been engaged long enough to marry. */
 	public static boolean engagedLongEnough(PeopleRegistry.Partnership partnership, World world, long now) {
-		return yearsTogether(partnership, world, now) >= ENGAGED_YEARS;
+		return engagedLongEnough(partnership, Calendar.yearDays(world), now);
+	}
+
+	public static boolean engagedLongEnough(PeopleRegistry.Partnership partnership, int yearDays, long now) {
+		return yearsTogether(partnership, yearDays, now) >= ENGAGED_YEARS;
 	}
 
 	/** A loaded person by id: an NPC in the world or a player. */

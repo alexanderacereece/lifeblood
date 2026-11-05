@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
+import java.util.function.Function;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.EntityDispatcher;
 import net.minecraft.core.entity.player.Player;
@@ -189,7 +190,7 @@ final class NpcCommands {
 	}
 
 	/** Shows something about each NPC the "npcs" argument names. */
-	private static int showEach(CommandContext<CommandSource> c, java.util.function.Function<EntityNPC, String> line) throws CommandSyntaxException {
+	private static int showEach(CommandContext<CommandSource> c, Function<EntityNPC, String> line) throws CommandSyntaxException {
 		List<EntityNPC> npcs = getNpcs(c, "npcs");
 		for (EntityNPC npc : npcs) {
 			reply(c, line.apply(npc));

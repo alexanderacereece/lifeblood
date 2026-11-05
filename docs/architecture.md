@@ -18,7 +18,7 @@ Four layers, each finer than the last. Read down only as far as you need:
 | Package | What's in it |
 |---|---|
 | `lifeblood` | The entry point (`Lifeblood`), the list of every system's setup (`Systems`), the mod id and log (`Mod`), settings (`NpcConfig`), and `ClientHooks`, the only way common code reaches the client |
-| `entity` | `EntityNPC`, `NpcPart` and `NpcGender`. Only the core; parts live with their systems |
+| `entity` | `EntityNPC`, `NpcPart`, `NpcGender`, and `Persons` (what counts as a person, who's behind an attack). Only the core; parts live with their systems |
 | `event` | The event hub (`LifeEvents`) and its events: deaths, births, real attacks, gifts, couples changing |
 | `ai` | The brain (`NpcBrain`), the registry of saved behaviors (`NpcBehaviors`), and the NPC's home (`NpcHome`); `ai/behavior` holds the plain orders (go to, stay, wander), `ai/routine` the daily schedules |
 | `nav` | Getting around: the walkable-space grid, the path search, the per-tick budget, and `NpcNavigator`, which walks paths |
@@ -111,6 +111,7 @@ Use an event when others should react to something; call directly when one syste
 | Common code never imports `lifeblood.client` or `net.minecraft.client` (only `client/` and the client mixins in `lifeblood.mixins.json` may) | A dedicated server has no client classes; touching one crashes it |
 | Nothing outside `command/` imports it (except the entry point) | Commands are tools over the game, never part of it |
 | Class names are unique across the project | A name says where to look; a second `X` means the first wasn't found |
+| Classes are imported, never written out in full in code | A file's imports list everything it uses |
 | Source files stay under 600 lines, with no exceptions | Big files hide code and invite duplication |
 | Every mixin is listed in `lifeblood.mixins.json` and named after its target | Mixins are easy to find and never silently unused |
 | Tests sit in the same package as what they test | Moving a class moves its test with it |
@@ -251,6 +252,7 @@ Rules every command follows:
 ## Tests
 
 `./gradlew test` runs the unit tests in `src/test/java`, each in the same package as the class it tests.
-- They cover pure logic: the calendar, kinship, age stages, appearance encoding, slim arms, words, the register of people, schedules, ownership records, prefab data, turning (positions, directions and every facing rule going full circle), faction colors, the command tree and the speech files.
+- They cover pure logic: the calendar, kinship, age stages, romance and birth timing, personality compatibility, appearance encoding, slim arms, words, speech styles, the register of people, schedules, ownership records, prefab data, turning (positions, directions and every facing rule going full circle), stone and wood swaps, faction colors, the command tree and the speech files.
+- BTA attaches block behavior only in a running game, so anything that paints blocks (color swaps, planks taking a wood's color) is checked in game, not in tests.
 - `ArchitectureTest` and `CodeMapTest` check the layout itself.
 - Tests run with the default config, without a world.

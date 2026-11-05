@@ -21,7 +21,8 @@ import org.jetbrains.annotations.Nullable;
  * picked again as the NPC grows into each new stage (see {@link #fitsAge} and {@link #growInto}).
  */
 public class SpeechStyle {
-	private static final Pattern ING = Pattern.compile("\\b([A-Za-z]{3,})ing\\b'?");
+	/** An -ing word ("going", "everything's"); KEEP_ING lists the stems that aren't -ing words (king, string). */
+	private static final Pattern ING = Pattern.compile("\\b([A-Za-z]+)ing\\b'?");
 	private static final Set<String> KEEP_ING = Set.of("str", "spr", "th", "br", "k", "r", "s", "w", "sw", "st", "cl", "fl", "sl");
 	private static final float CATCHPHRASE_CHANCE = 0.6F;
 	private static final float FILLER_CHANCE = 0.35F;
@@ -68,12 +69,19 @@ public class SpeechStyle {
 	 */
 	public void growInto(EntityNPC npc, Random random) {
 		String old = this.catchphrase;
-		boolean keepCatchphrase = this.stage == AgeStage.TEEN && npc.life.getStage() == AgeStage.ADULT && !old.isEmpty()
-			&& random.nextFloat() < KEEP_TEEN_CATCHPHRASE_CHANCE;
+		boolean keepCatchphrase = keepsCatchphrase(this.stage, npc.life.getStage(), old, random.nextFloat());
 		this.rollWords(npc, random);
 		if (keepCatchphrase) {
 			this.catchphrase = old;
 		}
+	}
+
+	/**
+	 * Whether a catchphrase survives growing from one stage into the next: only a teenager's, into adulthood, and only
+	 * for some (the roll, 0 to 1, against KEEP_TEEN_CATCHPHRASE_CHANCE).
+	 */
+	static boolean keepsCatchphrase(@Nullable AgeStage from, AgeStage to, String catchphrase, float roll) {
+		return from == AgeStage.TEEN && to == AgeStage.ADULT && !catchphrase.isEmpty() && roll < KEEP_TEEN_CATCHPHRASE_CHANCE;
 	}
 
 	/** Picks address, catchphrase and filler from the style symbols, using the age versions for the young. */

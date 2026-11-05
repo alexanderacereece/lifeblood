@@ -1,6 +1,7 @@
 package lifeblood.family;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 import java.util.UUID;
 import net.minecraft.core.entity.EntityDispatcher;
@@ -16,6 +17,7 @@ import lifeblood.event.LifeEvents;
 import lifeblood.people.NamePool;
 import lifeblood.people.PeopleRegistry;
 import lifeblood.social.MemoryType;
+import lifeblood.speech.Word;
 import lifeblood.world.Calendar;
 import org.jetbrains.annotations.Nullable;
 
@@ -40,11 +42,19 @@ public final class Children {
 
 	/** The chance, per romance check, that a couple who can have a child has one: about one every two years. */
 	public static float birthChance(World world) {
-		return Romance.CHECK_INTERVAL / (AVERAGE_YEARS_TO_CHILD * Calendar.ticksPerYear(world));
+		return birthChance(Calendar.yearDays(world));
+	}
+
+	public static float birthChance(int yearDays) {
+		return Romance.CHECK_INTERVAL / (AVERAGE_YEARS_TO_CHILD * Calendar.ticksPerYear(yearDays));
 	}
 
 	/** Whether this couple could have another child now (not counting chance). */
 	public static boolean canHaveChild(World world, PeopleRegistry family, UUID first, UUID second, long now) {
+		return canHaveChild(Calendar.yearDays(world), family, first, second, now);
+	}
+
+	public static boolean canHaveChild(int yearDays, PeopleRegistry family, UUID first, UUID second, long now) {
 		List<UUID> children = family.childrenOf(first);
 		children.retainAll(family.childrenOf(second));
 		if (children.size() >= MAX_CHILDREN) {
@@ -53,7 +63,7 @@ public final class Children {
 
 		for (UUID child : children) {
 			PeopleRegistry.Person person = family.find(child);
-			if (person != null && person.born >= 0 && now - person.born < MIN_YEARS_BETWEEN * Calendar.ticksPerYear(world)) {
+			if (person != null && person.born >= 0 && now - person.born < MIN_YEARS_BETWEEN * Calendar.ticksPerYear(yearDays)) {
 				return false;
 			}
 		}
@@ -104,8 +114,8 @@ public final class Children {
 		family.setDirty();
 		parent.remember(MemoryType.HAD_A_CHILD, null, 1.0F);
 		LifeEvents.post(new BirthEvent(child, parent, otherParent));
-		parent.voice.bark("new_baby", otherParent, context -> context.word("baby", lifeblood.speech.Word.name(child.nickname))
-			.fact("baby_gender", gender.name().toLowerCase(java.util.Locale.ROOT)), true);
+		parent.voice.bark("new_baby", otherParent, context -> context.word("baby", Word.name(child.nickname))
+			.fact("baby_gender", gender.name().toLowerCase(Locale.ROOT)), true);
 		return child;
 	}
 

@@ -494,9 +494,4 @@ public class NpcNavigator {
 	public boolean isRouteComplete() {
 		return this.path == null || this.pending || this.path.complete;
 	}
-
-	/** Steps left on the current route, for debugging. */
-	public int remainingSteps() {
-		return this.path != null ? this.path.remaining() : 0;
-	}
 }

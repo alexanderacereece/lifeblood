@@ -102,10 +102,6 @@ public final class Brawl {
 		return entity == this.first ? this.second : this.first;
 	}
 
-	public boolean isOver() {
-		return this.over;
-	}
-
 	/** The health at which this person gives up. Timid and proud cancel out. */
 	public static int yieldHealth(Mob mob) {
 		if (!(mob instanceof EntityNPC npc)) {

@@ -145,6 +145,7 @@ The NPC entity itself and the part system it's built from.
 - [`EntityNPC`](../src/main/java/lifeblood/entity/EntityNPC.java): A general-purpose NPC.
 - [`NpcGender`](../src/main/java/lifeblood/entity/NpcGender.java): An NPC's gender.
 - [`NpcPart`](../src/main/java/lifeblood/entity/NpcPart.java): A self-contained piece of an NPC (its life, health, eating...): its own state, its own upkeep, and its own section of the save.
+- [`Persons`](../src/main/java/lifeblood/entity/Persons.java): Telling people (players and NPCs) apart from creatures, and finding who is really behind an attack.
 
 ## `event`
 

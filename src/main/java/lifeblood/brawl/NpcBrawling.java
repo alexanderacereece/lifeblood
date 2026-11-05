@@ -9,6 +9,7 @@ import net.minecraft.core.util.helper.MathHelper;
 import lifeblood.combat.CombatBehavior;
 import lifeblood.entity.EntityNPC;
 import lifeblood.entity.NpcPart;
+import lifeblood.entity.Persons;
 import lifeblood.faction.FactionRelation;
 import lifeblood.faction.NpcFactions;
 import lifeblood.personality.Quirk;
@@ -101,7 +102,7 @@ public final class NpcBrawling implements NpcPart {
 	 * a cheap shot, or a real attack. Starting or escalating a brawl happens here too.
 	 */
 	public Hit classify(@Nullable Entity source, boolean armed, DamageType type) {
-		boolean person = source instanceof Player || source instanceof EntityNPC;
+		boolean person = Persons.isPerson(source);
 		if (source == null || source == this.npc || !person || type != DamageType.COMBAT) {
 			return Hit.REAL;
 		}
@@ -162,7 +163,7 @@ public final class NpcBrawling implements NpcPart {
 		float threshold = hothead ? -20.0F : -40.0F;
 		AABBd area = MathHelper.aabbGrow(this.npc.bb, 8.0, 3.0, 8.0, new AABBd());
 		for (Entity entity : this.npc.world.getEntitiesWithinAABBExcludingEntity(this.npc, area)) {
-			if (!(entity instanceof Player) && !(entity instanceof EntityNPC) || !this.npc.canEntityBeSeen(entity)
+			if (!Persons.isPerson(entity) || !this.npc.canEntityBeSeen(entity)
 				|| NpcFactions.regard(this.npc, entity) == FactionRelation.HOSTILE) {
 				continue;
 			}

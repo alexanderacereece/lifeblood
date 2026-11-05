@@ -4,7 +4,6 @@ import com.mojang.nbt.tags.CompoundTag;
 import com.mojang.nbt.tags.ListTag;
 import com.mojang.nbt.tags.Tag;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import net.minecraft.core.entity.player.Player;
@@ -72,10 +71,6 @@ public class NpcBrain {
 		for (NpcBehavior behavior : behaviors) {
 			this.add(behavior);
 		}
-	}
-
-	public List<NpcBehavior> getBehaviors() {
-		return Collections.unmodifiableList(this.behaviors);
 	}
 
 	/** The first behavior (not instinct) of the given type, if the NPC has one. */

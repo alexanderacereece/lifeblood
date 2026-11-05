@@ -10,6 +10,7 @@ import net.minecraft.core.world.pos.TilePos;
 import net.minecraft.core.world.weather.Weather;
 import lifeblood.entity.EntityNPC;
 import lifeblood.entity.NpcGender;
+import lifeblood.entity.Persons;
 import lifeblood.faction.FactionRegistry;
 import lifeblood.faction.FactionRelation;
 import lifeblood.faction.NpcFactions;
@@ -52,7 +53,7 @@ public final class SpeechFacts {
 		if (listener != null) {
 			context.fact("listener", Opinions.nameOf(listener));
 			context.fact("listener_type", listener instanceof Player ? "player" : "npc");
-			if (listener instanceof Player || listener instanceof EntityNPC) {
+			if (Persons.isPerson(listener)) {
 				context.fact("opinion", Opinions.Label.of(Opinions.of(npc, listener)).id());
 				context.fact("relation", NpcFactions.regard(npc, listener).name().toLowerCase(Locale.ROOT));
 			}

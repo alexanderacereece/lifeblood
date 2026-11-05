@@ -61,7 +61,12 @@ public final class Calendar {
 	}
 
 	public static long ticksPerYear(World world) {
-		return (long) yearDays(world) * TICKS_PER_DAY;
+		return ticksPerYear(yearDays(world));
+	}
+
+	/** How long a year is, in ticks, for a year of this many days. */
+	public static long ticksPerYear(int yearDays) {
+		return (long) yearDays * TICKS_PER_DAY;
 	}
 
 	/** A length of time in words: "3 days" under a year, "1.5 years" from then on. */

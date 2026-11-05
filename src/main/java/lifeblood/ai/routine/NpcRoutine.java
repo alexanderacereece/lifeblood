@@ -25,10 +25,6 @@ public final class NpcRoutine implements NpcPart {
 		this.npc = npc;
 	}
 
-	public String getScheduleId() {
-		return this.scheduleId;
-	}
-
 	public void setScheduleId(String scheduleId) {
 		this.scheduleId = scheduleId;
 		this.activity = null;

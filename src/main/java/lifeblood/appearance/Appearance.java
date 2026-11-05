@@ -1,5 +1,6 @@
 package lifeblood.appearance;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
@@ -146,7 +147,7 @@ public final class Appearance {
 	 */
 	public static Appearance inherit(PartCatalog catalog, NpcGender gender, Appearance first, Appearance second, Random random) {
 		Appearance child = random(catalog, gender, random, Float.NaN).with(AppearanceLayer.FACIAL_HAIR, null, "");
-		List<Appearance> parents = new java.util.ArrayList<>();
+		List<Appearance> parents = new ArrayList<>();
 		for (Appearance parent : new Appearance[] {first, second}) {
 			if (!parent.isEmpty()) {
 				parents.add(parent);

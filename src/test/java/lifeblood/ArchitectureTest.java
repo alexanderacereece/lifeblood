@@ -282,6 +282,26 @@ class ArchitectureTest {
 		assertNone(problems);
 	}
 
+	/** A class named in full in code ("java.util.Locale.ROOT") rather than imported; comments and strings don't count. */
+	private static final Pattern FULL_NAME = Pattern.compile(
+		"(?<![\\w.])(?:java|javax|lifeblood|net|com|org|turniplabs)\\.[a-z]\\w*(?:\\.[a-z]\\w*)*\\.[A-Z]");
+
+	/** Classes are imported, never written out in full in code, so every file's imports list what it uses. */
+	@Test
+	void classesAreImportedNotWrittenInFull() {
+		List<String> problems = new ArrayList<>();
+		for (SourceFile file : MAIN) {
+			String code = file.text().replaceAll("(?s)/\\*.*?\\*/", " ").replaceAll("//[^\\n]*", " ")
+				.replaceAll("\"(?:\\\\.|[^\"\\\\])*\"", "\"\"").replaceAll("(?m)^(?:import|package) [^\\n]*", "");
+			Matcher name = FULL_NAME.matcher(code);
+			while (name.find()) {
+				problems.add(file.path() + " writes out " + name.group() + "...: import the class instead");
+			}
+		}
+
+		assertNone(problems);
+	}
+
 	/** "lifeblood.ai.routine" is in "ai". */
 	private static String topPackage(String packageName) {
 		String[] parts = packageName.split("\\.");

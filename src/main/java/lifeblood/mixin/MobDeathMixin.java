@@ -2,7 +2,7 @@ package lifeblood.mixin;
 
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.Mob;
-import net.minecraft.core.entity.projectile.Projectile;
+import lifeblood.entity.Persons;
 import lifeblood.event.DeathEvent;
 import lifeblood.event.LifeEvents;
 import org.spongepowered.asm.mixin.Mixin;
@@ -17,8 +17,7 @@ public abstract class MobDeathMixin {
 	private void lifeblood$witnessDeath(Entity killedBy, CallbackInfo ci) {
 		Mob victim = (Mob) (Object) this;
 		if (!victim.world.isClientSide) {
-			Entity killer = killedBy instanceof Projectile projectile && projectile.owner != null ? projectile.owner : killedBy;
-			LifeEvents.post(new DeathEvent(victim, killer));
+			LifeEvents.post(new DeathEvent(victim, Persons.behind(killedBy)));
 		}
 	}
 }

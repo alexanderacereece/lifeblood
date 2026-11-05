@@ -47,7 +47,7 @@ The goal: anyone, including an AI that has never seen the project, can find the 
 - a package imports from a higher layer;
 - something is registered or listened for outside a setup class, or a setup isn't in `Systems`;
 - common code imports client code, or anything depends on `command/`;
-- two classes share a name;
+- two classes share a name, or a class is written out in full in code instead of imported;
 - a file is over 600 lines;
 - a mixin is unlisted or misnamed;
 - a test isn't beside what it tests.

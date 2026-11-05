@@ -14,7 +14,6 @@ import net.minecraft.core.entity.player.Player;
 import lifeblood.entity.EntityNPC;
 import lifeblood.inventory.NpcMenu;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Math;
 import org.lwjgl.input.Keyboard;
 
 /**
@@ -115,15 +114,15 @@ public class NpcInventoryScreen extends ScreenContainerAbstract {
 		GLRenderer.enableState(State.DEPTH_TEST);
 		GLRenderer.modelM4f().translate(x, y, 50.0F);
 		GLRenderer.modelM4f().scale(-30.0F, 30.0F, 30.0F);
-		GLRenderer.modelM4f().rotateZ(Math.toRadians(180.0F));
-		GLRenderer.modelM4f().rotateY(Math.toRadians(135.0F));
+		GLRenderer.modelM4f().rotateZ((float) Math.toRadians(180.0F));
+		GLRenderer.modelM4f().rotateY((float) Math.toRadians(135.0F));
 		Lighting.enableLight();
 		GLRenderer.setLightMapStrength(0.0F);
-		GLRenderer.modelM4f().rotateY(Math.toRadians(-135.0F));
-		GLRenderer.modelM4f().rotateX(Math.toRadians(-((float) java.lang.Math.atan(eyesY / 40.0F)) * 20.0F));
-		npc.yBodyRotO = npc.yBodyRot = (float) java.lang.Math.atan(eyesX / 40.0F) * 20.0F;
-		npc.yRotO = npc.yRot = (float) java.lang.Math.atan(eyesX / 40.0F) * 40.0F;
-		npc.xRotO = npc.xRot = -((float) java.lang.Math.atan(eyesY / 40.0F)) * 20.0F;
+		GLRenderer.modelM4f().rotateY((float) Math.toRadians(-135.0F));
+		GLRenderer.modelM4f().rotateX((float) Math.toRadians(-((float) Math.atan(eyesY / 40.0F)) * 20.0F));
+		npc.yBodyRotO = npc.yBodyRot = (float) Math.atan(eyesX / 40.0F) * 20.0F;
+		npc.yRotO = npc.yRot = (float) Math.atan(eyesX / 40.0F) * 40.0F;
+		npc.xRotO = npc.xRot = -((float) Math.atan(eyesY / 40.0F)) * 20.0F;
 		EntityRendererDispatcher.instance.viewLerpYaw = 180.0F;
 		EntityRenderer.renderShadows = false;
 		GLRenderer.globalGetNormalTransformMatrix().scale(1.0F, -1.0F, 1.0F);

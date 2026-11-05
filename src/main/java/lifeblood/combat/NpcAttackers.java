@@ -4,6 +4,7 @@ import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.item.ItemStack;
 import lifeblood.entity.EntityNPC;
+import lifeblood.entity.Persons;
 import lifeblood.event.AttackedEvent;
 import lifeblood.event.LifeEvents;
 import lifeblood.faction.FactionRelation;
@@ -58,7 +59,7 @@ public final class NpcAttackers {
 		this.lastAttacker = source;
 		this.lastAttackedTick = this.npc.tickCount;
 		LifeEvents.post(new AttackedEvent(this.npc, source));
-		if (!(source instanceof Player) && !(source instanceof EntityNPC)) {
+		if (!Persons.isPerson(source)) {
 			return;
 		}
 

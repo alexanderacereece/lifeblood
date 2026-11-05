@@ -2,7 +2,6 @@ package lifeblood.ai.routine;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Supplier;
 import lifeblood.ai.NpcBehavior;
 import org.jetbrains.annotations.Nullable;
@@ -45,9 +44,5 @@ public final class Routines {
 	public static Schedule schedule(String id) {
 		Schedule schedule = SCHEDULES.get(id);
 		return schedule != null ? schedule : SCHEDULES.get(DEFAULT_SCHEDULE);
-	}
-
-	public static Set<String> scheduleIds() {
-		return SCHEDULES.keySet();
 	}
 }

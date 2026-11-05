@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 import net.minecraft.core.entity.player.Player;
 import lifeblood.entity.EntityNPC;
+import lifeblood.entity.NpcGender;
 import lifeblood.family.Kinship;
 import lifeblood.family.Romance;
 import lifeblood.people.PeopleRegistry;
@@ -197,7 +198,7 @@ public final class RomanceDialogue {
 	}
 
 	@Nullable
-	private static lifeblood.entity.NpcGender genderOf(PeopleRegistry family, UUID id) {
+	private static NpcGender genderOf(PeopleRegistry family, UUID id) {
 		PeopleRegistry.Person person = family.find(id);
 		return person != null ? person.gender : null;
 	}

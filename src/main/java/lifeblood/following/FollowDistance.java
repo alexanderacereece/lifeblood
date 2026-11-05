@@ -1,5 +1,7 @@
 package lifeblood.following;
 
+import java.util.Locale;
+
 /** How closely an NPC follows: it starts walking once the player is further than {@code start}, and stops within {@code stop}. */
 public enum FollowDistance {
 	SHORT(2.5F, 4.0F),
@@ -24,6 +26,6 @@ public enum FollowDistance {
 	}
 
 	public String displayName() {
-		return this.name().charAt(0) + this.name().substring(1).toLowerCase(java.util.Locale.ROOT);
+		return this.name().charAt(0) + this.name().substring(1).toLowerCase(Locale.ROOT);
 	}
 }

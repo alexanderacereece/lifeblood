@@ -5,6 +5,7 @@ import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.world.World;
 import lifeblood.entity.EntityNPC;
+import lifeblood.entity.Persons;
 import lifeblood.social.Opinions;
 import org.jetbrains.annotations.Nullable;
 
@@ -53,7 +54,7 @@ public final class NpcFactions {
 			}
 		}
 
-		if (other instanceof Player || other instanceof EntityNPC) {
+		if (Persons.isPerson(other)) {
 			float opinion = Opinions.of(npc, other);
 			if (opinion >= Opinions.ALLY_THRESHOLD) {
 				return FactionRelation.ALLY;

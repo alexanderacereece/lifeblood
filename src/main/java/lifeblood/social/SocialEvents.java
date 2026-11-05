@@ -9,9 +9,9 @@ import net.minecraft.core.entity.MobPathfinder;
 import net.minecraft.core.entity.animal.AmbientCreature;
 import net.minecraft.core.entity.animal.MobAnimal;
 import net.minecraft.core.entity.animal.MobWaterAnimal;
-import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.util.helper.MathHelper;
 import lifeblood.entity.EntityNPC;
+import lifeblood.entity.Persons;
 import lifeblood.event.DeathEvent;
 import lifeblood.faction.FactionRelation;
 import lifeblood.faction.NpcFactions;
@@ -44,7 +44,7 @@ public final class SocialEvents {
 		Mob victim = event.victim();
 		Entity killer = event.killer();
 		mournFamily(victim, killer);
-		boolean person = isPerson(victim);
+		boolean person = Persons.isPerson(victim);
 		AABBd area = MathHelper.aabbGrow(victim.bb, WITNESS_RANGE, 8.0, WITNESS_RANGE, new AABBd());
 		List<EntityNPC> witnesses = victim.world.getEntitiesWithinAABB(EntityNPC.class, area);
 		for (EntityNPC npc : witnesses) {
@@ -57,7 +57,7 @@ public final class SocialEvents {
 				onEnemyDied(npc, victim, killer);
 			} else if (person) {
 				onPersonDied(npc, victim, killer);
-			} else if (isAnimal(victim) && killer != null && killer != npc && isPerson(killer) && npc.canEntityBeSeen(victim)) {
+			} else if (isAnimal(victim) && killer != null && killer != npc && Persons.isPerson(killer) && npc.canEntityBeSeen(victim)) {
 				onAnimalKilled(npc, victim, killer);
 			}
 		}
@@ -87,7 +87,7 @@ public final class SocialEvents {
 			boolean closest = kin == Kinship.SPOUSE || kin == Kinship.CHILD || kin == Kinship.FIANCE;
 			float closeness = closest || kin == Kinship.PARENT ? 1.0F : kin == Kinship.SIBLING || kin == Kinship.PARTNER ? 0.8F : 0.4F;
 			npc.remember(MemoryType.FAMILY_DIED, null, closeness);
-			if (killer != null && killer != npc && isPerson(killer)) {
+			if (killer != null && killer != npc && Persons.isPerson(killer)) {
 				npc.remember(closest ? MemoryType.KILLED_MY_SPOUSE_OR_CHILD : MemoryType.KILLED_FAMILY, killer, closest ? 1.0F : closeness);
 			}
 		}
@@ -117,7 +117,7 @@ public final class SocialEvents {
 		if (killer == npc) {
 			npc.remember(MemoryType.WON_A_FIGHT, null, 1.0F);
 			npc.voice.bark("victory", victim, context -> context.word("enemy", wordFor(victim)), false);
-		} else if (killer != null && isPerson(killer) && wasFighting(npc, victim)) {
+		} else if (killer != null && Persons.isPerson(killer) && wasFighting(npc, victim)) {
 			if (npc.isBadlyHurt()) {
 				npc.social.noticeRescue(killer);
 			} else {
@@ -131,7 +131,7 @@ public final class SocialEvents {
 		float opinion = Opinions.of(npc, victim);
 		if (opinion >= 50.0F) {
 			npc.remember(MemoryType.A_FRIEND_DIED, null, 1.0F);
-			if (killer != null && killer != npc && isPerson(killer)) {
+			if (killer != null && killer != npc && Persons.isPerson(killer)) {
 				npc.remember(MemoryType.KILLED_A_FRIEND, killer, 1.0F);
 			}
 
@@ -154,13 +154,9 @@ public final class SocialEvents {
 		return mob instanceof MobPathfinder hunter && hunter.getTarget() == npc;
 	}
 
-	private static boolean isPerson(Entity entity) {
-		return entity instanceof Player || entity instanceof EntityNPC;
-	}
-
 	/** What to call a mob in speech: a person by name, anything else by its kind ("zombie", "cave spider"). */
 	public static Word wordFor(Entity entity) {
-		if (isPerson(entity)) {
+		if (Persons.isPerson(entity)) {
 			return Word.name(Opinions.nameOf(entity));
 		}
 
