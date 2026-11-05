@@ -5,14 +5,10 @@ import java.util.List;
 import java.util.UUID;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.player.Player;
-import lifeblood.combat.CombatStyle;
 import lifeblood.entity.EntityNPC;
 import lifeblood.family.Kinship;
 import lifeblood.family.Romance;
-import lifeblood.following.FollowDistance;
-import lifeblood.ownership.Ownership;
 import lifeblood.people.PeopleRegistry;
-import lifeblood.social.MemoryType;
 import lifeblood.social.Opinions;
 import lifeblood.speech.Word;
 import org.jetbrains.annotations.Nullable;
@@ -59,100 +55,6 @@ public record NpcDialogue(String line, List<DialogueOption> options) {
 		return new NpcDialogue(line, options);
 	}
 
-	/** The built-in options of each menu. */
-	static {
-		DialogueMenus.register(DialogueMenus.Menu.MAIN, 100, (npc, player, options) -> options.add(new DialogueOption("How are you?", session -> {
-			if (!SocialLimits.tryChat(npc, player)) {
-				session.show(main(npc, player, narration(npc.nickname + " seems talked out for the moment.")));
-				return;
-			}
-
-			npc.remember(MemoryType.HAD_A_NICE_CHAT, player, 1.0F);
-			// Sometimes the chat turns into asking for a new word.
-			NpcDialogue word = WordDialogue.maybeAsk(npc, player);
-			session.show(word != null ? word : main(npc, player, say(npc, player, "smalltalk", "Fine.")));
-		})));
-		DialogueMenus.register(DialogueMenus.Menu.MAIN, 200, (npc, player, options) -> {
-			if (player.inventory.getCurrentItem() != null) {
-				options.add(new DialogueOption("Here, take this.", session -> session.show(main(npc, player, NpcGifts.give(npc, player)))));
-			}
-		});
-		DialogueMenus.register(DialogueMenus.Menu.MAIN, 300, (npc, player, options) -> {
-			DialogueOption romance = RomanceDialogue.mainOption(npc, player);
-			if (romance != null) {
-				options.add(romance);
-			}
-		});
-		DialogueMenus.register(DialogueMenus.Menu.MAIN, 400, (npc, player, options) -> options.add(new DialogueOption("Can I ask you something?",
-			session -> session.show(questions(npc, player, say(npc, player, "questions_open", "Sure."))))));
-		DialogueMenus.register(DialogueMenus.Menu.MAIN, 500, (npc, player, options) -> {
-			if (npc.following.getLeader() == player) {
-				options.add(new DialogueOption("You can stop following me.", session -> {
-					npc.following.stop();
-					session.show(main(npc, player, say(npc, player, "follow_stop", "All right.")));
-				}));
-			} else {
-				options.add(new DialogueOption("Come with me.", session -> {
-					if (npc.following.willFollow(player)) {
-						npc.following.start(player);
-						session.show(main(npc, player, say(npc, player, "follow_accept", "Lead the way.")));
-					} else {
-						session.show(main(npc, player, say(npc, player, "follow_refuse", "I don't think so.")));
-					}
-				}));
-			}
-		});
-		DialogueMenus.register(DialogueMenus.Menu.MAIN, 600, (npc, player, options) -> {
-			if (npc.following.trusts(player)) {
-				options.add(new DialogueOption("About the practical stuff...", session -> session.show(practical(npc, player, say(npc, player,
-					"practical_open", "What do you need?")))));
-			}
-		});
-
-		DialogueMenus.register(DialogueMenus.Menu.QUESTIONS, 100, (npc, player, options) -> options.add(new DialogueOption("Tell me about yourself.", session -> {
-			session.show(questions(npc, player, say(npc, player, "about_me", "Not much to tell.")));
-			session.openProfile();
-		})));
-		DialogueMenus.register(DialogueMenus.Menu.QUESTIONS, 200, (npc, player, options) -> options.add(new DialogueOption("Where are you from?",
-			session -> session.show(questions(npc, player, say(npc, player, "where_from", "Around here."))))));
-		DialogueMenus.register(DialogueMenus.Menu.QUESTIONS, 300, (npc, player, options) -> options.add(new DialogueOption("What do you think of...",
-			session -> session.show(askAbout(npc, player)))));
-		DialogueMenus.register(DialogueMenus.Menu.QUESTIONS, 400, (npc, player, options) -> options.add(new DialogueOption("What words do you know?",
-			session -> session.show(questions(npc, player, WordDialogue.listWords(npc, player))))));
-		DialogueMenus.register(DialogueMenus.Menu.QUESTIONS, 500, (npc, player, options) -> options.add(new DialogueOption("Tell me about your family.",
-			session -> session.show(questions(npc, player, RomanceDialogue.describeFamily(npc, player))))));
-
-		// Only family who share what it owns (spouse, parents, children) can go through its things.
-		DialogueMenus.register(DialogueMenus.Menu.PRACTICAL, 100, (npc, player, options) -> {
-			if (Ownership.shares(npc, player)) {
-				options.add(new DialogueOption("Let me see what you're carrying.", DialogueSession::openInventory));
-			}
-		});
-		DialogueMenus.register(DialogueMenus.Menu.PRACTICAL, 200, (npc, player, options) -> {
-			if (npc.following.getLeader() == player) {
-				options.add(new DialogueOption("Follow distance: " + npc.following.getDistance().displayName(), session -> {
-					FollowDistance distance = npc.following.getDistance().next();
-					npc.following.setDistance(distance);
-					session.show(practical(npc, player, switch (distance) {
-						case SHORT -> "I'll stay close.";
-						case MEDIUM -> "I'll give you some room.";
-						case LONG -> "I'll keep my distance.";
-					}));
-				}));
-			}
-		});
-		DialogueMenus.register(DialogueMenus.Menu.PRACTICAL, 300, (npc, player, options) -> options.add(new DialogueOption("How you fight: "
-			+ npc.getCombatStyle().displayName(), session -> {
-			CombatStyle style = npc.getCombatStyle().next();
-			npc.setCombatStyle(style);
-			session.show(practical(npc, player, switch (style) {
-				case AUTO -> "I'll fight however my gear suits.";
-				case MELEE -> "I'll fight up close.";
-				case RANGED -> "I'll fight from a distance.";
-			}));
-		})));
-	}
-
 	/** Questions about them, the people they know, their family and their words. */
 	public static NpcDialogue questions(EntityNPC npc, Player player, String line) {
 		List<DialogueOption> options = DialogueMenus.options(DialogueMenus.Menu.QUESTIONS, npc, player);
@@ -161,7 +63,7 @@ public record NpcDialogue(String line, List<DialogueOption> options) {
 	}
 
 	/** Who they can be asked about: you first, then the people nearby and the other players. */
-	private static NpcDialogue askAbout(EntityNPC npc, Player player) {
+	static NpcDialogue askAbout(EntityNPC npc, Player player) {
 		List<DialogueOption> options = new ArrayList<>();
 		options.add(new DialogueOption("Me?", session -> session.show(questions(npc, player, say(npc, player, "opinion_of_you", "You're all right.")))));
 		List<Entity> people = new ArrayList<>();

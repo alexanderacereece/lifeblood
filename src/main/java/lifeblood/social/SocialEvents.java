@@ -10,10 +10,9 @@ import net.minecraft.core.entity.animal.AmbientCreature;
 import net.minecraft.core.entity.animal.MobAnimal;
 import net.minecraft.core.entity.animal.MobWaterAnimal;
 import net.minecraft.core.entity.player.Player;
-import net.minecraft.core.entity.projectile.Projectile;
 import net.minecraft.core.util.helper.MathHelper;
-import lifeblood.combat.CombatBehavior;
 import lifeblood.entity.EntityNPC;
+import lifeblood.event.DeathEvent;
 import lifeblood.faction.FactionRelation;
 import lifeblood.faction.NpcFactions;
 import lifeblood.family.Kinship;
@@ -23,7 +22,10 @@ import lifeblood.speech.Word;
 import org.jetbrains.annotations.Nullable;
 import org.joml.primitives.AABBd;
 
-/** How NPCs nearby react to a death: thanks for help, rescues, grief, and grudges against killers. */
+/**
+ * How NPCs react to a death (a {@link DeathEvent} listener, see SocialSetup): witnesses thank whoever helped, count
+ * rescues, grieve and hold grudges against killers, and the dead person's family grieves wherever they are.
+ */
 public final class SocialEvents {
 	/** NPCs this close to a death notice it. */
 	private static final double WITNESS_RANGE = 24.0;
@@ -37,19 +39,11 @@ public final class SocialEvents {
 	private SocialEvents() {
 	}
 
-	/** Called whenever any mob dies (players included), before it's removed. */
-	public static void onDeath(Mob victim, @Nullable Entity killedBy) {
-		if (victim.world.isClientSide) {
-			return;
-		}
-
-		if (victim instanceof Player player) {
-			stopFollowingDeadLeader(player);
-		}
-
-		mournFamily(victim, killedBy instanceof Projectile projectile && projectile.owner != null ? projectile.owner : killedBy);
-
-		Entity killer = killedBy instanceof Projectile projectile && projectile.owner != null ? projectile.owner : killedBy;
+	/** Someone died (players included): witnesses react, and the family grieves wherever they are. */
+	static void onDeath(DeathEvent event) {
+		Mob victim = event.victim();
+		Entity killer = event.killer();
+		mournFamily(victim, killer);
 		boolean person = isPerson(victim);
 		AABBd area = MathHelper.aabbGrow(victim.bb, WITNESS_RANGE, 8.0, WITNESS_RANGE, new AABBd());
 		List<EntityNPC> witnesses = victim.world.getEntitiesWithinAABB(EntityNPC.class, area);
@@ -95,20 +89,6 @@ public final class SocialEvents {
 			npc.remember(MemoryType.FAMILY_DIED, null, closeness);
 			if (killer != null && killer != npc && isPerson(killer)) {
 				npc.remember(closest ? MemoryType.KILLED_MY_SPOUSE_OR_CHILD : MemoryType.KILLED_FAMILY, killer, closest ? 1.0F : closeness);
-			}
-		}
-
-		if (victim instanceof EntityNPC) {
-			family.died(id);
-		}
-	}
-
-	/** A player who dies loses their followers: they head home rather than waiting for them to come back. */
-	private static void stopFollowingDeadLeader(Player player) {
-		for (Entity entity : player.world.entities) {
-			if (entity instanceof EntityNPC npc && npc.isAlive() && npc.following.getLeader() == player) {
-				npc.voice.bark("leader_died", player, null, true);
-				npc.following.stop();
 			}
 		}
 	}
@@ -163,7 +143,7 @@ public final class SocialEvents {
 
 	/** Whether this NPC was fighting the mob: it was the target, or recently hit the NPC, or was hunting it. */
 	private static boolean wasFighting(EntityNPC npc, Mob mob) {
-		if (npc.brain.getActive() instanceof CombatBehavior combat && combat.getCurrentTarget() == mob) {
+		if (npc.isFighting(mob)) {
 			return true;
 		}
 

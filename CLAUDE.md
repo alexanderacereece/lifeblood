@@ -29,7 +29,9 @@ Keeping this project easy to find your way around is the top priority, above any
 The goal: anyone, including an AI that has never seen the project, can find the code for a behavior, understand it, and fix it, without reading code that has nothing to do with it.
 
 - **One system, one package.** Everything about a system lives in its package: its NPC part, its behaviors, its saved data, its helpers. Where each kind of thing goes is in the "Where new things go" table in `docs/architecture.md`. Per-NPC state is an `NpcPart`; world-wide state is a register saved as `SavedData`; periodic world logic is a `WorldSystem`; dialogue options are `DialogueMenus` contributors; commands are a class per area with `addTo(root)`, built with `CommandTree.branch` and taking targets as `TargetArgument`s.
-- **New package, new row.** A new package gets a `package-info.java` (what it's for, where to start, what doesn't belong) and a row in the package table of `docs/architecture.md`.
+- **New package, new row.** A new package gets a `package-info.java` (what it's for, where to start, what doesn't belong), a row in the package table of `docs/architecture.md`, and a layer (the layer table there and `ArchitectureTest.LAYERS`).
+- **Layers.** A package uses its own layer and below, never above (anything may use `entity`). When lower code needs something higher to happen, post an event or register from a setup; don't reach up.
+- **Wiring in setups, reactions through events.** Everything a system registers (behaviors, instincts, routines, world systems, dialogue options, event listeners) goes in its `XSetup.register()`, called from `lifeblood/Systems`. Something other systems should react to (a death, a birth, a gift) is posted as an event in `event/`; systems listen from their setup instead of being called by name.
 - **Reuse.** Use what exists (see "Before you change anything"). If a helper you need is buried in another class, move it somewhere both can reach, in the package that owns the idea, rather than copying it.
 - **Documented.** Every class has a doc comment whose first sentence says what it is: that sentence becomes its line in the code map, so make it something a searcher would recognize. Constants say what they mean and their unit. Non-obvious rules get a comment saying *why*. Match the surrounding style: plain English, tabs, no abbreviations.
 - **Identifiable.** Names say what things are (`NpcBrawling`, `ChunkOwners`, `putAwayWeaponWhenSafe`) and are unique across the project. Mixins are named after their target and say why they exist.
@@ -41,7 +43,9 @@ The goal: anyone, including an AI that has never seen the project, can find the 
 
 `ArchitectureTest` fails the build when:
 - a package has no `package-info.java`, or a class has no doc comment;
-- a package isn't in the architecture doc;
+- a package isn't in the architecture doc, or has no layer;
+- a package imports from a higher layer;
+- something is registered or listened for outside a setup class, or a setup isn't in `Systems`;
 - common code imports client code, or anything depends on `command/`;
 - two classes share a name;
 - a file is over 600 lines;

@@ -19,13 +19,14 @@ import net.minecraft.core.util.helper.DamageType;
 import net.minecraft.core.util.helper.MathHelper;
 import net.minecraft.core.world.World;
 import lifeblood.ClientHooks;
+import lifeblood.ai.NpcBehavior;
+import lifeblood.ai.NpcBehaviors;
 import lifeblood.ai.NpcBrain;
 import lifeblood.ai.NpcHome;
 import lifeblood.ai.routine.NpcRoutine;
 import lifeblood.appearance.NpcLooks;
 import lifeblood.appearance.SkinModel;
 import lifeblood.brawl.Brawl;
-import lifeblood.brawl.BrawlBehavior;
 import lifeblood.brawl.NpcBrawling;
 import lifeblood.combat.CombatBehavior;
 import lifeblood.combat.CombatStyle;
@@ -37,12 +38,10 @@ import lifeblood.dialogue.NpcDialogue;
 import lifeblood.faction.NpcFactions;
 import lifeblood.faction.NpcRelations;
 import lifeblood.family.NpcLife;
-import lifeblood.family.StayNearParentBehavior;
 import lifeblood.following.NpcFollowing;
 import lifeblood.health.HealthMode;
 import lifeblood.health.NpcEating;
 import lifeblood.health.NpcHealth;
-import lifeblood.health.RecoverBehavior;
 import lifeblood.inventory.NpcInventory;
 import lifeblood.nav.NpcNavigator;
 import lifeblood.people.PeopleRegistry;
@@ -52,7 +51,6 @@ import lifeblood.personality.NpcPersonality;
 import lifeblood.social.MemoryType;
 import lifeblood.social.NpcMemories;
 import lifeblood.social.NpcSocial;
-import lifeblood.social.Opinions;
 import lifeblood.speech.NpcVoice;
 import lifeblood.world.WorldSystems;
 import org.jetbrains.annotations.NotNull;
@@ -72,7 +70,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	 * Saved with every NPC so a future change of format can tell old data apart. Bump it when the format changes; until
 	 * long-term worlds exist, old development saves are simply not converted (see CLAUDE.md).
 	 */
-	public static final int DATA_VERSION = 3;
+	public static final int DATA_VERSION = 4;
 	private static final String SAVE_KEY = "Lifeblood";
 	public static final int DATA_SKIN = 20;
 	public static final int DATA_SKIN_MODEL = 21;
@@ -140,10 +138,9 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	public EntityNPC(World world) {
 		super(world);
 		this.doRandomWalk = false;
-		this.brain.addInstinct(new CombatBehavior());
-		this.brain.addInstinct(new BrawlBehavior());
-		this.brain.addInstinct(new RecoverBehavior());
-		this.brain.addInstinct(new StayNearParentBehavior());
+		for (NpcBehavior instinct : NpcBehaviors.createInstincts()) {
+			this.brain.addInstinct(instinct);
+		}
 		// Every NPC starts as someone; loading a saved NPC replaces this with who it was.
 		this.personality.randomize(this.random);
 	}
@@ -259,22 +256,16 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	 * Scale multiplies its effects, e.g. by how much a food is liked.
 	 */
 	public void remember(MemoryType type, @Nullable Entity subject, float scale) {
-		if (this.world.isClientSide) {
-			return;
-		}
-
-		UUID id = subject != null ? Opinions.idOf(subject) : null;
-		if (type.isAboutSomeone() && id == null) {
-			return;
-		}
-
-		boolean bond = subject != null && (this.faction != null && this.faction.equals(NpcFactions.affiliation(this.world, subject))
-			|| Opinions.of(this, subject) >= 50.0F);
-		this.memories.add(type, id, subject != null ? Opinions.nameOf(subject) : "", scale, this.personality, bond, this.world.getWorldTime());
+		this.memories.remember(this, type, subject, scale);
 	}
 
 	public boolean isBadlyHurt() {
 		return this.getHealth() < this.getMaxHealth() * BADLY_HURT_HEALTH;
+	}
+
+	/** Whether it's in a fight with this mob right now (its current target). */
+	public boolean isFighting(Entity mob) {
+		return this.brain.getActive() instanceof CombatBehavior combat && combat.getCurrentTarget() == mob;
 	}
 
 	/** Too occupied to start a conversation: fighting, brawling, talking to someone, or lying on the ground. */
@@ -554,9 +545,18 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		npc.putByte("Gender", (byte) this.getGender().ordinal());
 		npc.putByte("CombatStyle", (byte) this.combatStyle.ordinal());
 		npc.putList("Behaviors", this.brain.save());
+		CompoundTag sections = new CompoundTag();
 		for (NpcPart part : this.parts) {
-			part.save(npc);
+			if (sections.containsKey(part.saveKey())) {
+				throw new IllegalStateException("Two NPC parts share the save key " + part.saveKey());
+			}
+
+			CompoundTag section = new CompoundTag();
+			part.save(section);
+			sections.putCompound(part.saveKey(), section);
 		}
+
+		npc.putCompound("Parts", sections);
 
 		tag.putCompound(SAVE_KEY, npc);
 	}
@@ -585,8 +585,9 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 			this.brain.load(npc.getList("Behaviors"));
 		}
 
+		CompoundTag sections = npc.getCompound("Parts");
 		for (NpcPart part : this.parts) {
-			part.load(npc);
+			part.load(sections.containsKey(part.saveKey()) ? sections.getCompound(part.saveKey()) : new CompoundTag());
 		}
 	}
 }

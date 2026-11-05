@@ -71,16 +71,18 @@ public class NpcRelations implements NpcPart {
 		}
 	}
 
-	/** Saved in the NPC's compound under "PlayerRelations". */
+	@Override
+	public String saveKey() {
+		return "PlayerRelations";
+	}
+
 	@Override
 	public void save(CompoundTag tag) {
-		tag.putList("PlayerRelations", this.toTag());
+		tag.putList("Entries", this.toTag());
 	}
 
 	@Override
 	public void load(CompoundTag tag) {
-		if (tag.containsKey("PlayerRelations")) {
-			this.fromTag(tag.getList("PlayerRelations"));
-		}
+		this.fromTag(tag.getList("Entries"));
 	}
 }

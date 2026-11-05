@@ -112,6 +112,11 @@ public final class NpcAwareness implements NpcPart {
 		}
 	}
 
+	@Override
+	public String saveKey() {
+		return "Awareness";
+	}
+
 	/** Nothing to save: what it last noticed starts fresh, so loading never sets off a remark. */
 	@Override
 	public void save(CompoundTag tag) {

@@ -196,6 +196,11 @@ public final class NpcBrawling implements NpcPart {
 		}
 	}
 
+	@Override
+	public String saveKey() {
+		return "Brawling";
+	}
+
 	/** Brawls aren't saved. */
 	@Override
 	public void save(CompoundTag tag) {

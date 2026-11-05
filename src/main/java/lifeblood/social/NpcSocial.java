@@ -108,6 +108,11 @@ public final class NpcSocial implements NpcPart {
 		return true;
 	}
 
+	@Override
+	public String saveKey() {
+		return "Social";
+	}
+
 	/** Gift days are saved; a pending question and a rescue in progress aren't. */
 	@Override
 	public void save(CompoundTag tag) {

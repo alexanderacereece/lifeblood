@@ -2,7 +2,7 @@ package lifeblood.dialogue;
 
 import net.minecraft.core.entity.player.Player;
 import lifeblood.entity.EntityNPC;
-import lifeblood.social.Memory;
+import lifeblood.world.Calendar;
 
 /**
  * Pacing for making friends: one gift per NPC per in-game day, and five chats with an NPC per real-world minute.
@@ -35,7 +35,7 @@ public final class SocialLimits {
 	}
 
 	private static long today(EntityNPC npc) {
-		return npc.world.getWorldTime() / Memory.TICKS_PER_DAY;
+		return npc.world.getWorldTime() / Calendar.TICKS_PER_DAY;
 	}
 
 	/** Takes up one of this minute's chats, or returns false if they've had their five. */

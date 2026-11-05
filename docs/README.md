@@ -59,7 +59,7 @@ Each step is useful on its own and proves the next:
 - No code reads old saves while development worlds are disposable. Once long-term worlds start, it lives in one place and goes at content 1.0.
 - Nothing needs a command to play: everything is reached through items, screens and NPCs. Commands are admin and testing tools, all under `/lb`.
 - The build stays ready for multiplayer where that doesn't get in the way of the main vision.
-- Keeping the code easy to find your way around comes before any one feature: one package per system, a generated [code map](code-map.md), and layout rules the build checks (`ArchitectureTest`).
+- Keeping the code easy to find your way around comes before any one feature: one package per system, packages in layers, all wiring in one list of setups, reactions through an event hub, a generated [code map](code-map.md), and layout rules the build checks (`ArchitectureTest`).
 - Lifeblood is meant to start with a new world; builds from before it was added aren't protected.
 - One new axis, ambition, plus the homebody and wanderer quirks, for life choices. No more than that.
 - NPCs choose by inclination among real options the world offers; balance shapes the options, not the NPC.

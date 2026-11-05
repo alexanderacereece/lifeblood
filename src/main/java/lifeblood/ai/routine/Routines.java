@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 import lifeblood.ai.NpcBehavior;
-import lifeblood.ai.behavior.WanderBehavior;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -19,11 +18,6 @@ public final class Routines {
 
 	private static final Map<String, Supplier<NpcBehavior>> ACTIVITIES = new LinkedHashMap<>();
 	private static final Map<String, Schedule> SCHEDULES = new LinkedHashMap<>();
-
-	static {
-		registerActivity(WANDER, WanderBehavior::new);
-		registerSchedule(Schedule.allDay(DEFAULT_SCHEDULE, WANDER));
-	}
 
 	private Routines() {
 	}

@@ -197,6 +197,11 @@ public final class NpcFollowing implements NpcPart {
 	}
 
 	@Override
+	public String saveKey() {
+		return "Following";
+	}
+
+	@Override
 	public void save(CompoundTag tag) {
 		tag.putByte("FollowDistance", (byte) this.distance.ordinal());
 	}

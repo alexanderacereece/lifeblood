@@ -361,14 +361,13 @@ public class NpcVoice implements NpcPart {
 		}
 	}
 
-	private CompoundTag toTag() {
-		CompoundTag tag = this.style.save();
+	private void writeTo(CompoundTag tag) {
+		tag.putCompound("Style", this.style.save());
 		tag.putString("Revealed", String.join(",", this.revealed));
-		return tag;
 	}
 
 	private void fromTag(CompoundTag tag) {
-		this.style.load(tag);
+		this.style.load(tag.getCompound("Style"));
 		this.revealed.clear();
 		for (String topic : tag.getStringOrDefault("Revealed", "").split(",")) {
 			if (!topic.isBlank()) {
@@ -377,16 +376,18 @@ public class NpcVoice implements NpcPart {
 		}
 	}
 
-	/** Saved in the NPC's compound under "Voice". */
+	@Override
+	public String saveKey() {
+		return "Voice";
+	}
+
 	@Override
 	public void save(CompoundTag tag) {
-		tag.putCompound("Voice", this.toTag());
+		this.writeTo(tag);
 	}
 
 	@Override
 	public void load(CompoundTag tag) {
-		if (tag.containsKey("Voice")) {
-			this.fromTag(tag.getCompound("Voice"));
-		}
+		this.fromTag(tag);
 	}
 }

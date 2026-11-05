@@ -17,8 +17,9 @@ Four layers, each finer than the last. Read down only as far as you need:
 
 | Package | What's in it |
 |---|---|
-| `lifeblood` | The entry point (`Lifeblood`), settings (`NpcConfig`), and `ClientHooks`, the only way common code reaches the client |
+| `lifeblood` | The entry point (`Lifeblood`), the list of every system's setup (`Systems`), the mod id and log (`Mod`), settings (`NpcConfig`), and `ClientHooks`, the only way common code reaches the client |
 | `entity` | `EntityNPC`, `NpcPart` and `NpcGender`. Only the core; parts live with their systems |
+| `event` | The event hub (`LifeEvents`) and its events: deaths, births, real attacks, gifts, couples changing |
 | `ai` | The brain (`NpcBrain`), the registry of saved behaviors (`NpcBehaviors`), and the NPC's home (`NpcHome`); `ai/behavior` holds the plain orders (go to, stay, wander), `ai/routine` the daily schedules |
 | `nav` | Getting around: the walkable-space grid, the path search, the per-tick budget, and `NpcNavigator`, which walks paths |
 | `health` | Health modes, being downed and recovering (`RecoverBehavior`), eating |
@@ -44,16 +45,52 @@ Four layers, each finer than the last. Read down only as far as you need:
 | `mixin` | Changes to BTA classes, each named after its target |
 | `perf`, `util` | Profiling, and small helpers shared by several systems |
 
+## Layers
+
+Packages are stacked in layers. A package may use its own layer and the ones below, never the ones above. So the basics (time, the register of people, the NPC itself) can be understood and changed without the systems built on them:
+
+| Layer | Packages | What it is |
+|---|---|---|
+| 1. Foundations | `util`, `perf`, `world`, `Mod`, `NpcConfig` | Time, world systems, the log and settings |
+| 2. The NPC | `entity`, `event`, `people`, `nav`, `inventory`, `item`, `appearance`, `ai`, `ClientHooks` | The entity, its body, its brain, the register of people, the event hub |
+| 3. Who they are | `personality`, `social`, `faction`, `family`, `ownership`, `speech`, `words` | Character, feelings, family, property, voice |
+| 4. What they do | `combat`, `brawl`, `health`, `following`, `building` | Systems that act in the world |
+| 5. Conversation | `dialogue` | Talking with the player, which draws on everything |
+| 6. Tools and sides | `command`, `client`, `mixin`, `Lifeblood`, `Systems` | Wiring, screens, hooks into BTA, `/lb` |
+
+There are two exceptions: anything may use `entity`, since every part needs its NPC, and `entity` may use anything, since it holds the parts. When a lower package needs something to happen above it, turn the dependency around:
+- post an **event** and let the higher system listen;
+- **register** the higher system's piece from its setup class;
+- or move the code up, if it really belongs higher.
+
+## Wiring: setups and events
+
+**Setups.** Everything a system brings, it registers in its own setup class (`FamilySetup`, `CombatSetup`...): behaviors and instincts (`ai/NpcBehaviors`), activities and schedules (`ai/routine/Routines`), world systems (`world/WorldSystems`), dialogue options (`dialogue/DialogueMenus`) and event listeners. `lifeblood/Systems` calls every setup in one ordered list, which is the one place to see everything wired into the mod. The order matters only where it says so (world systems run in registration order; death listeners too).
+
+**Events** (`event/LifeEvents`). When something happens that other systems may care about, the code where it happens posts an event, and systems that care listen from their setup. A new system reacts to the world without editing anyone else's code.
+
+| Event | Posted when | Listened to by |
+|---|---|---|
+| `DeathEvent` | Any mob dies (`MobDeathMixin`) | `social` (witnesses, grief), `people` (records the death), `following` (followers go home) |
+| `BirthEvent` | A child is born (`family/Children`) | Nothing yet |
+| `PartnershipEvent` | A couple starts dating, gets engaged, marries or splits (`people/PeopleRegistry`) | Nothing yet |
+| `AttackedEvent` | An NPC is attacked for real (`combat/NpcAttackers`) | Nothing yet |
+| `GiftEvent` | An NPC takes a gift (`dialogue/NpcGifts`) | Nothing yet |
+
+Use an event when others should react to something; call directly when one system asks another for something. A new kind of event is a record in `event/` and a row in this table.
+
 ## Where new things go
 
 | Adding... | Goes... |
 |---|---|
 | A new system (skills, work, settlements, travel) | Its own package with a `package-info.java`, plus a row in the table above |
 | State every NPC has | An `NpcPart` in its system's package: a field and an entry in `parts` in `EntityNPC` |
-| Something an NPC does | A behavior in its system's package. Register it in `ai/NpcBehaviors` if it's saved, and in `ai/routine/Routines` if a schedule uses it |
+| Something an NPC does | A behavior in its system's package, registered from the system's setup: as an order in `ai/NpcBehaviors` if it's saved, an instinct if every NPC has it, an activity in `ai/routine/Routines` if a schedule uses it |
 | World-wide state | A register saved as `SavedData`, in its system's package |
-| Logic that runs on its own clock | A `WorldSystem`, registered in `world/WorldSystems` |
-| Something to say in conversation | A `DialogueMenus` contributor, from the system's package |
+| Logic that runs on its own clock | A `WorldSystem`, registered from the system's setup |
+| Anything a system registers | Its setup class (`XSetup.register()`), added to `lifeblood/Systems` |
+| Reacting to something that happens elsewhere | A listener on an event, from the system's setup; a new kind of event is a record in `event/` |
+| Something to say in conversation | A `DialogueMenus` option, registered from `dialogue/DialogueSetup` (or the setup of a system above dialogue) |
 | Lines NPCs say | A `.speech` file, with facts in `speech/SpeechFacts` |
 | A command | A branch in the area's class in `command/`, or a new area class |
 | A screen | `client/`, opened through a hook in `ClientHooks` |
@@ -69,6 +106,8 @@ Four layers, each finer than the last. Read down only as far as you need:
 | Every package has a `package-info.java` with a doc comment | Says what goes where |
 | Every class has a doc comment | It feeds the code map, and says what the class is |
 | Every top-level package is in the table above | New systems get placed on purpose |
+| Packages only use their own layer and below, except for `entity` (layer table in the test and above) | The basics stay understandable on their own |
+| Registrations and event listeners only happen in setup classes, and every setup is called from `Systems` | All wiring is in one list, and nothing registers by accident of class loading |
 | Common code never imports `lifeblood.client` or `net.minecraft.client` (only `client/` and the client mixins in `lifeblood.mixins.json` may) | A dedicated server has no client classes; touching one crashes it |
 | Nothing outside `command/` imports it (except the entry point) | Commands are tools over the game, never part of it |
 | Class names are unique across the project | A name says where to look; a second `X` means the first wasn't found |
@@ -91,7 +130,7 @@ Three are driven by the entity at set moments:
 | `conversation` | `dialogue/NpcConversation` | Who it's talking to, and turning players away mid-fight |
 | `attackers` | `combat/NpcAttackers` | Who last attacked it for real, grudges, and how it takes a hit |
 
-The rest are `NpcPart`s. Each has its own `tick()`, `save()` and `load()`, and writes its own keys into the NPC's save compound:
+The rest are `NpcPart`s. Each has its own `tick()`, `save()` and `load()`, and saves into its own section of the NPC's save, named by `saveKey()`:
 
 | Field | Class | What it is |
 |---|---|---|
@@ -118,7 +157,7 @@ The rest are `NpcPart`s. Each has its own `tick()`, `save()` and `load()`, and w
 
 `NpcBrain` runs the highest-priority behavior that can run, in three layers:
 
-1. **Instincts:** combat, brawls, recovering, staying near a parent. Built into every NPC, never saved.
+1. **Instincts:** combat, brawls, recovering, staying near a parent. Every NPC gets them (registered by each system's setup), never saved.
 2. **Orders:** follow, stay, go somewhere. Set by players and commands, and saved. Every behavior that can be saved is registered in `ai/NpcBehaviors`.
 3. **Routine:** with no orders, the NPC does what its schedule says for the hour.
 
@@ -138,7 +177,7 @@ Routines are in `ai/routine`.
 **Time** is `world/Calendar`. An in-game year (56 days by default) stands for a real year in every time-based mechanic, so durations are written in years.
 
 **World systems** (`world/WorldSystems`) run on a per-world clock, whether or not any NPC is nearby.
-- A `WorldSystem` has an interval and a `tick(world)`; register it in `WorldSystems`.
+- A `WorldSystem` has an interval and a `tick(world)` (`WorldSystem.every` makes one); register it from the system's setup.
 - The first one keeps the register's list of loaded NPCs tidy.
 - **Settlements, factions, elections, wars and trade between towns go here.**
 - The clock counts steadily even when the time of day jumps (sleeping) or is frozen.
@@ -159,7 +198,7 @@ Game logic lives in common code; `client/` only shows things. When common code n
 
 ## Talking
 
-**Dialogue menus** (`dialogue/DialogueMenus`) build the main, questions and practical menus from contributions, each with an order number. **A new system adds options by registering a contributor**, never by editing the menus. The built-in options use steps of 100 (`NpcDialogue`'s static block).
+**Dialogue menus** (`dialogue/DialogueMenus`) build the main, questions and practical menus from contributions, each with an order number. **A new system adds options by registering a contributor**, never by editing the menus. The built-in options use steps of 100 (`dialogue/DialogueSetup`).
 
 Options act on the conversation through `DialogueSession`, which the client's dialogue screen implements, and their actions change the game directly. That works in single-player. For multiplayer, the session is where a message to the server would go. Keep game logic in the option actions and out of the screens, and that stays a contained change.
 
@@ -171,7 +210,7 @@ Options act on the conversation through `DialogueSession`, which the client's di
 
 ## Saving and old saves
 
-Each system saves its own data: parts into the NPC's compound, world registers as `SavedData`. Nothing converts older saves right now: development worlds are disposable, so formats change freely.
+Each system saves its own data: each part into its own section of the NPC's save (under `Parts`, named by its `saveKey()`, so parts can't overwrite each other), world registers as `SavedData`. Nothing converts older saves right now: development worlds are disposable, so formats change freely.
 
 NPCs save a `DataVersion`. Once long-term worlds exist, a `save/SaveUpgrades` class can rewrite old data into the current format before the normal loading code sees it. That class would be temporary by design and deleted at content 1.0.
 

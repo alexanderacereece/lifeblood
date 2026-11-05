@@ -125,6 +125,11 @@ public final class NpcEating implements NpcPart {
 		}
 	}
 
+	@Override
+	public String saveKey() {
+		return "Eating";
+	}
+
 	/** Eating isn't saved: a bite in progress is simply abandoned. */
 	@Override
 	public void save(CompoundTag tag) {

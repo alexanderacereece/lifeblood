@@ -6,13 +6,14 @@ import net.minecraft.core.world.World;
 import net.minecraft.core.world.season.Season;
 import net.minecraft.core.world.season.SeasonManagerCycle;
 import lifeblood.NpcConfig;
-import lifeblood.social.Memory;
 
 /**
  * Days, years and dates for ages and birthdays, following the world's own seasons: an overworld year is four
  * 14-day seasons, 56 days. Worlds without a season cycle use the same 56-day year.
  */
 public final class Calendar {
+	/** How long an in-game day is, in ticks. */
+	public static final long TICKS_PER_DAY = 24000L;
 	public static final int DEFAULT_YEAR_DAYS = 56;
 	private static final String[] DEFAULT_SEASONS = {"Spring", "Summer", "Fall", "Winter"};
 
@@ -20,12 +21,12 @@ public final class Calendar {
 	}
 
 	public static long day(long worldTime) {
-		return Math.floorDiv(worldTime, Memory.TICKS_PER_DAY);
+		return Math.floorDiv(worldTime, TICKS_PER_DAY);
 	}
 
 	/** The hour of the day, 0 to 23; world time 0 is 6 in the morning. */
 	public static int hourOfDay(long worldTime) {
-		return (int) (Math.floorMod(worldTime + 6000L, Memory.TICKS_PER_DAY) / 1000L);
+		return (int) (Math.floorMod(worldTime + 6000L, TICKS_PER_DAY) / 1000L);
 	}
 
 	public static int yearDays(World world) {
@@ -60,7 +61,7 @@ public final class Calendar {
 	}
 
 	public static long ticksPerYear(World world) {
-		return (long) yearDays(world) * Memory.TICKS_PER_DAY;
+		return (long) yearDays(world) * TICKS_PER_DAY;
 	}
 
 	/** A length of time in words: "3 days" under a year, "1.5 years" from then on. */
@@ -69,7 +70,7 @@ public final class Calendar {
 	}
 
 	public static String describeLength(int yearDays, long ticks) {
-		double days = ticks / (double) Memory.TICKS_PER_DAY;
+		double days = ticks / (double) TICKS_PER_DAY;
 		if (days < yearDays) {
 			long whole = Math.round(Math.floor(days));
 			return whole == 1 ? "1 day" : whole + " days";

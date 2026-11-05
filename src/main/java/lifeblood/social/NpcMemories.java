@@ -10,10 +10,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import net.minecraft.core.entity.Entity;
+import lifeblood.entity.EntityNPC;
 import lifeblood.entity.NpcPart;
+import lifeblood.faction.NpcFactions;
 import lifeblood.personality.NpcPersonality;
 import lifeblood.personality.Quirk;
 import lifeblood.personality.TraitAxis;
+import lifeblood.world.Calendar;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -23,6 +27,26 @@ import org.jetbrains.annotations.Nullable;
  */
 public class NpcMemories implements NpcPart {
 	private final List<Memory> memories = new ArrayList<>();
+
+	/**
+	 * This NPC remembers something, about someone or (for mood-only memories) about nothing in particular. Scale
+	 * multiplies its effects, e.g. by how much a food is liked. Bonds (same faction, or a friend) soften bad memories.
+	 */
+	public void remember(EntityNPC npc, MemoryType type, @Nullable Entity subject, float scale) {
+		if (npc.world.isClientSide) {
+			return;
+		}
+
+		UUID id = subject != null ? Opinions.idOf(subject) : null;
+		if (type.isAboutSomeone() && id == null) {
+			return;
+		}
+
+		String faction = npc.getFaction();
+		boolean bond = subject != null && (faction != null && faction.equals(NpcFactions.affiliation(npc.world, subject))
+			|| Opinions.of(npc, subject) >= 50.0F);
+		this.add(type, id, subject != null ? Opinions.nameOf(subject) : "", scale, npc.personality, bond, npc.world.getWorldTime());
+	}
 
 	/**
 	 * Remembers something. Scale multiplies the memory's effects (e.g. by how much a gifted food is liked);
@@ -54,7 +78,7 @@ public class NpcMemories implements NpcPart {
 			this.memories.remove(same.get(same.size() - 1));
 		}
 
-		long expires = now + (long) (days * Memory.TICKS_PER_DAY);
+		long expires = now + (long) (days * Calendar.TICKS_PER_DAY);
 		this.memories.add(new Memory(type, subject, subjectName, now, expires, scale));
 	}
 
@@ -221,16 +245,18 @@ public class NpcMemories implements NpcPart {
 		}
 	}
 
-	/** Saved in the NPC's compound under "Memories". */
+	@Override
+	public String saveKey() {
+		return "Memories";
+	}
+
 	@Override
 	public void save(CompoundTag tag) {
-		tag.putList("Memories", this.toTag());
+		tag.putList("Entries", this.toTag());
 	}
 
 	@Override
 	public void load(CompoundTag tag) {
-		if (tag.containsKey("Memories")) {
-			this.fromTag(tag.getList("Memories"));
-		}
+		this.fromTag(tag.getList("Entries"));
 	}
 }

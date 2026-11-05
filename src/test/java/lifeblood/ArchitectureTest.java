@@ -189,6 +189,105 @@ class ArchitectureTest {
 		assertNone(problems);
 	}
 
+	/**
+	 * The layers, lowest first. A package may use packages in its own layer or below, never above, so the basics (time,
+	 * the register of people, the NPC itself) can be understood and changed without the systems built on them. Two
+	 * exceptions: anything may use entity (every part needs its NPC), and entity may use anything (it holds the parts).
+	 * Classes in the root package (lifeblood.Mod) each have their own place. A new package or root class must be given a
+	 * layer here and in docs/architecture.md.
+	 */
+	static final List<List<String>> LAYERS = List.of(
+		List.of("util", "perf", "world", "lifeblood.Mod", "lifeblood.NpcConfig"),
+		List.of("entity", "event", "people", "nav", "inventory", "item", "appearance", "ai", "lifeblood.ClientHooks"),
+		List.of("personality", "social", "faction", "family", "ownership", "speech", "words"),
+		List.of("combat", "brawl", "health", "following", "building"),
+		List.of("dialogue"),
+		List.of("command", "client", "mixin", "lifeblood.Lifeblood", "lifeblood.Systems"));
+
+	@Test
+	void packagesStayInTheirLayers() {
+		Map<String, Integer> layerOf = new HashMap<>();
+		for (int i = 0; i < LAYERS.size(); i++) {
+			for (String name : LAYERS.get(i)) {
+				layerOf.put(name, i);
+			}
+		}
+
+		List<String> problems = new ArrayList<>();
+		for (SourceFile file : MAIN) {
+			if (file.isPackageInfo()) {
+				continue;
+			}
+
+			String own = file.packageName().equals("lifeblood") ? "lifeblood." + file.name() : topPackage(file.packageName());
+			Integer ownLayer = layerOf.get(own);
+			if (ownLayer == null) {
+				problems.add((own.startsWith("lifeblood.") ? own : "lifeblood." + own) + " has no layer: add it to ArchitectureTest.LAYERS and the layer table in docs/architecture.md");
+				continue;
+			}
+
+			if (own.equals("entity")) {
+				continue;
+			}
+
+			for (String imported : file.imports()) {
+				if (!imported.startsWith("lifeblood.")) {
+					continue;
+				}
+
+				String target = imported.indexOf('.') == imported.lastIndexOf('.') ? imported
+					: topPackage(imported.substring(0, imported.lastIndexOf('.')));
+				Integer targetLayer = layerOf.get(target);
+				if (!target.equals("entity") && targetLayer != null && targetLayer > ownLayer) {
+					problems.add(file.path() + " imports " + imported + ": " + own + " is in a lower layer than " + target
+						+ ". Turn the dependency around: an event, a registration in a setup class, or move the code up");
+				}
+			}
+		}
+
+		assertNone(problems.stream().distinct().toList());
+	}
+
+	/** The calls that wire something into the mod. They belong in setup classes only, so lifeblood.Systems lists all wiring. */
+	private static final Pattern REGISTRATION = Pattern.compile(
+		"\\b(NpcBehaviors\\.register(?:Instinct)?|Routines\\.register(?:Activity|Schedule)|WorldSystems\\.register|DialogueMenus\\.register|LifeEvents\\.listen)\\(");
+
+	@Test
+	void wiringHappensInSetupClasses() {
+		List<String> problems = new ArrayList<>();
+		for (SourceFile file : MAIN) {
+			if (file.name().endsWith("Setup")) {
+				continue;
+			}
+
+			Matcher call = REGISTRATION.matcher(file.text());
+			while (call.find()) {
+				problems.add(file.path() + " calls " + call.group(1) + ": register in the system's setup class (listed in lifeblood.Systems) instead");
+			}
+		}
+
+		assertNone(problems);
+	}
+
+	@Test
+	void everySetupIsInTheSystemsList() throws IOException {
+		String systems = Files.readString(SourceTree.MAIN.resolve("lifeblood/Systems.java"), StandardCharsets.UTF_8);
+		List<String> problems = new ArrayList<>();
+		for (SourceFile file : MAIN) {
+			if (file.name().endsWith("Setup") && !systems.contains(file.name() + ".register();")) {
+				problems.add(file.name() + " is never called: add it to Systems.registerAll()");
+			}
+		}
+
+		assertNone(problems);
+	}
+
+	/** "lifeblood.ai.routine" is in "ai". */
+	private static String topPackage(String packageName) {
+		String[] parts = packageName.split("\\.");
+		return parts.length >= 2 ? parts[1] : "";
+	}
+
 	private static Set<String> clientMixins() throws IOException {
 		String config = Files.readString(Path.of("src/main/resources/lifeblood.mixins.json"), StandardCharsets.UTF_8);
 		Matcher section = Pattern.compile("\"client\"\\s*:\\s*\\[([^]]*)]").matcher(config);

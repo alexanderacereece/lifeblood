@@ -8,7 +8,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import net.minecraft.core.entity.player.Player;
-import lifeblood.Lifeblood;
+import lifeblood.Mod;
 import lifeblood.entity.EntityNPC;
 import org.jetbrains.annotations.Nullable;
 
@@ -178,7 +178,7 @@ public class NpcBrain {
 			String id = tag.getString("Id");
 			NpcBehavior behavior = NpcBehaviors.create(id);
 			if (behavior == null) {
-				Lifeblood.LOGGER.warn("NPC '{}' has unknown behavior '{}', dropping it", this.npc.nickname, id);
+				Mod.LOG.warn("NPC '{}' has unknown behavior '{}', dropping it", this.npc.nickname, id);
 				continue;
 			}
 

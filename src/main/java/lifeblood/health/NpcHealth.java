@@ -172,6 +172,11 @@ public final class NpcHealth implements NpcPart {
 	}
 
 	@Override
+	public String saveKey() {
+		return "Health";
+	}
+
+	@Override
 	public void save(CompoundTag tag) {
 		tag.putString("HealthMode", this.mode.name());
 		tag.putInt("DownedTicks", this.downedTicks);

@@ -1,25 +1,20 @@
 package lifeblood.ai;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
-import lifeblood.ai.behavior.GoToBehavior;
-import lifeblood.ai.behavior.StayBehavior;
-import lifeblood.ai.behavior.WanderBehavior;
-import lifeblood.following.FollowPlayerBehavior;
 import org.jetbrains.annotations.Nullable;
 
-/** Registry of behavior ids, used to recreate behaviors when an NPC is loaded. */
+/**
+ * The behaviors NPCs can have: orders by id (so a saved NPC gets its orders back when it loads), and instincts, which
+ * every NPC is born with. Systems register theirs in their setup class (see lifeblood.Systems).
+ */
 public final class NpcBehaviors {
 	private static final Map<String, Supplier<NpcBehavior>> FACTORIES = new LinkedHashMap<>();
-
-	static {
-		register(FollowPlayerBehavior.ID, FollowPlayerBehavior::new);
-		register(GoToBehavior.ID, GoToBehavior::new);
-		register(StayBehavior.ID, StayBehavior::new);
-		register(WanderBehavior.ID, WanderBehavior::new);
-	}
+	private static final List<Supplier<NpcBehavior>> INSTINCTS = new ArrayList<>();
 
 	private NpcBehaviors() {
 	}
@@ -28,6 +23,21 @@ public final class NpcBehaviors {
 		if (FACTORIES.putIfAbsent(id, factory) != null) {
 			throw new IllegalArgumentException("Duplicate NPC behavior id: " + id);
 		}
+	}
+
+	/** An instinct every NPC is given when it's made (fighting, recovering...); the brain orders them by priority. */
+	public static void registerInstinct(Supplier<NpcBehavior> instinct) {
+		INSTINCTS.add(instinct);
+	}
+
+	/** A fresh set of every instinct, for a new NPC's brain. */
+	public static List<NpcBehavior> createInstincts() {
+		List<NpcBehavior> instincts = new ArrayList<>();
+		for (Supplier<NpcBehavior> instinct : INSTINCTS) {
+			instincts.add(instinct.get());
+		}
+
+		return instincts;
 	}
 
 	@Nullable

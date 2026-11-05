@@ -11,6 +11,8 @@ import lifeblood.appearance.Appearance;
 import lifeblood.appearance.PartCatalog;
 import lifeblood.entity.EntityNPC;
 import lifeblood.entity.NpcGender;
+import lifeblood.event.BirthEvent;
+import lifeblood.event.LifeEvents;
 import lifeblood.people.NamePool;
 import lifeblood.people.PeopleRegistry;
 import lifeblood.social.MemoryType;
@@ -101,6 +103,7 @@ public final class Children {
 
 		family.setDirty();
 		parent.remember(MemoryType.HAD_A_CHILD, null, 1.0F);
+		LifeEvents.post(new BirthEvent(child, parent, otherParent));
 		parent.voice.bark("new_baby", otherParent, context -> context.word("baby", lifeblood.speech.Word.name(child.nickname))
 			.fact("baby_gender", gender.name().toLowerCase(java.util.Locale.ROOT)), true);
 		return child;

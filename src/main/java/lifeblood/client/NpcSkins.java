@@ -11,7 +11,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.render.PlayerSkinParser;
 import net.minecraft.client.render.TextureManager;
 import net.minecraft.client.render.texture.Texture;
-import lifeblood.Lifeblood;
+import lifeblood.Mod;
 import lifeblood.appearance.NpcSkinFiles;
 import lifeblood.appearance.SkinModel;
 import org.jetbrains.annotations.Nullable;
@@ -76,20 +76,20 @@ public final class NpcSkins {
 	private static RawSkin readSkin(String name) {
 		File file = NpcSkinFiles.getFile(name);
 		if (!file.isFile()) {
-			Lifeblood.LOGGER.warn("NPC skin '{}' not found at {}", name, file);
+			Mod.LOG.warn("NPC skin '{}' not found at {}", name, file);
 			return null;
 		}
 
 		try {
 			BufferedImage image = ImageIO.read(file);
 			if (image == null || image.getWidth() != 64 || image.getHeight() != 64 && image.getHeight() != 32) {
-				Lifeblood.LOGGER.warn("NPC skin '{}' must be a 64x64 or 64x32 PNG", name);
+				Mod.LOG.warn("NPC skin '{}' must be a 64x64 or 64x32 PNG", name);
 				return null;
 			}
 
 			return new RawSkin(image, NpcSkinFiles.isSlim(image));
 		} catch (IOException e) {
-			Lifeblood.LOGGER.warn("Could not read NPC skin '{}'", name, e);
+			Mod.LOG.warn("Could not read NPC skin '{}'", name, e);
 			return null;
 		}
 	}

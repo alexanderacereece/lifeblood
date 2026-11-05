@@ -10,14 +10,17 @@ The mod itself: its entry point (Lifeblood), its settings (NpcConfig), and Clien
 
 - [`ClientHooks`](../src/main/java/lifeblood/ClientHooks.java): Everything common code asks of the client, in one place: opening screens and refreshing textures.
 - [`Lifeblood`](../src/main/java/lifeblood/Lifeblood.java): The mod's entry point, started by Fabric on both client and server: loads the settings, registers the NPC entity, the items and the /lb command.
+- [`Mod`](../src/main/java/lifeblood/Mod.java): The mod's id and its log, for any code to use.
 - [`NpcConfig`](../src/main/java/lifeblood/NpcConfig.java): The mod's settings, in config/lifeblood.cfg: item ids (changeable if they clash with another mod's) and game settings.
+- [`Systems`](../src/main/java/lifeblood/Systems.java): Every system's setup, in one ordered list: the one place that shows everything wired into the mod.
 
 ## `ai`
 
 The brain: which behavior an NPC runs each tick, the registry of behaviors that can be saved, and the NPC's home.
 
+- [`AiSetup`](../src/main/java/lifeblood/ai/AiSetup.java): The plain orders (go somewhere, stay, wander) and the default daily routine of wandering about home all day.
 - [`NpcBehavior`](../src/main/java/lifeblood/ai/NpcBehavior.java): One thing an NPC can be doing.
-- [`NpcBehaviors`](../src/main/java/lifeblood/ai/NpcBehaviors.java): Registry of behavior ids, used to recreate behaviors when an NPC is loaded.
+- [`NpcBehaviors`](../src/main/java/lifeblood/ai/NpcBehaviors.java): The behaviors NPCs can have: orders by id (so a saved NPC gets its orders back when it loads), and instincts, which every NPC is born with.
 - [`NpcBrain`](../src/main/java/lifeblood/ai/NpcBrain.java): Picks which behavior an NPC runs each tick: the highest-priority one that can run.
 - [`NpcHome`](../src/main/java/lifeblood/ai/NpcHome.java): The spot an NPC calls home: where "stay" stands, what "wander" circles, where a downed NPC recovers, and where it's brought back to if it falls out of the world.
 
@@ -55,6 +58,7 @@ Fistfights: picking one, fighting it, and telling a brawl punch from a real atta
 
 - [`Brawl`](../src/main/java/lifeblood/brawl/Brawl.java): A non-lethal fistfight between two people (NPCs or a player and an NPC).
 - [`BrawlBehavior`](../src/main/java/lifeblood/brawl/BrawlBehavior.java): Fists up: walks at the other brawler and punches them.
+- [`BrawlSetup`](../src/main/java/lifeblood/brawl/BrawlSetup.java): Brawling, as an instinct every NPC has.
 - [`NpcBrawling`](../src/main/java/lifeblood/brawl/NpcBrawling.java): Fistfights: picking them, being in one, and telling a brawl punch apart from a real attack (a friend's shove, a cheap shot after the brawl is over, someone reaching for a weapon).
 
 ## `building`
@@ -93,6 +97,7 @@ Everything that only exists on the client: rendering, textures and screens.
 Real fights: fight or flight, sizing up danger, melee and archery by the player's rules, and mobs targeting NPCs.
 
 - [`CombatBehavior`](../src/main/java/lifeblood/combat/CombatBehavior.java): Fight or flight.
+- [`CombatSetup`](../src/main/java/lifeblood/combat/CombatSetup.java): Fight or flight, as an instinct every NPC has.
 - [`CombatStyle`](../src/main/java/lifeblood/combat/CombatStyle.java): How an NPC prefers to fight.
 - [`MonsterContact`](../src/main/java/lifeblood/combat/MonsterContact.java): Damage that monsters deal by touch, which vanilla only applies to players.
 - [`NpcArchery`](../src/main/java/lifeblood/combat/NpcArchery.java): Bow use for NPCs, matching the player's bow (ItemBow.onUse): the same ammo order (worn quiver, golden quiver, flaming, golden, then plain arrows from the inventory), the same arrows, launch speed and spread, and the same bow wear.
@@ -124,6 +129,7 @@ Conversations: the menus and the options in them, gifts, romance talk, and NPCs 
 - [`DialogueMenus`](../src/main/java/lifeblood/dialogue/DialogueMenus.java): The conversation menus and the options in them.
 - [`DialogueOption`](../src/main/java/lifeblood/dialogue/DialogueOption.java): Something the player can say, and what happens when they say it.
 - [`DialogueSession`](../src/main/java/lifeblood/dialogue/DialogueSession.java): An open conversation.
+- [`DialogueSetup`](../src/main/java/lifeblood/dialogue/DialogueSetup.java): Puts the built-in options into the conversation menus, in steps of 100 so others can slot in between: chatting, gifts, romance, questions, following, and the practical menu (inventory, follow distance, fighting style).
 - [`NpcConversation`](../src/main/java/lifeblood/dialogue/NpcConversation.java): Who the NPC is talking to right now, if anyone.
 - [`NpcDialogue`](../src/main/java/lifeblood/dialogue/NpcDialogue.java): What an NPC says when a conversation reaches this point, and the replies the player can pick.
 - [`NpcGifts`](../src/main/java/lifeblood/dialogue/NpcGifts.java): Giving an NPC whatever the player is holding: one of it goes into the NPC's inventory and is theirs from then on, to eat, wear or use.
@@ -138,7 +144,18 @@ The NPC entity itself and the part system it's built from.
 
 - [`EntityNPC`](../src/main/java/lifeblood/entity/EntityNPC.java): A general-purpose NPC.
 - [`NpcGender`](../src/main/java/lifeblood/entity/NpcGender.java): An NPC's gender.
-- [`NpcPart`](../src/main/java/lifeblood/entity/NpcPart.java): A self-contained piece of an NPC (its life, health, eating...): its own state, its own upkeep, and its own share of the save.
+- [`NpcPart`](../src/main/java/lifeblood/entity/NpcPart.java): A self-contained piece of an NPC (its life, health, eating...): its own state, its own upkeep, and its own section of the save.
+
+## `event`
+
+The event hub: what happens in the world (deaths, births, real attacks, gifts, couples changing), posted where it happens and heard by every system that subscribed.
+
+- [`AttackedEvent`](../src/main/java/lifeblood/event/AttackedEvent.java): An NPC was attacked for real and hurt: not a brawl punch or a friend's shove (those are sorted out first).
+- [`BirthEvent`](../src/main/java/lifeblood/event/BirthEvent.java): A child was born, to two NPCs or to an NPC and a player.
+- [`DeathEvent`](../src/main/java/lifeblood/event/DeathEvent.java): Someone or something died: any mob, players and NPCs included, just before it's removed.
+- [`GiftEvent`](../src/main/java/lifeblood/event/GiftEvent.java): A player gave an NPC something, and the NPC took it.
+- [`LifeEvents`](../src/main/java/lifeblood/event/LifeEvents.java): The event hub: something happens (a death, a birth, a hit, a gift, a couple changing), the code where it happens posts an event, and every system that cares has subscribed to it.
+- [`PartnershipEvent`](../src/main/java/lifeblood/event/PartnershipEvent.java): Two people's relationship changed: they started dating, got engaged, married, or split up.
 
 ## `faction`
 
@@ -156,6 +173,7 @@ Families and growing up: kinship, romance, children, birth, age stages and birth
 
 - [`AgeStage`](../src/main/java/lifeblood/family/AgeStage.java): Where someone is in growing up, for how they talk: babbling babies (0–2), little kids (3–9), young teens (10–15), older teens (16–17) and adults.
 - [`Children`](../src/main/java/lifeblood/family/Children.java): Married couples have children, so settlements carry on across generations.
+- [`FamilySetup`](../src/main/java/lifeblood/family/FamilySetup.java): A child keeping near a parent, as an instinct every NPC has (it only does anything while they're a child).
 - [`Kinship`](../src/main/java/lifeblood/family/Kinship.java): What one person is to another, worked out from parents and partnerships: "Tom is Ann's brother".
 - [`NpcLife`](../src/main/java/lifeblood/family/NpcLife.java): An NPC's life story so far: when it was born, how grown up it is, its birthdays, and where it's from.
 - [`Romance`](../src/main/java/lifeblood/family/Romance.java): How couples form and change, for NPCs with each other and with players.
@@ -166,6 +184,7 @@ Families and growing up: kinship, romance, children, birth, age stages and birth
 Following a player: the order itself, how closely, when an NPC leaves, and watching what the player does.
 
 - [`FollowDistance`](../src/main/java/lifeblood/following/FollowDistance.java): How closely an NPC follows: it starts walking once the player is further than start, and stops within stop.
+- [`FollowingSetup`](../src/main/java/lifeblood/following/FollowingSetup.java): The follow order, and followers heading home when the player they follow dies.
 - [`FollowPlayerBehavior`](../src/main/java/lifeblood/following/FollowPlayerBehavior.java): Walks after a player, teleporting to them when left too far behind.
 - [`NpcFollowing`](../src/main/java/lifeblood/following/NpcFollowing.java): Following a player: whether it will, how closely, leaving when it falls out with them, and keeping an eye on what they get up to.
 
@@ -174,6 +193,7 @@ Following a player: the order itself, how closely, when an NPC leaves, and watch
 Health by the player's rules: health modes, being downed and recovering, and eating.
 
 - [`HealthMode`](../src/main/java/lifeblood/health/HealthMode.java): Whether an NPC can be hurt and killed.
+- [`HealthSetup`](../src/main/java/lifeblood/health/HealthSetup.java): Going home to recover after being downed, as an instinct every NPC has.
 - [`NpcEating`](../src/main/java/lifeblood/health/NpcEating.java): Eating by the player's rules: only when hurt enough, picking the food it likes best, one bite at a time.
 - [`NpcHealth`](../src/main/java/lifeblood/health/NpcHealth.java): How an NPC takes a beating: its health mode, and for invincible NPCs, being knocked down instead of killed, lying there a few seconds, then going home to recover.
 - [`RecoverBehavior`](../src/main/java/lifeblood/health/RecoverBehavior.java): After being downed, the NPC goes home and stays there until it has recovered, whatever its orders were.
@@ -201,7 +221,7 @@ Changes to BTA's own classes, each named after its target and listed in lifebloo
 - [`ChunkMixin`](../src/main/java/lifeblood/mixin/ChunkMixin.java): Gives every chunk its ownership records, and keeps them up to date as blocks change.
 - [`HudComponentCrosshairMixin`](../src/main/java/lifeblood/mixin/HudComponentCrosshairMixin.java): Hides the crosshair while talking to an NPC, since the player can't look around then.
 - [`ItemStackMixin`](../src/main/java/lifeblood/mixin/ItemStackMixin.java): Blocks a player places by using an item on a block are theirs.
-- [`MobDeathMixin`](../src/main/java/lifeblood/mixin/MobDeathMixin.java): Lets NPCs nearby react to any death: thanking whoever helped, grieving friends, and remembering killers.
+- [`MobDeathMixin`](../src/main/java/lifeblood/mixin/MobDeathMixin.java): Posts a DeathEvent whenever any mob dies (players included), so systems can react: witnesses, family, followers.
 - [`MobGhastMixin`](../src/main/java/lifeblood/mixin/MobGhastMixin.java): Ghasts re-pick their target when they have none or every second; at those moments a visible NPC that is closer than any valid player becomes the target instead.
 - [`MobMonsterMixin`](../src/main/java/lifeblood/mixin/MobMonsterMixin.java): Monsters (zombies, skeletons, creepers, snowmen...) hunt NPCs as well as players.
 - [`MobScorpionMixin`](../src/main/java/lifeblood/mixin/MobScorpionMixin.java): Scorpions pick their own targets and are only hostile in the dark; same rule applies to NPCs.
@@ -230,6 +250,7 @@ Who placed each block, and who may use what someone owns.
 - [`ChunkOwners`](../src/main/java/lifeblood/ownership/ChunkOwners.java): Who owns the placed blocks in one chunk, saved with the chunk.
 - [`OwnedChunk`](../src/main/java/lifeblood/ownership/OwnedChunk.java): Added to every chunk by a mixin: the records of who placed its blocks.
 - [`Ownership`](../src/main/java/lifeblood/ownership/Ownership.java): Who shares what someone owns: themself, their husband or wife, their parents and their children.
+- [`OwnershipSetup`](../src/main/java/lifeblood/ownership/OwnershipSetup.java): Forgetting, each tick, any placer left over by an action that never finished (see BlockOwners.placingAs).
 
 ## `people`
 
@@ -237,6 +258,7 @@ The register of everyone who has lived in the world, and the pool of names.
 
 - [`NamePool`](../src/main/java/lifeblood/people/NamePool.java): The names NPCs are given, from assets/lifeblood/names.txt: a [male] and a [female] section, one name per line, .
 - [`PeopleRegistry`](../src/main/java/lifeblood/people/PeopleRegistry.java): Everyone who has lived in this world, saved with it: a record of each person (NPC or player) that outlasts their entity, so people who are far away, unloaded or dead still count.
+- [`PeopleSetup`](../src/main/java/lifeblood/people/PeopleSetup.java): Keeping the register of people tidy, and recording deaths in it.
 
 ## `perf`
 
@@ -269,7 +291,8 @@ Feelings about people: memories, opinions, compatibility, and dealings with part
 - [`NpcMemories`](../src/main/java/lifeblood/social/NpcMemories.java): Everything an NPC remembers, and what those memories add up to: its opinion of each person and its mood.
 - [`NpcSocial`](../src/main/java/lifeblood/social/NpcSocial.java): The NPC's dealings with particular people: who saved its life, the daily gift each player has given, and anything it's waiting to ask a player (out on a date, or to marry).
 - [`Opinions`](../src/main/java/lifeblood/social/Opinions.java): What an NPC thinks of someone, from -100 to +100: its memories of them plus standing factors (faction ties, family, and personality compatibility).
-- [`SocialEvents`](../src/main/java/lifeblood/social/SocialEvents.java): How NPCs nearby react to a death: thanks for help, rescues, grief, and grudges against killers.
+- [`SocialEvents`](../src/main/java/lifeblood/social/SocialEvents.java): How NPCs react to a death (a DeathEvent listener, see SocialSetup): witnesses thank whoever helped, count rescues, grieve and hold grudges against killers, and the dead person's family grieves wherever they are.
+- [`SocialSetup`](../src/main/java/lifeblood/social/SocialSetup.java): How people react to deaths around them and in their family (see SocialEvents).
 
 ## `speech`
 

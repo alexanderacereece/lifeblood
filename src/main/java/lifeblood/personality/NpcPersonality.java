@@ -147,8 +147,7 @@ public class NpcPersonality implements NpcPart {
 		return 1;
 	}
 
-	private CompoundTag toTag() {
-		CompoundTag tag = new CompoundTag();
+	private void writeTo(CompoundTag tag) {
 		CompoundTag axisTag = new CompoundTag();
 		for (TraitAxis axis : TraitAxis.values()) {
 			axisTag.putFloat(axis.id(), this.get(axis));
@@ -162,7 +161,6 @@ public class NpcPersonality implements NpcPart {
 		tag.putCompound("Axes", axisTag);
 		tag.putString("Quirks", String.join(",", quirkIds));
 		tag.putCompound("Tastes", this.tastes.save());
-		return tag;
 	}
 
 	/**
@@ -231,16 +229,18 @@ public class NpcPersonality implements NpcPart {
 
 	/** Converts the old 0-to-1 bravery into the courage axis. */
 
-	/** Saved in the NPC's compound under "Personality". */
+	@Override
+	public String saveKey() {
+		return "Personality";
+	}
+
 	@Override
 	public void save(CompoundTag tag) {
-		tag.putCompound("Personality", this.toTag());
+		this.writeTo(tag);
 	}
 
 	@Override
 	public void load(CompoundTag tag) {
-		if (tag.containsKey("Personality")) {
-			this.fromTag(tag.getCompound("Personality"));
-		}
+		this.fromTag(tag);
 	}
 }

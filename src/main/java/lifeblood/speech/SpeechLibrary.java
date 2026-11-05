@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import net.fabricmc.loader.api.FabricLoader;
-import lifeblood.Lifeblood;
+import lifeblood.Mod;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -93,13 +93,13 @@ public final class SpeechLibrary {
 		for (String name : BUNDLED) {
 			try (InputStream stream = SpeechLibrary.class.getResourceAsStream(BUNDLED_PATH + name)) {
 				if (stream == null) {
-					Lifeblood.LOGGER.error("Missing bundled speech file {}", name);
+					Mod.LOG.error("Missing bundled speech file {}", name);
 					continue;
 				}
 
 				parse(new InputStreamReader(stream, StandardCharsets.UTF_8), name, result);
 			} catch (IOException e) {
-				Lifeblood.LOGGER.error("Couldn't read bundled speech file {}", name, e);
+				Mod.LOG.error("Couldn't read bundled speech file {}", name, e);
 			}
 		}
 
@@ -111,7 +111,7 @@ public final class SpeechLibrary {
 				try (Reader reader = Files.newBufferedReader(file.toPath(), StandardCharsets.UTF_8)) {
 					parse(reader, file.getName(), result);
 				} catch (IOException e) {
-					Lifeblood.LOGGER.error("Couldn't read speech file {}", file, e);
+					Mod.LOG.error("Couldn't read speech file {}", file, e);
 				}
 			}
 		}
@@ -146,7 +146,7 @@ public final class SpeechLibrary {
 
 			String where = fileName + ":" + number;
 			if (symbol == null) {
-				Lifeblood.LOGGER.warn("{}: line outside any == symbol ==, ignored", where);
+				Mod.LOG.warn("{}: line outside any == symbol ==, ignored", where);
 				continue;
 			}
 
@@ -165,7 +165,7 @@ public final class SpeechLibrary {
 		if (line.endsWith("}")) {
 			int open = line.lastIndexOf('{');
 			if (open < 0) {
-				Lifeblood.LOGGER.warn("{}: unmatched }}", where);
+				Mod.LOG.warn("{}: unmatched }}", where);
 				return null;
 			}
 
@@ -179,7 +179,7 @@ public final class SpeechLibrary {
 					try {
 						weight = Float.parseFloat(token.substring(2));
 					} catch (NumberFormatException e) {
-						Lifeblood.LOGGER.warn("{}: bad weight '{}'", where, token);
+						Mod.LOG.warn("{}: bad weight '{}'", where, token);
 					}
 
 					continue;
@@ -187,7 +187,7 @@ public final class SpeechLibrary {
 
 				Condition condition = Condition.parse(token);
 				if (condition == null) {
-					Lifeblood.LOGGER.warn("{}: unknown condition '{}', line ignored", where, token);
+					Mod.LOG.warn("{}: unknown condition '{}', line ignored", where, token);
 					return null;
 				}
 

@@ -57,6 +57,11 @@ public final class NpcRoutine implements NpcPart {
 		return this.behavior;
 	}
 
+	@Override
+	public String saveKey() {
+		return "Routine";
+	}
+
 	/** The schedule is saved; the activity is worked out again from the time of day. */
 	@Override
 	public void save(CompoundTag tag) {

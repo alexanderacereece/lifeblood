@@ -65,6 +65,11 @@ public final class NpcLooks implements NpcPart {
 	}
 
 	@Override
+	public String saveKey() {
+		return "Looks";
+	}
+
+	@Override
 	public void save(CompoundTag tag) {
 		tag.putString("Skin", this.getSkin());
 		tag.putString("Appearance", this.getAppearance());

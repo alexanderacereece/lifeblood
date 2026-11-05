@@ -56,14 +56,19 @@ public final class NpcHome implements NpcPart {
 	}
 
 	@Override
+	public String saveKey() {
+		return "Home";
+	}
+
+	@Override
 	public void save(CompoundTag tag) {
-		tag.putDouble("HomeX", this.x);
-		tag.putDouble("HomeY", this.y);
-		tag.putDouble("HomeZ", this.z);
+		tag.putDouble("X", this.x);
+		tag.putDouble("Y", this.y);
+		tag.putDouble("Z", this.z);
 	}
 
 	@Override
 	public void load(CompoundTag tag) {
-		this.set(tag.getDouble("HomeX"), tag.getDouble("HomeY"), tag.getDouble("HomeZ"));
+		this.set(tag.getDouble("X"), tag.getDouble("Y"), tag.getDouble("Z"));
 	}
 }

@@ -181,6 +181,11 @@ public final class NpcLife implements NpcPart {
 	}
 
 	@Override
+	public String saveKey() {
+		return "Life";
+	}
+
+	@Override
 	public void save(CompoundTag tag) {
 		tag.putLong("BirthTime", this.birthTime);
 		tag.putLong("LastBirthday", this.lastBirthdayYear);

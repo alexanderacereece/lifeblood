@@ -11,7 +11,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.render.PlayerSkinParser;
 import net.minecraft.client.render.TextureManager;
-import lifeblood.Lifeblood;
+import lifeblood.Mod;
 import lifeblood.appearance.Appearance;
 import lifeblood.appearance.AppearanceLayer;
 import lifeblood.appearance.NpcSkinFiles;
@@ -215,13 +215,13 @@ public final class AppearanceTextures {
 		try (InputStream stream = source.open()) {
 			image = ImageIO.read(stream);
 			if (image != null && (image.getWidth() != 64 || image.getHeight() != 64 && image.getHeight() != 32)) {
-				Lifeblood.LOGGER.warn("Appearance part {} must be a 64x64 (or old-style 64x32) PNG", source);
+				Mod.LOG.warn("Appearance part {} must be a 64x64 (or old-style 64x32) PNG", source);
 				image = null;
 			} else if (image != null && image.getHeight() == 32) {
 				image = upgradeLegacy(image);
 			}
 		} catch (IOException e) {
-			Lifeblood.LOGGER.warn("Could not read appearance part {}", source, e);
+			Mod.LOG.warn("Could not read appearance part {}", source, e);
 		}
 
 		IMAGES.put(key, image);

@@ -25,7 +25,7 @@ public final class NpcConfig {
 		defaults.addEntry("Items.wordBook", DEFAULT_WORD_BOOK_ID);
 		defaults.addCategory("Game settings", "Game");
 		defaults.addEntry("Game.yearsToGrowUp", "How many in-game years children take to grow up (a year is 56 days)", DEFAULT_YEARS_TO_GROW_UP);
-		config = new TomlConfigHandler(Lifeblood.MOD_ID, defaults);
+		config = new TomlConfigHandler(Mod.ID, defaults);
 	}
 
 	public static int guardianAmuletId() {

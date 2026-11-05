@@ -5,8 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 import net.minecraft.core.world.World;
-import lifeblood.ownership.BlockOwners;
-import lifeblood.people.PeopleRegistry;
 
 /**
  * The world systems, run from each world's tick (see the world tick mixin). Each world keeps its own count of
@@ -16,13 +14,10 @@ public final class WorldSystems {
 	private static final List<WorldSystem> SYSTEMS = new ArrayList<>();
 	private static final Map<World, Long> TICKS = new WeakHashMap<>();
 
-	static {
-		register(PeopleRegistry.UPKEEP);
-	}
-
 	private WorldSystems() {
 	}
 
+	/** Adds a system; systems run in the order they were registered (see lifeblood.Systems). */
 	public static void register(WorldSystem system) {
 		SYSTEMS.add(system);
 	}
@@ -37,7 +32,6 @@ public final class WorldSystems {
 			return;
 		}
 
-		BlockOwners.resetPlacers();
 		long tick = TICKS.merge(world, 1L, Long::sum);
 		for (WorldSystem system : SYSTEMS) {
 			if (tick % system.interval() == 0) {

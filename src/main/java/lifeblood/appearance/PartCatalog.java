@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.lang.I18n;
-import lifeblood.Lifeblood;
+import lifeblood.Mod;
 import lifeblood.entity.NpcGender;
 import org.jetbrains.annotations.Nullable;
 
@@ -188,7 +188,7 @@ public final class PartCatalog {
 				catalog.readPalettes(stream, "bundled palettes.txt");
 			}
 		} catch (IOException e) {
-			Lifeblood.LOGGER.warn("Could not read the bundled palettes", e);
+			Mod.LOG.warn("Could not read the bundled palettes", e);
 		}
 
 		File palettes = new File(dir, "palettes.txt");
@@ -196,11 +196,11 @@ public final class PartCatalog {
 			try (InputStream stream = new FileInputStream(palettes)) {
 				catalog.readPalettes(stream, palettes.toString());
 			} catch (IOException e) {
-				Lifeblood.LOGGER.warn("Could not read {}", palettes, e);
+				Mod.LOG.warn("Could not read {}", palettes, e);
 			}
 		}
 
-		Lifeblood.LOGGER.info("Loaded {} appearance parts and {} palettes", catalog.partCount(), catalog.paletteCount());
+		Mod.LOG.info("Loaded {} appearance parts and {} palettes", catalog.partCount(), catalog.paletteCount());
 		return catalog;
 	}
 
@@ -247,14 +247,14 @@ public final class PartCatalog {
 
 			int colon = line.indexOf(':');
 			if (group == null || colon <= 0) {
-				Lifeblood.LOGGER.warn("{} line {}: expected \"[group]\" or \"name: five colors\"", where, number);
+				Mod.LOG.warn("{} line {}: expected \"[group]\" or \"name: five colors\"", where, number);
 				continue;
 			}
 
 			String name = line.substring(0, colon).strip().toLowerCase(Locale.ROOT).replace(' ', '_');
 			String[] colors = line.substring(colon + 1).strip().split("\\s+");
 			if (colors.length != 5) {
-				Lifeblood.LOGGER.warn("{} line {}: palette '{}' needs exactly five colors", where, number, name);
+				Mod.LOG.warn("{} line {}: palette '{}' needs exactly five colors", where, number, name);
 				continue;
 			}
 
@@ -264,7 +264,7 @@ public final class PartCatalog {
 					rgb[i] = Integer.parseInt(colors[i].replace("#", ""), 16) & 0xFFFFFF;
 				}
 			} catch (NumberFormatException e) {
-				Lifeblood.LOGGER.warn("{} line {}: '{}' has a color that isn't hex like #A0522D", where, number, name);
+				Mod.LOG.warn("{} line {}: '{}' has a color that isn't hex like #A0522D", where, number, name);
 				continue;
 			}
 

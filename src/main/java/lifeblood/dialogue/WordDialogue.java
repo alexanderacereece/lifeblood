@@ -7,12 +7,12 @@ import net.minecraft.core.entity.player.Player;
 import lifeblood.entity.EntityNPC;
 import lifeblood.family.AgeStage;
 import lifeblood.personality.Quirk;
-import lifeblood.social.Memory;
 import lifeblood.social.MemoryType;
 import lifeblood.social.Opinions;
 import lifeblood.speech.Word;
 import lifeblood.words.WordBook;
 import lifeblood.words.WordCategory;
+import lifeblood.world.Calendar;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -42,7 +42,7 @@ public final class WordDialogue {
 		}
 
 		WordBook book = WordBook.get(npc.world);
-		long today = npc.world.getWorldTime() / Memory.TICKS_PER_DAY;
+		long today = npc.world.getWorldTime() / Calendar.TICKS_PER_DAY;
 		float chance = ASK_CHANCE * (npc.personality.has(Quirk.CURIOUS) || npc.personality.has(Quirk.CHATTERBOX) ? 2.0F : 1.0F)
 			* (npc.personality.has(Quirk.TACITURN) ? 0.5F : 1.0F);
 		boolean limited = SocialLimits.isEnabled();

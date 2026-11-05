@@ -3,6 +3,8 @@ package lifeblood.dialogue;
 import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.item.ItemStack;
 import lifeblood.entity.EntityNPC;
+import lifeblood.event.GiftEvent;
+import lifeblood.event.LifeEvents;
 import lifeblood.item.NpcItems;
 import lifeblood.personality.ItemDefaults;
 import lifeblood.personality.Quirk;
@@ -47,6 +49,7 @@ public final class NpcGifts {
 		}
 
 		npc.inventory.wearBetterArmor();
+		LifeEvents.post(new GiftEvent(npc, player, gift.copy()));
 		boolean first = amulet || !SocialLimits.giftedToday(npc, player);
 		if (!amulet) {
 			SocialLimits.recordGift(npc, player);

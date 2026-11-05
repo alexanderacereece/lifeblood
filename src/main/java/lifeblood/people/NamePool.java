@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import net.minecraft.core.lang.I18n;
-import lifeblood.Lifeblood;
+import lifeblood.Mod;
 import lifeblood.entity.NpcGender;
 
 /**
@@ -51,7 +51,7 @@ public final class NamePool {
 				return parse(new InputStreamReader(stream, StandardCharsets.UTF_8));
 			}
 		} catch (IOException e) {
-			Lifeblood.LOGGER.warn("Could not read the name list", e);
+			Mod.LOG.warn("Could not read the name list", e);
 		}
 
 		return new EnumMap<>(NpcGender.class);

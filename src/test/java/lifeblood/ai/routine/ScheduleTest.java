@@ -3,10 +3,17 @@ package lifeblood.ai.routine;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import lifeblood.Systems;
 import lifeblood.world.Calendar;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 class ScheduleTest {
+	@BeforeAll
+	static void registerSystems() {
+		Systems.registerAll();
+	}
+
 	@Test
 	void blocksRunUntilTheNextOneStarts() {
 		Schedule farmer = new Schedule("farmer", new Schedule.Block(22, "sleep"), new Schedule.Block(6, "work"), new Schedule.Block(18, "socialize"));

@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import lifeblood.Lifeblood;
+import lifeblood.Mod;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -82,7 +82,7 @@ public final class SpeechEngine {
 	private static String expandSymbol(String symbol, SpeechContext context, Map<String, Long> used, long now, Random random, int depth)
 		throws Missing {
 		if (depth > MAX_DEPTH) {
-			Lifeblood.LOGGER.warn("Speech symbol '{}' nests too deep", symbol);
+			Mod.LOG.warn("Speech symbol '{}' nests too deep", symbol);
 			throw new Missing(symbol);
 		}
 

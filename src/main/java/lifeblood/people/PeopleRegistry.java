@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -16,7 +17,8 @@ import net.minecraft.core.world.World;
 import net.minecraft.core.world.saveddata.SavedData;
 import lifeblood.entity.EntityNPC;
 import lifeblood.entity.NpcGender;
-import lifeblood.family.Kinship;
+import lifeblood.event.LifeEvents;
+import lifeblood.event.PartnershipEvent;
 import lifeblood.world.WorldSystem;
 import lifeblood.world.WorldSystems;
 import org.jetbrains.annotations.Nullable;
@@ -25,7 +27,7 @@ import org.jetbrains.annotations.Nullable;
  * Everyone who has lived in this world, saved with it: a record of each person (NPC or player) that outlasts their
  * entity, so people who are far away, unloaded or dead still count. Each record holds who they are (name, gender,
  * birth, homeland, faction), where they were last seen, and their family: parents and partnerships (dating,
- * engaged, married). Siblings, grandparents, cousins and in-laws are worked out from those (see {@link Kinship}).
+ * engaged, married). Siblings, grandparents, cousins and in-laws are worked out from those (see family/Kinship).
  *
  * It also knows which NPCs are loaded right now, to find one by id without searching the world.
  */
@@ -269,6 +271,7 @@ public class PeopleRegistry extends SavedData {
 		this.partnerships.put(first, partnership);
 		this.partnerships.put(second, partnership);
 		this.setDirty();
+		LifeEvents.post(new PartnershipEvent(first, second, Stage.DATING.name().toLowerCase(Locale.ROOT)));
 		return true;
 	}
 
@@ -279,6 +282,7 @@ public class PeopleRegistry extends SavedData {
 			partnership.stage = stage;
 			partnership.since = now;
 			this.setDirty();
+			LifeEvents.post(new PartnershipEvent(partnership.first, partnership.second, stage.name().toLowerCase(Locale.ROOT)));
 		}
 	}
 
@@ -289,6 +293,7 @@ public class PeopleRegistry extends SavedData {
 			this.partnerships.remove(partnership.first);
 			this.partnerships.remove(partnership.second);
 			this.setDirty();
+			LifeEvents.post(new PartnershipEvent(partnership.first, partnership.second, null));
 		}
 	}
 

@@ -8,7 +8,6 @@ import org.jetbrains.annotations.Nullable;
  * Times are world ticks, so memories keep fading while the NPC's chunk is unloaded.
  */
 public record Memory(MemoryType type, @Nullable UUID subject, String subjectName, long created, long expires, float scale) {
-	public static final long TICKS_PER_DAY = 24000L;
 
 	/**
 	 * How much of this memory is still felt, 0 to 1. Full strength for the first three quarters of its life,

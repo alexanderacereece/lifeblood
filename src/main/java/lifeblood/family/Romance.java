@@ -11,7 +11,6 @@ import lifeblood.entity.EntityNPC;
 import lifeblood.entity.NpcGender;
 import lifeblood.people.PeopleRegistry;
 import lifeblood.personality.Quirk;
-import lifeblood.social.Memory;
 import lifeblood.social.MemoryType;
 import lifeblood.social.Opinions;
 import lifeblood.world.Calendar;
@@ -77,7 +76,7 @@ public final class Romance {
 	}
 
 	public static float daysTogether(PeopleRegistry.Partnership partnership, long now) {
-		return (now - partnership.since) / (float) Memory.TICKS_PER_DAY;
+		return (now - partnership.since) / (float) Calendar.TICKS_PER_DAY;
 	}
 
 	/** How long a couple has been at its current stage, in in-game years. */

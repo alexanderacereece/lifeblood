@@ -138,6 +138,11 @@ public final class NpcMelee implements NpcPart {
 	}
 
 	@Override
+	public String saveKey() {
+		return "Melee";
+	}
+
+	@Override
 	public void save(CompoundTag tag) {
 		// Nothing lasting: a reloaded NPC simply puts its weapon away on the usual schedule.
 	}

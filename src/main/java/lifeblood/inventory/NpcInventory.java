@@ -239,16 +239,18 @@ public class NpcInventory implements Container, NpcPart {
 		}
 	}
 
-	/** Saved in the NPC's compound under "Inventory". */
+	@Override
+	public String saveKey() {
+		return "Inventory";
+	}
+
 	@Override
 	public void save(CompoundTag tag) {
-		tag.putList("Inventory", this.toTag());
+		tag.putList("Entries", this.toTag());
 	}
 
 	@Override
 	public void load(CompoundTag tag) {
-		if (tag.containsKey("Inventory")) {
-			this.fromTag(tag.getList("Inventory"));
-		}
+		this.fromTag(tag.getList("Entries"));
 	}
 }

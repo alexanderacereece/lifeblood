@@ -2,7 +2,6 @@ package lifeblood.world;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import lifeblood.social.Memory;
 import org.junit.jupiter.api.Test;
 
 class CalendarTest {
@@ -17,7 +16,7 @@ class CalendarTest {
 		assertEquals("12 years", Calendar.describeLength(56, 12 * 56 * day));
 	}
 
-	private static final long DAY = Memory.TICKS_PER_DAY;
+	private static final long DAY = Calendar.TICKS_PER_DAY;
 	private static final int YEAR = Calendar.DEFAULT_YEAR_DAYS;
 
 	@Test
