@@ -10,6 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import lifeblood.entity.NpcPart;
 import lifeblood.personality.NpcPersonality;
 import lifeblood.personality.Quirk;
 import lifeblood.personality.TraitAxis;
@@ -20,7 +21,7 @@ import org.jetbrains.annotations.Nullable;
  * Personality shapes memories as they're made: vengeful NPCs hold bad memories longer, sentimental ones good ones,
  * proud ones feel slights twice as hard, and loyal ones go easy on friends.
  */
-public class NpcMemories {
+public class NpcMemories implements NpcPart {
 	private final List<Memory> memories = new ArrayList<>();
 
 	/**
@@ -175,7 +176,7 @@ public class NpcMemories {
 		return total;
 	}
 
-	public ListTag save() {
+	private ListTag toTag() {
 		ListTag list = new ListTag();
 		for (Memory memory : this.memories) {
 			CompoundTag tag = new CompoundTag();
@@ -194,7 +195,7 @@ public class NpcMemories {
 		return list;
 	}
 
-	public void load(ListTag list) {
+	private void fromTag(ListTag list) {
 		this.memories.clear();
 		for (Tag<?> entry : list) {
 			if (!(entry instanceof CompoundTag tag)) {
@@ -217,6 +218,19 @@ public class NpcMemories {
 
 			this.memories.add(new Memory(type, subject, tag.getString("Name"), tag.getLong("Created"), tag.getLong("Expires"),
 				tag.getFloatOrDefault("Scale", 1.0F)));
+		}
+	}
+
+	/** Saved in the NPC's compound under "Memories". */
+	@Override
+	public void save(CompoundTag tag) {
+		tag.putList("Memories", this.toTag());
+	}
+
+	@Override
+	public void load(CompoundTag tag) {
+		if (tag.containsKey("Memories")) {
+			this.fromTag(tag.getList("Memories"));
 		}
 	}
 }

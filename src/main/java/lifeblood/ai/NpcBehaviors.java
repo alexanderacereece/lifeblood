@@ -4,10 +4,10 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
-import lifeblood.following.FollowPlayerBehavior;
 import lifeblood.ai.behavior.GoToBehavior;
 import lifeblood.ai.behavior.StayBehavior;
 import lifeblood.ai.behavior.WanderBehavior;
+import lifeblood.following.FollowPlayerBehavior;
 import org.jetbrains.annotations.Nullable;
 
 /** Registry of behavior ids, used to recreate behaviors when an NPC is loaded. */

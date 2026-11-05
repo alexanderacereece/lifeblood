@@ -7,6 +7,8 @@ import java.util.function.Consumer;
 import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.item.Item;
 import net.minecraft.core.item.ItemStack;
+import lifeblood.entity.EntityNPC;
+import lifeblood.entity.NpcPart;
 import lifeblood.faction.FactionRelation;
 import lifeblood.faction.NpcFactions;
 import lifeblood.personality.ItemDefaults;
@@ -18,8 +20,6 @@ import lifeblood.social.Opinions;
 import lifeblood.speech.SpeechContext;
 import lifeblood.speech.Word;
 import org.jetbrains.annotations.Nullable;
-import lifeblood.entity.EntityNPC;
-import lifeblood.entity.NpcPart;
 
 /**
  * Following a player: whether it will, how closely, leaving when it falls out with them, and keeping an eye on what
@@ -112,7 +112,7 @@ public final class NpcFollowing implements NpcPart {
 
 	/** Goes back to its own routine, around wherever it's left. */
 	public void stop() {
-		this.npc.setHomeHere();
+		this.npc.home.setHere();
 		this.npc.brain.clear();
 	}
 

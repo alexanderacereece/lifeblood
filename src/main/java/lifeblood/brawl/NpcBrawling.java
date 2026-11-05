@@ -7,6 +7,8 @@ import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.util.helper.DamageType;
 import net.minecraft.core.util.helper.MathHelper;
 import lifeblood.combat.CombatBehavior;
+import lifeblood.entity.EntityNPC;
+import lifeblood.entity.NpcPart;
 import lifeblood.faction.FactionRelation;
 import lifeblood.faction.NpcFactions;
 import lifeblood.personality.Quirk;
@@ -15,8 +17,6 @@ import lifeblood.social.MemoryType;
 import lifeblood.social.Opinions;
 import org.jetbrains.annotations.Nullable;
 import org.joml.primitives.AABBd;
-import lifeblood.entity.EntityNPC;
-import lifeblood.entity.NpcPart;
 
 /**
  * Fistfights: picking them, being in one, and telling a brawl punch apart from a real attack (a friend's shove, a
@@ -80,7 +80,7 @@ public final class NpcBrawling implements NpcPart {
 
 	public void join(Brawl brawl) {
 		this.brawl = brawl;
-		this.npc.setTalkingTo(null);
+		this.npc.conversation.setTalkingTo(null);
 	}
 
 	/** Leaves the brawl; punches from the forgiven opponent no longer count as a reason to fight them for real. */
@@ -92,7 +92,7 @@ public final class NpcBrawling implements NpcPart {
 		}
 
 		if (forgiven != null) {
-			this.npc.forgiveAttacker(forgiven);
+			this.npc.attackers.forgive(forgiven);
 		}
 	}
 

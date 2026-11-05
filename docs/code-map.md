@@ -14,11 +14,12 @@ The mod itself: its entry point (Lifeblood), its settings (NpcConfig), and Clien
 
 ## `ai`
 
-The brain: which behavior an NPC runs each tick, and the registry of behaviors that can be saved.
+The brain: which behavior an NPC runs each tick, the registry of behaviors that can be saved, and the NPC's home.
 
 - [`NpcBehavior`](../src/main/java/lifeblood/ai/NpcBehavior.java): One thing an NPC can be doing.
 - [`NpcBehaviors`](../src/main/java/lifeblood/ai/NpcBehaviors.java): Registry of behavior ids, used to recreate behaviors when an NPC is loaded.
 - [`NpcBrain`](../src/main/java/lifeblood/ai/NpcBrain.java): Picks which behavior an NPC runs each tick: the highest-priority one that can run.
+- [`NpcHome`](../src/main/java/lifeblood/ai/NpcHome.java): The spot an NPC calls home: where "stay" stands, what "wander" circles, where a downed NPC recovers, and where it's brought back to if it falls out of the world.
 
 ## `ai/behavior`
 
@@ -42,6 +43,7 @@ How NPCs look: appearance parts and palettes, whole skin files, and slim or wide
 
 - [`Appearance`](../src/main/java/lifeblood/appearance/Appearance.java): Which part (and which palette) an NPC wears on each layer.
 - [`AppearanceLayer`](../src/main/java/lifeblood/appearance/AppearanceLayer.java): The layers an NPC's look is built from, in drawing order (later layers draw over earlier ones).
+- [`NpcLooks`](../src/main/java/lifeblood/appearance/NpcLooks.java): How one NPC looks: a skin file from npc_skins, or else a look built from appearance parts, and the arm width it's drawn with.
 - [`NpcSkinFiles`](../src/main/java/lifeblood/appearance/NpcSkinFiles.java): The npc_skins folder in the game directory.
 - [`PartCatalog`](../src/main/java/lifeblood/appearance/PartCatalog.java): Every appearance part and palette available: the ones bundled with the mod (assets/lifeblood/parts/) plus the ones in the game folder's npc_parts/, which can be added to without rebuilding.
 - [`SkinModel`](../src/main/java/lifeblood/appearance/SkinModel.java): Which arm width an NPC's skin is drawn with.
@@ -94,6 +96,8 @@ Real fights: fight or flight, sizing up danger, melee and archery by the player'
 - [`CombatStyle`](../src/main/java/lifeblood/combat/CombatStyle.java): How an NPC prefers to fight.
 - [`MonsterContact`](../src/main/java/lifeblood/combat/MonsterContact.java): Damage that monsters deal by touch, which vanilla only applies to players.
 - [`NpcArchery`](../src/main/java/lifeblood/combat/NpcArchery.java): Bow use for NPCs, matching the player's bow (ItemBow.onUse): the same ammo order (worn quiver, golden quiver, flaming, golden, then plain arrows from the inventory), the same arrows, launch speed and spread, and the same bow wear.
+- [`NpcAttackers`](../src/main/java/lifeblood/combat/NpcAttackers.java): Who last attacked the NPC for real, and how it takes being hit: a person who hits it is remembered, and someone it wasn't fighting gets a complaint.
+- [`NpcMelee`](../src/main/java/lifeblood/combat/NpcMelee.java): Hand-to-hand fighting by the player's rules: drawing the best weapon carried, hitting with it or with a bare fist, and putting the weapon away once things are calm.
 - [`NpcTargeting`](../src/main/java/lifeblood/combat/NpcTargeting.java): Lets hostile mobs pick NPCs as targets, the same way they pick players.
 - [`ThreatAssessment`](../src/main/java/lifeblood/combat/ThreatAssessment.java): A snapshot of how dangerous an NPC's surroundings are: the hostiles nearby, weighed against the NPC's own fighting strength plus that of its allies: NPCs its faction is allied with, and players it is personally allied with.
 
@@ -120,6 +124,7 @@ Conversations: the menus and the options in them, gifts, romance talk, and NPCs 
 - [`DialogueMenus`](../src/main/java/lifeblood/dialogue/DialogueMenus.java): The conversation menus and the options in them.
 - [`DialogueOption`](../src/main/java/lifeblood/dialogue/DialogueOption.java): Something the player can say, and what happens when they say it.
 - [`DialogueSession`](../src/main/java/lifeblood/dialogue/DialogueSession.java): An open conversation.
+- [`NpcConversation`](../src/main/java/lifeblood/dialogue/NpcConversation.java): Who the NPC is talking to right now, if anyone.
 - [`NpcDialogue`](../src/main/java/lifeblood/dialogue/NpcDialogue.java): What an NPC says when a conversation reaches this point, and the replies the player can pick.
 - [`NpcGifts`](../src/main/java/lifeblood/dialogue/NpcGifts.java): Giving an NPC whatever the player is holding: one of it goes into the NPC's inventory and is theirs from then on, to eat, wear or use.
 - [`RomanceDialogue`](../src/main/java/lifeblood/dialogue/RomanceDialogue.java): The player's side of romance and family in conversation: asking someone out, proposing, the wedding, breaking up, answering when the NPC is the one asking, and asking about their family.

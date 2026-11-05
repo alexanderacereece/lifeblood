@@ -13,8 +13,9 @@ import java.util.function.Consumer;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.util.helper.MathHelper;
-import lifeblood.family.AgeStage;
 import lifeblood.entity.EntityNPC;
+import lifeblood.entity.NpcPart;
+import lifeblood.family.AgeStage;
 import lifeblood.personality.Quirk;
 import lifeblood.personality.Surroundings;
 import lifeblood.personality.Tastes;
@@ -30,7 +31,7 @@ import org.joml.primitives.AABBd;
  * players, remarking on things, or chatting with other NPCs. Lines said aloud appear in the chat of players within
  * earshot, as "&lt;Name&gt; line".
  */
-public class NpcVoice {
+public class NpcVoice implements NpcPart {
 	public static final double HEARING_RANGE = 24.0;
 	/** Chance a friendly NPC chat passes on a taught word. */
 	private static final float WORD_SHARE_CHANCE = 0.3F;
@@ -178,6 +179,7 @@ public class NpcVoice {
 	}
 
 	/** Speaking up unprompted: greetings, remarks, chats with other NPCs, and replies to them. */
+	@Override
 	public void tick() {
 		if ((this.npc.tickCount + this.npc.id) % CHECK_INTERVAL != 0 || this.npc.health.isDowned()) {
 			return;
@@ -359,19 +361,32 @@ public class NpcVoice {
 		}
 	}
 
-	public CompoundTag save() {
+	private CompoundTag toTag() {
 		CompoundTag tag = this.style.save();
 		tag.putString("Revealed", String.join(",", this.revealed));
 		return tag;
 	}
 
-	public void load(CompoundTag tag) {
+	private void fromTag(CompoundTag tag) {
 		this.style.load(tag);
 		this.revealed.clear();
 		for (String topic : tag.getStringOrDefault("Revealed", "").split(",")) {
 			if (!topic.isBlank()) {
 				this.revealed.add(topic.trim());
 			}
+		}
+	}
+
+	/** Saved in the NPC's compound under "Voice". */
+	@Override
+	public void save(CompoundTag tag) {
+		tag.putCompound("Voice", this.toTag());
+	}
+
+	@Override
+	public void load(CompoundTag tag) {
+		if (tag.containsKey("Voice")) {
+			this.fromTag(tag.getCompound("Voice"));
 		}
 	}
 }

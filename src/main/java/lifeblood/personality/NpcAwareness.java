@@ -3,10 +3,10 @@ package lifeblood.personality;
 import com.mojang.nbt.tags.CompoundTag;
 import net.minecraft.core.util.helper.MathHelper;
 import net.minecraft.core.world.pos.TilePos;
-import lifeblood.social.MemoryType;
-import org.jetbrains.annotations.Nullable;
 import lifeblood.entity.EntityNPC;
 import lifeblood.entity.NpcPart;
+import lifeblood.social.MemoryType;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Noticing the world around it: remarking when the weather turns, the season changes or it walks somewhere new, and

@@ -16,7 +16,7 @@ The player chooses who they want to keep safe: a spouse, children, friends, comp
 - **Gifted like any item.** You can give it to any NPC you could normally give gifts to, and they respond to it with their own lines (touched, flustered, suspicious of the gesture, and so on).
 - **Theirs to keep.** Once given, they keep it no matter what happens between you later. They can't die while carrying it, so it never drops.
 - **Gifts are theirs.** Every gift goes into the NPC's inventory and belongs to them ([ownership](ownership.md)); only family who share what they own can open it, so nothing given can be taken back.
-- **A real cost.** The recipe should be expensive enough (gold and a diamond, for example) that you protect the people who matter, not everyone.
+- **A real cost.** It takes a block of gold and more gold besides, so you protect the people who matter, not everyone.
 - **Anywhere in their inventory.** The amulet works from any slot. An NPC who already has one turns down a second. It isn't shown on the model: modular appearance ([appearance](appearance.md)) gives enough visual variety.
 - **Recipe:** string on top, a gold block in the middle, gold ingots around it.
 

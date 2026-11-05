@@ -8,11 +8,11 @@ import net.minecraft.core.util.helper.MathHelper;
 import lifeblood.entity.EntityNPC;
 import lifeblood.personality.Quirk;
 import lifeblood.personality.TraitAxis;
+import lifeblood.social.MemoryType;
+import lifeblood.social.Opinions;
 import lifeblood.speech.Word;
 import org.jetbrains.annotations.Nullable;
 import org.joml.primitives.AABBd;
-import lifeblood.social.MemoryType;
-import lifeblood.social.Opinions;
 
 /**
  * A non-lethal fistfight between two people (NPCs or a player and an NPC). Fists only, and nobody goes below

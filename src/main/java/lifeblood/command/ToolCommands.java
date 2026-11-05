@@ -12,12 +12,12 @@ import net.minecraft.core.net.command.arguments.ArgumentTypeVector3d;
 import net.minecraft.core.util.helper.MathHelper;
 import net.minecraft.core.world.World;
 import lifeblood.ClientHooks;
+import lifeblood.appearance.NpcSkinFiles;
 import lifeblood.appearance.PartCatalog;
 import lifeblood.dialogue.SocialLimits;
 import lifeblood.ownership.BlockOwners;
 import lifeblood.people.PeopleRegistry;
 import lifeblood.perf.NpcProfiler;
-import lifeblood.appearance.NpcSkinFiles;
 import lifeblood.speech.SpeechLibrary;
 
 /**

@@ -8,13 +8,14 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 import net.minecraft.core.entity.player.Player;
+import lifeblood.entity.NpcPart;
 import org.jetbrains.annotations.Nullable;
 
 /**
  * One NPC's personal feelings toward individual players. These override the faction's view of that player;
  * players without an entry are judged by faction alone.
  */
-public class NpcRelations {
+public class NpcRelations implements NpcPart {
 	private final Map<UUID, FactionRelation> players = new LinkedHashMap<>();
 
 	/** The personal relation with this player, or null if none is set (the faction decides). */
@@ -40,7 +41,7 @@ public class NpcRelations {
 		return Collections.unmodifiableMap(this.players);
 	}
 
-	public ListTag save() {
+	private ListTag toTag() {
 		ListTag list = new ListTag();
 		for (Map.Entry<UUID, FactionRelation> entry : this.players.entrySet()) {
 			CompoundTag tag = new CompoundTag();
@@ -52,7 +53,7 @@ public class NpcRelations {
 		return list;
 	}
 
-	public void load(ListTag list) {
+	private void fromTag(ListTag list) {
 		this.players.clear();
 		for (Tag<?> entry : list) {
 			if (!(entry instanceof CompoundTag tag)) {
@@ -67,6 +68,19 @@ public class NpcRelations {
 			} catch (IllegalArgumentException ignored) {
 				// Skip malformed ids rather than lose the rest.
 			}
+		}
+	}
+
+	/** Saved in the NPC's compound under "PlayerRelations". */
+	@Override
+	public void save(CompoundTag tag) {
+		tag.putList("PlayerRelations", this.toTag());
+	}
+
+	@Override
+	public void load(CompoundTag tag) {
+		if (tag.containsKey("PlayerRelations")) {
+			this.fromTag(tag.getList("PlayerRelations"));
 		}
 	}
 }

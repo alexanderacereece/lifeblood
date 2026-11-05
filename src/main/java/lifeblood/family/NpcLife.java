@@ -1,11 +1,11 @@
 package lifeblood.family;
 
 import com.mojang.nbt.tags.CompoundTag;
-import lifeblood.world.Calendar;
-import lifeblood.personality.Surroundings;
-import lifeblood.social.MemoryType;
 import lifeblood.entity.EntityNPC;
 import lifeblood.entity.NpcPart;
+import lifeblood.personality.Surroundings;
+import lifeblood.social.MemoryType;
+import lifeblood.world.Calendar;
 
 /** An NPC's life story so far: when it was born, how grown up it is, its birthdays, and where it's from. */
 public final class NpcLife implements NpcPart {

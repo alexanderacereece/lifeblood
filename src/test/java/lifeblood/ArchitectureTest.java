@@ -24,14 +24,8 @@ import org.junit.jupiter.api.Test;
  * them there and here together, never just to get a build through.
  */
 class ArchitectureTest {
-	/** Longest a source file may be, in lines. Past this, split it: a part, a helper class, a sub-package. */
+	/** Longest a source file may be, in lines, with no exceptions. Past this, split it: a part, a helper class, a sub-package. */
 	static final int MAX_LINES = 600;
-	/**
-	 * Files allowed past {@link #MAX_LINES} for now, each with the most it may grow to. This list only ever shrinks: a
-	 * file here is waiting to be split, and a new one is never added.
-	 */
-	static final Map<String, Integer> OVERSIZED = Map.of(
-		"EntityNPC", 950); // the entity core; its remaining behavior should move into parts over time
 
 	private static final List<SourceFile> MAIN = SourceTree.read(SourceTree.MAIN);
 	private static final List<SourceFile> TEST = SourceTree.read(SourceTree.TEST);
@@ -141,9 +135,8 @@ class ArchitectureTest {
 	void filesStaySmall() {
 		List<String> problems = new ArrayList<>();
 		for (SourceFile file : MAIN) {
-			int limit = OVERSIZED.getOrDefault(file.name(), MAX_LINES);
-			if (file.lines() > limit) {
-				problems.add(file.path() + " is " + file.lines() + " lines (limit " + limit + "): split it into parts, helpers or a sub-package");
+			if (file.lines() > MAX_LINES) {
+				problems.add(file.path() + " is " + file.lines() + " lines (limit " + MAX_LINES + "): split it into parts, helpers or a sub-package; never raise the limit");
 			}
 		}
 

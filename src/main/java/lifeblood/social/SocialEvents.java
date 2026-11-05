@@ -5,17 +5,17 @@ import java.util.Locale;
 import java.util.UUID;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.Mob;
+import net.minecraft.core.entity.MobPathfinder;
 import net.minecraft.core.entity.animal.AmbientCreature;
 import net.minecraft.core.entity.animal.MobAnimal;
 import net.minecraft.core.entity.animal.MobWaterAnimal;
-import net.minecraft.core.entity.MobPathfinder;
 import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.entity.projectile.Projectile;
 import net.minecraft.core.util.helper.MathHelper;
 import lifeblood.combat.CombatBehavior;
+import lifeblood.entity.EntityNPC;
 import lifeblood.faction.FactionRelation;
 import lifeblood.faction.NpcFactions;
-import lifeblood.entity.EntityNPC;
 import lifeblood.family.Kinship;
 import lifeblood.people.PeopleRegistry;
 import lifeblood.personality.Quirk;
@@ -167,7 +167,7 @@ public final class SocialEvents {
 			return true;
 		}
 
-		if (npc.getLastAttacker() == mob && npc.ticksSinceAttacked() < RECENT_FIGHT_TICKS) {
+		if (npc.attackers.getLastAttacker() == mob && npc.attackers.ticksSinceAttacked() < RECENT_FIGHT_TICKS) {
 			return true;
 		}
 

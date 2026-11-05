@@ -46,9 +46,9 @@ public class WanderBehavior implements NpcBehavior {
 		this.pause = MIN_PAUSE + npc.getRandom().nextInt(MAX_PAUSE - MIN_PAUSE);
 		// A few tries, since a random spot may be inside a wall or unreachable.
 		for (int attempt = 0; attempt < 5; attempt++) {
-			int x = MathHelper.floor(npc.getHomeX()) + npc.getRandom().nextInt(this.radius * 2 + 1) - this.radius;
-			int y = MathHelper.floor(npc.getHomeY()) + npc.getRandom().nextInt(7) - 3;
-			int z = MathHelper.floor(npc.getHomeZ()) + npc.getRandom().nextInt(this.radius * 2 + 1) - this.radius;
+			int x = MathHelper.floor(npc.home.getX()) + npc.getRandom().nextInt(this.radius * 2 + 1) - this.radius;
+			int y = MathHelper.floor(npc.home.getY()) + npc.getRandom().nextInt(7) - 3;
+			int z = MathHelper.floor(npc.home.getZ()) + npc.getRandom().nextInt(this.radius * 2 + 1) - this.radius;
 			if (npc.navigator.moveTo(x, y, z)) {
 				return;
 			}

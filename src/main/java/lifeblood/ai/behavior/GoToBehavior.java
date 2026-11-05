@@ -46,7 +46,7 @@ public class GoToBehavior implements NpcBehavior {
 		double dz = npc.z - this.z;
 		if (dx * dx + dz * dz <= ARRIVED_DISTANCE_SQR && Math.abs(npc.y - this.y) < 2.0) {
 			npc.navigator.stop();
-			npc.setHome(this.x, this.y, this.z);
+			npc.home.set(this.x, this.y, this.z);
 			npc.brain.set(new StayBehavior());
 			return;
 		}

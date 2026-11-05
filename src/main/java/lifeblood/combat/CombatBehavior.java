@@ -169,12 +169,12 @@ public class CombatBehavior implements NpcBehavior {
 		return switch (npc.getCombatStyle()) {
 			case MELEE -> false;
 			case RANGED -> true;
-			case AUTO -> !npc.hasMeleeWeapon() || distance > CLOSE_QUARTERS;
+			case AUTO -> !npc.melee.hasWeapon() || distance > CLOSE_QUARTERS;
 		};
 	}
 
 	private void melee(EntityNPC npc, Mob target, double distance) {
-		npc.readyMeleeWeapon();
+		npc.melee.readyWeapon();
 		npc.setLookTarget(target, 10);
 		if (distance > MELEE_RANGE) {
 			if (--this.repathCooldown <= 0) {
@@ -185,7 +185,7 @@ public class CombatBehavior implements NpcBehavior {
 			npc.navigator.stop();
 		}
 
-		npc.tryMeleeAttack(target);
+		npc.melee.tryAttack(target);
 	}
 
 	/**
@@ -236,7 +236,7 @@ public class CombatBehavior implements NpcBehavior {
 	/** While running, strikes any hostile that has caught up, with whatever is in hand. */
 	private void hitWhateverIsInReach(EntityNPC npc, ThreatAssessment threat) {
 		for (Mob hostile : threat.hostiles) {
-			if (hostile.isAlive() && hostile.distanceToSqr(npc) <= MELEE_RANGE * MELEE_RANGE && npc.tryMeleeAttack(hostile)) {
+			if (hostile.isAlive() && hostile.distanceToSqr(npc) <= MELEE_RANGE * MELEE_RANGE && npc.melee.tryAttack(hostile)) {
 				return;
 			}
 		}

@@ -14,8 +14,8 @@ import lifeblood.entity.NpcGender;
 import lifeblood.people.NamePool;
 import lifeblood.people.PeopleRegistry;
 import lifeblood.social.MemoryType;
-import org.jetbrains.annotations.Nullable;
 import lifeblood.world.Calendar;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Married couples have children, so settlements carry on across generations. A child inherits a blend of its
@@ -77,10 +77,10 @@ public final class Children {
 		child.setNickname(NamePool.pick(gender, random));
 		child.setGender(gender);
 		child.personality.inherit(parent.personality, npcParent != null ? npcParent.personality : null, random);
-		child.setAppearance(Appearance.inherit(PartCatalog.get(), gender, Appearance.decode(parent.getAppearance()),
-			npcParent != null ? Appearance.decode(npcParent.getAppearance()) : Appearance.NONE, random));
+		child.looks.setAppearance(Appearance.inherit(PartCatalog.get(), gender, Appearance.decode(parent.looks.getAppearance()),
+			npcParent != null ? Appearance.decode(npcParent.looks.getAppearance()) : Appearance.NONE, random));
 		child.setFaction(parent.getFaction());
-		child.setHome(parent.getHomeX(), parent.getHomeY(), parent.getHomeZ());
+		child.home.set(parent.home.getX(), parent.home.getY(), parent.home.getZ());
 		child.life.setGrowth(0.0F);
 		child.spawnInit();
 		parent.world.entityJoinedWorld(child);
@@ -108,7 +108,7 @@ public final class Children {
 
 	/** Grown up: it says so, and a young man may grow a beard. */
 	public static void cameOfAge(EntityNPC npc) {
-		npc.setAppearance(Appearance.decode(npc.getAppearance()).cameOfAge(PartCatalog.get(), npc.getGender(), npc.getRandom()));
+		npc.looks.setAppearance(Appearance.decode(npc.looks.getAppearance()).cameOfAge(PartCatalog.get(), npc.getGender(), npc.getRandom()));
 		npc.voice.bark("grown_up", null, null, true);
 	}
 }

@@ -34,8 +34,8 @@ public class StayBehavior implements NpcBehavior {
 		}
 
 		this.checkCooldown = CHECK_INTERVAL;
-		if (!npc.navigator.isMoving() && npc.distanceToHomeSqr() > RETURN_DISTANCE * RETURN_DISTANCE) {
-			npc.navigator.moveTo(MathHelper.floor(npc.getHomeX()), MathHelper.floor(npc.getHomeY()), MathHelper.floor(npc.getHomeZ()));
+		if (!npc.navigator.isMoving() && npc.home.distanceSqr() > RETURN_DISTANCE * RETURN_DISTANCE) {
+			npc.navigator.moveTo(MathHelper.floor(npc.home.getX()), MathHelper.floor(npc.home.getY()), MathHelper.floor(npc.home.getZ()));
 		}
 	}
 

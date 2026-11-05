@@ -14,17 +14,17 @@ import net.minecraft.client.render.tessellator.TessellatorGeneral;
 import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.util.collection.NamespaceID;
 import net.minecraft.core.util.helper.MathHelper;
+import lifeblood.entity.EntityNPC;
 import lifeblood.faction.FactionRelation;
 import lifeblood.faction.NpcFactions;
-import lifeblood.entity.EntityNPC;
 import lifeblood.util.Geometry;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Math;
-import org.joml.Vector3dc;
-import org.useless.dragonfly.data.entity.mojang.EntityGeometryMojangData.Cache;
 import org.joml.Matrix4f;
+import org.joml.Vector3dc;
 import org.joml.Vector3f;
+import org.useless.dragonfly.data.entity.mojang.EntityGeometryMojangData.Cache;
 import org.useless.dragonfly.models.entity.BoneTransform;
 import org.useless.dragonfly.models.entity.StaticEntityModel;
 
@@ -193,10 +193,10 @@ public class NpcRenderer extends MobRendererBipedArmored<EntityNPC> {
 	@Nullable
 	private NpcSkins.LoadedSkin getSkin(EntityNPC entity) {
 		// A skin file, if one is set, wins; otherwise the look built from appearance parts.
-		if (!entity.getSkin().isEmpty()) {
-			return NpcSkins.get(this.renderDispatcher.textureManager, entity.getSkin(), entity.getSkinModel());
+		if (!entity.looks.getSkin().isEmpty()) {
+			return NpcSkins.get(this.renderDispatcher.textureManager, entity.looks.getSkin(), entity.looks.getSkinModel());
 		}
 
-		return AppearanceTextures.get(this.renderDispatcher.textureManager, entity.getAppearance(), entity.getLookModel());
+		return AppearanceTextures.get(this.renderDispatcher.textureManager, entity.looks.getAppearance(), entity.looks.getLookModel());
 	}
 }

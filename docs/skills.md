@@ -78,7 +78,7 @@ Building, farming and the like stay rules plus time, unless a real behavior turn
 ## How it fits the code
 
 - A skills part (an `NpcPart`) holds each skill's level, aptitude and recent practice, saved with the NPC, and records in the [register of people](architecture.md) so it outlives the entity and can be shown about NPCs who aren't loaded.
-- Combat reads skill where it makes decisions (aiming in `NpcArchery`, moving and timing in `CombatBehavior`, brawls), through one small interface per skill, so a new skill plugs in without touching the others.
+- Combat reads skill where it makes decisions (aiming in `NpcArchery`, blows in `NpcMelee`, moving and timing in `CombatBehavior`, brawls), through one small interface per skill, so a new skill plugs in without touching the others.
 - Every skill comes with speech lines and memories, where NPCs would naturally talk about it.
 
 ## Open questions

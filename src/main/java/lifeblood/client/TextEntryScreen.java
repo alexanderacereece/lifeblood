@@ -49,7 +49,7 @@ public class TextEntryScreen extends Screen {
 		Keyboard.enableRepeatEvents(true);
 		// Typing a reply is still part of the conversation: the NPC keeps waiting.
 		if (this.parentScreen instanceof DialogueSession session) {
-			session.getNpc().setTalkingTo(session.getPlayer());
+			session.getNpc().conversation.setTalkingTo(session.getPlayer());
 		}
 
 		this.buttons.clear();
@@ -87,7 +87,7 @@ public class TextEntryScreen extends Screen {
 	public void removed() {
 		Keyboard.enableRepeatEvents(false);
 		if (this.parentScreen instanceof DialogueSession session) {
-			session.getNpc().endTalkSoon(session.getPlayer());
+			session.getNpc().conversation.endSoon(session.getPlayer());
 		}
 	}
 

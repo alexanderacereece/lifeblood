@@ -22,11 +22,11 @@ import net.minecraft.core.item.ItemStack;
 import net.minecraft.core.util.helper.DamageType;
 import net.minecraft.core.util.helper.MathHelper;
 import lifeblood.entity.EntityNPC;
+import lifeblood.faction.FactionRelation;
+import lifeblood.faction.NpcFactions;
 import lifeblood.health.HealthMode;
 import org.jetbrains.annotations.Nullable;
 import org.joml.primitives.AABBd;
-import lifeblood.faction.FactionRelation;
-import lifeblood.faction.NpcFactions;
 
 /**
  * A snapshot of how dangerous an NPC's surroundings are: the hostiles nearby,
@@ -114,7 +114,7 @@ public final class ThreatAssessment {
 
 	/** Is this enemy attacking (or hunting) the NPC or the player it follows? */
 	private static boolean isComingFor(Mob mob, EntityNPC npc, Player leader) {
-		if (npc.holdsGrudge(mob, GRUDGE_TICKS)) {
+		if (npc.attackers.holdsGrudge(mob, GRUDGE_TICKS)) {
 			return true;
 		}
 
@@ -151,11 +151,11 @@ public final class ThreatAssessment {
 			}
 
 			// Neutral people are left alone unless they start something.
-			boolean grudge = npc.holdsGrudge(mob, GRUDGE_TICKS);
+			boolean grudge = npc.attackers.holdsGrudge(mob, GRUDGE_TICKS);
 			return grudge || relation == FactionRelation.HOSTILE && npc.canEntityBeSeen(mob);
 		}
 
-		if (npc.holdsGrudge(mob, GRUDGE_TICKS)) {
+		if (npc.attackers.holdsGrudge(mob, GRUDGE_TICKS)) {
 			return true;
 		}
 

@@ -34,7 +34,7 @@ public class BrawlBehavior implements NpcBehavior {
 	@Override
 	public void start(EntityNPC npc) {
 		this.repathCooldown = 0;
-		npc.putAwayWeapon();
+		npc.melee.putAwayWeapon();
 	}
 
 	@Override
@@ -67,7 +67,7 @@ public class BrawlBehavior implements NpcBehavior {
 			npc.navigator.stop();
 		}
 
-		npc.tryPunch(opponent);
+		npc.melee.tryPunch(opponent);
 	}
 
 	@Override

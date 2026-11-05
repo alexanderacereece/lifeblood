@@ -6,11 +6,11 @@ import net.minecraft.core.item.ItemStack;
 import net.minecraft.core.item.Items;
 import lifeblood.Lifeblood;
 import lifeblood.NpcConfig;
+import turniplabs.halplibe.event.defs.CommonEvents;
 import turniplabs.halplibe.helper.ItemBuilder;
 import turniplabs.halplibe.helper.RecipeBuilder;
 import turniplabs.halplibe.helper.creativeInventory.CreativeInventoryCategory;
 import turniplabs.halplibe.helper.creativeInventory.CreativeInventoryPlacement;
-import turniplabs.halplibe.event.defs.CommonEvents;
 import turniplabs.halplibe.util.dependency.Key;
 
 /**

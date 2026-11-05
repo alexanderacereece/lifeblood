@@ -9,13 +9,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import lifeblood.entity.NpcPart;
 import org.jetbrains.annotations.Nullable;
 
 /**
  * Who an NPC is: eight trait axes, a few quirks, and tastes in food, things, weather and places. Fixed for life (mood, coming later,
  * shifts how the axes come across without changing them). See docs/personality.md.
  */
-public class NpcPersonality {
+public class NpcPersonality implements NpcPart {
 	public static final int MAX_QUIRKS = 3;
 	/**
 	 * Spread of the bell curve trait values are rolled from: about 40% land neutral, a third lean, a quarter
@@ -146,7 +147,7 @@ public class NpcPersonality {
 		return 1;
 	}
 
-	public CompoundTag save() {
+	private CompoundTag toTag() {
 		CompoundTag tag = new CompoundTag();
 		CompoundTag axisTag = new CompoundTag();
 		for (TraitAxis axis : TraitAxis.values()) {
@@ -168,7 +169,7 @@ public class NpcPersonality {
 	 * Loads a saved personality over the one it was just rolled with. Anything the save doesn't have (a trait axis
 	 * added since, say) keeps its rolled value.
 	 */
-	public void load(CompoundTag tag) {
+	private void fromTag(CompoundTag tag) {
 		CompoundTag axisTag = tag.getCompound("Axes");
 		for (TraitAxis axis : TraitAxis.values()) {
 			if (axisTag.containsKey(axis.id())) {
@@ -229,4 +230,17 @@ public class NpcPersonality {
 	}
 
 	/** Converts the old 0-to-1 bravery into the courage axis. */
+
+	/** Saved in the NPC's compound under "Personality". */
+	@Override
+	public void save(CompoundTag tag) {
+		tag.putCompound("Personality", this.toTag());
+	}
+
+	@Override
+	public void load(CompoundTag tag) {
+		if (tag.containsKey("Personality")) {
+			this.fromTag(tag.getCompound("Personality"));
+		}
+	}
 }

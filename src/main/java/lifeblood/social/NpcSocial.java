@@ -8,10 +8,10 @@ import java.util.Map;
 import java.util.UUID;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.player.Player;
-import lifeblood.family.Romance;
-import org.jetbrains.annotations.Nullable;
 import lifeblood.entity.EntityNPC;
 import lifeblood.entity.NpcPart;
+import lifeblood.family.Romance;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * The NPC's dealings with particular people: who saved its life, the daily gift each player has given, and

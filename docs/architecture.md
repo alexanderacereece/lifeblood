@@ -19,7 +19,7 @@ Four layers, each finer than the last. Read down only as far as you need:
 |---|---|
 | `lifeblood` | The entry point (`Lifeblood`), settings (`NpcConfig`), and `ClientHooks`, the only way common code reaches the client |
 | `entity` | `EntityNPC`, `NpcPart` and `NpcGender`. Only the core; parts live with their systems |
-| `ai` | The brain (`NpcBrain`) and the registry of saved behaviors (`NpcBehaviors`); `ai/behavior` holds the plain orders (go to, stay, wander), `ai/routine` the daily schedules |
+| `ai` | The brain (`NpcBrain`), the registry of saved behaviors (`NpcBehaviors`), and the NPC's home (`NpcHome`); `ai/behavior` holds the plain orders (go to, stay, wander), `ai/routine` the daily schedules |
 | `nav` | Getting around: the walkable-space grid, the path search, the per-tick budget, and `NpcNavigator`, which walks paths |
 | `health` | Health modes, being downed and recovering (`RecoverBehavior`), eating |
 | `family` | Kinship, romance, children, life stages and birthdays (`NpcLife`, `AgeStage`), a child keeping near a parent |
@@ -28,13 +28,13 @@ Four layers, each finer than the last. Read down only as far as you need:
 | `social` | Memories, opinions, compatibility, social events, dealings with particular people (`NpcSocial`) |
 | `brawl` | Fistfights: the brawl, the behavior, and the NPC's part |
 | `following` | Following a player: the order, the distances, the NPC's part |
-| `combat` | Real fights: fight or flight, threat, melee and archery, mobs targeting NPCs |
+| `combat` | Real fights: fight or flight, threat, melee (`NpcMelee`) and archery, attackers and grudges, mobs targeting NPCs |
 | `faction` | Factions, their colors and relations, and how an NPC regards a person (`NpcFactions`) |
 | `inventory` | What an NPC carries, and its menu |
-| `dialogue` | Conversation menus and their options: gifts, romance, words, chat limits |
+| `dialogue` | Conversations (`NpcConversation`), their menus and options: gifts, romance, words, chat limits |
 | `speech` | The speech engine, the line library, facts for lines, speech styles, the voice |
 | `words` | The word book: words players teach |
-| `appearance` | Looks from parts and palettes, whole skin files, slim arms |
+| `appearance` | An NPC's looks (`NpcLooks`): parts and palettes, whole skin files, slim arms |
 | `ownership` | Who placed each block, and who shares what |
 | `building` | Prefabs: saving, turning, material and color swaps, surveying a site, placing, the save check |
 | `world` | The calendar (`Calendar`), and world systems that run per world on their own clock |
@@ -72,7 +72,7 @@ Four layers, each finer than the last. Read down only as far as you need:
 | Common code never imports `lifeblood.client` or `net.minecraft.client` (only `client/` and the client mixins in `lifeblood.mixins.json` may) | A dedicated server has no client classes; touching one crashes it |
 | Nothing outside `command/` imports it (except the entry point) | Commands are tools over the game, never part of it |
 | Class names are unique across the project | A name says where to look; a second `X` means the first wasn't found |
-| Source files stay under 600 lines; the few allowed over can't grow, and the list only shrinks | Big files hide code and invite duplication |
+| Source files stay under 600 lines, with no exceptions | Big files hide code and invite duplication |
 | Every mixin is listed in `lifeblood.mixins.json` and named after its target | Mixins are easy to find and never silently unused |
 | Tests sit in the same package as what they test | Moving a class moves its test with it |
 
@@ -80,17 +80,28 @@ Four layers, each finer than the last. Read down only as far as you need:
 
 ## The NPC
 
-`entity/EntityNPC` is the entity. It does only what every mob must: moving, fighting, being hurt, equipment, saving. Everything else lives in parts it holds:
+`entity/EntityNPC` is the entity. It does only what every mob must: moving, being hurt, equipment, synced data, saving. Everything else lives in the pieces it holds, each in its own system's package.
+
+Three are driven by the entity at set moments:
 
 | Field | Class | What it is |
 |---|---|---|
-| `brain` | `ai/NpcBrain` | Picks the behavior to run each tick |
+| `brain` | `ai/NpcBrain` | Picks the behavior to run, more often the nearer a player is |
 | `navigator` | `nav/NpcNavigator` | Pathfinding and moving along paths |
-| `inventory` | `inventory/NpcInventory` | Armor, hand and a 35-slot pack: as much as a player carries |
+| `conversation` | `dialogue/NpcConversation` | Who it's talking to, and turning players away mid-fight |
+| `attackers` | `combat/NpcAttackers` | Who last attacked it for real, grudges, and how it takes a hit |
+
+The rest are `NpcPart`s. Each has its own `tick()`, `save()` and `load()`, and writes its own keys into the NPC's save compound:
+
+| Field | Class | What it is |
+|---|---|---|
 | `personality` | `personality/NpcPersonality` | Trait axes, quirks and tastes |
+| `voice` | `speech/NpcVoice` | Saying lines, with cooldowns and its speech style |
 | `memories` | `social/NpcMemories` | What happened, feeding mood and opinions |
 | `relations` | `faction/NpcRelations` | Debug overrides of how it treats players |
-| `voice` | `speech/NpcVoice` | Saying lines, with cooldowns and its speech style |
+| `inventory` | `inventory/NpcInventory` | Armor, hand and a 35-slot pack: as much as a player carries |
+| `looks` | `appearance/NpcLooks` | Its skin file or look from parts |
+| `home` | `ai/NpcHome` | The spot stay, wander and recovering are anchored to |
 | `life` | `family/NpcLife` | Birth, growing up, birthdays, homeland |
 | `health` | `health/NpcHealth` | Health mode, being downed, recovering |
 | `eating` | `health/NpcEating` | Eating by the player's rules |
@@ -98,9 +109,10 @@ Four layers, each finer than the last. Read down only as far as you need:
 | `awareness` | `personality/NpcAwareness` | Noticing weather, seasons and places |
 | `following` | `following/NpcFollowing` | Following a player and watching what they do |
 | `brawling` | `brawl/NpcBrawling` | Fistfights, and telling a brawl punch from an attack |
+| `melee` | `combat/NpcMelee` | Drawing, swinging and putting away weapons, by the player's rules |
 | `routine` | `ai/routine/NpcRoutine` | Its schedule for the day |
 
-The last eight are `NpcPart`s. Each has its own `tick()`, `save()` and `load()`, and writes its own keys into the NPC's save compound. **A new per-NPC system is a new part in its own package:** write the class, add a field, add it to the `parts` list. The entity calls the rest.
+**A new per-NPC system is a new part in its own package:** write the class, add a field, add it to the `parts` list. The entity calls the rest. Behavior that grows inside the entity belongs in a part instead; the file limit keeps it honest.
 
 ## What drives an NPC
 

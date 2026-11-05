@@ -7,63 +7,64 @@ import java.util.UUID;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.IArmorWearing;
 import net.minecraft.core.entity.IItemHolding;
-import net.minecraft.core.entity.Mob;
 import net.minecraft.core.entity.MobPathfinder;
-import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.entity.monster.MobSlime;
+import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.entity.projectile.Projectile;
 import net.minecraft.core.enums.Difficulty;
 import net.minecraft.core.enums.HumanArmorShape;
-import net.minecraft.core.item.ItemBow;
 import net.minecraft.core.item.ItemStack;
 import net.minecraft.core.item.Items;
 import net.minecraft.core.util.helper.DamageType;
 import net.minecraft.core.util.helper.MathHelper;
 import net.minecraft.core.world.World;
+import lifeblood.ClientHooks;
 import lifeblood.ai.NpcBrain;
-import lifeblood.nav.NpcNavigator;
-import lifeblood.health.RecoverBehavior;
-import lifeblood.family.StayNearParentBehavior;
+import lifeblood.ai.NpcHome;
 import lifeblood.ai.routine.NpcRoutine;
-import lifeblood.appearance.Appearance;
-import lifeblood.appearance.PartCatalog;
+import lifeblood.appearance.NpcLooks;
+import lifeblood.appearance.SkinModel;
+import lifeblood.brawl.Brawl;
 import lifeblood.brawl.BrawlBehavior;
+import lifeblood.brawl.NpcBrawling;
 import lifeblood.combat.CombatBehavior;
 import lifeblood.combat.CombatStyle;
-import lifeblood.faction.FactionRelation;
 import lifeblood.combat.MonsterContact;
+import lifeblood.combat.NpcAttackers;
+import lifeblood.combat.NpcMelee;
+import lifeblood.dialogue.NpcConversation;
+import lifeblood.dialogue.NpcDialogue;
 import lifeblood.faction.NpcFactions;
 import lifeblood.faction.NpcRelations;
-import lifeblood.dialogue.NpcDialogue;
-import lifeblood.ClientHooks;
+import lifeblood.family.NpcLife;
+import lifeblood.family.StayNearParentBehavior;
+import lifeblood.following.NpcFollowing;
+import lifeblood.health.HealthMode;
+import lifeblood.health.NpcEating;
+import lifeblood.health.NpcHealth;
+import lifeblood.health.RecoverBehavior;
 import lifeblood.inventory.NpcInventory;
+import lifeblood.nav.NpcNavigator;
 import lifeblood.people.PeopleRegistry;
 import lifeblood.perf.NpcProfiler;
+import lifeblood.personality.NpcAwareness;
 import lifeblood.personality.NpcPersonality;
-import lifeblood.personality.Quirk;
-import lifeblood.brawl.Brawl;
 import lifeblood.social.MemoryType;
 import lifeblood.social.NpcMemories;
+import lifeblood.social.NpcSocial;
 import lifeblood.social.Opinions;
 import lifeblood.speech.NpcVoice;
 import lifeblood.world.WorldSystems;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.primitives.AABBd;
-import lifeblood.appearance.SkinModel;
-import lifeblood.brawl.NpcBrawling;
-import lifeblood.family.NpcLife;
-import lifeblood.following.NpcFollowing;
-import lifeblood.health.HealthMode;
-import lifeblood.health.NpcEating;
-import lifeblood.health.NpcHealth;
-import lifeblood.personality.NpcAwareness;
-import lifeblood.social.NpcSocial;
 
 /**
- * A general-purpose NPC. The entity itself handles what every mob must (moving, fighting, being hurt, equipment,
- * saving); everything else lives in its parts: who it is (personality, memories, voice), what it does (brain,
- * navigator, routine), and its {@link NpcPart}s for life, health, eating, following, brawling, awareness and social ties.
+ * A general-purpose NPC. The entity itself only does what every mob must (moving, being hurt, equipment, synced data,
+ * saving) and holds the rest as fields: the brain, navigator, conversation and attackers, and the {@link NpcPart}s,
+ * each in its own system's package, which tick, save and load themselves (personality, voice, memories, inventory,
+ * looks, home, life, health, eating, social ties, awareness, following, brawling, melee, routine). A new per-NPC
+ * system is a new part: a field here and an entry in {@code parts}. See docs/architecture.md, "The NPC".
  * The display name is the vanilla nickname, which BTA already draws as a name tag.
  */
 public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmorShape>, IItemHolding {
@@ -73,32 +74,19 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	 */
 	public static final int DATA_VERSION = 3;
 	private static final String SAVE_KEY = "Lifeblood";
-	static final int DATA_SKIN = 20;
-	static final int DATA_SKIN_MODEL = 21;
+	public static final int DATA_SKIN = 20;
+	public static final int DATA_SKIN_MODEL = 21;
 	public static final int DATA_DOWNED = 22;
 	/** The NPC's look built from parts (see Appearance), as an encoded string; empty for none. */
-	static final int DATA_APPEARANCE = 23;
+	public static final int DATA_APPEARANCE = 23;
 	/** How grown up it is, 0 (newborn) to 100 (adult). */
 	public static final int DATA_GROWTH = 24;
 	static final int DATA_GENDER = 25;
-	/** A conversation ends if the player walks further away than this. */
-	private static final float TALK_DISTANCE = 8.0F;
-	/** How long a conversation outlasts its screen closing, for the next screen to pick it up (half a second). */
-	private static final int TALK_HANDOFF_TICKS = 10;
-	/** How long after a fight the weapon stays out (15 seconds). */
-	private static final int WEAPON_AWAY_TICKS = 300;
-	/** Ticks between melee hits; players can click faster, monsters wait 20. */
-	private static final int MELEE_COOLDOWN = 15;
-	private static final double MELEE_REACH = 2.5;
 	private static final int SWING_DURATION = 8;
-	/** How often (ticks) the distance-based thinking rate is recalculated. */
-	private static final int THINK_RATE_REFRESH = 20;
 	/** The forward input of a player holding the walk key; NPCs walk at exactly player speed. */
 	private static final float WALK_INPUT = 1.0F;
 	/** Below this share of health, the NPC is badly hurt: it says so, and killing its attacker saves its life. */
 	private static final float BADLY_HURT_HEALTH = 0.3F;
-	/** At least this long between "not now, I'm fighting" lines when clicked mid-fight (1.5 seconds). */
-	private static final int REFUSAL_COOLDOWN = 30;
 	private static final int MEMORY_PRUNE_INTERVAL = 1200;
 	/** How often it checks in with the register of people: still here, and where (5 seconds). */
 	private static final int CHECK_IN_INTERVAL = 100;
@@ -118,13 +106,18 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	public final NpcAwareness awareness = new NpcAwareness(this);
 	public final NpcFollowing following = new NpcFollowing(this);
 	public final NpcBrawling brawling = new NpcBrawling(this);
+	public final NpcMelee melee = new NpcMelee(this);
+	public final NpcHome home = new NpcHome(this);
+	public final NpcLooks looks = new NpcLooks(this);
+	public final NpcAttackers attackers = new NpcAttackers(this);
+	public final NpcConversation conversation = new NpcConversation(this);
 	public final NpcRoutine routine = new NpcRoutine(this);
-	/** The parts, in the order they tick. */
-	private final List<NpcPart> parts = List.of(this.life, this.health, this.eating, this.social, this.awareness, this.following, this.brawling,
-		this.routine);
+	/** The parts, in the order they tick and load: who it is first, then what it does. */
+	private final List<NpcPart> parts = List.of(this.personality, this.voice, this.memories, this.relations, this.inventory,
+		this.looks, this.home, this.life, this.health, this.eating, this.social, this.awareness, this.following,
+		this.brawling, this.melee, this.routine);
 	/** Who this NPC is, for others' memories of it; kept for life. */
 	private UUID uuid = UUID.randomUUID();
-	private int lastRefusalTick = -REFUSAL_COOLDOWN;
 	/** Whether it's been given a look from parts yet this session, if it needed one. */
 	private boolean appearanceChecked;
 	/** Set while a brawl punch (or a friend's shove) lands, so it can't take the NPC below 1 health. */
@@ -132,28 +125,15 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	/** Whatever is hurting the NPC right now (during {@link #hurt}), so a knockdown can fall away from it. */
 	@Nullable
 	private Entity incomingDamageSource;
-	private double homeX;
-	private double homeY;
-	private double homeZ;
 	@Nullable
 	private Entity lookTarget;
 	private int lookTicks;
-	@Nullable
-	private Player talkingTo;
-	/** When a conversation whose screen closed ends, unless another of its screens opens first; 0 if none. */
-	private int talkEndsAt;
-	/** When it last fought, to put its weapon away once things have been calm for a while. */
-	private int lastFightTick;
 	/** Null when unaffiliated. */
 	@Nullable
 	private String faction;
 	private CombatStyle combatStyle = CombatStyle.AUTO;
-	@Nullable
-	private Entity lastAttacker;
-	private int lastAttackedTick = Integer.MIN_VALUE / 2;
 	private boolean swinging;
 	private int swingTicks;
-	private int thinkInterval;
 	/** When it last ticked (by the world systems' steady count), so the register of people can tell it's still loaded. */
 	private long lastTickTime;
 
@@ -182,21 +162,15 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	@Override
 	protected void updateAI() {
 		long start = System.nanoTime();
-		if (this.talkingTo != null && (this.talkingTo.removed || this.talkingTo.distanceTo(this) > TALK_DISTANCE
-			|| this.talkEndsAt > 0 && this.tickCount >= this.talkEndsAt)) {
-			this.talkingTo = null;
-			this.talkEndsAt = 0;
-		}
-
+		this.conversation.update();
 		// Mid-conversation the NPC stands still and faces the player; its behaviors resume afterwards.
-		if (this.talkingTo != null) {
+		if (this.conversation.isTalking()) {
 			this.navigator.stop();
-			this.setLookTarget(this.talkingTo, 5);
-		} else if (this.isThinkTick()) {
-			this.brain.tick();
+			this.setLookTarget(this.conversation.getTalkingTo(), 5);
+		} else {
+			this.brain.think();
 		}
 
-		this.putAwayWeaponWhenSafe();
 		super.updateAI();
 		this.navigator.tick();
 		// Applied after the vanilla idle AI, which would otherwise spin the head randomly.
@@ -210,21 +184,6 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		}
 
 		NpcProfiler.recordAi(System.nanoTime() - start);
-	}
-
-	/**
-	 * NPCs far from every player decide what to do less often (their movement stays smooth every tick):
-	 * every tick within 32 blocks, every 2nd within 64, every 5th within 128, every 10th beyond.
-	 * Each NPC thinks on its own offset tick so the work is spread out.
-	 */
-	private boolean isThinkTick() {
-		if (this.tickCount % THINK_RATE_REFRESH == 0 || this.thinkInterval == 0) {
-			Player nearest = this.world.getClosestPlayerToEntity(this, -1.0);
-			double distance = nearest != null ? nearest.distanceTo(this) : Double.MAX_VALUE;
-			this.thinkInterval = distance < 32.0 ? 1 : distance < 64.0 ? 2 : distance < 128.0 ? 5 : 10;
-		}
-
-		return (this.tickCount + this.id) % this.thinkInterval == 0;
 	}
 
 	public void setLookTarget(@Nullable Entity target, int ticks) {
@@ -269,13 +228,12 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		this.lastTickTime = WorldSystems.ticks(this.world);
 		if (!this.appearanceChecked) {
 			this.appearanceChecked = true;
-			this.rollAppearanceIfNeeded();
+			this.looks.rollIfNeeded();
 			PeopleRegistry.get(this.world).seen(this);
 		} else if ((this.tickCount + this.id) % CHECK_IN_INTERVAL == 0) {
 			PeopleRegistry.get(this.world).seen(this);
 		}
 
-		this.voice.tick();
 		for (NpcPart part : this.parts) {
 			part.tick();
 		}
@@ -321,7 +279,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 
 	/** Too occupied to start a conversation: fighting, brawling, talking to someone, or lying on the ground. */
 	public boolean isBusy() {
-		return this.talkingTo != null || this.health.isDowned() || this.brawling.isBrawling() || this.brain.getActive() instanceof CombatBehavior;
+		return this.conversation.isTalking() || this.health.isDowned() || this.brawling.isBrawling() || this.brain.getActive() instanceof CombatBehavior;
 	}
 
 	// Movement
@@ -363,18 +321,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		}
 
 		// No chatting mid-fight, or with someone it means to fight: it says so instead.
-		CombatBehavior combat = this.brain.getActive() instanceof CombatBehavior active ? active : null;
-		boolean hostile = NpcFactions.regard(this, player) == FactionRelation.HOSTILE;
-		boolean brawling = this.brawling.isBrawling();
-		if (combat != null || hostile || brawling) {
-			if (this.tickCount - this.lastRefusalTick >= REFUSAL_COOLDOWN) {
-				this.lastRefusalTick = this.tickCount;
-				boolean fightingYou = combat != null && combat.getCurrentTarget() == player || this.brawling.isBrawlingWith(player);
-				this.voice.bark("busy_fighting", player, context -> context.fact("fighting_you", fightingYou ? "yes" : "no")
-					.fact("in_combat", combat != null || brawling ? "yes" : "no")
-					.fact("brawling", brawling ? "yes" : "no"), true);
-			}
-
+		if (this.conversation.refuses(player)) {
 			return true;
 		}
 
@@ -385,26 +332,6 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	/** The conversation offered to this player when they right-click the NPC. */
 	public NpcDialogue getDialogue(Player player) {
 		return NpcDialogue.main(this, player);
-	}
-
-	@Nullable
-	public Player getTalkingTo() {
-		return this.talkingTo;
-	}
-
-	public void setTalkingTo(@Nullable Player player) {
-		this.talkingTo = player;
-		this.talkEndsAt = 0;
-	}
-
-	/**
-	 * A conversation screen with this player closed. The NPC waits a moment before going back to what it was doing,
-	 * so moving between the conversation's screens (inventory, profile, typing a word) doesn't let it walk off.
-	 */
-	public void endTalkSoon(Player player) {
-		if (this.talkingTo == player) {
-			this.talkEndsAt = this.tickCount + TALK_HANDOFF_TICKS;
-		}
 	}
 
 	// Combat
@@ -428,175 +355,12 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		this.combatStyle = combatStyle;
 	}
 
-	@Nullable
-	public Entity getLastAttacker() {
-		return this.lastAttacker;
-	}
-
-	public int ticksSinceAttacked() {
-		return this.tickCount - this.lastAttackedTick;
-	}
-
-	/** Lets go of wanting to fight back against this attacker (after a brawl with them ends fairly). */
-	public void forgiveAttacker(Entity attacker) {
-		if (this.lastAttacker == attacker) {
-			this.lastAttacker = null;
-		}
-	}
-
-	/** Whether this NPC still wants to fight back against someone who hit it recently (not counting brawl punches). */
-	public boolean holdsGrudge(Entity mob, int grudgeTicks) {
-		return mob == this.lastAttacker && this.ticksSinceAttacked() < grudgeTicks && !this.brawling.isBrawlingWith(mob);
-	}
-
 	public void swingArm() {
 		this.swinging = true;
 		this.swingTicks = 0;
 	}
 
-	/**
-	 * Moves the hardest-hitting item from the inventory into the hand, swapping places with what was held,
-	 * like a player switching to their sword. Does nothing if the hand already holds the best option.
-	 */
-	public void readyMeleeWeapon() {
-		if (this.eating.isEating()) {
-			return;
-		}
-
-		ItemStack held = this.getHeldItem();
-		int bestDamage = held != null ? held.getDamageVsEntity(this) : 1;
-		int bestSlot = -1;
-		for (int i = 0; i < NpcInventory.PACK_SIZE; i++) {
-			ItemStack stack = this.inventory.getItem(NpcInventory.PACK_START + i);
-			if (stack != null && !(stack.getItem() instanceof ItemBow) && stack.getDamageVsEntity(this) > bestDamage) {
-				bestDamage = stack.getDamageVsEntity(this);
-				bestSlot = NpcInventory.PACK_START + i;
-			}
-		}
-
-		if (bestSlot >= 0) {
-			this.inventory.swapWithHand(bestSlot);
-		}
-	}
-
-	/** True if anything carried hits harder than a bare fist (bows don't count). */
-	public boolean hasMeleeWeapon() {
-		return this.inventory.findSlot(stack -> !(stack.getItem() instanceof ItemBow) && stack.getDamageVsEntity(this) > 1) >= 0;
-	}
-
-	/**
-	 * Once there's been no fighting for a while, puts a weapon in hand away, like a player would. Paranoid NPCs keep
-	 * theirs out.
-	 */
-	private void putAwayWeaponWhenSafe() {
-		if (this.brain.getActive() instanceof CombatBehavior || this.brawling.isBrawling()) {
-			this.lastFightTick = this.tickCount;
-		} else if (this.tickCount - this.lastFightTick > WEAPON_AWAY_TICKS && (this.tickCount + this.id) % 20 == 0
-			&& !this.eating.isEating() && !this.personality.has(Quirk.PARANOID)) {
-			this.putAwayWeapon();
-		}
-	}
-
-	/** Moves a held weapon into the pack (if there's room), like putting it away for a fistfight. */
-	public void putAwayWeapon() {
-		ItemStack held = this.getHeldItem();
-		if (held != null && (held.getDamageVsEntity(this) > 1 || held.getItem() instanceof ItemBow) && this.inventory.addToPack(held)) {
-			this.setHeldItem(null);
-		}
-	}
-
-	private boolean canReach(Entity target) {
-		return target.distanceToSqr(this) <= MELEE_REACH * MELEE_REACH && target.bb.maxY > this.bb.minY && target.bb.minY < this.bb.maxY;
-	}
-
-	/**
-	 * A bare-fisted punch, like a player's with an empty hand, for brawls. Never takes a player below 1 health, and
-	 * a player beaten down to their yield point loses.
-	 */
-	public boolean tryPunch(Mob target) {
-		if (this.attackTime > 0 || this.eating.isEating() || !this.canReach(target)) {
-			return false;
-		}
-
-		this.attackTime = MELEE_COOLDOWN;
-		this.swingArm();
-		if (target instanceof Player && target.getHealth() <= 1) {
-			return false;
-		}
-
-		boolean hit = target.hurt(this, 1, DamageType.COMBAT);
-		Brawl brawl = this.brawling.getBrawl();
-		if (hit && brawl != null && target instanceof Player) {
-			brawl.checkYield(target);
-		}
-
-		return hit;
-	}
-
-	/** Hits the target with the held item, like a player's attack, if it's in reach and the cooldown is over. */
-	public boolean tryMeleeAttack(Entity target) {
-		if (this.attackTime > 0 || this.eating.isEating() || !this.canReach(target)) {
-			return false;
-		}
-
-		this.attackTime = MELEE_COOLDOWN;
-		this.swingArm();
-		ItemStack weapon = this.getHeldItem();
-		int damage = weapon != null ? weapon.getDamageVsEntity(target) : 1;
-		boolean hit = target.hurt(this, damage, DamageType.COMBAT);
-		if (hit && weapon != null && weapon.isItemStackDamageable()) {
-			weapon.damageItem(1, this);
-			if (weapon.stackSize <= 0) {
-				this.setHeldItem(null);
-			}
-		}
-
-		return hit;
-	}
-
-	// Identity and appearance
-
-	public String getSkin() {
-		return this.entityData.getString(DATA_SKIN);
-	}
-
-	public void setSkin(String skin) {
-		this.entityData.set(DATA_SKIN, skin);
-	}
-
-	public SkinModel getSkinModel() {
-		return SkinModel.byId(this.entityData.getByte(DATA_SKIN_MODEL));
-	}
-
-	public void setSkinModel(SkinModel model) {
-		this.entityData.set(DATA_SKIN_MODEL, (byte) model.ordinal());
-	}
-
-	/** The arm width its look from parts is drawn with: the skin model, except that women are slim unless set otherwise. */
-	public SkinModel getLookModel() {
-		SkinModel model = this.getSkinModel();
-		return model == SkinModel.AUTO && this.getGender() == NpcGender.FEMALE ? SkinModel.SLIM : model;
-	}
-
-	/** The look built from appearance parts, encoded; shown when the NPC has no skin file set. */
-	public String getAppearance() {
-		return this.entityData.getString(DATA_APPEARANCE);
-	}
-
-	public void setAppearance(Appearance appearance) {
-		this.entityData.set(DATA_APPEARANCE, appearance.encode());
-	}
-
-	/**
-	 * Gives an NPC with no skin file and no look yet a random one from the parts available (if there are any),
-	 * suited to where it's from. Runs once after spawning or loading, so NPCs get a look once parts are added.
-	 */
-	public void rollAppearanceIfNeeded() {
-		this.life.ensureHomeland();
-		if (this.getSkin().isEmpty() && this.getAppearance().isEmpty()) {
-			this.setAppearance(Appearance.random(PartCatalog.get(), this.getGender(), this.random, this.life.getHomeWarmth()));
-		}
-	}
+	// Identity
 
 	public NpcGender getGender() {
 		return NpcGender.byId(this.entityData.getByte(DATA_GENDER));
@@ -633,7 +397,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		if (this.health.getEffectiveMode() == HealthMode.MORTAL) {
 			super.outOfWorld();
 		} else {
-			this.goHome();
+			this.home.teleportHome();
 		}
 	}
 
@@ -679,42 +443,6 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		return false;
 	}
 
-	// Home: the spot that "stay" and "wander" are anchored to
-
-	public void setHome(double x, double y, double z) {
-		this.homeX = x;
-		this.homeY = y;
-		this.homeZ = z;
-	}
-
-	public void setHomeHere() {
-		this.setHome(this.x, this.y, this.z);
-	}
-
-	public double getHomeX() {
-		return this.homeX;
-	}
-
-	public double getHomeY() {
-		return this.homeY;
-	}
-
-	public double getHomeZ() {
-		return this.homeZ;
-	}
-
-	public double distanceToHomeSqr() {
-		double dx = this.x - this.homeX;
-		double dy = this.y - this.homeY;
-		double dz = this.z - this.homeZ;
-		return dx * dx + dy * dy + dz * dz;
-	}
-
-	/** Teleports home, for getting out of somewhere deadly. */
-	public void goHome() {
-		this.teleportTo(this.homeX, this.homeY, this.homeZ);
-	}
-
 	// Vanilla hooks
 
 	@Override
@@ -725,7 +453,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 
 		boolean wasBadlyHurt = this.isBadlyHurt();
 		Entity source = attacker instanceof Projectile projectile && projectile.owner != null ? projectile.owner : attacker;
-		boolean armed = attacker instanceof Projectile || this.isArmed(source);
+		boolean armed = attacker instanceof Projectile || this.attackers.isArmed(source);
 		NpcBrawling.Hit hit = this.brawling.classify(source, armed, type);
 		if (hit == NpcBrawling.Hit.IGNORED) {
 			return false;
@@ -747,7 +475,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 
 		// Being hurt breaks off any conversation, and the NPC remembers who did it (the archer, not the arrow).
 		// Brawl punches and a friend's first shove don't make it want to fight for real.
-		this.talkingTo = null;
+		this.conversation.end();
 		if (hit == NpcBrawling.Hit.BRAWL) {
 			Brawl brawl = this.brawling.getBrawl();
 			if (brawl != null) {
@@ -757,9 +485,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 			this.remember(MemoryType.HIT_ME, source, 0.3F);
 			this.voice.bark("hit_by_friend", source, null, false);
 		} else if (source != null && source != this) {
-			this.lastAttacker = source;
-			this.lastAttackedTick = this.tickCount;
-			this.reactToHit(source);
+			this.attackers.attackedBy(source);
 		}
 
 		if (!wasBadlyHurt && this.isBadlyHurt() && !this.health.isDowned()) {
@@ -767,25 +493,6 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		}
 
 		return true;
-	}
-
-	/** Whether this person is holding something that hits harder than a fist. */
-	private boolean isArmed(@Nullable Entity person) {
-		ItemStack held = person instanceof Player player ? player.inventory.getCurrentItem() : person instanceof EntityNPC npc ? npc.getHeldItem() : null;
-		return held != null && held.getDamageVsEntity(this) > 1;
-	}
-
-	/** Being hit by a person is remembered; being hit by someone it isn't fighting gets a complaint. */
-	private void reactToHit(Entity source) {
-		if (!(source instanceof Player) && !(source instanceof EntityNPC)) {
-			return;
-		}
-
-		boolean wasHostile = NpcFactions.regard(this, source) == FactionRelation.HOSTILE;
-		this.remember(MemoryType.HIT_ME, source, 1.0F);
-		if (!wasHostile && !(this.brain.getActive() instanceof CombatBehavior)) {
-			this.voice.bark("hit_by_friend", source, null, false);
-		}
 	}
 
 	/** Armor reduces damage and wears down exactly as it does for players. */
@@ -843,21 +550,10 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		CompoundTag npc = new CompoundTag();
 		npc.putInt("DataVersion", DATA_VERSION);
 		npc.putString("Uuid", this.uuid.toString());
-		npc.putString("Skin", this.getSkin());
-		npc.putString("Appearance", this.getAppearance());
-		npc.putByte("SkinModel", (byte) this.getSkinModel().ordinal());
 		npc.putString("Faction", this.faction != null ? this.faction : "");
 		npc.putByte("Gender", (byte) this.getGender().ordinal());
 		npc.putByte("CombatStyle", (byte) this.combatStyle.ordinal());
-		npc.putDouble("HomeX", this.homeX);
-		npc.putDouble("HomeY", this.homeY);
-		npc.putDouble("HomeZ", this.homeZ);
-		npc.putCompound("Personality", this.personality.save());
 		npc.putList("Behaviors", this.brain.save());
-		npc.putList("Inventory", this.inventory.save());
-		npc.putList("PlayerRelations", this.relations.save());
-		npc.putList("Memories", this.memories.save());
-		npc.putCompound("Voice", this.voice.save());
 		for (NpcPart part : this.parts) {
 			part.save(npc);
 		}
@@ -869,7 +565,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	public void readAdditionalSaveData(@NotNull CompoundTag tag) {
 		super.readAdditionalSaveData(tag);
 		if (!tag.containsKey(SAVE_KEY)) {
-			this.setHomeHere();
+			this.home.setHere();
 			return;
 		}
 
@@ -882,35 +578,11 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 			// Keep the fresh id rather than fail to load.
 		}
 
-		this.setSkin(npc.getString("Skin"));
-		this.entityData.set(DATA_APPEARANCE, npc.getStringOrDefault("Appearance", ""));
-		this.setSkinModel(SkinModel.byId(npc.getByte("SkinModel")));
 		this.faction = NpcFactions.normalize(npc.getStringOrDefault("Faction", ""));
 		this.setGender(NpcGender.byId(npc.getByte("Gender")));
 		this.combatStyle = CombatStyle.byId(npc.getByte("CombatStyle"));
-		this.setHome(npc.getDouble("HomeX"), npc.getDouble("HomeY"), npc.getDouble("HomeZ"));
-		if (npc.containsKey("Personality")) {
-			this.personality.load(npc.getCompound("Personality"));
-		}
-
 		if (npc.containsKey("Behaviors")) {
 			this.brain.load(npc.getList("Behaviors"));
-		}
-
-		if (npc.containsKey("Inventory")) {
-			this.inventory.load(npc.getList("Inventory"));
-		}
-
-		if (npc.containsKey("PlayerRelations")) {
-			this.relations.load(npc.getList("PlayerRelations"));
-		}
-
-		if (npc.containsKey("Memories")) {
-			this.memories.load(npc.getList("Memories"));
-		}
-
-		if (npc.containsKey("Voice")) {
-			this.voice.load(npc.getCompound("Voice"));
 		}
 
 		for (NpcPart part : this.parts) {

@@ -10,7 +10,7 @@ An NPC's character is built from layers, each simple on its own:
 | Memories | Things that happened, each with an opinion effect | Yes, they fade |
 | Family | Parent, spouse and fiancé links; other kin derived | Rarely |
 | Tastes | A like value for every item, weather, biome and season | No |
-| Speech style | Surface voice: greetings, filler, tics, catchphrase | No |
+| Speech style | Surface voice: what they call people, filler, catchphrase, habits | Its words change with age |
 | Word book | Words the player taught, spreading between NPCs | Yes |
 
 These feed two systems: **opinions** (how NPCs regard each other and players) and **speech** (what they say and how).
@@ -49,7 +49,7 @@ Tiers use the **effective** value (base plus mood, see [mood](#mood)).
 
 Planned: players choose or roll their own axes, quirks and tastes when they start ([player creation](family.md#player-creation-planned)), so compatibility works between NPCs and players exactly as between NPCs.
 
-Each axis is rolled from a bell curve centered on 0 (standard deviation about 0.4, clamped to ±1). About half of all values land in the neutral band, a third lean, and roughly one in six is strong. A typical NPC has one or two strong axes, which is what makes them recognizable.
+Each axis is rolled from a bell curve centered on 0 (standard deviation 0.55, clamped to ±1). About two in five values land in the neutral band, a third lean, and roughly one in four is strong. A typical NPC has one to three strong axes, which is what makes them recognizable.
 
 ### What each axis does
 
@@ -69,7 +69,7 @@ Each axis is rolled from a bell curve centered on 0 (standard deviation about 0.
 - Opinions: only the extremes clash. A strongly crude and a strongly proper NPC grate on each other, both ways. Everything else is neutral.
 
 **Courage (timid ↔ brave)**
-- Behavior: fight or flight, as already built. Replaces the current bravery value (0 to 1): courage = bravery × 2 - 1.
+- Behavior: fight or flight. Courage sets how much danger the NPC will face before it runs ([combat](../src/main/java/lifeblood/combat/CombatBehavior.java)).
 - Voice: how they talk about danger, enemies and their own fights.
 - Opinions: none directly. Memories cover it ("fled and left me", "stood by me").
 
@@ -89,13 +89,13 @@ Each axis is rolled from a bell curve centered on 0 (standard deviation about 0.
 - Opinions: only through memory duration.
 
 **Work ethic (lazy ↔ hardworking)**
-- Behavior: how long they work each day, how many breaks they take, how quickly they get to tasks.
+- Behavior (planned, with [work](work.md)): how long they work each day, how many breaks they take, how quickly they get to tasks.
 - Voice: complaining about work versus talking about it with pride.
 - Opinions: hardworking NPCs dislike lazy ones, scaled by both values. Lazy NPCs don't care either way.
 
 ## Quirks
 
-Discrete traits. Most come in opposing pairs, where most NPCs sit in the unmarked middle.
+Discrete traits. Most come in opposing pairs, where most NPCs sit in the unmarked middle. Quirks already shape opinions, tastes, fighting and what NPCs say; the behaviors below that need systems not built yet (gossip, lying, daily schedules, work) arrive with those systems.
 
 ### How many
 
@@ -191,21 +191,29 @@ Each memory type has:
 
 Mercy multiplies the duration of negative memories (×0.5 to ×2.0). Sentimental multiplies positive ones by 1.5. Proud doubles negative memories about their own pride (insults, defeats). Loyal halves negative memories about friends, family and faction.
 
-Starting catalog:
+The catalog (the exact numbers live in `social/MemoryType`; durations are in-game days, and gifts and chats are scaled as described under [pacing](#pacing)):
 
 | Memory | Opinion | Mood | Duration | Stacks |
 |---|---|---|---|---|
 | Saved my life | +30 | +10 | 60 days | 3 |
+| Gave me a guardian amulet | +25 | +8 | 60 days | 1 |
 | Fought beside me | +8 | | 10 days | 5 |
-| Gave me a gift | +5 | +3 | 5 days | 5 |
-| Gave me food I like | +4 to +10, by preference | +2 to +5 | 8 days | 3 |
+| Gave me a gift | up to +8, by how much they like it | up to +3 | 14 days | 14 |
+| Gave me food I like | up to +12, by how much they like it | up to +5 | 14 days | 14 |
 | Gave me food I hate | -3 | -2 | 3 days | 3 |
-| Beat me in a brawl | -5 (+3 if competitive) | -5 | 10 days | 3 |
-| Had a nice chat | +3 | +2 | 2 days | 5 |
+| Gave me junk | -3 | -2 | 3 days | 3 |
+| Had a nice chat | +2 | +2 | 3 days | 10 |
 | Taught me a word | +2 | | 3 days | 5 |
+| Cleared the air | +8 | +2 | 5 days | 2 |
+| Beat me fair and square (competitive) | +8 | | 10 days | 2 |
+| Turned me down | -5 | -8 | 5 days | 2 |
+| Killed an animal (animal lovers) | -4 | | 2 days | 5 |
+| Beat me in a brawl | -5 | -5 | 10 days | 3 |
+| Picked a fight with me | -6 | -2 | 7 days | 3 |
 | Insulted me | -8 | -3 | 4 days | 5 |
 | Hit me | -12 | -5 | 3 days | 5 |
 | Fled and left me | -15 | | 15 days | 3 |
+| Broke up with me | -20 | -20 | 20 days | 2 |
 | Lied to me (found out) | -20 | | 20 days | 3 |
 | Stole from me | -25 | -5 | 30 days | 3 |
 | Attacked my home | -30 | -10 | 40 days | 3 |
@@ -213,7 +221,9 @@ Starting catalog:
 | Killed family | -70 | -30 | 200 days | 3 |
 | Killed my spouse or child | -100 | -40 | 400 days | 3 |
 
-Mood-only memories (no opinion effect): ate food I like or hate (scaled by preference), slept in a bed, slept outside, got rained on, saw a death, family member died, got married, won a fight, lost a fight.
+Not all of these happen yet: lying, stealing and attacking homes wait for gossip, ownership and settlements.
+
+Mood-only memories (no opinion effect): ate food I like or hate, slept in a bed or outside, enjoyed or was miserable in the weather, likes or hates it here, saw an animal die, saw a death, a friend or family member died, their birthday, had a child, started dating, got engaged, went to a wedding, got married, won or lost a fight, nearly died.
 
 **Detecting "saved my life"** needs careful balancing. Starting rule: the NPC was in combat below 30% health, someone else killed or drove off the attacker (or healed them), and the NPC survived the next 10 seconds. Only whoever did the most damage to the attackers gets the memory. To be tuned in playtesting so ordinary teamwork doesn't count.
 
@@ -234,11 +244,7 @@ Computed live, never stored:
 | Same faction | +10 |
 | Factions allied | +5 |
 | Factions hostile | -15 |
-| Spouse | +40 |
-| Fiancé | +35 |
-| Parent or child | +30 |
-| Sibling | +20 |
-| Grandparent, grandchild, aunt, uncle, niece, nephew, cousin | +10 |
+| Family | +5 to +30 by how close: spouse +30, fiancé +25, partner +20, parent or child +20, sibling +15, and so on ([family](family.md#romance)) |
 | Personality compatibility | -15 to +15, from the table below |
 
 ### Personality compatibility
@@ -294,7 +300,7 @@ Combat: opinion overrides the faction only at the extremes.
 - At -60 or less, the NPC treats them as hostile. Hotheads turn hostile at -45, zen NPCs at -80.
 - In between, the faction decides, as it does now.
 
-The existing `/lb social stance` command stays as a debug override, implemented as a strong permanent memory.
+`/lb social stance` sets a debug override of how one NPC treats one player, which beats both opinion and faction.
 
 ### Brawls
 
@@ -351,9 +357,9 @@ What it drives:
 - **Secret until heard.** The profile screen shows a love or hate as "?" until the player has heard the NPC talk about it, or seen its reaction to being given it.
 - **Speech words:** `[favorite_food]`, `[hated_food]`, `[favorite_thing]` and `[hated_thing]` (the things most their own: what they love or hate more than most people do, so a curious NPC's favorite may be a compass rather than a diamond), `[favorite_weather]`, `[favorite_biome]`, `[favorite_season]` and their hated versions.
 
-## Archetype labels
+## Archetype labels (planned)
 
-A label for flavor and the inspect screen, taken from an NPC's most distinctive traits. Strong axes count by their strength; quirks count as 0.7.
+Not built yet. A label for flavor and the inspect screen, taken from an NPC's most distinctive traits. Strong axes count by their strength; quirks count as 0.7.
 
 - If the top two traits have a pair name, use it.
 - Otherwise use the name of the single top trait, if it is strong.

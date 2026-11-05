@@ -66,7 +66,7 @@ public class NpcDialogueScreen extends Screen implements DialogueSession {
 
 	@Override
 	public void init() {
-		this.npc.setTalkingTo(this.player);
+		this.npc.conversation.setTalkingTo(this.player);
 		this.layout();
 	}
 
@@ -169,14 +169,14 @@ public class NpcDialogueScreen extends Screen implements DialogueSession {
 
 	@Override
 	public void tick() {
-		if (!this.npc.isAlive() || this.npc.getTalkingTo() != this.player) {
+		if (!this.npc.isAlive() || this.npc.conversation.getTalkingTo() != this.player) {
 			this.close();
 		}
 	}
 
 	@Override
 	public void removed() {
-		this.npc.endTalkSoon(this.player);
+		this.npc.conversation.endSoon(this.player);
 	}
 
 	@Override

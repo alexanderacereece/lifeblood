@@ -3,10 +3,10 @@ package lifeblood.health;
 import com.mojang.nbt.tags.CompoundTag;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.projectile.Projectile;
-import lifeblood.social.MemoryType;
-import org.jetbrains.annotations.Nullable;
 import lifeblood.entity.EntityNPC;
 import lifeblood.entity.NpcPart;
+import lifeblood.social.MemoryType;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * How an NPC takes a beating: its health mode, and for invincible NPCs, being knocked down instead of killed, lying
@@ -123,7 +123,7 @@ public final class NpcHealth implements NpcPart {
 		this.downedTicks = DOWNED_DURATION;
 		this.recoveringTicks = RECOVERY_DURATION;
 		this.npc.getEntityData().set(EntityNPC.DATA_DOWNED, this.isPushedForward(source) ? DOWNED_ON_FRONT : DOWNED_ON_BACK);
-		this.npc.setTalkingTo(null);
+		this.npc.conversation.setTalkingTo(null);
 		this.npc.navigator.stop();
 		this.npc.eating.stop();
 		this.npc.remainingFireTicks = 0;
@@ -163,7 +163,7 @@ public final class NpcHealth implements NpcPart {
 		this.downedTicks = 0;
 		this.npc.getEntityData().set(EntityNPC.DATA_DOWNED, (byte) 0);
 		if (this.npc.isInLava() || this.npc.isInWall() || this.npc.isUnderAcidOrWater() || this.npc.y < 0.0) {
-			this.npc.goHome();
+			this.npc.home.teleportHome();
 		}
 
 		if (!this.npc.world.isClientSide && this.isRecovering()) {

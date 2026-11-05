@@ -63,7 +63,7 @@ public class NpcProfileScreen extends Screen {
 
 	@Override
 	public void init() {
-		this.npc.setTalkingTo(this.player);
+		this.npc.conversation.setTalkingTo(this.player);
 	}
 
 	@Override
@@ -279,14 +279,14 @@ public class NpcProfileScreen extends Screen {
 
 	@Override
 	public void tick() {
-		if (!this.npc.isAlive() || this.npc.getTalkingTo() != this.player) {
+		if (!this.npc.isAlive() || this.npc.conversation.getTalkingTo() != this.player) {
 			this.mc.displayScreen(null);
 		}
 	}
 
 	@Override
 	public void removed() {
-		this.npc.endTalkSoon(this.player);
+		this.npc.conversation.endSoon(this.player);
 	}
 
 	@Override

@@ -6,10 +6,10 @@ import java.util.Random;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.jetbrains.annotations.Nullable;
-import lifeblood.family.AgeStage;
 import lifeblood.entity.EntityNPC;
+import lifeblood.family.AgeStage;
 import lifeblood.personality.TraitAxis;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * The surface of an NPC's voice, independent of personality, so two NPCs with the same traits still sound different:

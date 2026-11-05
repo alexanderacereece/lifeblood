@@ -14,10 +14,10 @@ import java.util.Map;
 import net.minecraft.core.net.command.CommandSource;
 import lifeblood.appearance.Appearance;
 import lifeblood.appearance.AppearanceLayer;
-import lifeblood.appearance.PartCatalog;
-import lifeblood.entity.EntityNPC;
-import lifeblood.appearance.SkinModel;
 import lifeblood.appearance.NpcSkinFiles;
+import lifeblood.appearance.PartCatalog;
+import lifeblood.appearance.SkinModel;
+import lifeblood.entity.EntityNPC;
 
 /** /lb look: how NPCs look: appearance parts, palettes and skin files. Reloading them is under /lb reload. */
 final class LookCommands {
@@ -29,12 +29,12 @@ final class LookCommands {
 				.then(npcsArgument("npcs").executes(c -> {
 					List<EntityNPC> npcs = getNpcs(c, "npcs");
 					for (EntityNPC npc : npcs) {
-						npc.setAppearance(Appearance.random(PartCatalog.get(), npc.getGender(), npc.getRandom(), npc.life.getHomeWarmth()));
-						if (npc.getAppearance().isEmpty()) {
+						npc.looks.setAppearance(Appearance.random(PartCatalog.get(), npc.getGender(), npc.getRandom(), npc.life.getHomeWarmth()));
+						if (npc.looks.getAppearance().isEmpty()) {
 							throw error("There are no base parts yet. Put some in " + new File(PartCatalog.getDirectory(), "base"));
 						}
 
-						if (!npc.getSkin().isEmpty()) {
+						if (!npc.looks.getSkin().isEmpty()) {
 							reply(c, npc.nickname + " has a skin file set, which shows instead; /lb look skin " + npc.nickname + " none uses the look.");
 						}
 					}
@@ -67,12 +67,12 @@ final class LookCommands {
 
 	private static int describeLook(CommandContext<CommandSource> c) throws CommandSyntaxException {
 		EntityNPC npc = getNpc(c, "npc");
-		Appearance appearance = Appearance.decode(npc.getAppearance());
+		Appearance appearance = Appearance.decode(npc.looks.getAppearance());
 		if (appearance.isEmpty()) {
-			return reply(c, npc.nickname + " has no look built from parts" + (npc.getSkin().isEmpty() ? "." : " (it uses the skin '" + npc.getSkin() + "')."));
+			return reply(c, npc.nickname + " has no look built from parts" + (npc.looks.getSkin().isEmpty() ? "." : " (it uses the skin '" + npc.looks.getSkin() + "')."));
 		}
 
-		reply(c, npc.nickname + "'s look" + (npc.getSkin().isEmpty() ? ":" : " (hidden by the skin '" + npc.getSkin() + "'):"));
+		reply(c, npc.nickname + "'s look" + (npc.looks.getSkin().isEmpty() ? ":" : " (hidden by the skin '" + npc.looks.getSkin() + "'):"));
 		boolean outfit = appearance.get(AppearanceLayer.OUTFIT) != null;
 		for (Map.Entry<AppearanceLayer, Appearance.Choice> entry : appearance.choices().entrySet()) {
 			Appearance.Choice choice = entry.getValue();
@@ -93,9 +93,9 @@ final class LookCommands {
 
 		String part = ArgumentTypeString.getString(c, "part").toLowerCase(Locale.ROOT);
 		PartCatalog catalog = PartCatalog.get();
-		Appearance appearance = Appearance.decode(npc.getAppearance());
+		Appearance appearance = Appearance.decode(npc.looks.getAppearance());
 		if (part.equals("none")) {
-			npc.setAppearance(appearance.with(layer, null, ""));
+			npc.looks.setAppearance(appearance.with(layer, null, ""));
 			return reply(c, npc.nickname + " has nothing on the " + layer.id() + " layer now.");
 		}
 
@@ -112,7 +112,7 @@ final class LookCommands {
 			throw error(layer.paletteGroup == null ? "The " + layer.id() + " layer isn't recolored." : "No " + layer.paletteGroup + " palette called '" + palette + "'.");
 		}
 
-		npc.setAppearance(appearance.with(layer, part, palette));
+		npc.looks.setAppearance(appearance.with(layer, part, palette));
 		return reply(c, npc.nickname + " now has " + part + (palette.isEmpty() ? "" : " (" + palette + ")") + " on the " + layer.id() + " layer.");
 	}
 
@@ -136,8 +136,8 @@ final class LookCommands {
 		String skin = given.equalsIgnoreCase(NONE_KEYWORD) ? "" : given;
 		List<EntityNPC> npcs = getNpcs(c, "npcs");
 		for (EntityNPC npc : npcs) {
-			npc.setSkin(skin);
-			npc.setSkinModel(model);
+			npc.looks.setSkin(skin);
+			npc.looks.setSkinModel(model);
 		}
 
 		if (!skin.isEmpty() && !NpcSkinFiles.exists(skin)) {

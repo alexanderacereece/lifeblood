@@ -5,13 +5,13 @@ import net.minecraft.core.item.ItemFood;
 import net.minecraft.core.item.ItemSoup;
 import net.minecraft.core.item.ItemStack;
 import net.minecraft.core.item.Items;
+import lifeblood.entity.EntityNPC;
+import lifeblood.entity.NpcPart;
 import lifeblood.inventory.NpcInventory;
 import lifeblood.personality.Quirk;
 import lifeblood.personality.Tastes;
 import lifeblood.social.MemoryType;
 import lifeblood.speech.Word;
-import lifeblood.entity.EntityNPC;
-import lifeblood.entity.NpcPart;
 
 /** Eating by the player's rules: only when hurt enough, picking the food it likes best, one bite at a time. */
 public final class NpcEating implements NpcPart {

@@ -57,13 +57,13 @@ public class NpcInventoryScreen extends ScreenContainerAbstract {
 	@Override
 	public void init() {
 		super.init();
-		this.npc.setTalkingTo(this.player);
+		this.npc.conversation.setTalkingTo(this.player);
 	}
 
 	@Override
 	public void removed() {
 		super.removed();
-		this.npc.endTalkSoon(this.player);
+		this.npc.conversation.endSoon(this.player);
 	}
 
 	@Override

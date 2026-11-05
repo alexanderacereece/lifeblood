@@ -13,6 +13,7 @@ import net.minecraft.core.player.inventory.InventorySorter;
 import net.minecraft.core.player.inventory.container.Container;
 import net.minecraft.core.util.helper.DamageType;
 import lifeblood.entity.EntityNPC;
+import lifeblood.entity.NpcPart;
 import lifeblood.item.NpcItems;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -22,7 +23,7 @@ import org.jetbrains.annotations.Nullable;
  * HumanArmorShape order), the item in its hand, and 35 more slots, so 36 besides armor, like a player's inventory.
  * It's all the NPC's own; only people who share what it owns can open it ({@link lifeblood.ownership.Ownership}).
  */
-public class NpcInventory implements Container {
+public class NpcInventory implements Container, NpcPart {
 	public static final int ARMOR_START = 0;
 	public static final int ARMOR_SIZE = 4;
 	public static final int HAND_SLOT = 4;
@@ -212,7 +213,7 @@ public class NpcInventory implements Container {
 		}
 	}
 
-	public ListTag save() {
+	private ListTag toTag() {
 		ListTag list = new ListTag();
 		for (int i = 0; i < SIZE; i++) {
 			if (this.items[i] != null) {
@@ -226,7 +227,7 @@ public class NpcInventory implements Container {
 		return list;
 	}
 
-	public void load(ListTag list) {
+	private void fromTag(ListTag list) {
 		Arrays.fill(this.items, null);
 		for (Tag<?> entry : list) {
 			if (entry instanceof CompoundTag tag) {
@@ -235,6 +236,19 @@ public class NpcInventory implements Container {
 					this.items[slot] = ItemStack.readItemStackFromNbt(tag);
 				}
 			}
+		}
+	}
+
+	/** Saved in the NPC's compound under "Inventory". */
+	@Override
+	public void save(CompoundTag tag) {
+		tag.putList("Inventory", this.toTag());
+	}
+
+	@Override
+	public void load(CompoundTag tag) {
+		if (tag.containsKey("Inventory")) {
+			this.fromTag(tag.getList("Inventory"));
 		}
 	}
 }

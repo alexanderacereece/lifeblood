@@ -8,19 +8,19 @@ import net.minecraft.core.item.Item;
 import net.minecraft.core.util.helper.MathHelper;
 import net.minecraft.core.world.pos.TilePos;
 import net.minecraft.core.world.weather.Weather;
+import lifeblood.entity.EntityNPC;
+import lifeblood.entity.NpcGender;
 import lifeblood.faction.FactionRegistry;
 import lifeblood.faction.FactionRelation;
 import lifeblood.faction.NpcFactions;
-import lifeblood.entity.EntityNPC;
-import lifeblood.entity.NpcGender;
 import lifeblood.family.Kinship;
 import lifeblood.family.Romance;
 import lifeblood.people.PeopleRegistry;
-import lifeblood.words.WordBook;
-import lifeblood.words.WordCategory;
 import lifeblood.personality.Surroundings;
 import lifeblood.personality.Tastes;
 import lifeblood.social.Opinions;
+import lifeblood.words.WordBook;
+import lifeblood.words.WordCategory;
 import org.jetbrains.annotations.Nullable;
 
 /**

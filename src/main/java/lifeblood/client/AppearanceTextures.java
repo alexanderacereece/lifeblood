@@ -11,14 +11,13 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.render.PlayerSkinParser;
 import net.minecraft.client.render.TextureManager;
-import net.minecraft.client.render.texture.Texture;
 import lifeblood.Lifeblood;
 import lifeblood.appearance.Appearance;
 import lifeblood.appearance.AppearanceLayer;
-import lifeblood.appearance.PartCatalog;
-import lifeblood.appearance.SlimArms;
-import lifeblood.appearance.SkinModel;
 import lifeblood.appearance.NpcSkinFiles;
+import lifeblood.appearance.PartCatalog;
+import lifeblood.appearance.SkinModel;
+import lifeblood.appearance.SlimArms;
 import org.jetbrains.annotations.Nullable;
 
 /**

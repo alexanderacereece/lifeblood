@@ -4,13 +4,13 @@
 
 ### Facts and rules
 
-When an NPC wants to speak, it builds a list of **facts** about the moment: the event, its own traits and tiers, quirks, mood, the listener and its opinion of them, faction relations, time of day, weather, its job, its memories about the listener, and so on.
+When an NPC wants to speak, it builds a list of **facts** about the moment: the event, its own traits and tiers, quirks, mood, the listener and its opinion of them, faction relations, its family, time of day, weather, season and place, and so on. The full list of facts and words is at the top of `basics.speech`.
 
 Each line has **criteria** on those facts. The line whose criteria match the most facts wins (ties broken at random, weighted toward lines not used recently). Generic lines are the fallback; specific lines override them automatically. A hand-crafted character is just lines with the criterion `name = X`.
 
 ### Grammar
 
-Lines contain **symbols** that expand into one of several alternatives, which can contain more symbols. Alternatives can carry the same criteria as lines (trait tiers, quirks, facts).
+In outline (the exact file format is described at the top of `basics.speech`), lines contain **symbols** that expand into one of several alternatives, which can contain more symbols. Alternatives can carry the same criteria as lines (trait tiers, quirks, facts).
 
 ```
 greet        -> [hello] [comment]
@@ -24,7 +24,7 @@ harvest_talk -> Wheat didn't take. Next year, though!     (outlook: optimist, le
              |  Wheat didn't take this year.              (neutral)
 ```
 
-Fact symbols come from the NPC's data: `[player]`, `[name]`, `[job]`, `[home]`, `[faction]`, `[enemy_faction]`, `[favorite_food]`, `[spouse]`, `[time_of_day]`, and so on.
+Word symbols come from the NPC's data: `[name]`, `[faction]`, `[enemy_faction]`, `[favorite_food]`, `[partner]`, `[home_biome]`, `[weather_word]`, `[kin_call]`, the words players taught (`[taught_food]`), and so on.
 
 **Agreement.** Word symbols know their form (one item, plural or mass noun) and expand correctly:
 - `[food.a]`: "a pork chop", "some blackberries", "some bread"
@@ -45,12 +45,11 @@ Grown-ups talk to the young differently too: in chats between NPCs, parents fuss
 
 ### Speech style
 
-A surface layer rolled per NPC, independent of personality, so two NPCs with the same traits still sound different. It supplies its own values for shared symbols and applies small transforms:
-- symbols: `[hello]`, `[goodbye]`, `[yes]`, `[no]`, `[exclaim]`, `[filler]`, `[address]` (what they call people: "friend", "mate", "sir");
-- a catchphrase, inserted occasionally;
-- transforms: dropped g's ("goin'"), trailing "...", "y'know" at the end, no capitals.
+A surface layer rolled per NPC, independent of personality, so two NPCs with the same traits still sound different. It has:
+- **words:** what they call people (`address`: "friend", "mate", "sir"), a catchphrase said now and then, and a filler they tack on, picked from the `style_address`, `style_catchphrase` and `style_filler` symbols in `basics.speech`;
+- **habits:** dropped g's ("goin'") and trailing off ("...").
 
-Formality comes from the Speech axis; the rest is random. Because style supplies fragments rather than whole lines, it adds to the writing instead of multiplying it.
+The pools lean on the NPC's personality where it fits (a proper speaker says "sir"); otherwise the pick is random. Because style supplies fragments rather than whole lines, it adds to the writing instead of multiplying it.
 
 The habits (dropped g's, trailing off) are for life, but the words grow up with the NPC. Address, catchphrase and filler are picked for the NPC's age stage from the stage versions of the style symbols in `ages.speech` (a little kid says "Pinky promise!" and calls you "buddy"; a young teen says "Whatever."), and picked again each time it reaches a new stage. Babies have none. About a quarter of teenagers keep their catchphrase into adulthood.
 

@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import net.minecraft.core.entity.player.Player;
 import lifeblood.Lifeblood;
 import lifeblood.entity.EntityNPC;
 import org.jetbrains.annotations.Nullable;
@@ -20,6 +21,9 @@ import org.jetbrains.annotations.Nullable;
  * 3. With no orders that can run, the NPC goes about its day: its routine's activity for the time of day.
  */
 public class NpcBrain {
+	/** How often the distance-based thinking rate is recalculated, in ticks. */
+	private static final int THINK_RATE_REFRESH = 20;
+
 	private final EntityNPC npc;
 	private final List<NpcBehavior> instincts = new ArrayList<>();
 	private final List<NpcBehavior> behaviors = new ArrayList<>();
@@ -27,6 +31,8 @@ public class NpcBrain {
 	private final List<NpcBehavior> candidates = new ArrayList<>();
 	@Nullable
 	private NpcBehavior active;
+	/** Thinks every this many ticks; 0 until first worked out. */
+	private int thinkInterval;
 
 	public NpcBrain(EntityNPC npc) {
 		this.npc = npc;
@@ -94,6 +100,29 @@ public class NpcBrain {
 		return this.active != null && this.active == this.npc.routine.currentBehavior();
 	}
 
+	/** Runs {@link #tick} on this NPC's thinking ticks, which come less often the further it is from every player. */
+	public void think() {
+		if (this.isThinkTick()) {
+			this.tick();
+		}
+	}
+
+	/**
+	 * NPCs far from every player decide what to do less often (their movement stays smooth every tick):
+	 * every tick within 32 blocks, every 2nd within 64, every 5th within 128, every 10th beyond.
+	 * Each NPC thinks on its own offset tick so the work is spread out.
+	 */
+	private boolean isThinkTick() {
+		if (this.npc.tickCount % THINK_RATE_REFRESH == 0 || this.thinkInterval == 0) {
+			Player nearest = this.npc.world.getClosestPlayerToEntity(this.npc, -1.0);
+			double distance = nearest != null ? nearest.distanceTo(this.npc) : Double.MAX_VALUE;
+			this.thinkInterval = distance < 32.0 ? 1 : distance < 64.0 ? 2 : distance < 128.0 ? 5 : 10;
+		}
+
+		return (this.npc.tickCount + this.npc.id) % this.thinkInterval == 0;
+	}
+
+	/** Picks and runs the behavior for this tick; {@link #think} calls it on thinking ticks. */
 	public void tick() {
 		NpcBehavior next = null;
 		for (NpcBehavior behavior : this.candidates) {

@@ -14,12 +14,10 @@ import java.util.Map;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.net.command.CommandSource;
+import lifeblood.entity.EntityNPC;
 import lifeblood.faction.FactionColors;
 import lifeblood.faction.FactionRegistry;
 import lifeblood.faction.FactionRelation;
-import lifeblood.faction.NpcFactions;
-import lifeblood.entity.EntityNPC;
-import lifeblood.social.Opinions;
 
 /** /lb faction: factions, their stances, relations, colors and members. How one NPC treats a player is /lb social stance. */
 final class FactionCommands {

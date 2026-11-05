@@ -14,11 +14,11 @@ Generated homesteads start with whole families already linked.
 The way new couples form over time, so settlements change instead of staying frozen as generated. Any NPC can take part; the romantic quirk makes it far more likely and faster. Who an NPC can be attracted to: the opposite gender by default, or the same with the **gay** quirk (10%) or any with the **bisexual** quirk (10%). These show on the profile like other quirks, don't count toward the three-quirk limit, and aren't inherited. Players don't set a gender, so anyone can fall for a player. Blood relatives never date.
 
 Stages, each needing high opinions on both sides (for the player, only the NPC's side counts; the player decides for themself):
-1. **Dating** at 70 or more. One asks; the other accepts if their opinion is high enough and they're attracted, and a refusal leaves a "turned me down" memory. NPCs check about once a minute, romantics three times as often.
+1. **Dating** at 70 or more. One asks; the other accepts if their opinion is high enough and they're attracted, and a refusal leaves a "turned me down" memory. NPCs check about once a minute, and romantics are three times as likely to ask.
 2. **Engaged** after a year and a half of dating (84 in-game days) with both at 80 or more.
 3. **Married** after a year engaged (56 in-game days), still at 80 or more. A wedding: everyone nearby gets a "went to a wedding" memory and some cheer.
 
-With the gift and chat pacing ([opinions](personality.md#opinions)), that puts dating about two weeks into a friendship and a wedding a few weeks in.
+With the gift and chat pacing ([opinions](personality.md#opinions)), dating can start about two weeks into a friendship; the engagement and wedding then take as long as they would in life, two and a half years in all.
 
 A partner whose opinion falls under 30 (dating) or 10 (engaged or married) breaks it off, leaving a "broke up with me" memory. A partner's death leaves the other widowed; they remember their late husband or wife.
 

@@ -19,16 +19,16 @@ import net.minecraft.core.net.command.CommandSource;
 import net.minecraft.core.net.command.arguments.ArgumentTypeVector3d;
 import net.minecraft.core.world.World;
 import lifeblood.ai.NpcBehavior;
-import lifeblood.following.FollowPlayerBehavior;
 import lifeblood.ai.behavior.GoToBehavior;
 import lifeblood.ai.behavior.StayBehavior;
 import lifeblood.ai.behavior.WanderBehavior;
+import lifeblood.appearance.NpcSkinFiles;
 import lifeblood.entity.EntityNPC;
-import lifeblood.health.HealthMode;
 import lifeblood.entity.NpcGender;
 import lifeblood.family.Children;
+import lifeblood.following.FollowPlayerBehavior;
+import lifeblood.health.HealthMode;
 import lifeblood.people.NamePool;
-import lifeblood.appearance.NpcSkinFiles;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3dc;
 
@@ -106,7 +106,7 @@ final class NpcCommands {
 					List<EntityNPC> npcs = getNpcs(c, "npcs");
 					for (EntityNPC npc : npcs) {
 						overrideRecovery(c, npc);
-						npc.setHomeHere();
+						npc.home.setHere();
 						npc.brain.set(new StayBehavior());
 					}
 
@@ -121,7 +121,7 @@ final class NpcCommands {
 				.then(npcsArgument("npcs").executes(c -> {
 					List<EntityNPC> npcs = getNpcs(c, "npcs");
 					for (EntityNPC npc : npcs) {
-						npc.setHomeHere();
+						npc.home.setHere();
 						npc.brain.clear();
 					}
 
@@ -256,15 +256,15 @@ final class NpcCommands {
 		double feet = player != null ? pos.y() - player.heightOffset : pos.y();
 		npc.moveTo(pos.x() + offsetX, feet, pos.z() + offsetZ, player != null ? player.yRot : 0.0F, 0.0F);
 		npc.setNickname(name);
-		npc.setSkin(skin);
+		npc.looks.setSkin(skin);
 		npc.setGender(gender != null ? gender : npc.getRandom().nextBoolean() ? NpcGender.FEMALE : NpcGender.MALE);
-		npc.rollAppearanceIfNeeded();
+		npc.looks.rollIfNeeded();
 		if (faction != null) {
 			npc.setFaction(faction);
 		}
 
 		// No orders: it goes about its routine around where it appeared.
-		npc.setHomeHere();
+		npc.home.setHere();
 		npc.spawnInit();
 		world.entityJoinedWorld(npc);
 		return npc;
@@ -285,7 +285,7 @@ final class NpcCommands {
 		for (EntityNPC npc : npcs) {
 			npc.navigator.stop();
 			npc.teleportTo(x, y, z);
-			npc.setHomeHere();
+			npc.home.setHere();
 		}
 
 		return replyEach(c, npcs, name -> "Teleported " + name + " to " + where + ".", "Teleported %d NPCs to " + where + ".");
@@ -306,7 +306,7 @@ final class NpcCommands {
 		List<EntityNPC> npcs = getNpcs(c, "npcs");
 		for (EntityNPC npc : npcs) {
 			overrideRecovery(c, npc);
-			npc.setHomeHere();
+			npc.home.setHere();
 			npc.brain.set(new WanderBehavior(radius));
 		}
 
