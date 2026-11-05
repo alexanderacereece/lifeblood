@@ -58,6 +58,33 @@ public final class PrefabCheck {
 		return new Report(new ArrayList<>(warnings), swappable);
 	}
 
+	/**
+	 * What a prefab is made of, most common first, by short block name ("log_oak"), leaving out air: so whoever saves
+	 * one sees at once whether the box caught the build.
+	 */
+	public static Map<String, Integer> contents(Prefab prefab) {
+		List<Map.Entry<String, Integer>> counts = new ArrayList<>();
+		for (Map.Entry<String, Integer> entry : prefab.blockCounts().entrySet()) {
+			String name = shortName(entry.getKey());
+			if (!name.equals("air")) {
+				counts.add(Map.entry(name, entry.getValue()));
+			}
+		}
+
+		counts.sort(Map.Entry.<String, Integer>comparingByValue().reversed());
+		Map<String, Integer> result = new LinkedHashMap<>();
+		for (Map.Entry<String, Integer> entry : counts) {
+			result.merge(entry.getKey(), entry.getValue(), Integer::sum);
+		}
+
+		return result;
+	}
+
+	/** A saved block name without its namespace: "minecraft:block/log_oak" is "log_oak". */
+	public static String shortName(String name) {
+		return name.substring(Math.max(name.lastIndexOf(':'), name.lastIndexOf('/')) + 1);
+	}
+
 	private static void countSwappable(Block<?> block, int meta, Map<String, Integer> counts) {
 		if (WoodType.of(block) != null) {
 			counts.merge("logs (local wood)", 1, Integer::sum);
