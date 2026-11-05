@@ -20,7 +20,6 @@ public final class NpcSocial implements NpcPart {
 	/** How long an NPC must survive after being rescued for it to count (10 seconds). */
 	private static final int RESCUE_CONFIRM_TICKS = 200;
 	/** How often the NPC tends its love life: a relationship to keep up, or someone to ask out (1 minute). */
-	private static final int ROMANCE_INTERVAL = 1200;
 
 	private final EntityNPC npc;
 	/** Someone who just killed what was about to kill this NPC; becomes "saved my life" if it survives a while. */
@@ -52,7 +51,7 @@ public final class NpcSocial implements NpcPart {
 			}
 		}
 
-		if ((this.npc.tickCount + this.npc.id) % ROMANCE_INTERVAL == 0) {
+		if ((this.npc.tickCount + this.npc.id) % Romance.CHECK_INTERVAL == 0) {
 			Romance.tick(this.npc);
 		}
 	}

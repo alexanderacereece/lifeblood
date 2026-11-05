@@ -22,17 +22,21 @@ import org.joml.primitives.AABBd;
  * attraction allows who isn't blood family; the romantic quirk makes it come sooner.
  *
  * Stages (opinions on both sides, the NPC side for a player): dating once both are at 70 or more; engaged after
- * 7 days of dating with both at 80 or more; married after 5 days engaged, still at 80. A partner whose opinion
- * sinks too low (under 30 dating, under 10 engaged or married) breaks it off. With the daily pacing of gifts and
- * chats, that puts dating a couple of weeks into a friendship and a wedding a few weeks in.
+ * a year and a half of dating with both at 80 or more; married after a year engaged, still at 80. A partner whose
+ * opinion sinks too low (under 30 dating, under 10 engaged or married) breaks it off. Times are in in-game years
+ * (see Calendar), each standing for a real year, so courtships take as long as real ones.
  */
 public final class Romance {
 	public static final float DATING_OPINION = 70.0F;
 	public static final float ENGAGED_OPINION = 80.0F;
 	public static final float DATING_BREAKUP = 30.0F;
 	public static final float COMMITTED_BREAKUP = 10.0F;
-	public static final float DATING_DAYS = 7.0F;
-	public static final float ENGAGED_DAYS = 5.0F;
+	/** How long a couple dates before an engagement, in in-game years. */
+	public static final float DATING_YEARS = 1.5F;
+	/** How long an engagement lasts before the wedding, in in-game years. */
+	public static final float ENGAGED_YEARS = 1.0F;
+	/** How often each NPC's romance is checked ({@link #tick}), in ticks: once a minute. */
+	public static final int CHECK_INTERVAL = 1200;
 	private static final double COURTING_RANGE = 16.0;
 	private static final double WEDDING_GUEST_RANGE = 24.0;
 	/** Per check (once a minute), the chance a ready NPC makes a move; tripled for romantics. */
@@ -73,6 +77,21 @@ public final class Romance {
 
 	public static float daysTogether(PeopleRegistry.Partnership partnership, long now) {
 		return (now - partnership.since) / (float) Memory.TICKS_PER_DAY;
+	}
+
+	/** How long a couple has been at its current stage, in in-game years. */
+	public static float yearsTogether(PeopleRegistry.Partnership partnership, World world, long now) {
+		return (now - partnership.since) / (float) Calendar.ticksPerYear(world);
+	}
+
+	/** Whether a couple has dated long enough to get engaged. */
+	public static boolean datedLongEnough(PeopleRegistry.Partnership partnership, World world, long now) {
+		return yearsTogether(partnership, world, now) >= DATING_YEARS;
+	}
+
+	/** Whether a couple has been engaged long enough to marry. */
+	public static boolean engagedLongEnough(PeopleRegistry.Partnership partnership, World world, long now) {
+		return yearsTogether(partnership, world, now) >= ENGAGED_YEARS;
 	}
 
 	/** A loaded person by id: an NPC in the world or a player. */
@@ -123,29 +142,27 @@ public final class Romance {
 			}
 
 			float theirs = Opinions.of(other, npc);
-			float days = daysTogether(partnership, now);
 			float chance = PROPOSE_CHANCE * (npc.personality.has(Quirk.ROMANTIC) ? 2.0F : 1.0F);
-			if (partnership.stage == PeopleRegistry.Stage.DATING && days >= DATING_DAYS && mine >= ENGAGED_OPINION && theirs >= ENGAGED_OPINION
-				&& npc.getRandom().nextFloat() < chance) {
+			if (partnership.stage == PeopleRegistry.Stage.DATING && datedLongEnough(partnership, npc.world, now) && mine >= ENGAGED_OPINION
+				&& theirs >= ENGAGED_OPINION && npc.getRandom().nextFloat() < chance) {
 				npc.voice.bark("propose", other, null, true);
 				getEngaged(npc, other, family);
-			} else if (partnership.stage == PeopleRegistry.Stage.ENGAGED && days >= ENGAGED_DAYS && mine >= ENGAGED_OPINION
+			} else if (partnership.stage == PeopleRegistry.Stage.ENGAGED && engagedLongEnough(partnership, npc.world, now) && mine >= ENGAGED_OPINION
 				&& theirs >= ENGAGED_OPINION && npc.getRandom().nextFloat() < chance) {
 				wed(npc, other, family);
 			} else if (partnership.stage == PeopleRegistry.Stage.MARRIED && mine >= ENGAGED_OPINION && theirs >= ENGAGED_OPINION
-				&& npc.getRandom().nextFloat() < Children.BIRTH_CHANCE && Children.canHaveChild(family, npc.getUuid(), other.getUuid(), now)) {
+				&& npc.getRandom().nextFloat() < Children.birthChance(npc.world) && Children.canHaveChild(npc.world, family, npc.getUuid(), other.getUuid(), now)) {
 				Children.born(npc, other);
 			}
 		} else if (partner instanceof Player player && npc.distanceTo(player) <= COURTING_RANGE && npc.social.getRomanceRequest() == null) {
 			// With a player, the NPC can't just decide: it asks next time they talk.
-			float days = daysTogether(partnership, now);
-			if (partnership.stage == PeopleRegistry.Stage.MARRIED && mine >= ENGAGED_OPINION && npc.getRandom().nextFloat() < Children.BIRTH_CHANCE
-				&& Children.canHaveChild(family, npc.getUuid(), player.uuid, now)) {
+			if (partnership.stage == PeopleRegistry.Stage.MARRIED && mine >= ENGAGED_OPINION && npc.getRandom().nextFloat() < Children.birthChance(npc.world)
+				&& Children.canHaveChild(npc.world, family, npc.getUuid(), player.uuid, now)) {
 				Children.born(npc, player);
 				return;
 			}
 
-			if (partnership.stage == PeopleRegistry.Stage.DATING && days >= DATING_DAYS && mine >= ENGAGED_OPINION
+			if (partnership.stage == PeopleRegistry.Stage.DATING && datedLongEnough(partnership, npc.world, now) && mine >= ENGAGED_OPINION
 				&& npc.getRandom().nextFloat() < PROPOSE_CHANCE * 0.3F) {
 				npc.social.setRomanceRequest(Request.PROPOSE, player);
 				npc.voice.bark("want_to_talk", player, null, false);

@@ -108,12 +108,11 @@ public final class RomanceDialogue {
 		}
 
 		long now = npc.world.getWorldTime();
-		float days = Romance.daysTogether(partnership, now);
 		float opinion = Opinions.of(npc, player);
 		switch (partnership.stage) {
 			case DATING -> {
 				options.add(new DialogueOption("Will you marry me?", session -> {
-					if (days < Romance.DATING_DAYS || opinion < Romance.ENGAGED_OPINION) {
+					if (!Romance.datedLongEnough(partnership, npc.world, now) || opinion < Romance.ENGAGED_OPINION) {
 						session.show(aboutUs(npc, player, NpcDialogue.say(npc, player, "proposal_too_soon", "It's... a little soon, isn't it?")));
 						return;
 					}
@@ -126,7 +125,7 @@ public final class RomanceDialogue {
 			}
 			case ENGAGED -> {
 				options.add(new DialogueOption("Let's get married.", session -> {
-					if (days < Romance.ENGAGED_DAYS || opinion < Romance.ENGAGED_OPINION) {
+					if (!Romance.engagedLongEnough(partnership, npc.world, now) || opinion < Romance.ENGAGED_OPINION) {
 						session.show(aboutUs(npc, player, NpcDialogue.say(npc, player, "wedding_too_soon", "Soon. Let's not rush it.")));
 						return;
 					}

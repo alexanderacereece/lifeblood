@@ -63,6 +63,22 @@ public final class Calendar {
 		return (long) yearDays(world) * Memory.TICKS_PER_DAY;
 	}
 
+	/** A length of time in words: "3 days" under a year, "1.5 years" from then on. */
+	public static String describeLength(World world, long ticks) {
+		return describeLength(yearDays(world), ticks);
+	}
+
+	public static String describeLength(int yearDays, long ticks) {
+		double days = ticks / (double) Memory.TICKS_PER_DAY;
+		if (days < yearDays) {
+			long whole = Math.round(Math.floor(days));
+			return whole == 1 ? "1 day" : whole + " days";
+		}
+
+		double years = days / yearDays;
+		return String.format(Locale.ROOT, years < 10 ? "%.1f years" : "%.0f years", years);
+	}
+
 	public static long growUpTicks(World world) {
 		// 18 years by default (1008 days), set in the config.
 		return NpcConfig.yearsToGrowUp() * ticksPerYear(world);

@@ -6,13 +6,13 @@ import java.util.UUID;
 import net.minecraft.core.entity.EntityDispatcher;
 import net.minecraft.core.entity.Mob;
 import net.minecraft.core.entity.player.Player;
+import net.minecraft.core.world.World;
 import lifeblood.appearance.Appearance;
 import lifeblood.appearance.PartCatalog;
 import lifeblood.entity.EntityNPC;
 import lifeblood.entity.NpcGender;
 import lifeblood.people.NamePool;
 import lifeblood.people.PeopleRegistry;
-import lifeblood.social.Memory;
 import lifeblood.social.MemoryType;
 import org.jetbrains.annotations.Nullable;
 
@@ -21,20 +21,27 @@ import org.jetbrains.annotations.Nullable;
  * parents' personalities and looks, takes their faction and home, grows up over 18 in-game years (yearsToGrowUp), and is kept safe
  * (invincible, never fights) until then.
  *
- * A married couple at 80+ opinion, together and nearby, has about one child every ten in-game days, up to four,
- * and not until the youngest is at least five days old.
+ * A married couple at 80+ opinion, together and nearby, has about one child every two in-game years, up to four,
+ * and not until the youngest is a year and a half old. Times are in in-game years (see Calendar), each standing for
+ * a real year.
  */
 public final class Children {
 	public static final int MAX_CHILDREN = 4;
-	private static final float MIN_DAYS_BETWEEN = 5.0F;
-	/** Per romance check (once a minute): about one child every ten in-game days. */
-	public static final float BIRTH_CHANCE = 0.005F;
+	/** The youngest must be at least this old before another child, in in-game years. */
+	public static final float MIN_YEARS_BETWEEN = 1.5F;
+	/** Once another child is possible, how long one takes to come on average, in in-game years. */
+	public static final float AVERAGE_YEARS_TO_CHILD = 2.0F;
 
 	private Children() {
 	}
 
+	/** The chance, per romance check, that a couple who can have a child has one: about one every two years. */
+	public static float birthChance(World world) {
+		return Romance.CHECK_INTERVAL / (AVERAGE_YEARS_TO_CHILD * Calendar.ticksPerYear(world));
+	}
+
 	/** Whether this couple could have another child now (not counting chance). */
-	public static boolean canHaveChild(PeopleRegistry family, UUID first, UUID second, long now) {
+	public static boolean canHaveChild(World world, PeopleRegistry family, UUID first, UUID second, long now) {
 		List<UUID> children = family.childrenOf(first);
 		children.retainAll(family.childrenOf(second));
 		if (children.size() >= MAX_CHILDREN) {
@@ -43,7 +50,7 @@ public final class Children {
 
 		for (UUID child : children) {
 			PeopleRegistry.Person person = family.find(child);
-			if (person != null && person.born >= 0 && now - person.born < MIN_DAYS_BETWEEN * Memory.TICKS_PER_DAY) {
+			if (person != null && person.born >= 0 && now - person.born < MIN_YEARS_BETWEEN * Calendar.ticksPerYear(world)) {
 				return false;
 			}
 		}

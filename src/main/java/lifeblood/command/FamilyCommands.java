@@ -14,6 +14,7 @@ import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.Mob;
 import net.minecraft.core.net.command.CommandSource;
 import lifeblood.entity.EntityNPC;
+import lifeblood.family.Calendar;
 import lifeblood.family.Children;
 import lifeblood.family.Kinship;
 import lifeblood.family.Romance;
@@ -108,11 +109,11 @@ final class FamilyCommands {
 		PeopleRegistry family = PeopleRegistry.get(npc.world);
 		PeopleRegistry.Partnership partnership = family.partnershipOf(npc.getUuid());
 		if (partnership != null) {
-			reply(c, String.format(Locale.ROOT, "%s is %s %s (%.1f days).", npc.nickname, switch (partnership.stage) {
+			reply(c, String.format(Locale.ROOT, "%s is %s %s (%s).", npc.nickname, switch (partnership.stage) {
 				case DATING -> "dating";
 				case ENGAGED -> "engaged to";
 				case MARRIED -> "married to";
-			}, family.nameOf(partnership.other(npc.getUuid())), Romance.daysTogether(partnership, npc.world.getWorldTime())));
+			}, family.nameOf(partnership.other(npc.getUuid())), Calendar.describeLength(npc.world, npc.world.getWorldTime() - partnership.since)));
 		}
 
 		boolean any = partnership != null;

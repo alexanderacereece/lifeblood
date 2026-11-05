@@ -15,8 +15,8 @@ The way new couples form over time, so settlements change instead of staying fro
 
 Stages, each needing high opinions on both sides (for the player, only the NPC's side counts; the player decides for themself):
 1. **Dating** at 70 or more. One asks; the other accepts if their opinion is high enough and they're attracted, and a refusal leaves a "turned me down" memory. NPCs check about once a minute, romantics three times as often.
-2. **Engaged** after 7 days of dating with both at 80 or more.
-3. **Married** after 5 days engaged, still at 80 or more. A wedding: everyone nearby gets a "went to a wedding" memory and some cheer.
+2. **Engaged** after a year and a half of dating (84 in-game days) with both at 80 or more.
+3. **Married** after a year engaged (56 in-game days), still at 80 or more. A wedding: everyone nearby gets a "went to a wedding" memory and some cheer.
 
 With the gift and chat pacing ([opinions](personality.md#opinions)), that puts dating about two weeks into a friendship and a wedding a few weeks in.
 
@@ -29,7 +29,7 @@ Family is kept in the world's register of people (`lifeblood_people`, see [archi
 ## Children
 
 Married couples have children, which keeps settlements alive across generations. (Minecraft Comes Alive does something similar; this design is our own.)
-- A married couple at 80+ opinion, near each other, has about one child every ten in-game days, up to four, and not until the youngest is five days old. An NPC married to the player has children the same way.
+- A married couple at 80+ opinion, near each other, has about one child every two in-game years, up to four, and not until the youngest is a year and a half old. An NPC married to the player has children the same way. Like everything time-based, these are real-life lengths with an in-game year (56 days) as a year.
 - A child is born beside its NPC parent, with a name from `assets/lifeblood/names.txt`, its parents' faction and home, and family links set, so siblings, cousins and so on follow from the graph.
 - It starts at half size and grows to full size over 18 in-game years (1008 days in a world with 56-day years; `yearsToGrowUp` in `config/lifeblood.cfg` changes it). `/lb npc grow` shows or sets it. Its head grows from three quarters of an adult's to full size over the same years, for child proportions.
 - A child stays near a parent who's around, NPC or player, catching up when they walk off.

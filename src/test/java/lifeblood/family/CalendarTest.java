@@ -6,6 +6,17 @@ import lifeblood.social.Memory;
 import org.junit.jupiter.api.Test;
 
 class CalendarTest {
+	@Test
+	void lengthsReadInDaysThenYears() {
+		long day = 24000L;
+		assertEquals("0 days", Calendar.describeLength(56, 0L));
+		assertEquals("1 day", Calendar.describeLength(56, day));
+		assertEquals("55 days", Calendar.describeLength(56, 55 * day));
+		assertEquals("1.0 years", Calendar.describeLength(56, 56 * day));
+		assertEquals("1.5 years", Calendar.describeLength(56, 84 * day));
+		assertEquals("12 years", Calendar.describeLength(56, 12 * 56 * day));
+	}
+
 	private static final long DAY = Memory.TICKS_PER_DAY;
 	private static final int YEAR = Calendar.DEFAULT_YEAR_DAYS;
 

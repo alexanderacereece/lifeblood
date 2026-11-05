@@ -70,7 +70,6 @@ Each step is useful on its own and proves the next:
 
 ## Open questions
 
-- Romance and children predate the real-time rule and run faster: dating to engagement in 7 days (about six weeks), engagement to marriage in 5 (about a month), and a child about every ten days (about five a year). Whether to slow them to real time, or keep them quick for play.
 
 - The age-stopping item: its recipe, whether children can be given one, and whether the profile shows it.
 - Whether symbols on banners and shields are doable, for faction colors.
