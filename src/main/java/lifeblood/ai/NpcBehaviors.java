@@ -4,7 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
-import lifeblood.ai.behavior.FollowPlayerBehavior;
+import lifeblood.following.FollowPlayerBehavior;
 import lifeblood.ai.behavior.GoToBehavior;
 import lifeblood.ai.behavior.StayBehavior;
 import lifeblood.ai.behavior.WanderBehavior;

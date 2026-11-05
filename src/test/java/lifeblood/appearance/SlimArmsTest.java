@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.awt.image.BufferedImage;
-import lifeblood.skin.NpcSkinFiles;
 import org.junit.jupiter.api.Test;
 
 class SlimArmsTest {

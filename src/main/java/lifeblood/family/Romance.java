@@ -16,6 +16,7 @@ import lifeblood.social.Memory;
 import lifeblood.social.Opinions;
 import org.jetbrains.annotations.Nullable;
 import org.joml.primitives.AABBd;
+import lifeblood.world.Calendar;
 
 /**
  * How couples form and change, for NPCs with each other and with players. Anyone can fall for anyone their

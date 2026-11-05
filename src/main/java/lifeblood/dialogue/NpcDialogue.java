@@ -7,7 +7,7 @@ import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.player.Player;
 import lifeblood.combat.CombatStyle;
 import lifeblood.entity.EntityNPC;
-import lifeblood.entity.FollowDistance;
+import lifeblood.following.FollowDistance;
 import lifeblood.family.Kinship;
 import lifeblood.family.Romance;
 import lifeblood.ownership.Ownership;

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import net.minecraft.core.entity.player.Player;
-import lifeblood.entity.AgeStage;
+import lifeblood.family.AgeStage;
 import lifeblood.entity.EntityNPC;
 import lifeblood.personality.Quirk;
 import lifeblood.social.Memory;

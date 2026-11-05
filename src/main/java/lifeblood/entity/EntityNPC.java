@@ -21,27 +21,27 @@ import net.minecraft.core.util.helper.DamageType;
 import net.minecraft.core.util.helper.MathHelper;
 import net.minecraft.core.world.World;
 import lifeblood.ai.NpcBrain;
-import lifeblood.ai.NpcNavigator;
-import lifeblood.ai.behavior.RecoverBehavior;
-import lifeblood.ai.behavior.StayNearParentBehavior;
+import lifeblood.nav.NpcNavigator;
+import lifeblood.health.RecoverBehavior;
+import lifeblood.family.StayNearParentBehavior;
 import lifeblood.ai.routine.NpcRoutine;
 import lifeblood.appearance.Appearance;
 import lifeblood.appearance.PartCatalog;
-import lifeblood.combat.BrawlBehavior;
+import lifeblood.brawl.BrawlBehavior;
 import lifeblood.combat.CombatBehavior;
 import lifeblood.combat.CombatStyle;
-import lifeblood.combat.FactionRelation;
+import lifeblood.faction.FactionRelation;
 import lifeblood.combat.MonsterContact;
-import lifeblood.combat.NpcFactions;
-import lifeblood.combat.NpcRelations;
+import lifeblood.faction.NpcFactions;
+import lifeblood.faction.NpcRelations;
 import lifeblood.dialogue.NpcDialogue;
-import lifeblood.interaction.NpcInteractions;
+import lifeblood.ClientHooks;
 import lifeblood.inventory.NpcInventory;
 import lifeblood.people.PeopleRegistry;
 import lifeblood.perf.NpcProfiler;
 import lifeblood.personality.NpcPersonality;
 import lifeblood.personality.Quirk;
-import lifeblood.social.Brawl;
+import lifeblood.brawl.Brawl;
 import lifeblood.social.MemoryType;
 import lifeblood.social.NpcMemories;
 import lifeblood.social.Opinions;
@@ -50,6 +50,15 @@ import lifeblood.world.WorldSystems;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.primitives.AABBd;
+import lifeblood.appearance.SkinModel;
+import lifeblood.brawl.NpcBrawling;
+import lifeblood.family.NpcLife;
+import lifeblood.following.NpcFollowing;
+import lifeblood.health.HealthMode;
+import lifeblood.health.NpcEating;
+import lifeblood.health.NpcHealth;
+import lifeblood.personality.NpcAwareness;
+import lifeblood.social.NpcSocial;
 
 /**
  * A general-purpose NPC. The entity itself handles what every mob must (moving, fighting, being hurt, equipment,
@@ -66,11 +75,11 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private static final String SAVE_KEY = "Lifeblood";
 	static final int DATA_SKIN = 20;
 	static final int DATA_SKIN_MODEL = 21;
-	static final int DATA_DOWNED = 22;
+	public static final int DATA_DOWNED = 22;
 	/** The NPC's look built from parts (see Appearance), as an encoded string; empty for none. */
 	static final int DATA_APPEARANCE = 23;
 	/** How grown up it is, 0 (newborn) to 100 (adult). */
-	static final int DATA_GROWTH = 24;
+	public static final int DATA_GROWTH = 24;
 	static final int DATA_GENDER = 25;
 	/** A conversation ends if the player walks further away than this. */
 	private static final float TALK_DISTANCE = 8.0F;
@@ -339,7 +348,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	}
 
 	/** Resizes the hitbox (for growing up), keeping it where it stands. */
-	void resize(float width, float height) {
+	public void resize(float width, float height) {
 		this.setSize(width, height);
 		this.setPos(this.x, this.y, this.z);
 	}
@@ -369,7 +378,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 			return true;
 		}
 
-		NpcInteractions.interact(this, player);
+		ClientHooks.interact(this, player);
 		return true;
 	}
 
@@ -429,7 +438,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	}
 
 	/** Lets go of wanting to fight back against this attacker (after a brawl with them ends fairly). */
-	void forgiveAttacker(Entity attacker) {
+	public void forgiveAttacker(Entity attacker) {
 		if (this.lastAttacker == attacker) {
 			this.lastAttacker = null;
 		}
@@ -702,7 +711,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	}
 
 	/** Teleports home, for getting out of somewhere deadly. */
-	void goHome() {
+	public void goHome() {
 		this.teleportTo(this.homeX, this.homeY, this.homeZ);
 	}
 

@@ -1,34 +1,82 @@
 # Architecture
 
-How the mod is put together, and where new systems plug in. Everything here is in `src/main/java/lifeblood/`.
+How the mod is put together, where things go, and the rules that keep it that way. Everything is in `src/main/java/lifeblood/`.
+
+## Finding things
+
+Four layers, each finer than the last. Read down only as far as you need:
+
+1. **[CLAUDE.md](../CLAUDE.md):** the principles and the working rules.
+2. **This page:** the packages, how the systems fit together, and where new things go.
+3. **[code-map.md](code-map.md):** every package and class with one line on what it is. It's generated from the doc comments on every build, so it's never out of date. **Search it before writing anything new**: if something close exists, use it or extend it.
+4. **`package-info.java` in each package:** what the package is for, which class to start with, and what doesn't belong in it. Then the class doc comments.
 
 ## Packages
 
+**One system, one package: everything about a system lives in its package.** That covers its NPC part, its behaviors, its saved data and its helpers. Commands, screens and mixins are the exceptions, since they're layers over every system.
+
 | Package | What's in it |
 |---|---|
-| `ai` | The brain (`NpcBrain`), saved behaviors (`NpcBehaviors`), the navigator; `ai/behavior` holds follow, stay, go to, wander, recover; `ai/routine` holds schedules |
-| `nav` | The pathfinder: the world as walkable spaces (`NavGrid`), the search, paths, the shared per-tick budget |
-| `entity` | `EntityNPC` and its parts (life, health, eating, social, awareness, following, brawling), plus small enums (gender, age stage, health mode) |
-| `inventory` | What an NPC carries, and the inventory screen's slots |
-| `personality` | Trait axes, quirks, tastes, item defaults, surroundings (climate, biome likes) |
-| `social` | Memories, opinions, compatibility, brawls, reactions to deaths |
-| `family` | Kinship, romance, children, the calendar (ages, birthdays) |
-| `people` | The register of everyone who has lived in the world, and the name pool (`NamePool`, from `names.txt`) |
-| `combat` | Fighting, archery, threat, targeting, factions and relations |
+| `lifeblood` | The entry point (`Lifeblood`), settings (`NpcConfig`), and `ClientHooks`, the only way common code reaches the client |
+| `entity` | `EntityNPC`, `NpcPart` and `NpcGender`. Only the core; parts live with their systems |
+| `ai` | The brain (`NpcBrain`) and the registry of saved behaviors (`NpcBehaviors`); `ai/behavior` holds the plain orders (go to, stay, wander), `ai/routine` the daily schedules |
+| `nav` | Getting around: the walkable-space grid, the path search, the per-tick budget, and `NpcNavigator`, which walks paths |
+| `health` | Health modes, being downed and recovering (`RecoverBehavior`), eating |
+| `family` | Kinship, romance, children, life stages and birthdays (`NpcLife`, `AgeStage`), a child keeping near a parent |
+| `people` | The register of everyone who has lived in the world, and the name pool |
+| `personality` | Trait axes, quirks, tastes, item defaults, attraction, surroundings, and noticing them (`NpcAwareness`) |
+| `social` | Memories, opinions, compatibility, social events, dealings with particular people (`NpcSocial`) |
+| `brawl` | Fistfights: the brawl, the behavior, and the NPC's part |
+| `following` | Following a player: the order, the distances, the NPC's part |
+| `combat` | Real fights: fight or flight, threat, melee and archery, mobs targeting NPCs |
+| `faction` | Factions, their colors and relations, and how an NPC regards a person (`NpcFactions`) |
+| `inventory` | What an NPC carries, and its menu |
 | `dialogue` | Conversation menus and their options: gifts, romance, words, chat limits |
 | `speech` | The speech engine, the line library, facts for lines, speech styles, the voice |
 | `words` | The word book: words players teach |
-| `appearance` | Looks from parts and palettes, slim arms |
-| `skin` | Whole-skin files from `npc_skins/` |
+| `appearance` | Looks from parts and palettes, whole skin files, slim arms |
 | `ownership` | Who placed each block, and who shares what |
-| `building` | Prefabs: saving, turning (`BlockTurns`), material and color swaps (`Swaps`, `WoodType`, `StoneFamily`), surveying a site (`LocalMaterials`), placing, the save check |
-| `world` | World systems: logic that runs per world on its own clock |
+| `building` | Prefabs: saving, turning, material and color swaps, surveying a site, placing, the save check |
+| `world` | The calendar (`Calendar`), and world systems that run per world on their own clock |
+| `item` | The mod's items |
 | `command` | `/lb`, one class per area; admin and testing tools only |
-| `interaction` | The bridge from right-clicking an NPC to the screens |
-| `item` | The mod's items (guardian amulet, word book) |
 | `client` | Everything client-only: renderer, textures, screens |
 | `mixin` | Changes to BTA classes, each named after its target |
-| `perf`, `util` | Profiling and small shared helpers |
+| `perf`, `util` | Profiling, and small helpers shared by several systems |
+
+## Where new things go
+
+| Adding... | Goes... |
+|---|---|
+| A new system (skills, work, settlements, travel) | Its own package with a `package-info.java`, plus a row in the table above |
+| State every NPC has | An `NpcPart` in its system's package: a field and an entry in `parts` in `EntityNPC` |
+| Something an NPC does | A behavior in its system's package. Register it in `ai/NpcBehaviors` if it's saved, and in `ai/routine/Routines` if a schedule uses it |
+| World-wide state | A register saved as `SavedData`, in its system's package |
+| Logic that runs on its own clock | A `WorldSystem`, registered in `world/WorldSystems` |
+| Something to say in conversation | A `DialogueMenus` contributor, from the system's package |
+| Lines NPCs say | A `.speech` file, with facts in `speech/SpeechFacts` |
+| A command | A branch in the area's class in `command/`, or a new area class |
+| A screen | `client/`, opened through a hook in `ClientHooks` |
+| A hook into BTA | A thin mixin in `mixin/` that calls the system's own code |
+| A helper | Wherever the system that owns the idea lives. Only truly general code goes in `util` |
+
+## The rules, and what checks them
+
+`ArchitectureTest` fails the build when one of these breaks. Its messages say how to fix it. Rules change only on purpose, in this page, CLAUDE.md and the test together.
+
+| Rule | Why |
+|---|---|
+| Every package has a `package-info.java` with a doc comment | Says what goes where |
+| Every class has a doc comment | It feeds the code map, and says what the class is |
+| Every top-level package is in the table above | New systems get placed on purpose |
+| Common code never imports `lifeblood.client` or `net.minecraft.client` (only `client/` and the client mixins in `lifeblood.mixins.json` may) | A dedicated server has no client classes; touching one crashes it |
+| Nothing outside `command/` imports it (except the entry point) | Commands are tools over the game, never part of it |
+| Class names are unique across the project | A name says where to look; a second `X` means the first wasn't found |
+| Source files stay under 600 lines; the few allowed over can't grow, and the list only shrinks | Big files hide code and invite duplication |
+| Every mixin is listed in `lifeblood.mixins.json` and named after its target | Mixins are easy to find and never silently unused |
+| Tests sit in the same package as what they test | Moving a class moves its test with it |
+
+`CodeMapTest` rewrites [code-map.md](code-map.md) whenever it's out of date and fails once, so the new map gets committed with the change.
 
 ## The NPC
 
@@ -37,56 +85,85 @@ How the mod is put together, and where new systems plug in. Everything here is i
 | Field | Class | What it is |
 |---|---|---|
 | `brain` | `ai/NpcBrain` | Picks the behavior to run each tick |
-| `navigator` | `ai/NpcNavigator` | Pathfinding and moving along paths |
+| `navigator` | `nav/NpcNavigator` | Pathfinding and moving along paths |
 | `inventory` | `inventory/NpcInventory` | Armor, hand and a 35-slot pack: as much as a player carries |
 | `personality` | `personality/NpcPersonality` | Trait axes, quirks and tastes |
 | `memories` | `social/NpcMemories` | What happened, feeding mood and opinions |
-| `relations` | `combat/NpcRelations` | Debug overrides of how it treats players |
+| `relations` | `faction/NpcRelations` | Debug overrides of how it treats players |
 | `voice` | `speech/NpcVoice` | Saying lines, with cooldowns and its speech style |
-| `life` | `entity/NpcLife` | Birth, growing up, birthdays, homeland |
-| `health` | `entity/NpcHealth` | Health mode, being downed, recovering |
-| `eating` | `entity/NpcEating` | Eating by the player's rules |
-| `social` | `entity/NpcSocial` | Rescues, gift days, chat limits, romance questions |
-| `awareness` | `entity/NpcAwareness` | Noticing weather, seasons and places |
-| `following` | `entity/NpcFollowing` | Following a player and watching what they do |
-| `brawling` | `entity/NpcBrawling` | Fistfights, and telling a brawl punch from an attack |
+| `life` | `family/NpcLife` | Birth, growing up, birthdays, homeland |
+| `health` | `health/NpcHealth` | Health mode, being downed, recovering |
+| `eating` | `health/NpcEating` | Eating by the player's rules |
+| `social` | `social/NpcSocial` | Rescues, gift days, chat limits, romance questions |
+| `awareness` | `personality/NpcAwareness` | Noticing weather, seasons and places |
+| `following` | `following/NpcFollowing` | Following a player and watching what they do |
+| `brawling` | `brawl/NpcBrawling` | Fistfights, and telling a brawl punch from an attack |
 | `routine` | `ai/routine/NpcRoutine` | Its schedule for the day |
 
-The last eight are `NpcPart`s: each has its own `tick()`, `save()` and `load()`, writing its own keys into the NPC's save compound. **A new per-NPC system is a new part:** write the class, add a field, add it to the `parts` list. The entity calls the rest.
+The last eight are `NpcPart`s. Each has its own `tick()`, `save()` and `load()`, and writes its own keys into the NPC's save compound. **A new per-NPC system is a new part in its own package:** write the class, add a field, add it to the `parts` list. The entity calls the rest.
 
 ## What drives an NPC
 
 `NpcBrain` runs the highest-priority behavior that can run, in three layers:
 
-1. **Instincts**: combat, brawls, recovering, staying near a parent. Built into every NPC, never saved.
-2. **Orders**: follow, stay, go somewhere. Set by players and commands, and saved. Every behavior that can be saved is registered in `ai/NpcBehaviors`.
-3. **Routine**: with no orders, the NPC does what its schedule says for the hour.
+1. **Instincts:** combat, brawls, recovering, staying near a parent. Built into every NPC, never saved.
+2. **Orders:** follow, stay, go somewhere. Set by players and commands, and saved. Every behavior that can be saved is registered in `ai/NpcBehaviors`.
+3. **Routine:** with no orders, the NPC does what its schedule says for the hour.
 
-Routines are in `ai/routine`. A `Schedule` is a list of blocks ("from 6, work; from 18, socialize; from 22, sleep"), and each activity names the behavior that carries it out. Both are registered in `Routines`. Today there's one activity (wander) and one schedule (wander all day). **Occupations plug in here:** register their activities and schedules, then set an NPC's schedule.
+Routines are in `ai/routine`.
+- A `Schedule` is a list of blocks ("from 6, work; from 18, socialize; from 22, sleep"), and each activity names the behavior that carries it out.
+- Both are registered in `Routines`.
+- Today there's one activity (wander) and one schedule (wander all day).
+- **Occupations plug in here:** register their activities and schedules, then set an NPC's schedule.
 
 ## The world
 
-**The register of people** (`people/PeopleRegistry`, saved as `lifeblood_people`) has a record for everyone who has lived in the world: name, gender, birth, homeland, faction, where and when they were last seen, whether they're alive, their parents and partnerships. Records outlast entities, so anything that needs to reason about people who aren't loaded (relatives, rulers, voters, gossip) reads the register. NPCs check in as they tick. `loaded(world, id)` finds a loaded NPC by id without searching the world.
+**The register of people** (`people/PeopleRegistry`, saved as `lifeblood_people`) has a record for everyone who has lived in the world. A record holds their name, gender, birth, homeland, faction, where and when they were last seen, whether they're alive, their parents and partnerships.
+- Records outlast entities, so anything that needs to reason about people who aren't loaded (relatives, rulers, voters, gossip) reads the register.
+- NPCs check in as they tick.
+- `loaded(world, id)` finds a loaded NPC by id without searching the world.
 
-**World systems** (`world/WorldSystems`) run on a per-world clock, whether or not any NPC is nearby. A `WorldSystem` has an interval and a `tick(world)`. Register it in `WorldSystems`. The first one keeps the register's list of loaded NPCs tidy. **Settlements, factions, elections, wars and trade between towns go here.** The clock counts steadily even when the time of day jumps (sleeping) or is frozen.
+**Time** is `world/Calendar`. An in-game year (56 days by default) stands for a real year in every time-based mechanic, so durations are written in years.
 
-**Ownership** (`ownership/`) records who placed each block, saved with each chunk (`ChunkOwners`, added to chunks by `ChunkMixin` and saved by `ChunkLoaderMixin`). `BlockOwners` is the way in: `ownerAt`, `mayUse`, and `placingAs(owner, action)` so blocks an NPC places are its own; `ItemStackMixin` does the same for players using an item on a block. `Ownership.shares` says who shares what someone owns. Items are owned by where they are: an NPC's inventory, or a container whose block someone owns.
+**World systems** (`world/WorldSystems`) run on a per-world clock, whether or not any NPC is nearby.
+- A `WorldSystem` has an interval and a `tick(world)`; register it in `WorldSystems`.
+- The first one keeps the register's list of loaded NPCs tidy.
+- **Settlements, factions, elections, wars and trade between towns go here.**
+- The clock counts steadily even when the time of day jumps (sleeping) or is frozen.
 
-**Factions** (`combat/FactionRegistry`, saved as `lifeblood_factions`) hold each faction's default stance, its colors (`FactionColors`: primary and secondary), explicit relations between factions, and which faction each player has joined.
+**Ownership** (`ownership/`) records who placed each block, saved with each chunk.
+- `ChunkOwners` is added to chunks by `ChunkMixin` and saved by `ChunkLoaderMixin`.
+- `BlockOwners` is the way in: `ownerAt`, `mayUse`, and `placingAs(owner, action)` so blocks an NPC places are its own. `ItemStackMixin` does the same for players using an item on a block.
+- `Ownership.shares` says who shares what someone owns.
+- Items are owned by where they are: an NPC's inventory, or a container whose block someone owns.
+
+**Factions** (`faction/FactionRegistry`, saved as `lifeblood_factions`) hold each faction's default stance, its colors (`FactionColors`: primary and secondary), explicit relations between factions, and which faction each player has joined. `faction/NpcFactions` combines these with opinions and overrides into how one NPC regards one person.
 
 **The word book** (`words/WordBook`, saved as `lifeblood_words`) holds every word players have taught.
 
+## Client and server
+
+Game logic lives in common code; `client/` only shows things. When common code needs the client (open a screen, rebuild textures), it calls `ClientHooks`. The client fills the hooks in at startup (`LifebloodClient`), and on a dedicated server they do nothing. A new thing the client does for common code gets a new hook in the same shape.
+
 ## Talking
 
-**Dialogue menus** (`dialogue/DialogueMenus`): the main menu, the questions menu and the practical menu are built from contributions, each with an order number. **A new system adds options by registering a contributor**, never by editing the menus. The built-in options use steps of 100 (`NpcDialogue`'s static block).
+**Dialogue menus** (`dialogue/DialogueMenus`) build the main, questions and practical menus from contributions, each with an order number. **A new system adds options by registering a contributor**, never by editing the menus. The built-in options use steps of 100 (`NpcDialogue`'s static block).
 
-Options act on the conversation through `DialogueSession`, which the client's dialogue screen implements. Option actions change the game directly. That works in single-player. For multiplayer, the session is where a message to the server would go: keep game logic in the option actions and out of the screens, and it stays a contained change.
+Options act on the conversation through `DialogueSession`, which the client's dialogue screen implements, and their actions change the game directly. That works in single-player. For multiplayer, the session is where a message to the server would go. Keep game logic in the option actions and out of the screens, and that stays a contained change.
 
-**Speech** is data: `assets/lifeblood/speech/*.speech`, one file per topic, with the format described at the top of `basics.speech`. Extra `.speech` files in the game folder's `npc_speech/` add lines without rebuilding (`/lb reload speech`). Facts and words a line can use are set in `speech/SpeechFacts` and per event. `SpeechFilesTest` checks every condition and `[reference]`: a new fact or word needs adding to its lists.
+**Speech** is data: `assets/lifeblood/speech/*.speech`, one file per topic.
+- The format is described at the top of `basics.speech`.
+- Extra `.speech` files in the game folder's `npc_speech/` add lines without rebuilding (`/lb reload speech`).
+- Facts and words a line can use are set in `speech/SpeechFacts` and per event.
+- `SpeechFilesTest` checks every condition and `[reference]`, so a new fact or word needs adding to its lists.
 
 ## Saving and old saves
 
-Each system saves its own data: parts into the NPC's compound, world registers as `SavedData`. Nothing converts older saves right now: development worlds are disposable, so formats change freely. NPCs save a `DataVersion` so that, once long-term worlds exist, a `save/SaveUpgrades` class can rewrite old data into the current format before the normal loading code sees it. That class would be temporary by design and deleted at content 1.0.
+Each system saves its own data: parts into the NPC's compound, world registers as `SavedData`. Nothing converts older saves right now: development worlds are disposable, so formats change freely.
+
+NPCs save a `DataVersion`. Once long-term worlds exist, a `save/SaveUpgrades` class can rewrite old data into the current format before the normal loading code sees it. That class would be temporary by design and deleted at content 1.0.
+
+Moving a class between packages never touches saves: save keys and entity ids don't depend on class names.
 
 ## Settings
 
@@ -94,13 +171,35 @@ Each system saves its own data: parts into the NPC's compound, world registers a
 
 ## Commands
 
-**Commands are tools, never the way to play.** Everything a player does happens through items, screens and NPCs; `/lb` is for admins, building content and testing. It's assembled in `command/LifebloodCommand` from one class per area (`NpcCommands`, `PersonalityCommands` for personality, tastes and social, `FamilyCommands` for family and words, `LookCommands`, `FactionCommands`, `PrefabCommands`, `ToolCommands` for owner, reload and debug), sharing `CommandSupport` for suggestions and replies. **A new area gets its own class** with an `addTo(root)` method.
+**Commands are tools, never the way to play.** Everything a player does happens through items, screens and NPCs; `/lb` is for admins, building content and testing. It's assembled in `command/LifebloodCommand` from one class per area, which share `CommandSupport` for suggestions and replies:
+
+| Class | Covers |
+|---|---|
+| `NpcCommands` | NPCs |
+| `PersonalityCommands` | Personality, tastes and social |
+| `FamilyCommands` | Family and words |
+| `LookCommands` | Looks |
+| `FactionCommands` | Factions |
+| `PrefabCommands` | Prefabs |
+| `ToolCommands` | Owner, reload and debug |
+
+**A new area gets its own class** with an `addTo(root)` method.
 
 Rules every command follows:
-- **Made with `CommandTree.branch(path, description)`**, so typing any part of the tree on its own lists what's under it with descriptions (`/lb`, `/lb npc`, `/lb npc heal`), and vanilla `/help lb npc` works too.
-- **Vanilla's shape:** the verb, then who it's for, then values (`/lb npc heal <npcs>`, like `/heal <entities>`). Given who but no value, a command shows the current value (`/lb npc gender @e[type=lifeblood:npc]`), like `/gamerule`. Commands that change several NPCs reply per NPC, or with a count for many.
-- **Targets are `TargetArgument`s**: any vanilla selector (`@s`, `@p`, `@e[type=lifeblood:npc,name=Walter,limit=1,sort=nearest]`), an entity id, or a name (an NPC's, quoted if it has spaces, or a player's). Single targets refuse selectors that could match several, as vanilla does; a name shared by several NPCs picks the nearest.
+- **Made with `CommandTree.branch(path, description)`.** Typing any part of the tree on its own lists what's under it, with descriptions (`/lb`, `/lb npc`, `/lb npc heal`). Vanilla `/help lb npc` works too.
+- **Vanilla's shape:** the verb, then who it's for, then values (`/lb npc heal <npcs>`, like `/heal <entities>`).
+  - Given who but no value, a command shows the current value (`/lb npc gender @e[type=lifeblood:npc]`), like `/gamerule`.
+  - Commands that change several NPCs reply per NPC, or with a count for many.
+- **Targets are `TargetArgument`s**, which accept:
+  - any vanilla selector (`@s`, `@p`, `@e[type=lifeblood:npc,name=Walter,limit=1,sort=nearest]`);
+  - an entity id;
+  - a name: an NPC's (quoted if it has spaces) or a player's.
+
+  Single targets refuse selectors that could match several, as vanilla does. A name shared by several NPCs picks the nearest.
 
 ## Tests
 
-`./gradlew test` runs the unit tests in `src/test/java`. They cover pure logic: the calendar, kinship, age stages, appearance encoding, slim arms, words, the register of people, schedules, ownership records, prefab data, turning (positions, directions and every facing rule going full circle), faction colors, and the speech files. Tests run with the default config, without a world.
+`./gradlew test` runs the unit tests in `src/test/java`, each in the same package as the class it tests.
+- They cover pure logic: the calendar, kinship, age stages, appearance encoding, slim arms, words, the register of people, schedules, ownership records, prefab data, turning (positions, directions and every facing rule going full circle), faction colors, the command tree and the speech files.
+- `ArchitectureTest` and `CodeMapTest` check the layout itself.
+- Tests run with the default config, without a world.

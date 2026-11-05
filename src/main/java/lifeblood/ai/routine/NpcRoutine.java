@@ -4,7 +4,7 @@ import com.mojang.nbt.tags.CompoundTag;
 import lifeblood.ai.NpcBehavior;
 import lifeblood.entity.EntityNPC;
 import lifeblood.entity.NpcPart;
-import lifeblood.family.Calendar;
+import lifeblood.world.Calendar;
 import org.jetbrains.annotations.Nullable;
 
 /**

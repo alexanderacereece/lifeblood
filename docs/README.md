@@ -4,7 +4,8 @@ An NPC framework for Better Than Adventure 8.0.1: villagers with personalities, 
 
 | Doc | Covers |
 |---|---|
-| [architecture.md](architecture.md) | How the code is organized, and where new systems plug in |
+| [architecture.md](architecture.md) | How the code is organized, where new things go, and the rules the build checks |
+| [code-map.md](code-map.md) | Every package and class, one line each (generated) |
 | [personality.md](personality.md) | Trait axes, quirks, mood, opinions, brawls, tastes, archetype labels |
 | [family.md](family.md) | Kinship, romance, children, ages and birthdays, the player's love life |
 | [health.md](health.md) | Health modes, being downed, the guardian amulet |
@@ -58,6 +59,7 @@ Each step is useful on its own and proves the next:
 - No code reads old saves while development worlds are disposable. Once long-term worlds start, it lives in one place and goes at content 1.0.
 - Nothing needs a command to play: everything is reached through items, screens and NPCs. Commands are admin and testing tools, all under `/lb`.
 - The build stays ready for multiplayer where that doesn't get in the way of the main vision.
+- Keeping the code easy to find your way around comes before any one feature: one package per system, a generated [code map](code-map.md), and layout rules the build checks (`ArchitectureTest`).
 - Lifeblood is meant to start with a new world; builds from before it was added aren't protected.
 - One new axis, ambition, plus the homebody and wanderer quirks, for life choices. No more than that.
 - NPCs choose by inclination among real options the world offers; balance shapes the options, not the NPC.

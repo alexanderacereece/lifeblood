@@ -13,7 +13,7 @@ import java.util.function.Consumer;
 import net.minecraft.core.entity.Entity;
 import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.util.helper.MathHelper;
-import lifeblood.entity.AgeStage;
+import lifeblood.family.AgeStage;
 import lifeblood.entity.EntityNPC;
 import lifeblood.personality.Quirk;
 import lifeblood.personality.Surroundings;

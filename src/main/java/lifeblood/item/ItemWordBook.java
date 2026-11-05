@@ -4,7 +4,7 @@ import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.item.Item;
 import net.minecraft.core.item.ItemStack;
 import net.minecraft.core.world.World;
-import lifeblood.interaction.NpcInteractions;
+import lifeblood.ClientHooks;
 import org.jetbrains.annotations.NotNull;
 
 /** Opens the word book: every word players have taught NPCs, who knows each, and a way to delete them. */
@@ -15,7 +15,7 @@ public class ItemWordBook extends Item {
 
 	@Override
 	public ItemStack onUse(@NotNull ItemStack selfStack, @NotNull World world, @NotNull Player player) {
-		NpcInteractions.openWordBook(player);
+		ClientHooks.openWordBook(player);
 		return selfStack;
 	}
 }

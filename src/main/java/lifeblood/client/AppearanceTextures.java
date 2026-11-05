@@ -17,8 +17,8 @@ import lifeblood.appearance.Appearance;
 import lifeblood.appearance.AppearanceLayer;
 import lifeblood.appearance.PartCatalog;
 import lifeblood.appearance.SlimArms;
-import lifeblood.entity.SkinModel;
-import lifeblood.skin.NpcSkinFiles;
+import lifeblood.appearance.SkinModel;
+import lifeblood.appearance.NpcSkinFiles;
 import org.jetbrains.annotations.Nullable;
 
 /**

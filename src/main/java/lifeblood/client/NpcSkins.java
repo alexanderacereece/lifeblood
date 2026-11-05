@@ -12,8 +12,8 @@ import net.minecraft.client.render.PlayerSkinParser;
 import net.minecraft.client.render.TextureManager;
 import net.minecraft.client.render.texture.Texture;
 import lifeblood.Lifeblood;
-import lifeblood.entity.SkinModel;
-import lifeblood.skin.NpcSkinFiles;
+import lifeblood.appearance.SkinModel;
+import lifeblood.appearance.NpcSkinFiles;
 import org.jetbrains.annotations.Nullable;
 
 /**

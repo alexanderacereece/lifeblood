@@ -6,20 +6,18 @@ import static lifeblood.command.CommandTree.branch;
 import com.mojang.brigadier.builder.ArgumentBuilderLiteral;
 import com.mojang.brigadier.context.CommandContext;
 import java.util.UUID;
-import net.minecraft.core.Global;
 import net.minecraft.core.entity.player.Player;
 import net.minecraft.core.net.command.CommandSource;
 import net.minecraft.core.net.command.arguments.ArgumentTypeVector3d;
 import net.minecraft.core.util.helper.MathHelper;
 import net.minecraft.core.world.World;
+import lifeblood.ClientHooks;
 import lifeblood.appearance.PartCatalog;
-import lifeblood.client.AppearanceTextures;
-import lifeblood.client.NpcSkins;
 import lifeblood.dialogue.SocialLimits;
 import lifeblood.ownership.BlockOwners;
 import lifeblood.people.PeopleRegistry;
 import lifeblood.perf.NpcProfiler;
-import lifeblood.skin.NpcSkinFiles;
+import lifeblood.appearance.NpcSkinFiles;
 import lifeblood.speech.SpeechLibrary;
 
 /**
@@ -78,17 +76,13 @@ final class ToolCommands {
 
 	private static int reloadParts(CommandContext<CommandSource> c) {
 		PartCatalog catalog = PartCatalog.reload();
-		if (!Global.isServer) {
-			AppearanceTextures.reload();
-		}
+		ClientHooks.reloadAppearanceTextures();
 
 		return reply(c, "Loaded " + catalog.partCount() + " parts and " + catalog.paletteCount() + " palettes.");
 	}
 
 	private static int reloadSkins(CommandContext<CommandSource> c) {
-		if (!Global.isServer) {
-			NpcSkins.reload();
-		}
+		ClientHooks.reloadSkins();
 
 		return reply(c, "NPC skins will be reloaded from " + NpcSkinFiles.getDirectory());
 	}

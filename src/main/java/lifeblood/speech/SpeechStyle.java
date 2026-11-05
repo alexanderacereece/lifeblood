@@ -7,7 +7,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.jetbrains.annotations.Nullable;
-import lifeblood.entity.AgeStage;
+import lifeblood.family.AgeStage;
 import lifeblood.entity.EntityNPC;
 import lifeblood.personality.TraitAxis;
 

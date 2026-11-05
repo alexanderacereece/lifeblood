@@ -3,7 +3,7 @@ package lifeblood.ai.routine;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import lifeblood.family.Calendar;
+import lifeblood.world.Calendar;
 import org.junit.jupiter.api.Test;
 
 class ScheduleTest {

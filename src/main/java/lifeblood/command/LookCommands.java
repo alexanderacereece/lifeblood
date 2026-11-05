@@ -16,8 +16,8 @@ import lifeblood.appearance.Appearance;
 import lifeblood.appearance.AppearanceLayer;
 import lifeblood.appearance.PartCatalog;
 import lifeblood.entity.EntityNPC;
-import lifeblood.entity.SkinModel;
-import lifeblood.skin.NpcSkinFiles;
+import lifeblood.appearance.SkinModel;
+import lifeblood.appearance.NpcSkinFiles;
 
 /** /lb look: how NPCs look: appearance parts, palettes and skin files. Reloading them is under /lb reload. */
 final class LookCommands {

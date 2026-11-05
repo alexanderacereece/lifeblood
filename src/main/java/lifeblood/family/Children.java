@@ -15,6 +15,7 @@ import lifeblood.people.NamePool;
 import lifeblood.people.PeopleRegistry;
 import lifeblood.social.MemoryType;
 import org.jetbrains.annotations.Nullable;
+import lifeblood.world.Calendar;
 
 /**
  * Married couples have children, so settlements carry on across generations. A child inherits a blend of its

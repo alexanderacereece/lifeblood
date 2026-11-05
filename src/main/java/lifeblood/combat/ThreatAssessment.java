@@ -22,9 +22,11 @@ import net.minecraft.core.item.ItemStack;
 import net.minecraft.core.util.helper.DamageType;
 import net.minecraft.core.util.helper.MathHelper;
 import lifeblood.entity.EntityNPC;
-import lifeblood.entity.HealthMode;
+import lifeblood.health.HealthMode;
 import org.jetbrains.annotations.Nullable;
 import org.joml.primitives.AABBd;
+import lifeblood.faction.FactionRelation;
+import lifeblood.faction.NpcFactions;
 
 /**
  * A snapshot of how dangerous an NPC's surroundings are: the hostiles nearby,

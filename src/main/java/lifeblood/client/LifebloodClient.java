@@ -5,11 +5,15 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.render.item.model.ItemModelStandard;
 import lifeblood.Lifeblood;
 import lifeblood.entity.EntityNPC;
-import lifeblood.interaction.NpcInteractions;
+import lifeblood.ClientHooks;
 import lifeblood.item.NpcItems;
 import turniplabs.halplibe.event.defs.ClientEvents;
 import turniplabs.halplibe.util.dependency.Key;
 
+/**
+ * The client side of the mod, started by Fabric on the client only: renderers, item icons, and the {@link ClientHooks}
+ * through which common code opens screens and refreshes textures.
+ */
 public class LifebloodClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
@@ -22,14 +26,16 @@ public class LifebloodClient implements ClientModInitializer {
 				dispatcher.addDispatch(new ItemModelStandard(NpcItems.guardianAmulet, true));
 				dispatcher.addDispatch(new ItemModelStandard(NpcItems.wordBook, true));
 			});
-		NpcInteractions.setWordBookHandler(player -> {
+		ClientHooks.setAppearanceReload(AppearanceTextures::reload);
+		ClientHooks.setSkinReload(NpcSkins::reload);
+		ClientHooks.setWordBookHandler(player -> {
 			Minecraft mc = Minecraft.getMinecraft();
 			if (player == mc.thePlayer) {
 				mc.displayScreen(new WordBookScreen(player));
 			}
 		});
 
-		NpcInteractions.setHandler((npc, player) -> {
+		ClientHooks.setHandler((npc, player) -> {
 			Minecraft mc = Minecraft.getMinecraft();
 			if (player == mc.thePlayer) {
 				mc.displayScreen(new NpcDialogueScreen(npc, player, npc.getDialogue(player)));

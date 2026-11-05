@@ -108,6 +108,11 @@ tasks {
 	withType<Test>().configureEach {
 		defaultCharacterEncoding = "UTF-8"
 		useJUnitPlatform()
+		// The architecture rules and the code map read the source text and docs, not just the compiled classes, so a
+		// comment-only change must still rerun the tests.
+		inputs.dir("src/main/java").withPropertyName("mainSources").withPathSensitivity(PathSensitivity.RELATIVE)
+		inputs.dir("src/main/resources").withPropertyName("mainResources").withPathSensitivity(PathSensitivity.RELATIVE)
+		inputs.file("docs/architecture.md").withPropertyName("architectureDoc").withPathSensitivity(PathSensitivity.RELATIVE)
 	}
 	withType<Jar>().configureEach {
 		licenseFile?.let {

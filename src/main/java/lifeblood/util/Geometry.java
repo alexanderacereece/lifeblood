@@ -2,6 +2,7 @@ package lifeblood.util;
 
 import org.joml.primitives.AABBdc;
 
+/** Small geometry helpers shared by several systems: for now, whether a line passes through a box (line of fire). */
 public final class Geometry {
 	private Geometry() {
 	}

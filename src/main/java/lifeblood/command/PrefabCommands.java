@@ -28,8 +28,8 @@ import lifeblood.building.PrefabFiles;
 import lifeblood.building.PrefabPlacer;
 import lifeblood.building.Swaps;
 import lifeblood.building.Turns;
-import lifeblood.combat.FactionColors;
-import lifeblood.combat.FactionRegistry;
+import lifeblood.faction.FactionColors;
+import lifeblood.faction.FactionRegistry;
 import org.jetbrains.annotations.Nullable;
 
 /**
