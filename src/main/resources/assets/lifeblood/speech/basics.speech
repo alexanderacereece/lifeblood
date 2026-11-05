@@ -6,7 +6,8 @@
 # (time=night), any of them negated with "!", and w=2 to make a line more likely. Lines with more conditions are
 # picked more often when they fit, so every symbol keeps plain lines as a fallback.
 #
-# Facts: name, listener, listener_type (player/npc), opinion (enemy/disliked/neutral/friendly/friend/close_friend),
+# Facts: name (their given name), family_name, birth_family_name (the one they were born with), married_name (yes
+# when they took a spouse's family name), listener, listener_type (player/npc), opinion (enemy/disliked/neutral/friendly/friend/close_friend),
 # relation (ally/neutral/hostile: how they'd treat the listener in a fight),
 # age (baby 0-2, child 3-9, young_teen 10-15, teen 16-17, adult; see ages.speech), birthday (yes on their birthday), relationship (single/dating/engaged/married/widowed), listener_kin (what the listener is to them: spouse, fiance,
 # partner, parent, child, sibling, grandparent, grandchild, aunt_uncle, niece_nephew, cousin, ..._in_law, or none),

@@ -1,6 +1,8 @@
 # NPC appearance palettes: five colors per palette, darkest to lightest.
 # In a recolorable part, #202020 #505050 #808080 #B0B0B0 #E0E0E0 become these five colors, in order;
 # every other color in the part is drawn as is. Add or override palettes in the game folder's npc_parts/palettes.txt.
+# A line may end in a weight: "x40" is forty times as likely to be rolled as a palette without one (weight 1), and
+# "x0" is never rolled (usable by command, and for graying hair). Skin and dye palettes ignore weights.
 # Skin palettes are listed palest first: NPCs from cold places lean toward the top of the list, and NPCs from
 # hot places toward the bottom (new skin palettes in your own file go at the end, so list them dark ones).
 
@@ -14,29 +16,37 @@ brown: #3F2316 #5C3723 #794C30 #95633F #A97452
 dark_brown: #3A2114 #563321 #6E432C #865639 #9A6747
 deep: #2E1A10 #45291A #5A3624 #6E4630 #80553D
 
+# Hair: natural colors, weighted toward the common ones. Gray and white are never rolled: hair grays with age
+# (see HairColor). Now and then someone dyes their hair, with any dye palette below.
 [hair]
-black: #120E0E #1A1615 #221D1B #2A2422 #4C423F
-dark_brown: #1F120E #2E1C16 #3C271E #4A3226 #664939
-brown: #2E1B12 #442A1C #593927 #6E4A32 #855E42
-light_brown: #3E2719 #5C3C27 #785335 #946A45 #A57A53
-auburn: #3B1209 #571F10 #712E18 #8C3F22 #9E4F30
-red: #4C130B #702213 #93331E #B5482A #C15637
-ginger: #572911 #81411D #A85C2A #D07A3A #D78647
-dirty_blond: #4D3921 #725733 #957546 #B8955A #C3A266
-blond: #5D4A2A #897141 #B39759 #DDBF72 #E2C77C
-platinum: #615A4F #8F8675 #BAB19A #E6DCC0 #EAE1C6
-gray: #3C3938 #585553 #736F6C #8E8A86 #A09C98
-white: #5D5B5A #898784 #B3B0AD #DDDAD6 #E2E0DC
+black: #120E0E #1A1615 #221D1B #2A2422 #4C423F x20
+dark_brown: #1F120E #2E1C16 #3C271E #4A3226 #664939 x24
+brown: #2E1B12 #442A1C #593927 #6E4A32 #855E42 x24
+light_brown: #3E2719 #5C3C27 #785335 #946A45 #A57A53 x12
+auburn: #3B1209 #571F10 #712E18 #8C3F22 #9E4F30 x4
+red: #4C130B #702213 #93331E #B5482A #C15637 x2
+ginger: #572911 #81411D #A85C2A #D07A3A #D78647 x3
+dirty_blond: #4D3921 #725733 #957546 #B8955A #C3A266 x6
+blond: #5D4A2A #897141 #B39759 #DDBF72 #E2C77C x6
+platinum: #615A4F #8F8675 #BAB19A #E6DCC0 #EAE1C6 x1
+gray: #3C3938 #585553 #736F6C #8E8A86 #A09C98 x0
+white: #5D5B5A #898784 #B3B0AD #DDDAD6 #E2E0DC x0
 
+# Eyes: brown is by far the most common, then blue, hazel and the rest; the last few are rare and unusual.
 [eyes]
-brown: #2D170C #422414 #57321D #6B4226 #AE7A52
-dark_brown: #1A0D08 #27150C #331D11 #3F2617 #956748
-hazel: #3A2812 #563D1D #705428 #8A6B35 #BF9E5E
-amber: #4C2F0B #704913 #93651E #B5832A #D6AA4F
-green: #223A14 #315620 #40702C #4F8A3A #79BF64
-blue: #15304C #214670 #2F5B93 #3F6FB5 #648FD6
-light_blue: #2F485B #476A86 #6089AF #7AA8D8 #96BCEA
-gray: #343A3E #4D565C #657078 #7E8A94 #ACB9C4
+brown: #2D170C #422414 #57321D #6B4226 #AE7A52 x45
+dark_brown: #1A0D08 #27150C #331D11 #3F2617 #956748 x22
+hazel: #3A2812 #563D1D #705428 #8A6B35 #BF9E5E x8
+amber: #4C2F0B #704913 #93651E #B5832A #D6AA4F x4
+green: #223A14 #315620 #40702C #4F8A3A #79BF64 x4
+blue: #15304C #214670 #2F5B93 #3F6FB5 #648FD6 x9
+light_blue: #2F485B #476A86 #6089AF #7AA8D8 #96BCEA x4
+gray: #343A3E #4D565C #657078 #7E8A94 #ACB9C4 x2
+violet: #2A1640 #3F2160 #573087 #6F40AD #9A6CD6 x0.3
+gold: #4F3A06 #7A5A0C #A67E14 #CFA21F #EBC94E x0.3
+teal: #0E3533 #17514E #217069 #2C8E85 #52B8AE x0.3
+ice: #44535C #66808C #8DAAB8 #B4D1DE #D8EDF5 x0.2
+red: #3D0A0A #5C1010 #801A1A #A32626 #CC4A4A x0.1
 
 [dye]
 white: #626363 #909292 #BDBFBF #E9ECEC #F2F4F5

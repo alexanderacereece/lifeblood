@@ -62,7 +62,7 @@ import org.joml.primitives.AABBd;
  * each in its own system's package, which tick, save and load themselves (personality, voice, memories, inventory,
  * looks, home, life, health, eating, social ties, awareness, following, brawling, melee, routine). A new per-NPC
  * system is a new part: a field here and an entry in {@code parts}. See docs/architecture.md, "The NPC".
- * The display name is the vanilla nickname, which BTA already draws as a name tag.
+ * The given name is the vanilla nickname, which BTA already draws as a name tag; the family name is in its life story.
  */
 public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmorShape>, IItemHolding {
 	/**
@@ -79,6 +79,8 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	/** How grown up it is, 0 (newborn) to 100 (adult). */
 	public static final int DATA_GROWTH = 24;
 	static final int DATA_GENDER = 25;
+	/** Its family name ("Thorne"); the given name is the vanilla nickname. */
+	public static final int DATA_FAMILY_NAME = 26;
 	private static final int SWING_DURATION = 8;
 	/** The forward input of a player holding the walk key; NPCs walk at exactly player speed. */
 	private static final float WALK_INPUT = 1.0F;
@@ -153,6 +155,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		this.entityData.define(DATA_APPEARANCE, "", String.class);
 		this.entityData.define(DATA_GROWTH, (byte) 100, Byte.class);
 		this.entityData.define(DATA_GENDER, (byte) NpcGender.MALE.ordinal(), Byte.class);
+		this.entityData.define(DATA_FAMILY_NAME, "", String.class);
 	}
 
 	@Override
@@ -223,6 +226,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		this.lastTickTime = WorldSystems.ticks(this.world);
 		if (!this.appearanceChecked) {
 			this.appearanceChecked = true;
+			this.life.ensureFamilyName();
 			this.looks.rollIfNeeded();
 			PeopleRegistry.get(this.world).seen(this);
 		} else if ((this.tickCount + this.id) % CHECK_IN_INTERVAL == 0) {

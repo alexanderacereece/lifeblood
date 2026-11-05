@@ -46,6 +46,7 @@ Husband and wife. Or... you know what I mean. Married!
 Cube God bless this marriage! {pious, w=4}
 Best day of my life.         {sentimental, w=3}
 I do. I really do.           {romantic, w=3}
+[name] [family_name]. I like the sound of that. {married_name=yes, w=5}
 
 == wedding_guest ==
 Congratulations!

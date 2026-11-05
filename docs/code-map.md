@@ -42,15 +42,17 @@ Daily routines: the schedule of activities an NPC follows when nobody has given 
 
 ## `appearance`
 
-How NPCs look: appearance parts and palettes, whole skin files, and slim or wide arms.
+How NPCs look: appearance parts and palettes, hair color and graying, clothes for a gender, climate or job, whole skin files, and slim or wide arms.
 
 - [`Appearance`](../src/main/java/lifeblood/appearance/Appearance.java): Which part (and which palette) an NPC wears on each layer.
 - [`AppearanceLayer`](../src/main/java/lifeblood/appearance/AppearanceLayer.java): The layers an NPC's look is built from, in drawing order (later layers draw over earlier ones).
+- [`HairColor`](../src/main/java/lifeblood/appearance/HairColor.java): Someone's hair color: the natural color they were born with, how far it has grayed with age, and a dye, if they dye it.
 - [`NpcLooks`](../src/main/java/lifeblood/appearance/NpcLooks.java): How one NPC looks: a skin file from npc_skins, or else a look built from appearance parts, and the arm width it's drawn with.
 - [`NpcSkinFiles`](../src/main/java/lifeblood/appearance/NpcSkinFiles.java): The npc_skins folder in the game directory.
 - [`PartCatalog`](../src/main/java/lifeblood/appearance/PartCatalog.java): Every appearance part and palette available: the ones bundled with the mod (assets/lifeblood/parts/) plus the ones in the game folder's npc_parts/, which can be added to without rebuilding.
 - [`SkinModel`](../src/main/java/lifeblood/appearance/SkinModel.java): Which arm width an NPC's skin is drawn with.
 - [`SlimArms`](../src/main/java/lifeblood/appearance/SlimArms.java): Turns a 64x64 skin's 4-pixel-wide arms into slim 3-pixel ones, so one wide part (a base body, a shirt) fits slim NPCs too.
+- [`Wearer`](../src/main/java/lifeblood/appearance/Wearer.java): Who a look is rolled for, as far as clothes go: their gender, their job (null for none) and the climate they dress for ("cold", "mild", "hot", or null if unknown).
 
 ## `brawl`
 
@@ -175,9 +177,10 @@ Families and growing up: kinship, romance, children, birth, age stages and birth
 
 - [`AgeStage`](../src/main/java/lifeblood/family/AgeStage.java): Where someone is in growing up, for how they talk: babbling babies (0–2), little kids (3–9), young teens (10–15), older teens (16–17) and adults.
 - [`Children`](../src/main/java/lifeblood/family/Children.java): Married couples have children, so settlements carry on across generations.
+- [`FamilyNames`](../src/main/java/lifeblood/family/FamilyNames.java): How family names pass down, the traditional way: a child takes its father's family name, and a bride usually takes her husband's at the wedding, remembering the one she was born with.
 - [`FamilySetup`](../src/main/java/lifeblood/family/FamilySetup.java): A child keeping near a parent, as an instinct every NPC has (it only does anything while they're a child).
 - [`Kinship`](../src/main/java/lifeblood/family/Kinship.java): What one person is to another, worked out from parents and partnerships: "Tom is Ann's brother".
-- [`NpcLife`](../src/main/java/lifeblood/family/NpcLife.java): An NPC's life story so far: when it was born, how grown up it is, its birthdays, and where it's from.
+- [`NpcLife`](../src/main/java/lifeblood/family/NpcLife.java): An NPC's life story so far: its family name, when it was born, how grown up it is, its birthdays, its graying hair, and where it's from.
 - [`Romance`](../src/main/java/lifeblood/family/Romance.java): How couples form and change, for NPCs with each other and with players.
 - [`StayNearParentBehavior`](../src/main/java/lifeblood/family/StayNearParentBehavior.java): A child keeps close to a parent who's around (an NPC or a player), toddling after them when they wander off and pottering about nearby otherwise.
 
@@ -258,7 +261,7 @@ Who placed each block, and who may use what someone owns.
 
 The register of everyone who has lived in the world, and the pool of names.
 
-- [`NamePool`](../src/main/java/lifeblood/people/NamePool.java): The names NPCs are given, from assets/lifeblood/names.txt: a [male] and a [female] section, one name per line, .
+- [`NamePool`](../src/main/java/lifeblood/people/NamePool.java): The names NPCs are given, from assets/lifeblood/names.txt: [male] and [female] sections of given names and a [family] section of family names, one name per line, .
 - [`PeopleRegistry`](../src/main/java/lifeblood/people/PeopleRegistry.java): Everyone who has lived in this world, saved with it: a record of each person (NPC or player) that outlasts their entity, so people who are far away, unloaded or dead still count.
 - [`PeopleSetup`](../src/main/java/lifeblood/people/PeopleSetup.java): Keeping the register of people tidy, and recording deaths in it.
 

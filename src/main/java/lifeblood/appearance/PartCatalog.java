@@ -8,13 +8,17 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.lang.I18n;
 import lifeblood.Mod;
@@ -28,12 +32,15 @@ import org.jetbrains.annotations.Nullable;
  *
  * Layout (the same in both places):
  * - <layer>/<name>.png: a 64x64 skin-format part, usable by anyone. Layers: base, eyes, mouth, facial_hair,
- *   bottom, top, hair, accessory.
- * - <layer>/male/<name>.png and <layer>/female/<name>.png: parts only rolled for that gender (still assignable by
- *   command to anyone).
+ *   bottom, top, outfit, hair, accessory.
+ * - Folders inside a layer are tags on the parts in them, in any order and nesting: male or female (only rolled
+ *   for that gender), cold, mild or hot (only rolled in that climate, and preferred there), and any other name is a
+ *   job (only rolled for that job: outfit/guard/, top/female/farmer/). See {@link Wearer}. Commands can still put
+ *   any part on anyone.
  * - <name>_slim.png next to <name>.png: the slim-armed version, used when the NPC's base part has slim arms.
  * - palettes.txt: "[group]" headers (skin, hair, eyes, dye) followed by "name: #202020 #505050 #808080 #B0B0B0
- *   #E0E0E0" lines, darkest to lightest. Lines starting with # are comments.
+ *   #E0E0E0" lines, darkest to lightest, optionally ending in a weight ("x40": forty times as likely to be rolled
+ *   as a palette of weight 1, the default; "x0" is never rolled). Lines starting with # are comments.
  *
  * Recoloring: in a part, the five grays #202020, #505050, #808080, #B0B0B0 and #E0E0E0 become the palette's five
  * colors; every other color is drawn as is. Contains no client code.
@@ -63,8 +70,8 @@ public final class PartCatalog {
 		}
 	}
 
-	/** A part: its name, the gender it's rolled for (null for anyone), and its wide and slim images. */
-	public record Part(String name, @Nullable NpcGender gender, @Nullable Source wide, @Nullable Source slim) {
+	/** A part: its name, its tags (the folders it's in: gender, climate, job), and its wide and slim images. */
+	public record Part(String name, Set<String> tags, @Nullable Source wide, @Nullable Source slim) {
 		/** The image to use for an arm width, falling back to whichever exists. */
 		@Nullable
 		public Source source(boolean slim) {
@@ -74,12 +81,62 @@ public final class PartCatalog {
 
 			return this.wide != null ? this.wide : this.slim;
 		}
+
+		/** The gender it's rolled for; null for anyone. */
+		@Nullable
+		public NpcGender gender() {
+			for (String tag : this.tags) {
+				if (NpcGender.byName(tag) != null) {
+					return NpcGender.byName(tag);
+				}
+			}
+
+			return null;
+		}
+
+		/** The climate it's rolled in ("cold", "mild", "hot"); null for any. */
+		@Nullable
+		public String climate() {
+			for (String tag : this.tags) {
+				if (CLIMATES.contains(tag)) {
+					return tag;
+				}
+			}
+
+			return null;
+		}
+
+		/** The job it belongs to ("guard"); null for everyday wear. */
+		@Nullable
+		public String job() {
+			for (String tag : this.tags) {
+				if (NpcGender.byName(tag) == null && !CLIMATES.contains(tag)) {
+					return tag;
+				}
+			}
+
+			return null;
+		}
+
+		/** Whether it's rolled for this wearer: their gender, their climate, and their job or none. */
+		public boolean fits(Wearer wearer) {
+			NpcGender gender = this.gender();
+			String climate = this.climate();
+			String job = this.job();
+			return (gender == null || gender == wearer.gender()) && (climate == null || climate.equals(wearer.climate()))
+				&& (job == null || job.equals(wearer.job()));
+		}
 	}
+
+	/** The folder names that are climates rather than jobs. */
+	private static final Set<String> CLIMATES = Set.of("cold", "mild", "hot");
 
 	private static PartCatalog instance;
 
 	private final Map<AppearanceLayer, Map<String, Part>> parts = new EnumMap<>(AppearanceLayer.class);
 	private final Map<String, Map<String, int[]>> palettes = new LinkedHashMap<>();
+	/** How likely each palette is to be rolled, by group; 1 unless palettes.txt says otherwise. */
+	private final Map<String, Map<String, Float>> weights = new HashMap<>();
 
 	private PartCatalog() {
 	}
@@ -110,16 +167,16 @@ public final class PartCatalog {
 		return dir;
 	}
 
-	/** Part names rolled for this gender: shared parts plus that gender's own. */
-	public List<String> parts(AppearanceLayer layer, NpcGender gender) {
-		List<String> names = new ArrayList<>();
+	/** The parts rolled for this wearer (see {@link Part#fits}). */
+	public List<Part> parts(AppearanceLayer layer, Wearer wearer) {
+		List<Part> fitting = new ArrayList<>();
 		for (Part part : this.parts.getOrDefault(layer, Map.of()).values()) {
-			if (part.gender() == null || part.gender() == gender) {
-				names.add(part.name());
+			if (part.fits(wearer)) {
+				fitting.add(part);
 			}
 		}
 
-		return names;
+		return fitting;
 	}
 
 	public List<String> allParts(AppearanceLayer layer) {
@@ -133,6 +190,29 @@ public final class PartCatalog {
 
 	public List<String> paletteNames(String group) {
 		return new ArrayList<>(this.palettes.getOrDefault(group, Map.of()).keySet());
+	}
+
+	/** How likely a palette is to be rolled, relative to the others in its group (1 unless set). */
+	public float weight(String group, String name) {
+		return this.weights.getOrDefault(group, Map.of()).getOrDefault(name, 1.0F);
+	}
+
+	/**
+	 * The five colors a layer is drawn with for a palette name: a hair color with its graying and dye worked out (see
+	 * {@link HairColor}; beards are never dyed), any other a palette from the layer's group. Null if unknown.
+	 */
+	@Nullable
+	public int[] colors(AppearanceLayer layer, String palette) {
+		if (layer.paletteGroup == null || palette.isEmpty()) {
+			return null;
+		}
+
+		if ("hair".equals(layer.paletteGroup)) {
+			HairColor hair = HairColor.parse(palette);
+			return (layer == AppearanceLayer.FACIAL_HAIR ? hair.withDye(null) : hair).colors(this);
+		}
+
+		return this.palette(layer.paletteGroup, palette);
 	}
 
 	/** A palette's five colors (RGB), darkest first; null if there's no such palette. */
@@ -164,22 +244,8 @@ public final class PartCatalog {
 		File dir = getDirectory();
 		for (AppearanceLayer layer : AppearanceLayer.values()) {
 			Map<String, Part> found = new TreeMap<>();
-			for (NpcGender gender : new NpcGender[] {null, NpcGender.MALE, NpcGender.FEMALE}) {
-				String sub = layer.id() + "/" + (gender != null ? gender.name().toLowerCase(Locale.ROOT) + "/" : "");
-				for (String path : I18n.getFilesInDirectory(BUNDLED + sub)) {
-					addPart(found, fileName(path), gender, new Source(path, null));
-				}
-
-				File[] files = new File(dir, sub).listFiles();
-				if (files != null) {
-					for (File file : files) {
-						if (file.isFile()) {
-							addPart(found, file.getName(), gender, new Source(null, file));
-						}
-					}
-				}
-			}
-
+			scanBundled(found, BUNDLED + layer.id(), Set.of());
+			scanFolder(found, new File(dir, layer.id()), Set.of());
 			catalog.parts.put(layer, found);
 		}
 
@@ -204,12 +270,44 @@ public final class PartCatalog {
 		return catalog;
 	}
 
-	private static String fileName(String path) {
-		return path.substring(path.lastIndexOf('/') + 1);
+	/** Bundled parts in a folder and the folders inside it, each folder name a tag. */
+	private static void scanBundled(Map<String, Part> found, String folder, Set<String> tags) {
+		for (String path : I18n.getFilesInDirectory(folder)) {
+			// Folders inside a jar may be listed with a slash on the end.
+			String trimmed = path.endsWith("/") ? path.substring(0, path.length() - 1) : path;
+			String name = trimmed.substring(trimmed.lastIndexOf('/') + 1);
+			if (name.contains(".")) {
+				addPart(found, name, tags, new Source(path, null));
+			} else {
+				scanBundled(found, folder + "/" + name, withTag(tags, name));
+			}
+		}
+	}
+
+	/** Game-folder parts in a folder and the folders inside it, each folder name a tag. */
+	private static void scanFolder(Map<String, Part> found, File folder, Set<String> tags) {
+		File[] files = folder.listFiles();
+		if (files == null) {
+			return;
+		}
+
+		for (File file : files) {
+			if (file.isDirectory()) {
+				scanFolder(found, file, withTag(tags, file.getName()));
+			} else {
+				addPart(found, file.getName(), tags, new Source(null, file));
+			}
+		}
+	}
+
+	private static Set<String> withTag(Set<String> tags, String tag) {
+		Set<String> more = new TreeSet<>(tags);
+		more.add(tag.toLowerCase(Locale.ROOT));
+		return more;
 	}
 
 	/** Files later in the scan (the game folder) replace earlier ones of the same name. */
-	private static void addPart(Map<String, Part> found, String fileName, @Nullable NpcGender gender, Source source) {
+	private static void addPart(Map<String, Part> found, String fileName, Set<String> tags, Source source) {
 		String lower = fileName.toLowerCase(Locale.ROOT);
 		if (!lower.endsWith(".png")) {
 			return;
@@ -224,8 +322,8 @@ public final class PartCatalog {
 		Part existing = found.get(name);
 		Source wide = existing != null ? existing.wide() : null;
 		Source slimSource = existing != null ? existing.slim() : null;
-		NpcGender partGender = existing != null && existing.gender() != null ? existing.gender() : gender;
-		found.put(name, new Part(name, partGender, slim ? wide : source, slim ? source : slimSource));
+		Set<String> partTags = existing != null && !existing.tags().isEmpty() ? existing.tags() : tags;
+		found.put(name, new Part(name, partTags, slim ? wide : source, slim ? source : slimSource));
 	}
 
 	private void readPalettes(InputStream stream, String where) throws IOException {
@@ -253,6 +351,17 @@ public final class PartCatalog {
 
 			String name = line.substring(0, colon).strip().toLowerCase(Locale.ROOT).replace(' ', '_');
 			String[] colors = line.substring(colon + 1).strip().split("\\s+");
+			float weight = 1.0F;
+			if (colors.length == 6 && colors[5].startsWith("x")) {
+				try {
+					weight = Math.max(0.0F, Float.parseFloat(colors[5].substring(1)));
+				} catch (NumberFormatException e) {
+					Mod.LOG.warn("{} line {}: '{}' has a weight that isn't a number like x40", where, number, name);
+				}
+
+				colors = Arrays.copyOf(colors, 5);
+			}
+
 			if (colors.length != 5) {
 				Mod.LOG.warn("{} line {}: palette '{}' needs exactly five colors", where, number, name);
 				continue;
@@ -269,6 +378,7 @@ public final class PartCatalog {
 			}
 
 			this.palettes.computeIfAbsent(group, g -> new LinkedHashMap<>()).put(name, rgb);
+			this.weights.computeIfAbsent(group, g -> new HashMap<>()).put(name, weight);
 		}
 	}
 

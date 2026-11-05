@@ -77,7 +77,7 @@ public class NpcProfileScreen extends Screen {
 		NpcPersonality personality = this.npc.personality;
 		long now = this.npc.world.getWorldTime();
 		float mood = this.npc.memories.mood(personality, now);
-		this.drawStringShadow(this.fontRenderer, this.npc.nickname, x + PADDING, y + PADDING, TITLE_COLOR);
+		this.drawStringShadow(this.fontRenderer, this.npc.life.getFullName(), x + PADDING, y + PADDING, TITLE_COLOR);
 		List<String> subtitle = new ArrayList<>();
 		if (this.npc.getFaction() != null) {
 			subtitle.add("one of the " + this.npc.getFaction());

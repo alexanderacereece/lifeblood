@@ -45,23 +45,49 @@ Every NPC has a homeland: the biome it was first seen in (a child's is where it 
 
 The homeland also feeds speech: "Where are you from?" in the questions menu, remarks when the climate is colder or hotter than home ("I'm from the desert, I'm not built for this"), homesickness, and feeling at home on returning to their own biome.
 
+## Colors: common and rare
+
+Palettes can carry a weight, so some colors are common and others rare ([the art](#the-art)):
+- **Eyes:** brown is by far the most common (about two in three, counting dark brown), then blue, hazel, amber, green, light blue and gray. About one NPC in eighty has an unusual color: violet, gold, teal, ice or red.
+- **Hair:** dark brown, brown and black are the most common, then light brown, blond and dirty blond, with auburn, ginger, red and platinum rarer.
+- **Dyed hair:** about one adult in twenty-five dyes their hair, any color from the dye palettes, bright ones more often than muted. A beard is never dyed. Children aren't born with dyed hair, and inherit the natural color.
+
+## Graying
+
+Hair grays with age. Everyone starts going gray at their own age, on a bell curve around 40 (from 25 to 60), turns fully gray over the next 20 years, then white over the 25 after that. The highlights go first, the way hair silvers at the temples, so a graying head reads as salt and pepper rather than faded. Beards gray with the hair. Dyed hair keeps its dye.
+
+Gray and white aren't rolled as natural colors any more: nobody is born gray, and an NPC who's already old when it first appears is as gray as its age. Children inherit a parent's natural color, never their gray.
+
+The hair layer's palette name carries all of this: `auburn` is natural, `auburn~7` is grayed 7 steps of 20, and `auburn+pink` is dyed pink. `/lb look set` takes the same forms.
+
+## Clothes for who and where
+
+Parts are tagged by the folders they're in ([the art](#the-art)), so clothes can be made for a gender, a climate or a job:
+- **Gender:** `male` or `female` parts are only rolled for that gender.
+- **Climate:** `cold`, `mild` or `hot` parts are only rolled for NPCs from that climate (the same bands as speech's `climate`), and they're preferred there: an NPC from the tundra wears cold-weather clothes 70% of the time, if there are any, and everyday clothes otherwise. Untagged parts are everyday wear for any climate.
+- **Job:** any other folder name is a job (`outfit/guard/`, `top/farmer/`). Job clothes are never rolled for anyone without that job; someone with the job always wears its clothes on a layer that has some. Nobody has a job yet, so these wait for [work](work.md).
+
+Tags combine and nest in any order: `top/female/cold/` holds women's winter tops.
+
+Planned: changing clothes as the weather and seasons change, along with the rest of [clothing that changes](#clothing-that-changes).
+
 ## Clothing that changes
 
 An NPC's look is split into **body** (skin, eyes, face, hair: fixed for life, except hair could grow or be cut later) and **outfits** (sets of clothing layers). NPCs change outfits with their job and schedule: work clothes for the farmer, an apron for the cook, nightclothes for sleeping, something nicer for a wedding. Armor still draws on top of everything, as it does now.
 
 ## Inheritance
 
-Children inherit body traits: skin tone, hair color and eye color each from one parent or the other, and often a parent's hairstyle, eyes or mouth. Families visibly look related. Children don't get a skin tone from their homeland's climate; their parents' does that. Planned: a player who builds their own look from parts ([player creation](family.md#player-creation-planned)) passes it on to their children the same way; a player with a plain Minecraft skin passes on nothing yet.
+Children inherit body traits: skin tone, hair color and eye color each from one parent or the other, and often a parent's hairstyle, eyes or mouth. Hair color is the parent's natural color, without their gray or dye, and rare eye colors run in families the same way. Families visibly look related. Children don't get a skin tone from their homeland's climate; their parents' does that. Planned: a player who builds their own look from parts ([player creation](family.md#player-creation-planned)) passes it on to their children the same way; a player with a plain Minecraft skin passes on nothing yet.
 
 ## The art
 
 Parts live in two places with the same layout: bundled with the mod (`assets/lifeblood/parts/`) and in the game folder's `npc_parts/`, which can be added to without rebuilding (`/lb reload parts` picks up changes). Game-folder files win over bundled ones with the same name.
 
 - `<layer>/<name>.png`: a 64x64 skin-format part anyone can roll. Layer folders: `base`, `eyes`, `mouth`, `facial_hair`, `bottom`, `top`, `outfit`, `hair`, `accessory` (drawn in that order).
-- `<layer>/male/<name>.png`, `<layer>/female/<name>.png`: parts only rolled for that gender (a command can still put them on anyone).
+- `<layer>/<tag>/<name>.png`: folders are tags ([clothes for who and where](#clothes-for-who-and-where)): `male` and `female` for a gender, `cold`, `mild` and `hot` for a climate, and any other name for a job. They nest in any order (`top/female/cold/`). A command can still put any part on anyone.
 - `<name>_slim.png` beside `<name>.png`: a hand-made slim-armed version. Women are slim unless their skin model says otherwise (men follow their base part's arm width). A slim NPC wearing a part with no slim version gets the wide one squeezed: the faces as wide as the arm (front, back, top, bottom) lose an inner column, keeping both edges, which is how a wide skin is usually redrawn as slim.
-- `palettes.txt` (a swatch sheet of the bundled palettes is in [palette_reference.html](palette_reference.html)): `[skin]`, `[hair]`, `[eyes]`, `[dye]` groups of `name: #c1 #c2 #c3 #c4 #c5` lines, darkest to lightest. The mod ships defaults (8 skin tones, 12 hair colors, 8 eye colors, and the 16 dye colors each in a bright and a muted version); a game-folder file adds to or overrides them.
+- `palettes.txt` (a swatch sheet of the bundled palettes is in [palette_reference.html](palette_reference.html)): `[skin]`, `[hair]`, `[eyes]`, `[dye]` groups of `name: #c1 #c2 #c3 #c4 #c5` lines, darkest to lightest, optionally ending in a weight: `x40` is forty times as likely to be rolled as a palette without one, and `x0` is never rolled. Hair and eye colors use weights; skin follows the climate and dyes their own muted-or-bright rule. The mod ships defaults (8 skin tones, 12 hair colors, 13 eye colors, and the 16 dye colors each in a bright and a muted version); a game-folder file adds to or overrides them.
 
 Whether a part is recolorable isn't declared anywhere: any of the five grays in it get recolored, and everything else is drawn as is. The mouth is recolored with the base's skin palette and facial hair with the hair's, so they always match. Old-style 64x32 parts work too: they're upgraded like old skins (left limbs mirrored from the right, and a completely filled hat area cleared).
 
-Random looks: every NPC without a skin file gets one from the parts available, rolled once (NPCs from before any parts existed get one when parts are added). Hair is almost always present (92% for men, 99% for women), facial hair 35% for men, an accessory 15%. Hair and facial hair share a color. A skin file set with `/lb look skin` still wins over the look.
+Random looks: every NPC without a skin file gets one from the parts that fit it, rolled once (NPCs from before any parts existed get one when parts are added). Hair is almost always present (92% for men, 99% for women), facial hair 35% for men, an accessory 15%. Hair and facial hair share a color. A skin file set with `/lb look skin` still wins over the look.

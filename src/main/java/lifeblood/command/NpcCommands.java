@@ -48,7 +48,7 @@ final class NpcCommands {
 
 	static void addTo(ArgumentBuilderLiteral<CommandSource> root) {
 		root.then(branch("npc", "Making NPCs and telling them what to do.")
-			.then(branch("npc summon", "Summons an NPC where you stand, with a skin file of its name if there is one.")
+			.then(branch("npc summon", "Summons an NPC where you stand, with a skin file of its name if there is one. \"Ada Thorne\" gives a family name too.")
 				.then(branch("npc summon random", "Summons NPCs with random genders and names from the name pool, like children born in the world.")
 					.executes(c -> summonRandom(c, 1, null))
 					.then(argument("amount", ArgumentTypeInteger.integer(1, MAX_RANDOM_AMOUNT))
@@ -213,7 +213,7 @@ final class NpcCommands {
 		// the NPC is built from appearance parts, and either is equally likely.
 		NpcGender gender = skin.isEmpty() ? null : NpcSkinFiles.isSlim(skin) ? NpcGender.FEMALE : NpcGender.MALE;
 		EntityNPC npc = summon(c, name, gender, skin, faction, 0.0, 0.0);
-		return reply(c, "Summoned " + name + ", " + factionLabel(npc.getFaction()) + (skin.isEmpty() ? "." : " (skin '" + skin + "')."));
+		return reply(c, "Summoned " + npc.life.getFullName() + ", " + factionLabel(npc.getFaction()) + (skin.isEmpty() ? "." : " (skin '" + skin + "')."));
 	}
 
 	/** /lb npc summon random [amount] [faction]: NPCs with names from the name pool, spread out a little. */
@@ -227,7 +227,7 @@ final class NpcCommands {
 			double offsetX = i == 0 ? 0.0 : (random.nextDouble() - 0.5) * RANDOM_SPREAD;
 			double offsetZ = i == 0 ? 0.0 : (random.nextDouble() - 0.5) * RANDOM_SPREAD;
 			EntityNPC npc = summon(c, name, gender, "", faction, offsetX, offsetZ);
-			names.add(name + " (" + npc.getGender().displayName().toLowerCase(Locale.ROOT) + ")");
+			names.add(npc.life.getFullName() + " (" + npc.getGender().displayName().toLowerCase(Locale.ROOT) + ")");
 		}
 
 		String factionText = faction != null ? ", of the " + faction : "";
@@ -256,7 +256,15 @@ final class NpcCommands {
 		Player player = source.getSender();
 		double feet = player != null ? pos.y() - player.heightOffset : pos.y();
 		npc.moveTo(pos.x() + offsetX, feet, pos.z() + offsetZ, player != null ? player.yRot : 0.0F, 0.0F);
-		npc.setNickname(name);
+		// "Ada Thorne": the last word is the family name. A single name gets a family name from the name pool.
+		int space = name.lastIndexOf(' ');
+		npc.setNickname(space > 0 ? name.substring(0, space) : name);
+		if (space > 0) {
+			npc.life.setBirthFamilyName(name.substring(space + 1));
+		} else {
+			npc.life.ensureFamilyName();
+		}
+
 		npc.looks.setSkin(skin);
 		npc.setGender(gender != null ? gender : npc.getRandom().nextBoolean() ? NpcGender.FEMALE : NpcGender.MALE);
 		npc.looks.rollIfNeeded();
@@ -333,7 +341,7 @@ final class NpcCommands {
 			NpcBehavior active = npc.brain.getActive();
 			String doing = active == null ? "idle" : npc.brain.isOnRoutine() ? active.describe() + " (its routine)" : active.describe();
 			c.getSource().sendMessage(String.format(Locale.ROOT, "- %s (%s): %s, health %d, faction %s, at %d %d %d%s",
-				npc.nickname, npc.getGender().displayName().toLowerCase(Locale.ROOT), doing, npc.getHealth(),
+				npc.life.getFullName(), npc.getGender().displayName().toLowerCase(Locale.ROOT), doing, npc.getHealth(),
 				npc.getFaction() != null ? npc.getFaction() : "none",
 				(int) Math.floor(npc.x), (int) Math.floor(npc.y), (int) Math.floor(npc.z),
 				npc.health.getMode() != HealthMode.MORTAL ? ", " + npc.health.getMode().displayName() : ""));

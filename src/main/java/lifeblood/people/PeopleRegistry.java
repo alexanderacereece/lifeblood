@@ -43,7 +43,10 @@ public class PeopleRegistry extends SavedData {
 	/** A person: who they are, where they were last seen, and their parents. Gender is null for players. */
 	public static final class Person {
 		public final UUID id;
+		/** Their given name ("Ada"). */
 		public String name;
+		/** Their family name ("Thorne"); "" for players and anyone without one. */
+		public String familyName = "";
 		@Nullable
 		public NpcGender gender;
 		public boolean player;
@@ -123,6 +126,7 @@ public class PeopleRegistry extends SavedData {
 	public void seen(EntityNPC npc) {
 		this.loaded.put(npc.getUuid(), npc);
 		Person person = this.person(npc.getUuid(), npc.nickname, npc.getGender(), false);
+		person.familyName = npc.life.getFamilyName();
 		person.birthTime = npc.life.getBirthTime();
 		person.homeBiome = npc.life.getHomeBiome();
 		person.faction = npc.getFaction();
@@ -189,9 +193,16 @@ public class PeopleRegistry extends SavedData {
 		return this.people.values();
 	}
 
+	/** Their given name, the one people call them by ("Ada"); "someone" if unknown. */
 	public String nameOf(UUID id) {
 		Person person = this.people.get(id);
 		return person != null && person.name != null ? person.name : "someone";
+	}
+
+	/** Their given and family name ("Ada Thorne"), or just the given name if they have no family name. */
+	public String fullNameOf(UUID id) {
+		Person person = this.people.get(id);
+		return person == null || person.familyName.isEmpty() ? this.nameOf(id) : this.nameOf(id) + " " + person.familyName;
 	}
 
 	// Parents and children
@@ -330,6 +341,7 @@ public class PeopleRegistry extends SavedData {
 			try {
 				Person person = new Person(UUID.fromString(personTag.getString("Id")));
 				person.name = personTag.getStringOrDefault("Name", "someone");
+				person.familyName = personTag.getStringOrDefault("FamilyName", "");
 				person.gender = personTag.containsKey("Gender") ? NpcGender.byName(personTag.getString("Gender")) : null;
 				person.player = personTag.getBoolean("Player");
 				person.alive = !personTag.getBoolean("Dead");
@@ -382,6 +394,7 @@ public class PeopleRegistry extends SavedData {
 			CompoundTag personTag = new CompoundTag();
 			personTag.putString("Id", person.id.toString());
 			personTag.putString("Name", person.name != null ? person.name : "someone");
+			personTag.putString("FamilyName", person.familyName);
 			if (person.gender != null) {
 				personTag.putString("Gender", person.gender.name());
 			}

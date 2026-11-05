@@ -25,6 +25,11 @@ public final class Appearance {
 	private static final float ACCESSORY = 0.15F;
 	/** Chance of an outfit (top and bottom in one) instead of separate clothes, if there are outfits to wear. */
 	private static final float OUTFIT = 0.35F;
+	/** Chance an adult dyes their hair, any dye color, bright ones more often than muted. */
+	private static final float DYED_HAIR = 0.04F;
+	private static final float BRIGHT_HAIR_DYE = 0.7F;
+	/** Chance of picking from clothes made for the wearer's climate, when there are any, over everyday wear. */
+	private static final float CLIMATE_CLOTHES = 0.7F;
 
 	private final Map<AppearanceLayer, Choice> choices;
 
@@ -104,19 +109,26 @@ public final class Appearance {
 	private static final float SKIN_SPREAD = 1.3F;
 
 	/**
-	 * A random look from the parts available, or NONE if there are no base parts yet. Hair and facial hair share a
-	 * color; clothes are a top and bottom with a dye each, or now and then an outfit that's both (used only if the
-	 * part has recolorable pixels). Skin tone leans
-	 * on how warm the place they're from is (0 cold to 1 hot, NaN for anywhere): paler in the cold, darker in the heat.
+	 * A random look from the parts that fit the wearer (their gender, job and climate; see Wearer), or NONE if there
+	 * are no base parts yet. Hair and facial hair share a color, now and then dyed; eye and hair colors follow their
+	 * palettes' weights, so brown eyes are common and violet ones rare. Clothes are a top and bottom with a dye each,
+	 * or now and then an outfit that's both (used only if the part has recolorable pixels). Skin tone leans on how
+	 * warm the place they're from is (0 cold to 1 hot, NaN for anywhere): paler in the cold, darker in the heat.
 	 */
-	public static Appearance random(PartCatalog catalog, NpcGender gender, Random random, float warmth) {
+	public static Appearance random(PartCatalog catalog, Wearer wearer, Random random, float warmth) {
 		Map<AppearanceLayer, Choice> choices = new EnumMap<>(AppearanceLayer.class);
-		if (catalog.parts(AppearanceLayer.BASE, gender).isEmpty()) {
+		NpcGender gender = wearer.gender();
+		if (catalog.parts(AppearanceLayer.BASE, wearer).isEmpty()) {
 			return NONE;
 		}
 
-		String hairColor = pick(catalog.paletteNames("hair"), random, "");
-		boolean outfit = !catalog.parts(AppearanceLayer.OUTFIT, gender).isEmpty() && random.nextFloat() < OUTFIT;
+		HairColor hair = HairColor.natural(pickWeighted(catalog, "hair", random));
+		if (random.nextFloat() < DYED_HAIR) {
+			hair = hair.withDye(pickDye(catalog.paletteNames("dye"), random, BRIGHT_HAIR_DYE));
+		}
+
+		String hairColor = hair.encode();
+		boolean outfit = !catalog.parts(AppearanceLayer.OUTFIT, wearer).isEmpty() && random.nextFloat() < OUTFIT;
 		for (AppearanceLayer layer : AppearanceLayer.values()) {
 			float chance = switch (layer) {
 				case HAIR -> gender == NpcGender.MALE ? MALE_HAIR : FEMALE_HAIR;
@@ -126,16 +138,16 @@ public final class Appearance {
 				case TOP, BOTTOM -> outfit ? 0.0F : 1.0F;
 				default -> 1.0F;
 			};
-			List<String> parts = catalog.parts(layer, gender);
+			List<PartCatalog.Part> parts = catalog.parts(layer, wearer);
 			if (parts.isEmpty() || random.nextFloat() >= chance) {
 				continue;
 			}
 
 			String palette = layer.paletteGroup == null ? "" : "hair".equals(layer.paletteGroup) ? hairColor
 				: layer == AppearanceLayer.BASE ? pickSkin(catalog.paletteNames("skin"), random, warmth)
-				: "dye".equals(layer.paletteGroup) ? pickDye(catalog.paletteNames("dye"), random)
-				: pick(catalog.paletteNames(layer.paletteGroup), random, "");
-			choices.put(layer, new Choice(pick(parts, random, ""), palette));
+				: "dye".equals(layer.paletteGroup) ? pickDye(catalog.paletteNames("dye"), random, 1.0F - MUTED_CHANCE)
+				: pickWeighted(catalog, layer.paletteGroup, random);
+			choices.put(layer, new Choice(pickPart(parts, random), palette));
 		}
 
 		return new Appearance(choices);
@@ -146,7 +158,8 @@ public final class Appearance {
 	 * eyes or face, and no facial hair (that can come with adulthood). Parents may be NONE (a player parent).
 	 */
 	public static Appearance inherit(PartCatalog catalog, NpcGender gender, Appearance first, Appearance second, Random random) {
-		Appearance child = random(catalog, gender, random, Float.NaN).with(AppearanceLayer.FACIAL_HAIR, null, "");
+		Wearer wearer = Wearer.of(gender);
+		Appearance child = random(catalog, wearer, random, Float.NaN).with(AppearanceLayer.FACIAL_HAIR, null, "");
 		List<Appearance> parents = new ArrayList<>();
 		for (Appearance parent : new Appearance[] {first, second}) {
 			if (!parent.isEmpty()) {
@@ -167,8 +180,14 @@ public final class Appearance {
 			}
 
 			// The color always comes from a parent; the part itself sometimes, if it suits the child's gender.
-			String part = random.nextFloat() < 0.5F && catalog.parts(layer, gender).contains(theirs.part()) ? theirs.part() : mine.part();
+			boolean suitsChild = catalog.parts(layer, wearer).stream().anyMatch(part -> part.name().equals(theirs.part()));
+			String part = random.nextFloat() < 0.5F && suitsChild ? theirs.part() : mine.part();
 			String palette = theirs.palette().isEmpty() ? mine.palette() : theirs.palette();
+			if (layer == AppearanceLayer.HAIR) {
+				// Born with the natural color: no parent's gray or dye.
+				palette = HairColor.parse(palette).natural();
+			}
+
 			if (layer == AppearanceLayer.HAIR) {
 				hairColor = palette;
 			}
@@ -180,7 +199,7 @@ public final class Appearance {
 			for (Appearance parent : parents) {
 				Choice hair = parent.get(AppearanceLayer.HAIR);
 				if (hair != null && !hair.palette().isEmpty()) {
-					hairColor = hair.palette();
+					hairColor = HairColor.parse(hair.palette()).natural();
 				}
 			}
 		}
@@ -188,7 +207,14 @@ public final class Appearance {
 		return hairColor != null ? child.withHairColor(hairColor) : child;
 	}
 
-	/** A copy with hair (and facial hair) recolored. */
+	/** Its hair color (from the hair, or the beard if bald); null if it has neither. */
+	@Nullable
+	public HairColor hairColor() {
+		Choice hair = this.get(AppearanceLayer.HAIR) != null ? this.get(AppearanceLayer.HAIR) : this.get(AppearanceLayer.FACIAL_HAIR);
+		return hair != null && !hair.palette().isEmpty() ? HairColor.parse(hair.palette()) : null;
+	}
+
+	/** A copy with hair (and facial hair) recolored: a palette name, or an encoded HairColor. */
 	public Appearance withHairColor(String palette) {
 		Appearance result = this;
 		for (AppearanceLayer layer : new AppearanceLayer[] {AppearanceLayer.HAIR, AppearanceLayer.FACIAL_HAIR}) {
@@ -203,13 +229,13 @@ public final class Appearance {
 
 	/** Grown up: a man may grow facial hair, in his hair color. */
 	public Appearance cameOfAge(PartCatalog catalog, NpcGender gender, Random random) {
-		List<String> beards = catalog.parts(AppearanceLayer.FACIAL_HAIR, gender);
+		List<PartCatalog.Part> beards = catalog.parts(AppearanceLayer.FACIAL_HAIR, Wearer.of(gender));
 		if (gender != NpcGender.MALE || beards.isEmpty() || this.get(AppearanceLayer.FACIAL_HAIR) != null || random.nextFloat() >= MALE_FACIAL_HAIR) {
 			return this;
 		}
 
 		Choice hair = this.get(AppearanceLayer.HAIR);
-		return this.with(AppearanceLayer.FACIAL_HAIR, pick(beards, random, ""), hair != null ? hair.palette() : "");
+		return this.with(AppearanceLayer.FACIAL_HAIR, beards.get(random.nextInt(beards.size())).name(), hair != null ? hair.palette() : "");
 	}
 
 	/** Skin palettes are listed palest first; the climate picks a spot along the list, and it's spread around that. */
@@ -222,13 +248,45 @@ public final class Appearance {
 		return skins.get((int) Math.max(0, Math.min(skins.size() - 1, Math.round(spot))));
 	}
 
-	/** Clothes are usually muted: a muted dye (named "muted_...") most of the time, a bright one now and then. */
-	private static String pickDye(List<String> dyes, Random random) {
+	/** A dye: a bright one with this chance, else a muted one (named "muted_..."). Clothes are usually muted. */
+	private static String pickDye(List<String> dyes, Random random, float brightChance) {
 		List<String> muted = dyes.stream().filter(name -> name.startsWith(MUTED_PREFIX)).toList();
 		List<String> bright = dyes.stream().filter(name -> !name.startsWith(MUTED_PREFIX)).toList();
-		boolean wantMuted = random.nextFloat() < MUTED_CHANCE;
+		boolean wantMuted = random.nextFloat() >= brightChance;
 		List<String> from = wantMuted && !muted.isEmpty() || bright.isEmpty() ? muted : bright;
 		return pick(from, random, "");
+	}
+
+	/** A palette from a group, by the weights in palettes.txt. */
+	private static String pickWeighted(PartCatalog catalog, String group, Random random) {
+		List<String> names = catalog.paletteNames(group);
+		float total = 0.0F;
+		for (String name : names) {
+			total += catalog.weight(group, name);
+		}
+
+		float roll = random.nextFloat() * total;
+		for (String name : names) {
+			roll -= catalog.weight(group, name);
+			if (roll < 0.0F) {
+				return name;
+			}
+		}
+
+		return pick(names, random, "");
+	}
+
+	/**
+	 * A part for the wearer: their job's own, if it has any for this layer; otherwise clothes made for their
+	 * climate most of the time, if there are any, and everyday wear the rest.
+	 */
+	static String pickPart(List<PartCatalog.Part> parts, Random random) {
+		List<PartCatalog.Part> job = parts.stream().filter(part -> part.job() != null).toList();
+		List<PartCatalog.Part> climate = parts.stream().filter(part -> part.job() == null && part.climate() != null).toList();
+		List<PartCatalog.Part> everyday = parts.stream().filter(part -> part.job() == null && part.climate() == null).toList();
+		List<PartCatalog.Part> from = !job.isEmpty() ? job
+			: !climate.isEmpty() && (everyday.isEmpty() || random.nextFloat() < CLIMATE_CLOTHES) ? climate : everyday;
+		return from.get(random.nextInt(from.size())).name();
 	}
 
 	private static String pick(List<String> options, Random random, String fallback) {

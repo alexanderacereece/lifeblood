@@ -35,6 +35,12 @@ Built in this order; each is useful on its own.
 - **Guard:** equips from the armory; without iron, guards go without.
 - **Cook, merchant, innkeeper:** turn raw goods into meals and sell them.
 
+- **Nether diver:** a specialist who outfits for the Nether (fire protection, food, a way back), goes through a portal for its resources, and comes home with them. Dangerous, well paid, and only for the brave.
+
+## The jobs planned
+
+Everyday work: farmer, fisher, hunter, forester, miner, sifter, smith, cook, merchant, innkeeper, builder and guard. Specialists: the nether diver. Political and power roles: officeholders, rulers, guild leaders and the like, filled by [life choices](life-choices.md) and the faction's government rather than hired. Each job brings its own clothes ([appearance](appearance.md#clothes-for-who-and-where)), schedule, tastes and speech lines.
+
 Before currency exists, goods go to household chests and are shared; with currency, they're bought and sold (currency is planned on the roadmap).
 
 ## Resources

@@ -1,9 +1,14 @@
 package lifeblood.appearance;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
+import lifeblood.entity.NpcGender;
 import org.junit.jupiter.api.Test;
 
 class AppearanceTest {
@@ -54,5 +59,49 @@ class AppearanceTest {
 	void removingALayer() {
 		Appearance look = Appearance.NONE.with(AppearanceLayer.HAIR, "short", "black").with(AppearanceLayer.HAIR, null, "");
 		assertNull(look.get(AppearanceLayer.HAIR));
+	}
+
+	private static PartCatalog.Part part(String name, String... tags) {
+		return new PartCatalog.Part(name, Set.of(tags), null, null);
+	}
+
+	@Test
+	void foldersTagPartsByGenderClimateAndJob() {
+		PartCatalog.Part coat = part("coat", "female", "cold");
+		assertEquals(NpcGender.FEMALE, coat.gender());
+		assertEquals("cold", coat.climate());
+		assertNull(coat.job());
+		assertTrue(coat.fits(new Wearer(NpcGender.FEMALE, null, "cold")));
+		assertFalse(coat.fits(new Wearer(NpcGender.MALE, null, "cold")));
+		assertFalse(coat.fits(new Wearer(NpcGender.FEMALE, null, "hot")));
+		assertFalse(coat.fits(Wearer.of(NpcGender.FEMALE)));
+
+		PartCatalog.Part uniform = part("uniform", "guard");
+		assertEquals("guard", uniform.job());
+		assertTrue(uniform.fits(new Wearer(NpcGender.MALE, "guard", "mild")));
+		assertFalse(uniform.fits(new Wearer(NpcGender.MALE, null, "mild")));
+		assertTrue(part("shirt").fits(new Wearer(NpcGender.MALE, "guard", "hot")));
+	}
+
+	@Test
+	void aJobsOwnClothesComeFirstThenTheClimates() {
+		Random random = new Random(3);
+		List<PartCatalog.Part> guard = List.of(part("shirt"), part("coat", "cold"), part("uniform", "guard"));
+		List<PartCatalog.Part> cold = List.of(part("shirt"), part("coat", "cold"));
+		int coats = 0;
+		for (int i = 0; i < 1000; i++) {
+			assertEquals("uniform", Appearance.pickPart(guard, random));
+			coats += Appearance.pickPart(cold, random).equals("coat") ? 1 : 0;
+		}
+
+		assertTrue(coats > 600 && coats < 800, "coats " + coats);
+	}
+
+	@Test
+	void childrenAreBornWithTheNaturalColor() {
+		Appearance look = Appearance.NONE.with(AppearanceLayer.HAIR, "short", "black~12+pink");
+		assertEquals("black", look.hairColor().natural());
+		assertEquals("pink", look.hairColor().dye());
+		assertNull(Appearance.NONE.hairColor());
 	}
 }

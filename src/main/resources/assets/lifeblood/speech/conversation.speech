@@ -258,6 +258,10 @@ Ugh. Fine.                   {rude}
 Hm.                          {taciturn, w=2}
 That's a big question.       {serious}
 I'm an open book. A short one. {lighthearted}
+[name] [family_name], at your service. {polite, w=2}
+I'm a [family_name]. That tells you most of it. {proud, w=2}
+The [family_name]s have always been decent folk. {sentimental, w=2}
+I was a [birth_family_name] before I married. {married_name=yes, w=3}
 
 == where_from ==
 [home_biome.the.cap]. Born and raised. {w=3}

@@ -109,11 +109,11 @@ final class FamilyCommands {
 		PeopleRegistry family = PeopleRegistry.get(npc.world);
 		PeopleRegistry.Partnership partnership = family.partnershipOf(npc.getUuid());
 		if (partnership != null) {
-			reply(c, String.format(Locale.ROOT, "%s is %s %s (%s).", npc.nickname, switch (partnership.stage) {
+			reply(c, String.format(Locale.ROOT, "%s is %s %s (%s).", npc.life.getFullName(), switch (partnership.stage) {
 				case DATING -> "dating";
 				case ENGAGED -> "engaged to";
 				case MARRIED -> "married to";
-			}, family.nameOf(partnership.other(npc.getUuid())), Calendar.describeLength(npc.world, npc.world.getWorldTime() - partnership.since)));
+			}, family.fullNameOf(partnership.other(npc.getUuid())), Calendar.describeLength(npc.world, npc.world.getWorldTime() - partnership.since)));
 		}
 
 		boolean any = partnership != null;
@@ -124,7 +124,7 @@ final class FamilyCommands {
 				continue;
 			}
 
-			reply(c, "- " + kin.label(person.gender) + ": " + person.name + (person.alive ? "" : " (dead)"));
+			reply(c, "- " + kin.label(person.gender) + ": " + family.fullNameOf(relative) + (person.alive ? "" : " (dead)"));
 			any = true;
 		}
 

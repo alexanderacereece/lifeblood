@@ -99,7 +99,7 @@ public final class AppearanceTextures {
 
 			// The mouth takes the skin's color and a beard the hair's (falling back to their own if that layer is empty).
 			Appearance.Choice source = layer.paletteFrom() != null && appearance.get(layer.paletteFrom()) != null ? appearance.get(layer.paletteFrom()) : choice;
-			int[] palette = layer.paletteGroup != null && !source.palette().isEmpty() ? catalog.palette(layer.paletteGroup, source.palette()) : null;
+			int[] palette = catalog.colors(layer, source.palette());
 			drawOver(result, image, palette);
 		}
 

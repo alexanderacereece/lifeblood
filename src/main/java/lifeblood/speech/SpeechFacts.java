@@ -29,7 +29,7 @@ import org.jetbrains.annotations.Nullable;
  * weather, the speaker's mood and health, faction, tastes and voice. Speech files test these as conditions
  * ({time=night}) and fill them in ([listener], [favorite_food.a]).
  *
- * Facts: name, listener, listener_type (player/npc), opinion (enemy ... close_friend), relation (ally/neutral/hostile), leader (yes if the listener is
+ * Facts: name, family_name, birth_family_name, married_name (yes/no), listener, listener_type (player/npc), opinion (enemy ... close_friend), relation (ally/neutral/hostile), leader (yes if the listener is
  * who they follow), time (morning/day/evening/night), weather (clear/rain/snow/storm/fog/blood_rain), wet (yes if
  * it's coming down on them), outside, season (spring/summer/fall/winter), biome (desert, tundra...), with
  * climate (cold/mild/hot here), home_climate and home_biome (where they're from), at_home (yes in their home
@@ -50,6 +50,9 @@ public final class SpeechFacts {
 		float mood = npc.memories.mood(npc.personality, now);
 		SpeechContext context = new SpeechContext(npc, listener, mood);
 		context.fact("name", npc.nickname);
+		context.fact("family_name", npc.life.getFamilyName());
+		context.fact("birth_family_name", npc.life.getBirthFamilyName());
+		context.fact("married_name", npc.life.getFamilyName().equals(npc.life.getBirthFamilyName()) ? "no" : "yes");
 		if (listener != null) {
 			context.fact("listener", Opinions.nameOf(listener));
 			context.fact("listener_type", listener instanceof Player ? "player" : "npc");

@@ -29,7 +29,7 @@ final class LookCommands {
 				.then(npcsArgument("npcs").executes(c -> {
 					List<EntityNPC> npcs = getNpcs(c, "npcs");
 					for (EntityNPC npc : npcs) {
-						npc.looks.setAppearance(Appearance.random(PartCatalog.get(), npc.getGender(), npc.getRandom(), npc.life.getHomeWarmth()));
+						npc.looks.randomize();
 						if (npc.looks.getAppearance().isEmpty()) {
 							throw error("There are no base parts yet. Put some in " + new File(PartCatalog.getDirectory(), "base"));
 						}
@@ -88,7 +88,7 @@ final class LookCommands {
 		EntityNPC npc = getNpc(c, "npc");
 		AppearanceLayer layer = AppearanceLayer.byName(ArgumentTypeString.getString(c, "layer"));
 		if (layer == null) {
-			throw error("Unknown layer. Layers: base, eyes, mouth, facial_hair, bottom, top, hair, accessory.");
+			throw error("Unknown layer. Layers: base, eyes, mouth, facial_hair, bottom, top, outfit, hair, accessory.");
 		}
 
 		String part = ArgumentTypeString.getString(c, "part").toLowerCase(Locale.ROOT);
@@ -108,7 +108,7 @@ final class LookCommands {
 			palette = current != null ? current.palette() : "";
 		}
 
-		if (!palette.isEmpty() && (layer.paletteGroup == null || catalog.palette(layer.paletteGroup, palette) == null)) {
+		if (!palette.isEmpty() && catalog.colors(layer, palette) == null) {
 			throw error(layer.paletteGroup == null ? "The " + layer.id() + " layer isn't recolored." : "No " + layer.paletteGroup + " palette called '" + palette + "'.");
 		}
 

@@ -239,6 +239,7 @@ public final class Romance {
 	/** The wedding: the couple is married, and everyone nearby enjoys it. */
 	public static void wed(EntityNPC npc, Mob other, PeopleRegistry family) {
 		family.setStage(npc.getUuid(), PeopleRegistry.Stage.MARRIED, npc.world.getWorldTime());
+		FamilyNames.atWedding(npc, other, npc.getRandom());
 		npc.remember(MemoryType.GOT_MARRIED, null, 1.0F);
 		npc.voice.bark("wedding", other, null, true);
 		if (other instanceof EntityNPC otherNpc) {

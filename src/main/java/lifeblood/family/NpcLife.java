@@ -3,11 +3,15 @@ package lifeblood.family;
 import com.mojang.nbt.tags.CompoundTag;
 import lifeblood.entity.EntityNPC;
 import lifeblood.entity.NpcPart;
+import lifeblood.people.NamePool;
 import lifeblood.personality.Surroundings;
 import lifeblood.social.MemoryType;
 import lifeblood.world.Calendar;
 
-/** An NPC's life story so far: when it was born, how grown up it is, its birthdays, and where it's from. */
+/**
+ * An NPC's life story so far: its family name, when it was born, how grown up it is, its birthdays, its graying
+ * hair, and where it's from.
+ */
 public final class NpcLife implements NpcPart {
 	/** How often it checks its age: growing up, and whether it's its birthday (10 seconds). */
 	private static final int CHECK_INTERVAL = 200;
@@ -33,6 +37,8 @@ public final class NpcLife implements NpcPart {
 	/** Where it's from: the biome it was first seen in (or born in), and how warm that is (NaN until known). */
 	private String homeBiome = "";
 	private float homeWarmth = Float.NaN;
+	/** The family name it was born with, kept after marriage changes its name; "" until it has one. */
+	private String birthFamilyName = "";
 	/** The size its hitbox was last set for, so it's only resized when growth changes. */
 	private int sizedForGrowth = -1;
 
@@ -44,11 +50,50 @@ public final class NpcLife implements NpcPart {
 	public void tick() {
 		if ((this.npc.tickCount + this.npc.id) % CHECK_INTERVAL == 0) {
 			this.ensureBirth();
+			this.ensureFamilyName();
+			this.npc.looks.ageHair(this.getAgeYears());
 			if (this.isChild()) {
 				this.grow();
 			}
 
 			this.checkBirthday();
+		}
+	}
+
+	// Family name
+
+	/** Its family name ("Thorne"), the one it goes by now; "" until it has one. */
+	public String getFamilyName() {
+		return this.npc.getEntityData().getString(EntityNPC.DATA_FAMILY_NAME);
+	}
+
+	/** The family name it was born with: the same as now unless marriage changed it. */
+	public String getBirthFamilyName() {
+		return this.birthFamilyName.isEmpty() ? this.getFamilyName() : this.birthFamilyName;
+	}
+
+	/** Its given and family name together: "Ada Thorne". */
+	public String getFullName() {
+		String family = this.getFamilyName();
+		return family.isEmpty() ? this.npc.nickname : this.npc.nickname + " " + family;
+	}
+
+	/** Its family name from birth (a child's from its parents, see FamilyNames). */
+	public void setBirthFamilyName(String name) {
+		this.birthFamilyName = name;
+		this.npc.getEntityData().set(EntityNPC.DATA_FAMILY_NAME, name);
+	}
+
+	/** Takes a new family name, as on marrying; the one it was born with is remembered. */
+	public void changeFamilyName(String name) {
+		this.birthFamilyName = this.getBirthFamilyName();
+		this.npc.getEntityData().set(EntityNPC.DATA_FAMILY_NAME, name);
+	}
+
+	/** Gives an NPC with no family name one from the name list: its family comes from somewhere outside this world. */
+	public void ensureFamilyName() {
+		if (this.getFamilyName().isEmpty()) {
+			this.setBirthFamilyName(NamePool.pickFamilyName(this.npc.getRandom()));
 		}
 	}
 
@@ -187,6 +232,8 @@ public final class NpcLife implements NpcPart {
 
 	@Override
 	public void save(CompoundTag tag) {
+		tag.putString("FamilyName", this.getFamilyName());
+		tag.putString("BirthFamilyName", this.birthFamilyName);
 		tag.putLong("BirthTime", this.birthTime);
 		tag.putLong("LastBirthday", this.lastBirthdayYear);
 		tag.putString("HomeBiome", this.homeBiome);
@@ -196,6 +243,8 @@ public final class NpcLife implements NpcPart {
 
 	@Override
 	public void load(CompoundTag tag) {
+		this.npc.getEntityData().set(EntityNPC.DATA_FAMILY_NAME, tag.getStringOrDefault("FamilyName", ""));
+		this.birthFamilyName = tag.getStringOrDefault("BirthFamilyName", "");
 		this.birthTime = tag.getLongOrDefault("BirthTime", UNKNOWN_BIRTH);
 		this.lastBirthdayYear = tag.getLongOrDefault("LastBirthday", Long.MIN_VALUE);
 		this.homeBiome = tag.getStringOrDefault("HomeBiome", "");

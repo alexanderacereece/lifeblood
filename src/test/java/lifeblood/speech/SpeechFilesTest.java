@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
  * symbol, a fact or a word the game fills in. A new fact or word set in code needs adding to the lists here.
  */
 class SpeechFilesTest {
-	private static final Set<String> FACTS = Set.of("name", "listener", "listener_type", "opinion", "leader", "time", "weather", "mood",
+	private static final Set<String> FACTS = Set.of("name", "family_name", "birth_family_name", "married_name", "listener", "listener_type", "opinion", "leader", "time", "weather", "mood",
 		"health", "recovering", "has_faction", "has_enemy", "address", "catchphrase", "victim", "kind", "taste", "wet", "outside", "season",
 		"biome", "weather_like", "season_like", "biome_like", "rude_gift", "surprising", "surprising_thing", "relation", "fighting_you",
 		"in_combat", "about", "other_type", "is_favorite", "brawling", "forfeit", "friend_fighting", "relationship", "listener_kin", "age",

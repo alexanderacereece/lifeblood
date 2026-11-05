@@ -87,6 +87,7 @@ public final class Children {
 		EntityNPC npcParent = otherParent instanceof EntityNPC other ? other : null;
 		child.moveTo(parent.x, parent.y, parent.z, random.nextFloat() * 360.0F, 0.0F);
 		child.setNickname(NamePool.pick(gender, random));
+		child.life.setBirthFamilyName(FamilyNames.forChild(parent, otherParent));
 		child.setGender(gender);
 		child.personality.inherit(parent.personality, npcParent != null ? npcParent.personality : null, random);
 		child.looks.setAppearance(Appearance.inherit(PartCatalog.get(), gender, Appearance.decode(parent.looks.getAppearance()),

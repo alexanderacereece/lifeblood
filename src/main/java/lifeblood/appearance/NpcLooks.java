@@ -60,7 +60,28 @@ public final class NpcLooks implements NpcPart {
 	public void rollIfNeeded() {
 		this.npc.life.ensureHomeland();
 		if (this.getSkin().isEmpty() && this.getAppearance().isEmpty()) {
-			this.setAppearance(Appearance.random(PartCatalog.get(), this.npc.getGender(), this.npc.getRandom(), this.npc.life.getHomeWarmth()));
+			this.randomize();
+		}
+	}
+
+	/** A new random look from the parts available, suited to where it's from and grayed for its age. */
+	public void randomize() {
+		float warmth = this.npc.life.getHomeWarmth();
+		this.setAppearance(Appearance.random(PartCatalog.get(), Wearer.of(this.npc.getGender(), warmth), this.npc.getRandom(), warmth));
+		this.ageHair(this.npc.life.getAgeYears());
+	}
+
+	/** Grays its hair as far as it has at this age (see HairColor): a little more every few years from middle age. */
+	public void ageHair(int age) {
+		Appearance look = Appearance.decode(this.getAppearance());
+		HairColor hair = look.hairColor();
+		if (hair == null) {
+			return;
+		}
+
+		int gray = HairColor.grayAt(age, HairColor.onsetAge(this.npc.getUuid()));
+		if (gray != hair.gray()) {
+			this.setAppearance(look.withHairColor(hair.withGray(gray).encode()));
 		}
 	}
 

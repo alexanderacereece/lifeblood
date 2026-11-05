@@ -35,7 +35,7 @@ Four layers, each finer than the last. Read down only as far as you need:
 | `dialogue` | Conversations (`NpcConversation`), their menus and options: gifts, romance, words, chat limits |
 | `speech` | The speech engine, the line library, facts for lines, speech styles, the voice |
 | `words` | The word book: words players teach |
-| `appearance` | An NPC's looks (`NpcLooks`): parts and palettes, whole skin files, slim arms |
+| `appearance` | An NPC's looks (`NpcLooks`): parts and palettes, hair color and graying (`HairColor`), who clothes are for (`Wearer`), whole skin files, slim arms |
 | `ownership` | Who placed each block, and who shares what |
 | `building` | Prefabs: saving, turning, material and color swaps, surveying a site, placing, the save check |
 | `world` | The calendar (`Calendar`), and world systems that run per world on their own clock |
