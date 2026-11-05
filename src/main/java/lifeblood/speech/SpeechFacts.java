@@ -58,7 +58,7 @@ public final class SpeechFacts {
 				context.fact("relation", NpcFactions.regard(npc, listener).name().toLowerCase(Locale.ROOT));
 			}
 
-			context.fact("leader", listener == npc.following.getLeader() ? "yes" : "no");
+			context.fact("leader", listener == npc.state.leader() ? "yes" : "no");
 		}
 
 		addFamily(npc, listener, context);

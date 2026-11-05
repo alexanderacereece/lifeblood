@@ -118,7 +118,7 @@ public final class SocialEvents {
 			npc.remember(MemoryType.WON_A_FIGHT, null, 1.0F);
 			npc.voice.bark("victory", victim, context -> context.word("enemy", wordFor(victim)), false);
 		} else if (killer != null && Persons.isPerson(killer) && wasFighting(npc, victim)) {
-			if (npc.isBadlyHurt()) {
+			if (npc.state.isBadlyHurt()) {
 				npc.social.noticeRescue(killer);
 			} else {
 				npc.remember(MemoryType.FOUGHT_BESIDE_ME, killer, 1.0F);
@@ -143,11 +143,11 @@ public final class SocialEvents {
 
 	/** Whether this NPC was fighting the mob: it was the target, or recently hit the NPC, or was hunting it. */
 	private static boolean wasFighting(EntityNPC npc, Mob mob) {
-		if (npc.isFighting(mob)) {
+		if (npc.state.isFighting(mob)) {
 			return true;
 		}
 
-		if (npc.attackers.getLastAttacker() == mob && npc.attackers.ticksSinceAttacked() < RECENT_FIGHT_TICKS) {
+		if (npc.state.wasAttackedBy(mob, RECENT_FIGHT_TICKS)) {
 			return true;
 		}
 

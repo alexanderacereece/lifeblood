@@ -81,7 +81,6 @@ public final class NpcBrawling implements NpcPart {
 
 	public void join(Brawl brawl) {
 		this.brawl = brawl;
-		this.npc.conversation.setTalkingTo(null);
 	}
 
 	/** Leaves the brawl; punches from the forgiven opponent no longer count as a reason to fight them for real. */
@@ -154,7 +153,7 @@ public final class NpcBrawling implements NpcPart {
 	 * otherwise only someone who hates it right back. Never when hurt, busy, or outmatched by its own nerves.
 	 */
 	private void considerPickingOne() {
-		if (this.brawl != null || this.npc.isBusy() || this.npc.health.isRecovering() || this.npc.life.isChild()
+		if (this.brawl != null || this.npc.state.isBusy() || this.npc.health.isRecovering() || this.npc.life.isChild()
 			|| this.npc.getHealth() < this.npc.getMaxHealth() * 0.75F) {
 			return;
 		}
@@ -174,7 +173,7 @@ public final class NpcBrawling implements NpcPart {
 				continue;
 			}
 
-			if (other instanceof EntityNPC npc && (npc.isBusy() || npc.getHealth() < npc.getMaxHealth() * 0.75F
+			if (other instanceof EntityNPC npc && (npc.state.isBusy() || npc.getHealth() < npc.getMaxHealth() * 0.75F
 				|| !hothead && Opinions.of(npc, this.npc) > -40.0F)) {
 				continue;
 			}

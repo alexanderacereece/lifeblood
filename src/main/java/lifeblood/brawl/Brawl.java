@@ -198,7 +198,7 @@ public final class Brawl {
 		AABBd area = MathHelper.aabbGrow(this.first.bb, BYSTANDER_RANGE, 6.0, BYSTANDER_RANGE, new AABBd());
 		List<EntityNPC> nearby = this.first.world.getEntitiesWithinAABB(EntityNPC.class, area);
 		for (EntityNPC npc : nearby) {
-			if (this.involves(npc) || !npc.isAlive() || npc.isBusy() || npc.getRandom().nextFloat() >= BYSTANDER_REMARK_CHANCE) {
+			if (this.involves(npc) || !npc.isAlive() || npc.state.isBusy() || npc.getRandom().nextFloat() >= BYSTANDER_REMARK_CHANCE) {
 				continue;
 			}
 

@@ -52,8 +52,8 @@ public final class NpcAwareness implements NpcPart {
 		if (this.pendingRemark != null && this.npc.tickCount >= this.pendingRemarkTick) {
 			String remark = this.pendingRemark;
 			this.pendingRemark = null;
-			if (!this.npc.isBusy()) {
-				this.npc.voice.bark(remark, this.npc.following.getLeader(), null, false);
+			if (!this.npc.state.isBusy()) {
+				this.npc.voice.bark(remark, this.npc.state.leader(), null, false);
 			}
 		}
 	}

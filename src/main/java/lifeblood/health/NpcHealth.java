@@ -123,7 +123,6 @@ public final class NpcHealth implements NpcPart {
 		this.downedTicks = DOWNED_DURATION;
 		this.recoveringTicks = RECOVERY_DURATION;
 		this.npc.getEntityData().set(EntityNPC.DATA_DOWNED, this.isPushedForward(source) ? DOWNED_ON_FRONT : DOWNED_ON_BACK);
-		this.npc.conversation.setTalkingTo(null);
 		this.npc.navigator.stop();
 		this.npc.eating.stop();
 		this.npc.remainingFireTicks = 0;

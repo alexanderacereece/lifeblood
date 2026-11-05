@@ -124,7 +124,7 @@ public final class Romance {
 		PeopleRegistry.Partnership partnership = family.partnershipOf(npc.getUuid());
 		if (partnership != null) {
 			tendRelationship(npc, family, partnership);
-		} else if (!npc.isBusy() && !npc.health.isRecovering()) {
+		} else if (!npc.state.isBusy() && !npc.health.isRecovering()) {
 			lookForLove(npc, family);
 		}
 	}
@@ -193,7 +193,7 @@ public final class Romance {
 				continue;
 			}
 
-			if (entity instanceof EntityNPC other && !other.isBusy()) {
+			if (entity instanceof EntityNPC other && !other.state.isBusy()) {
 				npc.voice.bark("ask_out", other, null, true);
 				if (couldFallFor(other, npc) && Opinions.of(other, npc) >= DATING_OPINION) {
 					startDating(npc, other, family);

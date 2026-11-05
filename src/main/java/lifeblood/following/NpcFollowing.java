@@ -141,7 +141,7 @@ public final class NpcFollowing implements NpcPart {
 			return;
 		}
 
-		if (this.npc.isBusy()) {
+		if (this.npc.state.isBusy()) {
 			return;
 		}
 

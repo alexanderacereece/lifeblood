@@ -198,9 +198,9 @@ class ArchitectureTest {
 	 */
 	static final List<List<String>> LAYERS = List.of(
 		List.of("util", "perf", "world", "lifeblood.Mod", "lifeblood.NpcConfig"),
-		List.of("entity", "event", "people", "nav", "inventory", "item", "appearance", "ai", "lifeblood.ClientHooks"),
-		List.of("personality", "social", "faction", "family", "ownership", "speech", "words"),
-		List.of("combat", "brawl", "health", "following", "building"),
+		List.of("entity", "event", "nav", "inventory", "item", "ai", "lifeblood.ClientHooks"),
+		List.of("personality", "social", "faction", "family", "people", "appearance", "health", "ownership", "speech", "words"),
+		List.of("combat", "brawl", "following", "building"),
 		List.of("dialogue"),
 		List.of("command", "client", "mixin", "lifeblood.Lifeblood", "lifeblood.Systems"));
 
@@ -241,6 +241,57 @@ class ArchitectureTest {
 				if (!target.equals("entity") && targetLayer != null && targetLayer > ownLayer) {
 					problems.add(file.path() + " imports " + imported + ": " + own + " is in a lower layer than " + target
 						+ ". Turn the dependency around: an event, a registration in a setup class, or move the code up");
+				}
+			}
+		}
+
+		assertNone(problems.stream().distinct().toList());
+	}
+
+	/** An NPC part reached through one of the entity's fields: "npc.following.stop()" (receiver, field, member). */
+	private static final Pattern PART_ACCESS = Pattern.compile("(?<![\\w.])(\\w+(?:\\(\\))?)\\.(\\w+)\\.(\\w+)");
+
+	/**
+	 * The entity holds every part as a public field, and anything may use the entity, so without this rule a lower layer
+	 * could reach a higher system through it (npc.following from speech). It can't: lower layers ask NpcState instead
+	 * (npc.state.leader()), and only code at the part's own layer or above uses the part directly.
+	 */
+	@Test
+	void partsAreReachedOnlyFromTheirLayerOrAbove() throws IOException {
+		String entity = Files.readString(SourceTree.MAIN.resolve("lifeblood/entity/EntityNPC.java"), StandardCharsets.UTF_8);
+		Map<String, String> importedPackage = new HashMap<>();
+		Matcher imported = Pattern.compile("(?m)^import lifeblood" + "\\.(\\w+)(?:\\.\\w+)*\\.(\\w+);").matcher(entity);
+		while (imported.find()) {
+			importedPackage.put(imported.group(2), imported.group(1));
+		}
+
+		Map<String, String> partPackage = new HashMap<>();
+		Matcher field = Pattern.compile("(?m)^\\tpublic final (\\w+) (\\w+) = new").matcher(entity);
+		while (field.find()) {
+			partPackage.put(field.group(2), importedPackage.getOrDefault(field.group(1), "entity"));
+		}
+
+		Map<String, Integer> layerOf = new HashMap<>();
+		for (int i = 0; i < LAYERS.size(); i++) {
+			for (String name : LAYERS.get(i)) {
+				layerOf.put(name, i);
+			}
+		}
+
+		List<String> problems = new ArrayList<>();
+		for (SourceFile file : MAIN) {
+			String own = file.packageName().equals("lifeblood") ? "lifeblood." + file.name() : topPackage(file.packageName());
+			if (file.isPackageInfo() || own.equals("entity") || !layerOf.containsKey(own)) {
+				continue;
+			}
+
+			String code = file.text().replaceAll("(?s)/\\*.*?\\*/", " ").replaceAll("//[^\n]*", " ");
+			Matcher access = PART_ACCESS.matcher(code);
+			while (access.find()) {
+				String part = partPackage.get(access.group(2));
+				if (part != null && !access.group(1).equals("this") && layerOf.getOrDefault(part, 0) > layerOf.get(own)) {
+					problems.add(file.path() + " uses " + access.group() + ": " + own + " is below " + part
+						+ ". Ask npc.state (add a question there if one is really needed), or move the code up");
 				}
 			}
 		}

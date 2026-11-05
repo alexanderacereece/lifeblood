@@ -181,7 +181,7 @@ public class NpcVoice implements NpcPart {
 	/** Speaking up unprompted: greetings, remarks, chats with other NPCs, and replies to them. */
 	@Override
 	public void tick() {
-		if ((this.npc.tickCount + this.npc.id) % CHECK_INTERVAL != 0 || this.npc.health.isDowned()) {
+		if ((this.npc.tickCount + this.npc.id) % CHECK_INTERVAL != 0 || !this.npc.isAlive()) {
 			return;
 		}
 
@@ -197,7 +197,7 @@ public class NpcVoice implements NpcPart {
 			return;
 		}
 
-		if (this.npc.isBusy()) {
+		if (this.npc.state.isBusy()) {
 			return;
 		}
 
@@ -248,7 +248,7 @@ public class NpcVoice implements NpcPart {
 		AABBd area = MathHelper.aabbGrow(this.npc.bb, CHAT_PARTNER_RANGE, 2.0, CHAT_PARTNER_RANGE, new AABBd());
 		List<EntityNPC> nearby = this.npc.world.getEntitiesWithinAABB(EntityNPC.class, area);
 		for (EntityNPC partner : nearby) {
-			if (partner == this.npc || partner.isBusy() || now < partner.voice.nextChat || !this.npc.canEntityBeSeen(partner)) {
+			if (partner == this.npc || partner.state.isBusy() || now < partner.voice.nextChat || !this.npc.canEntityBeSeen(partner)) {
 				continue;
 			}
 

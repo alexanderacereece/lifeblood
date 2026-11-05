@@ -12,6 +12,7 @@ Keeping this project easy to find your way around is the top priority, above any
    Reading the code map is cheaper than grepping the whole project, and it's always current.
 2. **Check it doesn't exist already.** Search the code map for the idea, not just the name: "turn", "owner", "opinion", "years". If something close exists, use it or extend it, never write a second one. Common helpers: `BlockOwners`, `Ownership`, `PrefabPlacer`, `Swaps`, `BlockTurns`, `Turns`, `Opinions`, `Kinship`, `PeopleRegistry`, `Calendar`, `SpeechFacts`, `CommandSupport`, `NpcInventory`, `ClientHooks`.
 3. **Read the design doc** for the system ([docs/README.md](docs/README.md) lists them). The design docs say how each system behaves; the class comments say how it's done.
+4. **Adding a whole new system?** Follow the checklist in `docs/architecture.md`, "Adding a new system".
 
 ## Principles
 
@@ -30,7 +31,7 @@ The goal: anyone, including an AI that has never seen the project, can find the 
 
 - **One system, one package.** Everything about a system lives in its package: its NPC part, its behaviors, its saved data, its helpers. Where each kind of thing goes is in the "Where new things go" table in `docs/architecture.md`. Per-NPC state is an `NpcPart`; world-wide state is a register saved as `SavedData`; periodic world logic is a `WorldSystem`; dialogue options are `DialogueMenus` contributors; commands are a class per area with `addTo(root)`, built with `CommandTree.branch` and taking targets as `TargetArgument`s.
 - **New package, new row.** A new package gets a `package-info.java` (what it's for, where to start, what doesn't belong), a row in the package table of `docs/architecture.md`, and a layer (the layer table there and `ArchitectureTest.LAYERS`).
-- **Layers.** A package uses its own layer and below, never above (anything may use `entity`). When lower code needs something higher to happen, post an event or register from a setup; don't reach up.
+- **Layers.** A package uses its own layer and below, never above (anything may use `entity`). That includes the NPC's parts: a lower layer never touches `npc.following` or another higher part, it asks `npc.state`. When lower code needs something higher to happen, post an event or register from a setup; don't reach up.
 - **Wiring in setups, reactions through events.** Everything a system registers (behaviors, instincts, routines, world systems, dialogue options, event listeners) goes in its `XSetup.register()`, called from `lifeblood/Systems`. Something other systems should react to (a death, a birth, a gift) is posted as an event in `event/`; systems listen from their setup instead of being called by name.
 - **Reuse.** Use what exists (see "Before you change anything"). If a helper you need is buried in another class, move it somewhere both can reach, in the package that owns the idea, rather than copying it.
 - **Documented.** Every class has a doc comment whose first sentence says what it is: that sentence becomes its line in the code map, so make it something a searcher would recognize. Constants say what they mean and their unit. Non-obvious rules get a comment saying *why*. Match the surrounding style: plain English, tabs, no abbreviations.
@@ -44,7 +45,7 @@ The goal: anyone, including an AI that has never seen the project, can find the 
 `ArchitectureTest` fails the build when:
 - a package has no `package-info.java`, or a class has no doc comment;
 - a package isn't in the architecture doc, or has no layer;
-- a package imports from a higher layer;
+- a package imports from a higher layer, or reaches a higher layer's part through the NPC;
 - something is registered or listened for outside a setup class, or a setup isn't in `Systems`;
 - common code imports client code, or anything depends on `command/`;
 - two classes share a name, or a class is written out in full in code instead of imported;

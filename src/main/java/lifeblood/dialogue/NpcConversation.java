@@ -31,10 +31,13 @@ public final class NpcConversation {
 		this.npc = npc;
 	}
 
-	/** Ends the conversation once the player has walked off or its screens have been closed for a moment. */
+	/**
+	 * Ends the conversation once the player has walked off or its screens have been closed for a moment, or as soon as
+	 * the NPC is knocked down or pulled into a brawl.
+	 */
 	public void update() {
 		if (this.talkingTo != null && (this.talkingTo.removed || this.talkingTo.distanceTo(this.npc) > TALK_DISTANCE
-			|| this.endsAt > 0 && this.npc.tickCount >= this.endsAt)) {
+			|| this.endsAt > 0 && this.npc.tickCount >= this.endsAt || this.npc.health.isDowned() || this.npc.brawling.isBrawling())) {
 			this.end();
 		}
 	}

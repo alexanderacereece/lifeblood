@@ -140,11 +140,12 @@ Conversations: the menus and the options in them, gifts, romance talk, and NPCs 
 
 ## `entity`
 
-The NPC entity itself and the part system it's built from.
+The NPC entity itself, the part system it's built from, and what any system may ask about an NPC.
 
 - [`EntityNPC`](../src/main/java/lifeblood/entity/EntityNPC.java): A general-purpose NPC.
 - [`NpcGender`](../src/main/java/lifeblood/entity/NpcGender.java): An NPC's gender.
 - [`NpcPart`](../src/main/java/lifeblood/entity/NpcPart.java): A self-contained piece of an NPC (its life, health, eating...): its own state, its own upkeep, and its own section of the save.
+- [`NpcState`](../src/main/java/lifeblood/entity/NpcState.java): What an NPC is up to right now, for any system to ask: whether it's busy, fighting someone, badly hurt, who it's following, who attacked it lately.
 - [`Persons`](../src/main/java/lifeblood/entity/Persons.java): Telling people (players and NPCs) apart from creatures, and finding who is really behind an attack.
 
 ## `event`

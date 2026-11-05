@@ -28,7 +28,6 @@ import lifeblood.appearance.NpcLooks;
 import lifeblood.appearance.SkinModel;
 import lifeblood.brawl.Brawl;
 import lifeblood.brawl.NpcBrawling;
-import lifeblood.combat.CombatBehavior;
 import lifeblood.combat.CombatStyle;
 import lifeblood.combat.MonsterContact;
 import lifeblood.combat.NpcAttackers;
@@ -83,8 +82,6 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	private static final int SWING_DURATION = 8;
 	/** The forward input of a player holding the walk key; NPCs walk at exactly player speed. */
 	private static final float WALK_INPUT = 1.0F;
-	/** Below this share of health, the NPC is badly hurt: it says so, and killing its attacker saves its life. */
-	private static final float BADLY_HURT_HEALTH = 0.3F;
 	private static final int MEMORY_PRUNE_INTERVAL = 1200;
 	/** How often it checks in with the register of people: still here, and where (5 seconds). */
 	private static final int CHECK_IN_INTERVAL = 100;
@@ -109,6 +106,8 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	public final NpcLooks looks = new NpcLooks(this);
 	public final NpcAttackers attackers = new NpcAttackers(this);
 	public final NpcConversation conversation = new NpcConversation(this);
+	/** What it's up to right now, for any system to ask (see NpcState). */
+	public final NpcState state = new NpcState(this);
 	public final NpcRoutine routine = new NpcRoutine(this);
 	/** The parts, in the order they tick and load: who it is first, then what it does. */
 	private final List<NpcPart> parts = List.of(this.personality, this.voice, this.memories, this.relations, this.inventory,
@@ -159,7 +158,6 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	@Override
 	protected void updateAI() {
 		long start = System.nanoTime();
-		this.conversation.update();
 		// Mid-conversation the NPC stands still and faces the player; its behaviors resume afterwards.
 		if (this.conversation.isTalking()) {
 			this.navigator.stop();
@@ -231,6 +229,8 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 			PeopleRegistry.get(this.world).seen(this);
 		}
 
+		// Every tick, even while downed (when vanilla skips the AI): talks end when the NPC is knocked down.
+		this.conversation.update();
 		for (NpcPart part : this.parts) {
 			part.tick();
 		}
@@ -257,20 +257,6 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	 */
 	public void remember(MemoryType type, @Nullable Entity subject, float scale) {
 		this.memories.remember(this, type, subject, scale);
-	}
-
-	public boolean isBadlyHurt() {
-		return this.getHealth() < this.getMaxHealth() * BADLY_HURT_HEALTH;
-	}
-
-	/** Whether it's in a fight with this mob right now (its current target). */
-	public boolean isFighting(Entity mob) {
-		return this.brain.getActive() instanceof CombatBehavior combat && combat.getCurrentTarget() == mob;
-	}
-
-	/** Too occupied to start a conversation: fighting, brawling, talking to someone, or lying on the ground. */
-	public boolean isBusy() {
-		return this.conversation.isTalking() || this.health.isDowned() || this.brawling.isBrawling() || this.brain.getActive() instanceof CombatBehavior;
 	}
 
 	// Movement
@@ -442,7 +428,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 			return false;
 		}
 
-		boolean wasBadlyHurt = this.isBadlyHurt();
+		boolean wasBadlyHurt = this.state.isBadlyHurt();
 		Entity source = Persons.behind(attacker);
 		boolean armed = attacker instanceof Projectile || this.attackers.isArmed(source);
 		NpcBrawling.Hit hit = this.brawling.classify(source, armed, type);
@@ -479,7 +465,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 			this.attackers.attackedBy(source);
 		}
 
-		if (!wasBadlyHurt && this.isBadlyHurt() && !this.health.isDowned()) {
+		if (!wasBadlyHurt && this.state.isBadlyHurt() && !this.health.isDowned()) {
 			this.voice.bark("low_health", null, null, true);
 		}
 

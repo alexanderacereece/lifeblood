@@ -18,7 +18,7 @@ Four layers, each finer than the last. Read down only as far as you need:
 | Package | What's in it |
 |---|---|
 | `lifeblood` | The entry point (`Lifeblood`), the list of every system's setup (`Systems`), the mod id and log (`Mod`), settings (`NpcConfig`), and `ClientHooks`, the only way common code reaches the client |
-| `entity` | `EntityNPC`, `NpcPart`, `NpcGender`, and `Persons` (what counts as a person, who's behind an attack). Only the core; parts live with their systems |
+| `entity` | `EntityNPC`, `NpcPart`, `NpcGender`, `NpcState` (what any system may ask about an NPC), and `Persons` (what counts as a person, who's behind an attack). Only the core; parts live with their systems |
 | `event` | The event hub (`LifeEvents`) and its events: deaths, births, real attacks, gifts, couples changing |
 | `ai` | The brain (`NpcBrain`), the registry of saved behaviors (`NpcBehaviors`), and the NPC's home (`NpcHome`); `ai/behavior` holds the plain orders (go to, stay, wander), `ai/routine` the daily schedules |
 | `nav` | Getting around: the walkable-space grid, the path search, the per-tick budget, and `NpcNavigator`, which walks paths |
@@ -47,18 +47,22 @@ Four layers, each finer than the last. Read down only as far as you need:
 
 ## Layers
 
-Packages are stacked in layers. A package may use its own layer and the ones below, never the ones above. So the basics (time, the register of people, the NPC itself) can be understood and changed without the systems built on them:
+Packages are stacked in layers. A package may use its own layer and the ones below, never the ones above. So the basics (time, the NPC itself, how it moves and thinks) can be understood and changed without the systems built on them:
 
 | Layer | Packages | What it is |
 |---|---|---|
 | 1. Foundations | `util`, `perf`, `world`, `Mod`, `NpcConfig` | Time, world systems, the log and settings |
-| 2. The NPC | `entity`, `event`, `people`, `nav`, `inventory`, `item`, `appearance`, `ai`, `ClientHooks` | The entity, its body, its brain, the register of people, the event hub |
-| 3. Who they are | `personality`, `social`, `faction`, `family`, `ownership`, `speech`, `words` | Character, feelings, family, property, voice |
-| 4. What they do | `combat`, `brawl`, `health`, `following`, `building` | Systems that act in the world |
+| 2. The NPC | `entity`, `event`, `nav`, `inventory`, `item`, `ai`, `ClientHooks` | The entity, its brain and movement, what it carries, the event hub |
+| 3. Who they are | `personality`, `social`, `faction`, `family`, `people`, `appearance`, `health`, `ownership`, `speech`, `words` | Character, feelings, family and the register of people, looks, body, property, voice |
+| 4. What they do | `combat`, `brawl`, `following`, `building` | Systems that act in the world |
 | 5. Conversation | `dialogue` | Talking with the player, which draws on everything |
 | 6. Tools and sides | `command`, `client`, `mixin`, `Lifeblood`, `Systems` | Wiring, screens, hooks into BTA, `/lb` |
 
-There are two exceptions: anything may use `entity`, since every part needs its NPC, and `entity` may use anything, since it holds the parts. When a lower package needs something to happen above it, turn the dependency around:
+There are two exceptions: anything may use `entity`, since every part needs its NPC, and `entity` may use anything, since it holds the parts.
+
+The parts themselves still follow the layers. Every part is a field on the NPC (`npc.following`), so code could otherwise reach a higher system through it. Lower layers may only use the parts at their own layer or below. For anything above, they ask `npc.state` (`entity/NpcState`): a short, named list of questions about what the NPC is up to (busy, in combat, fighting someone, badly hurt, following whom, attacked lately). A question goes there only when a lower layer really needs it.
+
+When a lower package needs something to happen above it, turn the dependency around:
 - post an **event** and let the higher system listen;
 - **register** the higher system's piece from its setup class;
 - or move the code up, if it really belongs higher.
@@ -97,6 +101,21 @@ Use an event when others should react to something; call directly when one syste
 | A hook into BTA | A thin mixin in `mixin/` that calls the system's own code |
 | A helper | Wherever the system that owns the idea lives. Only truly general code goes in `util` |
 
+## Adding a new system
+
+The checklist for something like skills, work or settlements, in order:
+1. **Design doc** in `docs/`, listed in `docs/README.md`.
+2. **Package** with a `package-info.java`, a row in the package table, and a layer (the layer table above and `ArchitectureTest.LAYERS`). Pick the lowest layer whose packages are all it needs.
+3. **Per-NPC state** is an `NpcPart` in the package, with a unique `saveKey()`: a field on `EntityNPC` and an entry in its `parts` list.
+4. **World-wide state** is a `SavedData` register in the package.
+5. **Wiring** goes in an `XSetup.register()`, added to `lifeblood/Systems`: behaviors, instincts, activities, world systems, dialogue options, event listeners.
+6. **Reacting** to things elsewhere means listening to an event. If others should react to this system, post a new event (a record in `event/` and a row in the events table).
+7. **Lower layers** that need to know about it get a question on `NpcState`, never the part itself.
+8. **Speech lines** where NPCs would naturally talk about it, with new facts added to `SpeechFilesTest`.
+9. **Commands** for testing in a `command/` area class, never as the way to play.
+10. **Tests** for its pure logic, beside its classes.
+11. **Docs and memory:** this page if structure changed, the design doc, and the AI memory.
+
 ## The rules, and what checks them
 
 `ArchitectureTest` fails the build when one of these breaks. Its messages say how to fix it. Rules change only on purpose, in this page, CLAUDE.md and the test together.
@@ -107,6 +126,7 @@ Use an event when others should react to something; call directly when one syste
 | Every class has a doc comment | It feeds the code map, and says what the class is |
 | Every top-level package is in the table above | New systems get placed on purpose |
 | Packages only use their own layer and below, except for `entity` (layer table in the test and above) | The basics stay understandable on their own |
+| NPC parts are only used from their own layer or above; lower layers ask `npc.state` | The entity's fields can't become a back door around the layers |
 | Registrations and event listeners only happen in setup classes, and every setup is called from `Systems` | All wiring is in one list, and nothing registers by accident of class loading |
 | Common code never imports `lifeblood.client` or `net.minecraft.client` (only `client/` and the client mixins in `lifeblood.mixins.json` may) | A dedicated server has no client classes; touching one crashes it |
 | Nothing outside `command/` imports it (except the entry point) | Commands are tools over the game, never part of it |
