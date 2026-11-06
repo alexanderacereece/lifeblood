@@ -26,6 +26,8 @@ public final class NpcLife implements NpcPart {
 	private static final float OLDER_SPREAD = 12.0F;
 	private static final int MIN_ADULT_AGE = 18;
 	private static final int MAX_ADULT_AGE = 85;
+	/** The age a child is old enough for a first crush, when who it falls for is decided, in years. */
+	public static final int ORIENTATION_AGE = 7;
 	private static final float ADULT_WIDTH = 0.6F;
 	private static final float ADULT_HEIGHT = 1.825F;
 
@@ -59,6 +61,10 @@ public final class NpcLife implements NpcPart {
 			this.npc.looks.ageHair(this.getAgeYears());
 			if (this.isChild()) {
 				this.grow();
+			}
+
+			if (!this.npc.personality.isOrientationDecided() && this.getAgeYears() >= ORIENTATION_AGE) {
+				this.npc.personality.decideOrientation(this.npc.getRandom());
 			}
 
 			this.checkBirthday();

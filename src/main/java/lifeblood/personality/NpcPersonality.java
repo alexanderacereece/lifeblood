@@ -28,6 +28,11 @@ public class NpcPersonality implements NpcPart {
 
 	private final Map<TraitAxis, Float> axes = new EnumMap<>(TraitAxis.class);
 	private final Set<Quirk> quirks = EnumSet.noneOf(Quirk.class);
+	/**
+	 * Whether its orientation is decided yet. A child's isn't until it's old enough for a first crush (see
+	 * NpcLife.ORIENTATION_AGE); until then it has no orientation quirk and falls for nobody.
+	 */
+	private boolean orientationDecided = true;
 	public final Tastes tastes = new Tastes(this);
 
 	public NpcPersonality() {
@@ -115,7 +120,7 @@ public class NpcPersonality implements NpcPart {
 		}
 
 		this.tastes.reroll(random);
-		this.rollOrientation(random);
+		this.decideOrientation(random);
 	}
 
 	/** Every quirk that's rolled as a quirk (orientation is rolled separately). */
@@ -123,6 +128,17 @@ public class NpcPersonality implements NpcPart {
 		List<Quirk> pool = new ArrayList<>(List.of(Quirk.values()));
 		pool.removeIf(Quirk::isOrientation);
 		return pool;
+	}
+
+	/** Whether its orientation is decided yet (a young child's isn't). */
+	public boolean isOrientationDecided() {
+		return this.orientationDecided;
+	}
+
+	/** Decides its orientation, once a child is old enough for a first crush: 10% gay, 10% bisexual. */
+	public void decideOrientation(Random random) {
+		this.rollOrientation(random);
+		this.orientationDecided = true;
 	}
 
 	/** 10% gay, 10% bisexual. */
@@ -161,6 +177,7 @@ public class NpcPersonality implements NpcPart {
 		tag.putCompound("Axes", axisTag);
 		tag.putString("Quirks", String.join(",", quirkIds));
 		tag.putCompound("Tastes", this.tastes.save());
+		tag.putBoolean("OrientationDecided", this.orientationDecided);
 	}
 
 	/**
@@ -188,6 +205,8 @@ public class NpcPersonality implements NpcPart {
 		if (tag.containsKey("Tastes")) {
 			this.tastes.load(tag.getCompound("Tastes"));
 		}
+
+		this.orientationDecided = !tag.containsKey("OrientationDecided") || tag.getBoolean("OrientationDecided");
 	}
 
 	/**
@@ -202,7 +221,9 @@ public class NpcPersonality implements NpcPart {
 			this.set(axis, parents + (float) random.nextGaussian() * (second != null ? 0.3F : 0.45F));
 		}
 
-		this.quirks.removeIf(quirk -> !quirk.isOrientation());
+		// Who a child will fall for isn't known until it's old enough for a first crush.
+		this.quirks.removeIf(Quirk::isOrientation);
+		this.orientationDecided = false;
 		List<Quirk> inherited = new ArrayList<>(first.getQuirks());
 		if (second != null) {
 			inherited.addAll(second.getQuirks());
@@ -226,8 +247,6 @@ public class NpcPersonality implements NpcPart {
 			}
 		}
 	}
-
-	/** Converts the old 0-to-1 bravery into the courage axis. */
 
 	@Override
 	public String saveKey() {

@@ -79,6 +79,26 @@ public enum WoodType {
 		return null;
 	}
 
+	/** The kind of tree a leaves block grows on, or null if it isn't one of these trees' leaves. */
+	@Nullable
+	public static WoodType ofLeaves(Block<?> block) {
+		if (block == Blocks.LEAVES_OAK || block == Blocks.LEAVES_OAK_RETRO || block == Blocks.LEAVES_SHRUB) {
+			return OAK;
+		} else if (block == Blocks.LEAVES_PINE) {
+			return PINE;
+		} else if (block == Blocks.LEAVES_BIRCH) {
+			return BIRCH;
+		} else if (block == Blocks.LEAVES_CHERRY || block == Blocks.LEAVES_CHERRY_FLOWERING) {
+			return CHERRY;
+		} else if (block == Blocks.LEAVES_EUCALYPTUS) {
+			return EUCALYPTUS;
+		} else if (block == Blocks.LEAVES_THORN) {
+			return THORN;
+		}
+
+		return block == Blocks.LEAVES_PALM ? PALM : null;
+	}
+
 	/** Whether the block is plain planks or made from them, so it takes the local wood's planks. */
 	public static boolean isPlainPlanks(Block<?> block) {
 		return PAINTED_FORM.containsKey(block);

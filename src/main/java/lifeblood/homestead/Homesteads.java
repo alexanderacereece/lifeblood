@@ -123,7 +123,9 @@ public final class Homesteads {
 			who.add(npc.life.getFullName() + " (" + npc.life.getAgeYears() + ")");
 		}
 
-		String description = "a " + plan.kind().name().toLowerCase(Locale.ROOT) + " homestead (" + prefab.name + ") at " + site.x() + " " + site.y()
+		String materials = (swaps.wood() != null ? swaps.wood().id() : "no trees found, so oak") + " wood, "
+			+ (swaps.stone() != null ? swaps.stone().name().toLowerCase(Locale.ROOT).replace("stone", "plain") : "plain") + " stone";
+		String description = "a " + plan.kind().name().toLowerCase(Locale.ROOT) + " homestead (" + prefab.name + ", " + materials + ") at " + site.x() + " " + site.y()
 			+ " " + site.z() + ": " + who;
 		Mod.LOG.info("Generated {}", description);
 		return "Generated " + description + ".";

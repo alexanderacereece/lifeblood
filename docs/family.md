@@ -21,7 +21,7 @@ People go by their given name: it's the name tag and what others call them. The 
 
 ## Romance
 
-The way new couples form over time, so settlements change instead of staying frozen as generated. Any NPC can take part; the romantic quirk makes it far more likely and faster. Who an NPC can be attracted to: the opposite gender by default, or the same with the **gay** quirk (10%) or any with the **bisexual** quirk (10%). These show on the profile like other quirks, don't count toward the three-quirk limit, and aren't inherited. Players don't set a gender, so anyone can fall for a player. Blood relatives never date.
+The way new couples form over time, so settlements change instead of staying frozen as generated. Any NPC can take part; the romantic quirk makes it far more likely and faster. Who an NPC can be attracted to: the opposite gender by default, or the same with the **gay** quirk (10%) or any with the **bisexual** quirk (10%). These show on the profile like other quirks, don't count toward the three-quirk limit, and aren't inherited. A child's isn't decided until age 7, old enough for a first crush; until then it has none. Players don't set a gender, so anyone can fall for a player. Blood relatives never date.
 
 Stages, each needing high opinions on both sides (for the player, only the NPC's side counts; the player decides for themself):
 1. **Dating** at 70 or more. One asks; the other accepts if their opinion is high enough and they're attracted, and a refusal leaves a "turned me down" memory. NPCs check about once a minute, and romantics are three times as likely to ask.

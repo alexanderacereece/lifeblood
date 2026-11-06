@@ -31,7 +31,10 @@ public final class LocalMaterials {
 		return new Swaps(commonestWood(world, x, groundY, z), commonestStone(world, x, z), null, null);
 	}
 
-	/** The kind of tree with the most logs around the site, or null if there are no trees. */
+	/**
+	 * The kind of tree growing most around the site, by its logs and leaves, or null if there are no trees. Leaves
+	 * count too: they spread wide, so they're found where a sampled grid steps over a one-block trunk.
+	 */
 	@Nullable
 	public static WoodType commonestWood(World world, int x, int groundY, int z) {
 		Map<WoodType, Integer> counts = new EnumMap<>(WoodType.class);
@@ -45,7 +48,12 @@ public final class LocalMaterials {
 
 				for (int y = groundY - 4; y <= groundY + TREE_HEIGHT; y++) {
 					pos.set(x + dx, y, z + dz);
-					WoodType type = WoodType.of(world.getBlockType(pos));
+					Block<?> block = world.getBlockType(pos);
+					WoodType type = WoodType.of(block);
+					if (type == null) {
+						type = WoodType.ofLeaves(block);
+					}
+
 					if (type != null) {
 						counts.merge(type, 1, Integer::sum);
 					}
