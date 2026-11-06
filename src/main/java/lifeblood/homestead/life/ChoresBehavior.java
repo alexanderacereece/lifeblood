@@ -86,12 +86,15 @@ public final class ChoresBehavior implements NpcBehavior {
 		boolean curious = npc.personality.has(Quirk.CURIOUS);
 		List<Option> options = new ArrayList<>();
 		int logs = Household.count(npc, stack -> stack.getItem() instanceof ItemBlock<?> block && block.getBlock().getLogic() instanceof BlockLogicLog);
-		float woodNeed = noTrees ? 0.0F : logs < LOGS_WANTED ? 2.0F : 0.4F;
+		float woodNeed = noTrees ? 0.0F : logs < LOGS_WANTED ? 2.0F : logs < LOGS_WANTED * 2 ? 0.3F : 0.05F;
 		options.add(new Option(woodNeed * (1.0F + 0.5F * ethic), GatherWoodChore::new));
 		options.add(new Option((curious ? 1.2F : 0.6F) * (1.0F - 0.5F * ethic), who -> WalkChore.stroll(curious)));
 		int food = Household.count(npc, stack -> stack.getItem() instanceof ItemFood || stack.getItem() == Items.WHEAT);
 		float foodNeed = food < FOOD_WANTED * Math.max(1, Household.size(npc)) ? 2.0F : 0.6F;
 		options.add(new Option(foodNeed * (1.0F + 0.5F * ethic), FarmChore::new));
+		// Hunting is for the brave more than the timid, and never for animal lovers.
+		float courage = npc.personality.get(TraitAxis.COURAGE);
+		options.add(new Option(HuntChore.willHunt(npc) ? foodNeed * 0.6F * (1.0F + 0.5F * courage) : 0.0F, who -> new HuntChore()));
 		float total = 0.0F;
 		for (Option option : options) {
 			total += Math.max(0.0F, option.weight());

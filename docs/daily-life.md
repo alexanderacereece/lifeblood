@@ -1,6 +1,6 @@
 # Daily life (being built)
 
-**Built so far:** the day's schedule, sleeping in their own beds, meals from the chests, gathering wood, farming, walks, and children playing near home. **Next:** hunting, fishing, and older children's chores.
+**Built so far:** the day's schedule, sleeping in their own beds, meals from the chests, gathering wood, farming, hunting, walks, and children playing near home. **Next:** fishing, cooking meat at the furnace, older children's chores, and speech lines about their work.
 
 How NPCs who live somewhere spend their days without anyone telling them what to do, starting with homesteaders: sleeping in their own beds, eating from the household's chests, and doing the chores a household needs. Adventurers and travelers come after ([travelers](travelers.md)). Numbers are starting points for playtesting.
 
@@ -28,14 +28,14 @@ Fights, brawls, being downed and conversations still interrupt anything, as now.
 ## Chores, by need and inclination
 
 Nobody has a fixed job yet (jobs come later as [life choices](life-choices.md)). Each time someone is free for chores, they pick one, weighing:
-- **What the household is short of:** under 12 food items (wheat counts) per person in the chests makes farming, fishing and hunting likelier; under 32 logs, gathering wood.
+- **What the household is short of:** under 12 food items (wheat counts) per person in the chests makes farming, fishing and hunting likelier; under 32 logs makes gathering wood likely, and past 64 they hardly bother.
 - **What suits them:** the hardworking do more and rest less; the lazy take long walks; animal lovers never hunt; the restless walk farther.
 - **What they have:** a hoe to farm, an axe for wood (bare hands work, slowly, as for a player), a fishing rod to fish, a weapon to hunt. Tools come from the household's chests and go back when they're done.
 
 The chores, built in this order:
 1. **Gathering wood** (built): takes the household's axe if there is one (bare hands work, slowly), finds a natural tree within 48 blocks of home (nobody placed it, it stands on soil, it has leaves), chops its trunk from the bottom up as far as they can reach, gathers what falls for 15 seconds, plants a sapling if they have one, and brings the logs, saplings, apples, sticks and the axe home. Finding no tree puts wood off for an in-game day.
 2. **Farming** (built): takes the hoe and seeds from home, harvests ripe wheat, sows bare farmland, and tills up to 4 new plots a trip until the field has 16. The field is the farmland the household tilled (by ownership), within 20 blocks of home and kept 2 blocks clear of the house. A new field starts beside water if there's any within the game's 4-block reach for wetting farmland, else near home; where it can't grow (a slope, a tree), a new patch starts the same way. Tall grass and flowers are knocked off before tilling. Wheat, spare seeds and the hoe go home. Not yet: baking the wheat into bread.
-3. **Hunting:** pigs, cows, chickens and sheep, never the last few in an area, so herds last. Meat goes home, cooked at the furnace.
+3. **Hunting** (built): takes a sword or axe from home if there is one (fists otherwise), picks the nearest animal within 32 blocks of home that has at least 2 others of its kind around it, so some are always left, chases it for up to 40 seconds striking by the player's melee rules, gathers what drops, and brings home the raw meat, leather, feathers and the like (and the weapon). The brave hunt more, the timid less, animal lovers never; animal lovers who see it are upset, as with any killing. Not yet: cooking the meat at the furnace.
 4. **Fishing:** at the nearest water, with the player's catch timing and rules.
 5. **Walks** (built): a stroll 12 to 28 blocks from home and a while looking around; the curious go up to twice as far, the lazy walk more and the hardworking less.
 
