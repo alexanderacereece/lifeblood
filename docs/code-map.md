@@ -226,10 +226,24 @@ Generated homesteads: lone houses the world places as it generates, with people 
 - [`HomesteadPeople`](../src/main/java/lifeblood/homestead/HomesteadPeople.java): Brings a planned household to life: makes each person where they sleep, with their age, looks and family name, and writes their history into the register of people as history, not news: marriages from years ago, children's parents, a late husband or wife, siblings' parents back home.
 - [`HomesteadRegister`](../src/main/java/lifeblood/homestead/HomesteadRegister.java): Every homestead the world has generated, saved with it (BTA SavedData): where it is, which prefab, who heads the household, and when they settled.
 - [`Homesteads`](../src/main/java/lifeblood/homestead/Homesteads.java): Generated homesteads: as the overworld decorates a new chunk, rarely, a house from the prefabs/homestead folder is fitted to flat ground nearby, with its household already living there and its chests stocked.
-- [`HomesteadSetup`](../src/main/java/lifeblood/homestead/HomesteadSetup.java): Homesteaders talking about how they came to live out here, as a chat topic (chat_open_settling, chat_reply_settling).
+- [`HomesteadSetup`](../src/main/java/lifeblood/homestead/HomesteadSetup.java): Homesteaders' days (the homestead schedule and its activities: sleeping, chores, meals, evenings) and their talk of how they came to live out here, as a chat topic (chat_open_settling, chat_reply_settling).
 - [`HomesteadSites`](../src/main/java/lifeblood/homestead/HomesteadSites.java): Where homesteads may go: the overworld is split into square cells, about 400 blocks across, and each cell has a few chunks picked from the world seed where a homestead is tried.
 - [`HouseholdPlan`](../src/main/java/lifeblood/homestead/HouseholdPlan.java): Who lives in a homestead, decided before anyone is made: each member's place in the household, gender, age and bed, how long they've been there, and anyone missing from it (a late husband or wife, parents back home).
 - [`HouseholdPlanner`](../src/main/java/lifeblood/homestead/HouseholdPlanner.java): Decides who lives in a homestead from its beds: a double bed is a couple (or a widow or widower who still sleeps on their side), a single bed alone is one person.
+
+## `homestead/life`
+
+Homesteaders' days (see docs/daily-life.md): the homestead schedule (HomesteadDay), sleeping in their own beds (SleepBehavior), meals from the household's chests (MealBehavior), and chores picked by what the household needs and what suits them (ChoresBehavior, with one Chore class per kind).
+
+- [`Chore`](../src/main/java/lifeblood/homestead/life/Chore.java): One chore a homesteader does start to finish: gathering wood, farming, a walk.
+- [`ChoresBehavior`](../src/main/java/lifeblood/homestead/life/ChoresBehavior.java): Chore time: picks a chore by what the household needs and what suits the person, does it start to finish, rests a little, and picks the next.
+- [`Errands`](../src/main/java/lifeblood/homestead/life/Errands.java): The trips to the house that chores begin and end with: fetching a tool from the household's chests, and putting away what was gathered.
+- [`GatherWoodChore`](../src/main/java/lifeblood/homestead/life/GatherWoodChore.java): Gathering wood: takes an axe from home if there is one (bare hands work too, slowly, as for a player), finds a natural tree nearby (one nobody placed, with leaves on it), chops its trunk from the bottom up as far as they can reach, gathers what falls (logs, saplings, apples), plants a sapling where the tree stood, and brings it all home.
+- [`HomesteadDay`](../src/main/java/lifeblood/homestead/life/HomesteadDay.java): A homesteader's day, as a schedule: chores from 6, a meal at home at 12, chores or a walk from 13, home for the evening at 18, and bed at 21.
+- [`Household`](../src/main/java/lifeblood/homestead/life/Household.java): A homesteader's household as far as their day goes: their house (found from their home, which is in it) and its chests, what the chests hold, and which chest to walk to.
+- [`MealBehavior`](../src/main/java/lifeblood/homestead/life/MealBehavior.java): Mealtime at home: back to the house, where someone carrying little food takes some from the household's chests, so they have it when they need it (they eat by the player's rules, when hurt; see NpcEating).
+- [`SleepBehavior`](../src/main/java/lifeblood/homestead/life/SleepBehavior.java): Bedtime: walks to their own bed and sleeps in it, lying on their back with their head on the pillow, until morning.
+- [`WalkChore`](../src/main/java/lifeblood/homestead/life/WalkChore.java): A walk for the pleasure of it: out to somewhere a fair way from home, a while to look around, then done (the next chore brings them back).
 
 ## `inventory`
 
@@ -355,6 +369,17 @@ The word book: words players teach NPCs, and who knows them.
 
 - [`WordBook`](../src/main/java/lifeblood/words/WordBook.java): Every word players have taught NPCs, saved with the world.
 - [`WordCategory`](../src/main/java/lifeblood/words/WordCategory.java): What kind of word the player is teaching, which decides how it's asked for and how it's used.
+
+## `work`
+
+Work by the player's rules: breaking blocks at the player's digging speed with the tool in hand (BlockBreaking), using an item on a block within reach, as a player clicks (BlockUse: placing, tilling, sowing), picking up what drops (ItemPickup), and taking from and putting into chests (Containers).
+
+- [`Approach`](../src/main/java/lifeblood/work/Approach.java): Walking over to a block until it's within reach, for anything worked on by hand: a tree to chop, a chest to open, a field to till.
+- [`BlockBreaking`](../src/main/java/lifeblood/work/BlockBreaking.java): Breaking one block at a time by the player's rules (BlockLogic.getStrength and PlayerController): progress each tick is the held tool's strength against the block over its hardness (a fifth as fast underwater or off the ground, and very slow without the right tool), the arm swings as it digs, the block drops what it would for a player with that tool, and the tool wears down.
+- [`BlockUse`](../src/main/java/lifeblood/work/BlockUse.java): Using an item on a block as a player right-clicks it: placing a sapling or a block, sowing seeds, tilling with a hoe.
+- [`Containers`](../src/main/java/lifeblood/work/Containers.java): Taking from and putting into chests and other containers, within reach, the way a player moves stacks in a chest's screen: whole stacks, merging onto stacks of the same thing first.
+- [`ItemPickup`](../src/main/java/lifeblood/work/ItemPickup.java): Picking up items lying close by, as a player does by walking over them: only once their pickup delay is over, only what fits in the pack, with the pickup sound.
+- [`Reach`](../src/main/java/lifeblood/work/Reach.java): How far an NPC can reach to a block, the player's own survival reach, and turning to look at what it works on.
 
 ## `world`
 

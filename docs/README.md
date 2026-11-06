@@ -22,6 +22,7 @@ Planned, not built yet (ownership and building are partly built):
 | [work.md](work.md) | Jobs, block actions, real item chains, storage, honest mining |
 | [ownership.md](ownership.md) | Who placed what, protecting player builds, property for crime and law |
 | [skills.md](skills.md) | Archery and melee as real AI skill (aim, timing, footwork), where skill comes from and how it grows |
+| [daily-life.md](daily-life.md) | How homesteaders spend their days: sleeping in their beds, meals from the household chests, chores by need and inclination |
 | [travelers.md](travelers.md) | Wanderers, adventurers, hunters, gatherers and long trips: NPCs out in the world |
 | [unloaded.md](unloaded.md) | Keeping the world alive where nobody is watching |
 
@@ -33,7 +34,8 @@ The aim is a world to play in and feel the mod's pace: a mix of NPCs living in p
 1. **Prefabs** (built).
 2. **Generated homesteads** (built): families, lone settlers, widows and friends already living there ([building](building.md#generated-homesteads-built)).
 3. **Block actions**, the smallest set travelers need: breaking and placing by the player's rules ([work](work.md#the-pieces)).
-4. **Travelers and adventures:** wanderers passing through, adventurers in caves and ruins, hunters, gatherers and long trips ([travelers](travelers.md)).
+4. **Homesteader daily life:** beds, meals and chores (wood, farming, hunting, fishing, walks) by need and inclination ([daily life](daily-life.md)).
+5. **Travelers and adventures:** wanderers passing through, adventurers in caves and ruins, hunters, gatherers and long trips ([travelers](travelers.md)).
 
 ## Build order for working life
 

@@ -81,6 +81,8 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	static final int DATA_GENDER = 25;
 	/** Its family name ("Thorne"); the given name is the vanilla nickname. */
 	public static final int DATA_FAMILY_NAME = 26;
+	/** Asleep in bed (1) or not (0), so the client draws it lying down. */
+	public static final int DATA_SLEEPING = 27;
 	private static final int SWING_DURATION = 8;
 	/** The forward input of a player holding the walk key; NPCs walk at exactly player speed. */
 	private static final float WALK_INPUT = 1.0F;
@@ -156,6 +158,7 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		this.entityData.define(DATA_GROWTH, (byte) 100, Byte.class);
 		this.entityData.define(DATA_GENDER, (byte) NpcGender.MALE.ordinal(), Byte.class);
 		this.entityData.define(DATA_FAMILY_NAME, "", String.class);
+		this.entityData.define(DATA_SLEEPING, (byte) 0, Byte.class);
 	}
 
 	@Override
@@ -334,6 +337,15 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 
 	public void setCombatStyle(CombatStyle combatStyle) {
 		this.combatStyle = combatStyle;
+	}
+
+	/** Whether it's asleep in bed, drawn lying down. */
+	public boolean isSleeping() {
+		return this.entityData.getByte(DATA_SLEEPING) != 0;
+	}
+
+	public void setSleeping(boolean sleeping) {
+		this.entityData.set(DATA_SLEEPING, (byte) (sleeping ? 1 : 0));
 	}
 
 	public void swingArm() {

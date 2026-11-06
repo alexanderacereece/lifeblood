@@ -34,7 +34,7 @@ public class StayNearParentBehavior implements NpcBehavior {
 
 	@Override
 	public boolean canStart(EntityNPC npc) {
-		return npc.life.isChild() && findParent(npc) != null;
+		return npc.life.isChild() && !npc.isSleeping() && findParent(npc) != null;
 	}
 
 	@Override
@@ -69,7 +69,9 @@ public class StayNearParentBehavior implements NpcBehavior {
 		Mob nearest = null;
 		for (UUID id : PeopleRegistry.get(npc.world).parentsOf(npc.getUuid())) {
 			Mob parent = Romance.findPerson(npc.world, id);
-			if (parent != null && parent.isAlive() && parent.distanceTo(npc) <= FIND_RANGE
+			// A parent asleep in bed is left be: the child goes to its own bed when it's time.
+			boolean asleep = parent instanceof EntityNPC sleeper && sleeper.isSleeping();
+			if (parent != null && parent.isAlive() && !asleep && parent.distanceTo(npc) <= FIND_RANGE
 				&& (nearest == null || parent.distanceTo(npc) < nearest.distanceTo(npc))) {
 				nearest = parent;
 			}

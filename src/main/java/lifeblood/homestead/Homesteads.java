@@ -107,7 +107,7 @@ public final class Homesteads {
 		TerrainFit.settle(world, prefab, site);
 
 		double[] home = {site.x() + size[0] / 2.0, site.y() + 1.0, site.z() + size[1] / 2.0};
-		List<EntityNPC> people = HomesteadPeople.settle(world, plan, bedSpots(prefab, site, beds, plan), home, random);
+		List<EntityNPC> people = HomesteadPeople.settle(world, plan, bedsOf(prefab, site, beds, plan), home, random);
 		if (people.isEmpty()) {
 			return "Placed " + prefab.name + ", but its household couldn't be made.";
 		}
@@ -116,8 +116,8 @@ public final class Homesteads {
 		UUID head = people.get(0).getUuid();
 		claim(world, prefab, site, head);
 		HomesteadGoods.stock(world, prefab, site, swaps, people.size(), random);
-		register.add(new HomesteadRegister.Homestead(site.x(), site.y(), site.z(), prefab.name, head,
-			world.getWorldTime() - plan.yearsHere() * Calendar.ticksPerYear(world)));
+		register.add(new HomesteadRegister.Homestead(site.x(), site.y(), site.z(), size[0], prefab.height, size[1], prefab.name, head,
+			world.getWorldTime() - plan.yearsHere() * Calendar.ticksPerYear(world), chests(prefab, site)));
 		StringJoiner who = new StringJoiner(", ");
 		for (EntityNPC npc : people) {
 			who.add(npc.life.getFullName() + " (" + npc.life.getAgeYears() + ")");
@@ -148,16 +148,36 @@ public final class Homesteads {
 		return houses;
 	}
 
-	/** Where each member stands to start with: on their own bed, the couple's side by side. */
-	private static List<double[]> bedSpots(Prefab prefab, TerrainFit.Site site, PrefabBeds.Layout beds, HouseholdPlan plan) {
-		List<double[]> spots = new ArrayList<>();
+	/**
+	 * Each member's own bed in the world, as {x, y, z, facing} of its foot (facing turned with the house): the couple's
+	 * side by side in a double.
+	 */
+	private static List<int[]> bedsOf(Prefab prefab, TerrainFit.Site site, PrefabBeds.Layout beds, HouseholdPlan plan) {
+		List<int[]> spots = new ArrayList<>();
 		int[] usedSide = new int[beds.doubles().size()];
 		for (Member member : plan.members()) {
 			PrefabBeds.Bed bed = member.inDouble() ? beds.doubles().get(member.bed())[usedSide[member.bed()]++ % 2] : bedOrFirst(beds, member.bed());
-			spots.add(spot(prefab, site, bed));
+			TilePos pos = PrefabPlacer.spotPosition(prefab, bed.x(), bed.y(), bed.z(), site.x(), site.y(), site.z(), site.turns(), new TilePos());
+			// Bed facings go south, west, north, east: a quarter turn clockwise is one step along.
+			spots.add(new int[] {pos.x, pos.y, pos.z, Math.floorMod(bed.facing() + site.turns(), 4)});
 		}
 
 		return spots;
+	}
+
+	/** Where the house's chests are, in the world. */
+	private static List<int[]> chests(Prefab prefab, TerrainFit.Site site) {
+		List<int[]> chests = new ArrayList<>();
+		for (var entry : prefab.tileEntities().entrySet()) {
+			if ("minecraft:chest".equals(entry.getValue().getStringOrDefault("id", ""))) {
+				int spot = entry.getKey();
+				TilePos pos = PrefabPlacer.spotPosition(prefab, spot % prefab.width, spot / (prefab.width * prefab.depth), spot / prefab.width % prefab.depth,
+					site.x(), site.y(), site.z(), site.turns(), new TilePos());
+				chests.add(new int[] {pos.x, pos.y, pos.z});
+			}
+		}
+
+		return chests;
 	}
 
 	/** A single bed by its index; if there are fewer, the first bed there is. */
@@ -167,12 +187,6 @@ public final class Homesteads {
 		}
 
 		return beds.doubles().isEmpty() ? beds.singles().get(0) : beds.doubles().get(0)[0];
-	}
-
-	/** Standing on top of a bed, in world coordinates. */
-	private static double[] spot(Prefab prefab, TerrainFit.Site site, PrefabBeds.Bed bed) {
-		TilePos pos = PrefabPlacer.spotPosition(prefab, bed.x(), bed.y(), bed.z(), site.x(), site.y(), site.z(), site.turns(), new TilePos());
-		return new double[] {pos.x + 0.5, pos.y + 0.6, pos.z + 0.5};
 	}
 
 	/** Records every block the house placed as the head's. */

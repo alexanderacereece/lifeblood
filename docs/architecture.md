@@ -39,6 +39,7 @@ Four layers, each finer than the last. Read down only as far as you need:
 | `appearance` | An NPC's looks (`NpcLooks`): parts and palettes, hair color and graying (`HairColor`), who clothes are for (`Wearer`), whole skin files, slim arms |
 | `ownership` | Who placed each block, and who shares what |
 | `building` | Prefabs: saving, turning, material and color swaps, surveying a site, fitting to the land, beds, placing, the save check |
+| `work` | Work by the player's rules: breaking blocks at the player's digging speed, using items on blocks (placing, tilling, sowing), picking up drops, taking from and putting into chests |
 | `homestead` | Generated homesteads: where they go, who lives in them (from the beds), bringing the household to life with its history, and stocking the chests |
 | `world` | The calendar (`Calendar`), and world systems that run per world on their own clock |
 | `item` | The mod's items |
@@ -56,7 +57,7 @@ Packages are stacked in layers. A package may use its own layer and the ones bel
 | 1. Foundations | `util`, `perf`, `world`, `Mod`, `NpcConfig` | Time, world systems, the log and settings |
 | 2. The NPC | `entity`, `event`, `nav`, `inventory`, `item`, `ai`, `ClientHooks` | The entity, its brain and movement, what it carries, the event hub |
 | 3. Who they are | `personality`, `social`, `faction`, `family`, `people`, `appearance`, `health`, `ownership`, `speech`, `words`, `gossip` | Character, feelings, family and the register of people, looks, body, property, voice, news |
-| 4. What they do | `combat`, `brawl`, `following`, `building`, `homestead` | Systems that act in the world |
+| 4. What they do | `combat`, `brawl`, `following`, `building`, `work`, `homestead` | Systems that act in the world |
 | 5. Conversation | `dialogue` | Talking with the player, which draws on everything |
 | 6. Tools and sides | `command`, `client`, `mixin`, `Lifeblood`, `Systems` | Wiring, screens, hooks into BTA, `/lb` |
 

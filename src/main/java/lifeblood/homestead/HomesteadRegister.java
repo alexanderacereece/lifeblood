@@ -6,9 +6,11 @@ import com.mojang.nbt.tags.Tag;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.UUID;
 import net.minecraft.core.world.World;
 import net.minecraft.core.world.saveddata.SavedData;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Every homestead the world has generated, saved with it (BTA SavedData): where it is, which prefab, who heads the
@@ -17,8 +19,15 @@ import net.minecraft.core.world.saveddata.SavedData;
 public class HomesteadRegister extends SavedData {
 	public static final String DATA_ID = "lifeblood_homesteads";
 
-	/** One homestead: the house's box corner and floor level, its prefab, the head of the household, and when they settled (world time). */
-	public record Homestead(int x, int y, int z, String prefab, UUID head, long settled) {
+	/**
+	 * One homestead: the house's box (lowest corner, at floor level, and its size once turned), its prefab, the head
+	 * of the household, when they settled (world time), and where its chests are ({x, y, z} each).
+	 */
+	public record Homestead(int x, int y, int z, int width, int height, int depth, String prefab, UUID head, long settled, List<int[]> chests) {
+		/** Whether a position is inside the house's box. */
+		public boolean contains(double px, double py, double pz) {
+			return px >= this.x && px < this.x + this.width && py >= this.y && py < this.y + this.height && pz >= this.z && pz < this.z + this.depth;
+		}
 	}
 
 	private final List<Homestead> homesteads = new ArrayList<>();
@@ -54,6 +63,18 @@ public class HomesteadRegister extends SavedData {
 		return false;
 	}
 
+	/** The homestead whose house holds this position (someone's home), or null if none does. */
+	@Nullable
+	public Homestead at(double x, double y, double z) {
+		for (Homestead homestead : this.homesteads) {
+			if (homestead.contains(x, y, z)) {
+				return homestead;
+			}
+		}
+
+		return null;
+	}
+
 	public void add(Homestead homestead) {
 		this.homesteads.add(homestead);
 		this.setDirty();
@@ -66,12 +87,26 @@ public class HomesteadRegister extends SavedData {
 			if (entry instanceof CompoundTag homestead) {
 				try {
 					this.homesteads.add(new Homestead(homestead.getInteger("X"), homestead.getInteger("Y"), homestead.getInteger("Z"),
-						homestead.getString("Prefab"), UUID.fromString(homestead.getString("Head")), homestead.getLong("Settled")));
+						homestead.getInteger("Width"), homestead.getInteger("Height"), homestead.getInteger("Depth"), homestead.getString("Prefab"),
+						UUID.fromString(homestead.getString("Head")), homestead.getLong("Settled"), readPositions(homestead.getStringOrDefault("Chests", ""))));
 				} catch (IllegalArgumentException e) {
 					// A damaged entry is skipped rather than losing the rest.
 				}
 			}
 		}
+	}
+
+	/** Positions saved as "x,y,z;x,y,z". */
+	private static List<int[]> readPositions(String saved) {
+		List<int[]> positions = new ArrayList<>();
+		for (String part : saved.split(";")) {
+			String[] numbers = part.split(",");
+			if (numbers.length == 3) {
+				positions.add(new int[] {Integer.parseInt(numbers[0].trim()), Integer.parseInt(numbers[1].trim()), Integer.parseInt(numbers[2].trim())});
+			}
+		}
+
+		return positions;
 	}
 
 	@Override
@@ -85,6 +120,15 @@ public class HomesteadRegister extends SavedData {
 			entry.putString("Prefab", homestead.prefab());
 			entry.putString("Head", homestead.head().toString());
 			entry.putLong("Settled", homestead.settled());
+			entry.putInt("Width", homestead.width());
+			entry.putInt("Height", homestead.height());
+			entry.putInt("Depth", homestead.depth());
+			StringJoiner chests = new StringJoiner(";");
+			for (int[] chest : homestead.chests()) {
+				chests.add(chest[0] + "," + chest[1] + "," + chest[2]);
+			}
+
+			entry.putString("Chests", chests.toString());
 			list.addTag(entry);
 		}
 

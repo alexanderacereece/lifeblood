@@ -13,9 +13,12 @@ import lifeblood.entity.NpcGender;
 import lifeblood.family.FamilyNames;
 import lifeblood.family.Romance;
 import lifeblood.homestead.HouseholdPlan.Member;
+import lifeblood.homestead.life.HomesteadDay;
+import lifeblood.homestead.life.SleepBehavior;
 import lifeblood.homestead.HouseholdPlan.Role;
 import lifeblood.people.NamePool;
 import lifeblood.people.PeopleRegistry;
+import lifeblood.personality.Quirk;
 import lifeblood.social.MemoryType;
 import lifeblood.world.Calendar;
 import org.jetbrains.annotations.Nullable;
@@ -30,10 +33,11 @@ public final class HomesteadPeople {
 	}
 
 	/**
-	 * Makes the household's people, each standing at their bed (bedSpots: {x, y, z} per member, in the plan's order),
-	 * all calling the house's middle home. Returns them in the plan's order, without any that couldn't be made.
+	 * Makes the household's people, each given their own bed and standing beside it (beds: {x, y, z, facing} of each
+	 * member's bed foot, in the plan's order), all calling the house's middle home. Returns them in the plan's order,
+	 * without any that couldn't be made.
 	 */
-	public static List<EntityNPC> settle(World world, HouseholdPlan plan, List<double[]> bedSpots, double[] home, Random random) {
+	public static List<EntityNPC> settle(World world, HouseholdPlan plan, List<int[]> beds, double[] home, Random random) {
 		List<EntityNPC> people = new ArrayList<>();
 		EntityNPC[] byIndex = new EntityNPC[plan.members().size()];
 		String headFamily = NamePool.pickFamilyName(random);
@@ -44,9 +48,17 @@ public final class HomesteadPeople {
 				continue;
 			}
 
-			double[] spot = bedSpots.get(i);
+			int[] bed = beds.get(i);
 			NpcGender gender = member.female() ? NpcGender.FEMALE : NpcGender.MALE;
+			// Beside their bed rather than on it: on a bed, a low ceiling can leave no room to move.
+			double[] spot = SleepBehavior.besideBed(world, bed);
+			if (spot == null) {
+				spot = new double[] {home[0], home[1], home[2]};
+			}
+
 			npc.moveTo(spot[0], spot[1], spot[2], random.nextFloat() * 360.0F, 0.0F);
+			npc.home.setBed(bed[0], bed[1], bed[2], bed[3]);
+			npc.routine.setScheduleId(HomesteadDay.SCHEDULE);
 			npc.setNickname(NamePool.pick(gender, random));
 			npc.setGender(gender);
 			// Family and siblings share the head's family name; friends have their own.
@@ -63,6 +75,8 @@ public final class HomesteadPeople {
 		for (EntityNPC npc : byIndex) {
 			if (npc != null) {
 				npc.looks.rollIfNeeded();
+				// Early birds are up and to bed an hour early; night owls an hour late.
+				npc.routine.setHourShift(npc.personality.has(Quirk.EARLY_BIRD) ? 1 : npc.personality.has(Quirk.NIGHT_OWL) ? -1 : 0);
 				npc.spawnInit();
 				world.entityJoinedWorld(npc);
 				Romance.register(npc);

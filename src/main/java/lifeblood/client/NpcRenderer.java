@@ -56,7 +56,8 @@ public class NpcRenderer extends MobRendererBipedArmored<EntityNPC> {
 	@Override
 	protected void preRenderTransform(@NotNull EntityNPC entity, double x, double y, double z, float yaw, float partialTick) {
 		// Lying down, the body is lifted by half its thickness so it rests on the ground instead of in it.
-		float fall = entity.health.getFallAmount(partialTick);
+		// Asleep in bed it lies flat on its back, as fully as someone knocked down.
+		float fall = entity.isSleeping() ? 1.0F : entity.health.getFallAmount(partialTick);
 		GLRenderer.modelM4f().translate((float) x, (float) y + fall * LYING_LIFT, (float) z);
 		GLRenderer.modelM4f().rotateY(-this.getBodyYaw(entity, partialTick));
 		GLRenderer.modelM4f().scale(0.062539086F, 0.062539086F, -0.062539086F);
@@ -65,7 +66,8 @@ public class NpcRenderer extends MobRendererBipedArmored<EntityNPC> {
 		float size = entity.life.getSizeScale();
 		GLRenderer.modelM4f().scale(size, size, size);
 		if (fall > 0.0F) {
-			GLRenderer.modelM4f().rotateX(Math.toRadians((entity.health.isDownedOnFront() ? -90.0F : 90.0F) * fall));
+			boolean onFront = !entity.isSleeping() && entity.health.isDownedOnFront();
+			GLRenderer.modelM4f().rotateX(Math.toRadians((onFront ? -90.0F : 90.0F) * fall));
 		} else if (entity.deathTime > 0) {
 			float rotationProgress = (entity.deathTime + partialTick - 1.0F) / 20.0F * 1.6F;
 			rotationProgress = Math.min(MathHelper.sqrt_float(rotationProgress), 1.0F);

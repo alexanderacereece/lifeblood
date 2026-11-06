@@ -10,10 +10,17 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
+import java.util.TreeMap;
+import net.minecraft.core.item.ItemStack;
 import net.minecraft.core.net.command.CommandSource;
 import net.minecraft.core.net.command.arguments.ArgumentTypeVector3d;
+import net.minecraft.core.player.inventory.container.Container;
 import net.minecraft.core.util.helper.MathHelper;
+import net.minecraft.core.world.World;
+import net.minecraft.core.world.pos.TilePos;
+import lifeblood.building.PrefabCheck;
 import lifeblood.building.PrefabFiles;
 import lifeblood.homestead.HomesteadRegister;
 import lifeblood.homestead.Homesteads;
@@ -44,7 +51,7 @@ final class HomesteadCommands {
 					.executes(c -> generate(c, ArgumentTypeString.getString(c, "prefab"), position(c, null)))
 					.then(argument("location", ArgumentTypeVector3d.vec3d())
 						.executes(c -> generate(c, ArgumentTypeString.getString(c, "prefab"), position(c, "location"))))))
-			.then(branch("homestead list", "Every homestead the world has generated, and where.").executes(HomesteadCommands::list)));
+			.then(branch("homestead list", "Every homestead the world has generated, where, and what its chests hold.").executes(HomesteadCommands::list)));
 	}
 
 	/** Where to put it: the location given, or where the command is run from. */
@@ -72,17 +79,45 @@ final class HomesteadCommands {
 		}
 	}
 
+	/** What a homestead's chests hold, most first ("12 log_oak, 5 food_bread..."), or that they aren't loaded. */
+	private static String describeChests(World world, HomesteadRegister.Homestead homestead) {
+		Map<String, Integer> counts = new TreeMap<>();
+		boolean loaded = false;
+		for (int[] chest : homestead.chests()) {
+			TilePos pos = new TilePos(chest[0], chest[1], chest[2]);
+			if (world.isBlockLoaded(pos) && world.getTileEntity(pos) instanceof Container container) {
+				loaded = true;
+				for (int slot = 0; slot < container.getContainerSize(); slot++) {
+					ItemStack stack = container.getItem(slot);
+					if (stack != null) {
+						counts.merge(PrefabCheck.shortName(stack.getItem().getKey()), stack.stackSize, Integer::sum);
+					}
+				}
+			}
+		}
+
+		if (!loaded) {
+			return "chests not loaded";
+		}
+
+		StringJoiner joiner = new StringJoiner(", ");
+		counts.entrySet().stream().sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+			.forEach(entry -> joiner.add(entry.getValue() + " " + entry.getKey()));
+		return counts.isEmpty() ? "chests empty" : joiner.toString();
+	}
+
 	private static int list(CommandContext<CommandSource> c) {
 		List<HomesteadRegister.Homestead> homesteads = HomesteadRegister.get(c.getSource().getWorld()).all();
 		if (homesteads.isEmpty()) {
 			return reply(c, "The world hasn't generated any homesteads yet.");
 		}
 
-		StringJoiner joiner = new StringJoiner("; ");
+		reply(c, homesteads.size() + (homesteads.size() == 1 ? " homestead:" : " homesteads:"));
+		World world = c.getSource().getWorld();
 		for (HomesteadRegister.Homestead homestead : homesteads) {
-			joiner.add(homestead.prefab() + " at " + homestead.x() + " " + homestead.y() + " " + homestead.z());
+			reply(c, "- " + homestead.prefab() + " at " + homestead.x() + " " + homestead.y() + " " + homestead.z() + ": " + describeChests(world, homestead));
 		}
 
-		return reply(c, homesteads.size() + (homesteads.size() == 1 ? " homestead: " : " homesteads: ") + joiner + ".");
+		return homesteads.size();
 	}
 }

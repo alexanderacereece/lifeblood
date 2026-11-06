@@ -15,6 +15,11 @@ import org.jetbrains.annotations.Nullable;
 public final class NpcRoutine implements NpcPart {
 	private final EntityNPC npc;
 	private String scheduleId = Routines.DEFAULT_SCHEDULE;
+	/**
+	 * How many hours ahead of the clock it lives: 1 for an early bird (up and to bed an hour early), -1 for a night owl
+	 * (an hour late), 0 for most.
+	 */
+	private int hourShift;
 	/** The activity under way, and the behavior carrying it out; null until first asked. */
 	@Nullable
 	private String activity;
@@ -30,9 +35,16 @@ public final class NpcRoutine implements NpcPart {
 		this.activity = null;
 	}
 
-	/** The activity the schedule calls for right now. */
+	/** Sets how many hours ahead of the clock it lives (an early bird 1, a night owl -1). */
+	public void setHourShift(int hours) {
+		this.hourShift = hours;
+		this.activity = null;
+	}
+
+	/** The activity the schedule calls for right now, by its own hours. */
 	public String currentActivity() {
-		return Routines.schedule(this.scheduleId).activityAt(Calendar.hourOfDay(this.npc.world.getWorldTime()));
+		int hour = Math.floorMod(Calendar.hourOfDay(this.npc.world.getWorldTime()) + this.hourShift, 24);
+		return Routines.schedule(this.scheduleId).activityAt(hour);
 	}
 
 	/** The behavior for the activity of the moment, switching to a new one when the schedule moves on. */
@@ -62,10 +74,12 @@ public final class NpcRoutine implements NpcPart {
 	@Override
 	public void save(CompoundTag tag) {
 		tag.putString("Schedule", this.scheduleId);
+		tag.putInt("HourShift", this.hourShift);
 	}
 
 	@Override
 	public void load(CompoundTag tag) {
 		this.setScheduleId(tag.getStringOrDefault("Schedule", Routines.DEFAULT_SCHEDULE));
+		this.hourShift = tag.getIntegerOrDefault("HourShift", 0);
 	}
 }
