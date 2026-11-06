@@ -1,6 +1,6 @@
 # Building (partly built)
 
-Prefabs are built: saving a build, turning it, swapping its materials for the place, and placing it all at once. The rest is planned: generated homesteads, and NPCs choosing a site and building a real house from a prefab, honestly: block by block, from real materials, within the player's reach and support rules. Used by homesteaders, growing towns and builders for hire. Numbers are starting points for playtesting.
+Prefabs and generated homesteads are built: saving a build, turning it, swapping its materials for the place, placing it all at once, and the world placing homesteads with people living in them. The rest is planned: NPCs choosing a site and building a real house from a prefab, honestly: block by block, from real materials, within the player's reach and support rules. Used by homesteaders, growing towns and builders for hire. Numbers are starting points for playtesting.
 
 As far as we know, no NPC mod builds this way; village mods place blocks without the player's rules. It's the most ambitious single feature planned, and expected to take several rounds of iteration. What makes it workable is doing most of the thinking when a prefab is **authored**, so the NPC in the game only has to adapt a known plan.
 
@@ -46,21 +46,24 @@ The NPC places blocks the way a player does: it stands where the game's own plac
 
 **Making it convincing:** arm swings and sounds, walking to the stockpile and carrying loads, stepping back to look at the work, a lunch break, quitting at dusk, and speech lines ("roof's going up tomorrow"). Coming across someone halfway through their house is part of the charm, so it should take a few in-game days.
 
-## Generated homesteads (next)
+## Generated homesteads (built)
 
-The first use of prefabs, before any NPC builds: homesteads placed by world generation, with people already living there. A house placed by the world needs none of the honest-building machinery, so this comes first.
+The first use of prefabs, before any NPC builds: homesteads placed by world generation, with people already living there. A house placed by the world needs none of the honest-building machinery, so this came first. The code is in `homestead/`; `/lb homestead generate` puts one up on the spot for testing, and `/lb homestead list` shows where the world has put them.
 
-- **Where:** rarely, about one per 400 by 400 blocks, since towns and cities with factions will fill the land later. On fairly flat ground in the overworld, during the same decoration step that places dungeons. Each house stays inside the area being decorated, so generation never pulls in new chunks.
-- **Which prefabs:** only those in a `homestead` folder (`prefabs/homestead/` bundled, `npc_prefabs/homestead/` in the game folder). Folders are tags, as with parts. A house with the right beds isn't automatically a homestead, and a homestead prefab can still be used in towns.
-- **The house:** a prefab fitted to the terrain, with swaps for the local wood, stone and colors. Its bottom layer is the floor, sunk into the ground so the door is at ground level. Air in that bottom layer keeps the terrain instead of clearing it, so no trench is dug around the house. Any gap under the floor is filled down with the local ground (dirt, sand...), so the land looks leveled, not built up. Space above the floor is cleared. The household owns its blocks and chests ([ownership](ownership.md)).
-- **Goods:** chests and furnaces hold what the household would have after a few days or weeks of living there, and nothing they couldn't have: food they'd grow, hunt or cook, seeds, worn tools, leftover building materials. Taking it is theft from them.
-- **Beds decide the household.** Two single beds side by side, facing the same way, are a double bed: a couple. A single bed alone is one person: a lone settler, a widow or widower, a child, or a friend. A homestead prefab with no beds is never chosen, and the authoring check says so.
-- **Who lives there.** Most are families, but not all:
-  - a family: a couple, often with children;
-  - a lone settler;
-  - someone who *had* someone: a widow or widower whose late spouse is in the register of people, sometimes with children, sometimes a grave nearby;
-  - friends or like-minded people who came out together, each with their own reasons (a shared faith, running from something, a fresh start).
-- **History:** real ages and birthdays, marriages and family links in the register, memories and opinions of each other, a homeland, and the homestead as home. They talk about how they came to live there.
+- **Where:** rarely. The overworld is split into cells 400 blocks across, and each cell has 8 chunks picked from the seed where one is tried (`HomesteadSites`). The first of those generated with fairly flat, dry ground gets the cell's homestead, so a cell has one at most, and cells of water or steep hills have none. Towns and cities with factions will fill the land later. The house goes in when a new chunk is decorated, after its trees and snow, inside the area being decorated, so generation never pulls in new chunks.
+- **Fairly flat:** the ground under the house may rise and fall 4 blocks at most (`building/TerrainFit`). Better than Adventure's land is rarely flatter than that over a house's width; the floor goes in at the middle height, so the house is cut into the high side and built up on the low side. Under water, ice or lava never counts.
+- **Which prefabs:** only those in a `homestead` folder (`prefabs/homestead/` bundled, `npc_prefabs/homestead/` in the game folder). Folders are tags, as with parts (`building/PrefabFiles`). A house with the right beds isn't automatically a homestead, and a homestead prefab can still be used in towns. `/lb prefab list` shows each prefab's tags.
+- **The house:** fitted to the terrain, with swaps for the local wood and stone. Its bottom layer is the floor, sunk into the ground so the door is at ground level. Air in that bottom layer keeps the terrain instead of clearing it, so no trench is dug around the house; this holds wherever a prefab is placed, `/lb prefab place` included. Any gap under the floor's own blocks is filled down with the local ground (dirt, sand...), so the land looks leveled, not built up. Space above the floor is cleared, and logs and leaves left hanging over the roof are removed. The head of the household owns its blocks and chests, which their husband or wife and children share ([ownership](ownership.md)).
+- **Goods** (`HomesteadGoods`): what the household would have after a few days or weeks of living there, and nothing they couldn't have: bread, wheat and seeds; maybe apples, cooked pork or venison, fish, eggs, leather, feathers, string, bone; logs, planks and cobblestone left from building, in the local wood and stone; sticks, torches, coal, sometimes flint or a few iron ingots; worn stone tools (a hoe, an axe, a pickaxe, maybe a shovel or sword). More food for more people. Furnaces keep a little coal. Taking it is theft from them.
+- **Beds decide the household** (`building/PrefabBeds`, `HouseholdPlanner`). Two single beds side by side, facing the same way, are a double bed: a couple. A single bed alone is one person. Everyone starts on their own bed. The prefab check says how many each house sleeps, and warns about a homestead prefab with no beds, which is never used.
+- **Who lives there:**
+  - a double bed: a married couple (85%), each spare single bed likely holding a child; or a widow or widower (15%), sometimes with children. A second double bed may hold a couple of friends;
+  - one single bed: a lone settler;
+  - several single beds: friends who came out together, brothers and sisters, or a widowed parent with children.
+- **History** (`HomesteadPeople`), written into the register of people as history, so no news or reactions: real ages and birthdays; a marriage from before their eldest was born, with the bride usually taking her husband's family name; children who take after both parents in personality and looks and carry their father's name; a late husband or wife in the register as dead; siblings' parents still living back home; friends who settled together start out close. Children younger than the homestead were born there.
+- **How they came:** each person knows why they live there (`NpcLife.getCameFor`): a fresh start, faith, land, the quiet, or running from something; children came with their family or were born there. Players can ask "What brought you out here?", and NPCs talk it over in chats (`homestead.speech`).
+
+Not yet: a grave for the late husband or wife; adults' homeland is the homestead's own land rather than somewhere else; homesteads don't use faction colors (grays stay gray); and a later neighbor's decoration could in rare cases put something against the house, since it goes in as soon as its own chunk is decorated.
 
 ## Towns rising and falling
 
@@ -72,6 +75,7 @@ The first use of prefabs, before any NPC builds: homesteads placed by world gene
 
 - Mirrored variants of prefabs, or rotations only.
 - Whether some air above the floor layer should keep the terrain too (for builds set into a hillside).
+- Where homesteaders came from: a homeland somewhere else, and a grave for a late husband or wife.
 - Which wood and stone to use where nothing's found nearby (worldgen may place a house before its trees): a table by biome.
 - Roads and paths between buildings: generated, or prefabs too.
 - How much a builder for hire charges, once there's currency.

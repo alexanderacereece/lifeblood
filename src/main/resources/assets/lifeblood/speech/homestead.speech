@@ -1,0 +1,78 @@
+# Homesteads: how people came to live out on their own land. came_for says why (fresh_start, faith, land, quiet,
+# running, family for children who came with their family, born_here); settler is yes for anyone who came from
+# somewhere else. Asked by the player ("What brought you out here?") and talked over between NPCs (the settling topic).
+
+# ---------------------------------------------------------------------------------------------------------------
+# What brought you out here?
+
+== came_here ==
+[came_reason] [came_life?]
+[came_reason]
+
+== came_reason ==
+Just ended up here, I suppose.
+Needed a fresh start. Out here, nobody knows who I used to be. {came_for=fresh_start, w=6}
+A fresh start. Back home everyone had me figured out already. {came_for=fresh_start, w=4}
+Wanted to start over somewhere nobody had an opinion of me yet. {came_for=fresh_start, introvert, w=4}
+Fresh start! New land, new me. {came_for=fresh_start, optimist, w=4}
+Things went bad back home. This was the only way to make them good again. {came_for=fresh_start, pessimist, w=4}
+The Cube God led us here. I believe that. {came_for=faith, w=6}
+Faith. We prayed on it, and this is where we were meant to be. {came_for=faith, pious, w=6}
+Folks back home didn't care for how we worship. Out here, nobody minds. {came_for=faith, w=4}
+I came out with others who believe as I do. It's a simpler life, closer to what matters. {came_for=faith, serious, w=4}
+Land. Good soil, and nobody else's name on it. {came_for=land, w=6}
+Land of my own. Back home I'd have worked someone else's my whole life. {came_for=land, w=5}
+Land, plain and simple. A body's got to own something. {came_for=land, proud, w=4}
+Every field here, I cleared myself. Couldn't do that back home. {came_for=land, hardworking, w=5}
+Land was cheap. Well, free. Nobody else wanted it. {came_for=land, lighthearted, w=4}
+The quiet. Towns are loud, and people are louder. {came_for=quiet, w=6}
+Peace and quiet. You hear that? Nothing. That's why. {came_for=quiet, w=5}
+I like people fine, in small doses. Out here the doses are very small. {came_for=quiet, introvert, w=5}
+Too many people back home, all wanting something. {came_for=quiet, w=4}
+Let's just say I needed to be somewhere else for a while. {came_for=running, w=6}
+I'd rather not talk about it. {came_for=running, w=4}
+Nobody comes looking out here. That's all I'll say. {came_for=running, paranoid, w=5}
+I left in a hurry. Didn't stop walking until I got here. {came_for=running, w=3}
+I owed some people money. Still do, I suppose. {came_for=running, honest, w=4}
+Oh, the land. Definitely just the land. Why do you ask? {came_for=running, liar, w=5}
+My folks brought me. Wasn't my choice, but I don't mind it now. {came_for=family, w=6}
+Came out with my family when I was younger. Hardly remember anywhere else. {came_for=family, w=4}
+My parents wanted land. I wanted to stay. They won. {came_for=family, rude, w=3}
+I was born here! This is home. {came_for=born_here, w=6}
+Brought me out here? I was born in that house. {came_for=born_here, w=5}
+Never been anywhere else. Born right here. {came_for=born_here, introvert, w=4}
+
+== came_life ==
+It's hard work, but it's honest work.
+Hard going, some winters. {season=winter, w=2}
+Wouldn't trade it.                        {optimist}
+Some days I wonder if it was worth it.    {pessimist}
+Every day's work, out here. Suits me.     {hardworking}
+More chores than I signed up for.         {lazy}
+It's quieter since [partner] passed. We built this place together. {relationship=widowed, w=6}
+We built it all ourselves, the two of us. {relationship=married, w=4}
+The children were born out here. They don't know any other life. {listener_type=player, relationship=married, w=2}
+
+# Children have their own way of putting it.
+== came_here.child ==
+I was born here! It's my house! {came_for=born_here, w=5}
+Mama and Papa brought me. It was a long walk. {came_for=family, w=5}
+I live here!
+
+# ---------------------------------------------------------------------------------------------------------------
+# NPCs talking it over (the settling chat topic).
+
+== chat_open_settling ==
+[listener]. Ever think about why we ended up out here? [came_reason]
+Funny, the things that bring a person out this far. [came_reason]
+I was thinking about the old days, before we came out here. {settler=yes, w=2}
+Do you ever miss it? Back home? {settler=yes, sentimental, w=3}
+[came_reason] [came_life?]
+
+== chat_reply_settling ==
+[came_reason]
+Same here, more or less.
+I don't think about it much. Too busy.    {hardworking}
+I miss it sometimes. Then I remember why I left. {settler=yes, w=2}
+Never miss it. Not once.                  {settler=yes, proud, w=2}
+I was born out here, so I wouldn't know.  {came_for=born_here, w=4}

@@ -1,6 +1,6 @@
 # Travelers and adventures (planned)
 
-Not built yet. NPCs who are out in the world instead of at home: wanderers passing through, adventurers going into caves and ruins, hunters and gatherers out for the day, and people making a long trip to somewhere. With [generated homesteads](building.md#generated-homesteads-next), this is the **first playtest**: a world with a mix of NPCs living in places and NPCs showing up on their own, so the pace of the mod can be felt. Numbers are starting points for playtesting.
+Not built yet. NPCs who are out in the world instead of at home: wanderers passing through, adventurers going into caves and ruins, hunters and gatherers out for the day, and people making a long trip to somewhere. With [generated homesteads](building.md#generated-homesteads-built), this is the **first playtest**: a world with a mix of NPCs living in places and NPCs showing up on their own, so the pace of the mod can be felt. Numbers are starting points for playtesting.
 
 ## What it should feel like
 
@@ -45,7 +45,7 @@ How well a traveler hunts, fights or finds its way is its [skill](skills.md), an
 
 ## What it needs first
 
-- **[Generated homesteads](building.md#generated-homesteads-next)**, so there are homes to set out from and come back to.
+- **[Generated homesteads](building.md#generated-homesteads-built)**, so there are homes to set out from and come back to.
 - **[Block actions](work.md#the-pieces)** for gathering and lighting caves (break and place by the player's rules).
 - **Long-distance travel** in the navigator: routes in legs across loaded areas, and how a trip carries on when its area unloads ([unloaded](unloaded.md): a traveler is a record moving along a route, made real again where they've got to).
 - **Outings as plans:** a small framework for a destination, steps and a reason to return, reused by jobs later ([work](work.md)).

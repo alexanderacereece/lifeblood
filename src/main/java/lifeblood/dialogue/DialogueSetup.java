@@ -78,6 +78,13 @@ public final class DialogueSetup {
 		})));
 		DialogueMenus.register(DialogueMenus.Menu.QUESTIONS, 200, (npc, player, options) -> options.add(new DialogueOption("Where are you from?",
 			session -> session.show(NpcDialogue.questions(npc, player, NpcDialogue.say(npc, player, "where_from", "Around here."))))));
+		// Only for those with a story of coming to live where they do, like homesteaders.
+		DialogueMenus.register(DialogueMenus.Menu.QUESTIONS, 250, (npc, player, options) -> {
+			if (!npc.life.getCameFor().isEmpty()) {
+				options.add(new DialogueOption("What brought you out here?",
+					session -> session.show(NpcDialogue.questions(npc, player, NpcDialogue.say(npc, player, "came_here", "Long story.")))));
+			}
+		});
 		DialogueMenus.register(DialogueMenus.Menu.QUESTIONS, 300, (npc, player, options) -> options.add(new DialogueOption("What do you think of...",
 			session -> session.show(NpcDialogue.askAbout(npc, player)))));
 		DialogueMenus.register(DialogueMenus.Menu.QUESTIONS, 400, (npc, player, options) -> options.add(new DialogueOption("What words do you know?",

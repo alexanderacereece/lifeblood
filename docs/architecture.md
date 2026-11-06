@@ -38,7 +38,8 @@ Four layers, each finer than the last. Read down only as far as you need:
 | `words` | The word book: words players teach |
 | `appearance` | An NPC's looks (`NpcLooks`): parts and palettes, hair color and graying (`HairColor`), who clothes are for (`Wearer`), whole skin files, slim arms |
 | `ownership` | Who placed each block, and who shares what |
-| `building` | Prefabs: saving, turning, material and color swaps, surveying a site, placing, the save check |
+| `building` | Prefabs: saving, turning, material and color swaps, surveying a site, fitting to the land, beds, placing, the save check |
+| `homestead` | Generated homesteads: where they go, who lives in them (from the beds), bringing the household to life with its history, and stocking the chests |
 | `world` | The calendar (`Calendar`), and world systems that run per world on their own clock |
 | `item` | The mod's items |
 | `command` | `/lb`, one class per area; admin and testing tools only |
@@ -55,7 +56,7 @@ Packages are stacked in layers. A package may use its own layer and the ones bel
 | 1. Foundations | `util`, `perf`, `world`, `Mod`, `NpcConfig` | Time, world systems, the log and settings |
 | 2. The NPC | `entity`, `event`, `nav`, `inventory`, `item`, `ai`, `ClientHooks` | The entity, its brain and movement, what it carries, the event hub |
 | 3. Who they are | `personality`, `social`, `faction`, `family`, `people`, `appearance`, `health`, `ownership`, `speech`, `words`, `gossip` | Character, feelings, family and the register of people, looks, body, property, voice, news |
-| 4. What they do | `combat`, `brawl`, `following`, `building` | Systems that act in the world |
+| 4. What they do | `combat`, `brawl`, `following`, `building`, `homestead` | Systems that act in the world |
 | 5. Conversation | `dialogue` | Talking with the player, which draws on everything |
 | 6. Tools and sides | `command`, `client`, `mixin`, `Lifeblood`, `Systems` | Wiring, screens, hooks into BTA, `/lb` |
 
@@ -216,6 +217,8 @@ Routines are in `ai/routine`.
 
 **The word book** (`words/WordBook`, saved as `lifeblood_words`) holds every word players have taught.
 
+**Homesteads** (`homestead/`) are generated with the world. `ChunkDecoratorOverworldMixin` calls `Homesteads` once each new overworld chunk is decorated; it places the house, brings the household to life and records it in `HomesteadRegister` (saved as `lifeblood_homesteads`). Only prefabs in a `homestead` folder are used (`building/PrefabFiles` treats folders as tags).
+
 ## Client and server
 
 Game logic lives in common code; `client/` only shows things. When common code needs the client (open a screen, rebuild textures), it calls `ClientHooks`. The client fills the hooks in at startup (`LifebloodClient`), and on a dedicated server they do nothing. A new thing the client does for common code gets a new hook in the same shape.
@@ -256,6 +259,7 @@ Moving a class between packages never touches saves: save keys and entity ids do
 | `LookCommands` | Looks |
 | `FactionCommands` | Factions |
 | `PrefabCommands` | Prefabs |
+| `HomesteadCommands` | Generated homesteads |
 | `ToolCommands` | Owner, reload and debug |
 
 **A new area gets its own class** with an `addTo(root)` method.
@@ -275,7 +279,7 @@ Rules every command follows:
 ## Tests
 
 `./gradlew test` runs the unit tests in `src/test/java`, each in the same package as the class it tests.
-- They cover pure logic: the calendar, kinship, age stages, romance and birth timing, personality compatibility, appearance encoding, slim arms, words, speech styles, the register of people, schedules, ownership records, prefab data, turning (positions, directions and every facing rule going full circle), stone and wood swaps, faction colors, the command tree and the speech files.
+- They cover pure logic: the calendar, kinship, age stages, romance and birth timing, personality compatibility, appearance encoding, slim arms, words, speech styles, the register of people, schedules, ownership records, prefab data, beds and double beds, turning (positions, directions and every facing rule going full circle), stone and wood swaps, homestead sites and households, faction colors, the command tree and the speech files.
 - BTA attaches block behavior only in a running game, so anything that paints blocks (color swaps, planks taking a wood's color) is checked in game, not in tests.
 - `ArchitectureTest` and `CodeMapTest` check the layout itself.
 - Tests run with the default config, without a world.

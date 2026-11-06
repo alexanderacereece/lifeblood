@@ -18,6 +18,9 @@ import org.jetbrains.annotations.Nullable;
  * itself places a build (generated homesteads, the /lb prefab command); NPCs building by hand will place block by
  * block under the player's rules instead (see docs/building.md).
  *
+ * The bottom layer is the floor, meant to be sunk into the ground so the door is at ground level: air in it leaves the
+ * terrain as it is. Every other air spot clears the box.
+ *
  * Blocks are written without neighbor updates, so nothing falls, pops off or reshapes while the build is half placed,
  * then tile entities are filled in from the saved data and every block is marked for redrawing.
  */
@@ -59,6 +62,11 @@ public final class PrefabPlacer {
 					}
 
 					Block<?> saved = blocks[prefab.paletteIndexAt(x, y, z)];
+					if (y == 0 && saved == Blocks.AIR) {
+						// The bottom layer is the floor, sunk into the ground: air there keeps the terrain, so no trench is dug.
+						continue;
+					}
+
 					WoodType.Placed placing = saved != null ? swaps.apply(saved, BlockTurns.turn(saved, prefab.metaAt(x, y, z), turns))
 						: new WoodType.Placed(Blocks.AIR, 0);
 					Block<?> block = placing.block();

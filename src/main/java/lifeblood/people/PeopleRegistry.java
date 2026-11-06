@@ -290,6 +290,22 @@ public class PeopleRegistry extends SavedData {
 		return true;
 	}
 
+	/**
+	 * Records a couple who were already together before anyone saw it happen (a generated household): no news, no
+	 * reactions. Both must be single.
+	 */
+	public boolean recordPartnership(UUID first, UUID second, Stage stage, long since) {
+		if (first.equals(second) || this.partnerships.containsKey(first) || this.partnerships.containsKey(second)) {
+			return false;
+		}
+
+		Partnership partnership = new Partnership(first, second, stage, since);
+		this.partnerships.put(first, partnership);
+		this.partnerships.put(second, partnership);
+		this.setDirty();
+		return true;
+	}
+
 	/** Moves a couple to the next stage (or straight to one, by command), restarting the clock. */
 	public void setStage(UUID id, Stage stage, long now) {
 		Partnership partnership = this.partnerships.get(id);

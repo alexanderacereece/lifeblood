@@ -8,6 +8,7 @@ import lifeblood.family.FamilySetup;
 import lifeblood.following.FollowingSetup;
 import lifeblood.gossip.GossipSetup;
 import lifeblood.health.HealthSetup;
+import lifeblood.homestead.HomesteadSetup;
 import lifeblood.ownership.OwnershipSetup;
 import lifeblood.people.PeopleSetup;
 import lifeblood.social.SocialSetup;
@@ -44,6 +45,7 @@ public final class Systems {
 		BrawlSetup.register();
 		HealthSetup.register();
 		FamilySetup.register();
+		HomesteadSetup.register();
 		DialogueSetup.register();
 	}
 }

@@ -67,6 +67,10 @@ public final class SpeechFacts {
 		addFamily(npc, listener, context);
 		addTaughtWords(npc, listener, context);
 		context.fact("age", npc.life.getStage().id());
+		String cameFor = npc.life.getCameFor();
+		context.fact("came_for", cameFor.isEmpty() ? "none" : cameFor);
+		// Settlers came from somewhere else to live where they do; those born there aren't.
+		context.fact("settler", !cameFor.isEmpty() && !"born_here".equals(cameFor) ? "yes" : "no");
 		context.fact("birthday", npc.life.isBirthday() ? "yes" : "no");
 		context.fact("time", timeOfDay(npc));
 		addSurroundings(npc, context);

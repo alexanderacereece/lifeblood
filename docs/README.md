@@ -31,7 +31,7 @@ The roadmap (what's built and what's next, including settlements and factions) i
 
 The aim is a world to play in and feel the mod's pace: a mix of NPCs living in places and NPCs showing up on their own, out doing things.
 1. **Prefabs** (built).
-2. **Generated homesteads:** families, lone settlers, widows and friends already living there ([building](building.md#generated-homesteads-next)).
+2. **Generated homesteads** (built): families, lone settlers, widows and friends already living there ([building](building.md#generated-homesteads-built)).
 3. **Block actions**, the smallest set travelers need: breaking and placing by the player's rules ([work](work.md#the-pieces)).
 4. **Travelers and adventures:** wanderers passing through, adventurers in caves and ruins, hunters, gatherers and long trips ([travelers](travelers.md)).
 
@@ -86,7 +86,7 @@ Each step is useful on its own and proves the next:
 - **Skills:** archery and melee change how well an NPC fights, never the rules; from its history, age, aptitude and family, and grown by doing ([skills](skills.md)). Today every NPC fights like a veteran.
 - **Parenting:** both parents, NPC or player, shape who a child becomes, by nature at birth and by upbringing as it grows ([family](family.md#parenting-planned)).
 - **Player creation:** players choose their own axes, quirks and tastes, and can take a skin built from parts, so opinions and inheritance work for them as for NPCs ([family](family.md#player-creation-planned)).
-- **Reachable without commands:** NPCs only enter the world by `/lb npc summon` or being born until generated homesteads place them; players join factions only by command until faction membership happens through NPCs and play; player creation will be a screen.
+- **Reachable without commands:** NPCs enter the world through generated homesteads, being born, or `/lb npc summon`; players join factions only by command until faction membership happens through NPCs and play; player creation will be a screen.
 - **Generated factions:** settlers and raiders are placeholders until factions are generated with the world; nothing should depend on them existing.
 - Whether the player can talk an NPC into or out of a life choice.
 - What BTA's trommel yields, and whether sifting is worth a job.

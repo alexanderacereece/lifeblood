@@ -268,13 +268,13 @@ The [family_name]s have always been decent folk. {sentimental, w=2}
 I was a [birth_family_name] before I married. {married_name=yes, w=3}
 
 == where_from ==
-[home_biome.the.cap]. Born and raised. {w=3}
+[home_biome.the.cap]. Born and raised. {settler=no, w=3}
 [home_biome.the.cap]. You can probably tell. {w=2}
 I'm from [home_biome.the]. {w=3}
 [home_biome.the.cap]. Best place there is. {biome_like=like, at_home=yes, w=2}
-Right here! [home_biome.the.cap], born and raised. {at_home=yes, w=4}
+Right here! [home_biome.the.cap], born and raised. {at_home=yes, settler=no, w=4}
 You're standing in it. [home_biome.the.cap]. {at_home=yes, lighthearted, w=3}
-Here. Never been anywhere else, really. {at_home=yes, introvert, w=3}
+Here. Never been anywhere else, really. {at_home=yes, settler=no, introvert, w=3}
 Oh, [home_biome.the]! I could talk about it for hours. Don't worry, I won't. {extrovert, w=2}
 [home_biome.the.cap]. Why? {paranoid, w=3}
 Why do you want to know? {paranoid, w=1}

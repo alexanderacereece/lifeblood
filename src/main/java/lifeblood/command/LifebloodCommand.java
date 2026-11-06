@@ -36,6 +36,7 @@ public class LifebloodCommand implements CommandManager.CommandRegistry {
 		LookCommands.addTo(root);
 		FactionCommands.addTo(root);
 		PrefabCommands.addTo(root);
+		HomesteadCommands.addTo(root);
 		ToolCommands.addTo(root);
 		dispatcher.register(root);
 	}

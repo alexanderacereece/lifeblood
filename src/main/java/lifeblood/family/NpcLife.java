@@ -10,7 +10,7 @@ import lifeblood.world.Calendar;
 
 /**
  * An NPC's life story so far: its family name, when it was born, how grown up it is, its birthdays, its graying
- * hair, and where it's from.
+ * hair, where it's from, and why it came to live where it does.
  */
 public final class NpcLife implements NpcPart {
 	/** How often it checks its age: growing up, and whether it's its birthday (10 seconds). */
@@ -37,6 +37,11 @@ public final class NpcLife implements NpcPart {
 	/** Where it's from: the biome it was first seen in (or born in), and how warm that is (NaN until known). */
 	private String homeBiome = "";
 	private float homeWarmth = Float.NaN;
+	/**
+	 * Why it came to live where it lives, for what it says about it: "fresh_start", "faith", "running", "land", "quiet",
+	 * "family" (came with its family) or "born_here"; "" if it has no such story.
+	 */
+	private String cameFor = "";
 	/** The family name it was born with, kept after marriage changes its name; "" until it has one. */
 	private String birthFamilyName = "";
 	/** The size its hitbox was last set for, so it's only resized when growth changes. */
@@ -118,6 +123,14 @@ public final class NpcLife implements NpcPart {
 		growth = Math.max(0.0F, Math.min(1.0F, growth));
 		this.npc.getEntityData().set(EntityNPC.DATA_GROWTH, (byte) Math.round(growth * 100.0F));
 		this.birthTime = this.npc.world.getWorldTime() - (long) (growth * Calendar.growUpTicks(this.npc.world));
+	}
+
+	/** Makes it this many years old, some way into the year (0 to 1), as a child or an adult, counting its birth back from now. */
+	public void setAge(int years, float intoYear) {
+		long age = years * Calendar.ticksPerYear(this.npc.world) + (long) (intoYear * Calendar.ticksPerYear(this.npc.world));
+		long growUp = Calendar.growUpTicks(this.npc.world);
+		this.npc.getEntityData().set(EntityNPC.DATA_GROWTH, (byte) Math.round(Math.min(1.0F, age / (float) growUp) * 100.0F));
+		this.birthTime = this.npc.world.getWorldTime() - age;
 	}
 
 	/** How big it's drawn and how big its hitbox is: half size as a newborn, full as an adult. */
@@ -225,6 +238,17 @@ public final class NpcLife implements NpcPart {
 		return this.homeWarmth;
 	}
 
+	// How it came to live here
+
+	/** Why it came to live where it lives ("fresh_start", "born_here"...), or "" if it has no such story. */
+	public String getCameFor() {
+		return this.cameFor;
+	}
+
+	public void setCameFor(String reason) {
+		this.cameFor = reason;
+	}
+
 	@Override
 	public String saveKey() {
 		return "Life";
@@ -238,6 +262,7 @@ public final class NpcLife implements NpcPart {
 		tag.putLong("LastBirthday", this.lastBirthdayYear);
 		tag.putString("HomeBiome", this.homeBiome);
 		tag.putFloat("HomeWarmth", this.homeWarmth);
+		tag.putString("CameFor", this.cameFor);
 		tag.putByte("Growth", this.npc.getEntityData().getByte(EntityNPC.DATA_GROWTH));
 	}
 
@@ -249,6 +274,7 @@ public final class NpcLife implements NpcPart {
 		this.lastBirthdayYear = tag.getLongOrDefault("LastBirthday", Long.MIN_VALUE);
 		this.homeBiome = tag.getStringOrDefault("HomeBiome", "");
 		this.homeWarmth = tag.containsKey("HomeWarmth") ? tag.getFloat("HomeWarmth") : Float.NaN;
+		this.cameFor = tag.getStringOrDefault("CameFor", "");
 		this.npc.getEntityData().set(EntityNPC.DATA_GROWTH, tag.containsKey("Growth") ? tag.getByte("Growth") : (byte) 100);
 	}
 }

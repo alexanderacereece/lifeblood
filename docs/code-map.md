@@ -71,12 +71,14 @@ Builds: prefabs saved from the world and placed back, turned and with local mate
 - [`FacingRule`](../src/main/java/lifeblood/building/FacingRule.java): How one kind of block stores its facing in metadata, and so how to turn it.
 - [`LocalMaterials`](../src/main/java/lifeblood/building/LocalMaterials.java): Finds out what a place is made of by looking at it, the way a settler would: which trees grow nearby and which stone is underground.
 - [`Prefab`](../src/main/java/lifeblood/building/Prefab.java): A saved build: every block in a box, exactly as it was.
+- [`PrefabBeds`](../src/main/java/lifeblood/building/PrefabBeds.java): The beds in a prefab, and which make a double bed: Minecraft has only single beds, so two side by side, facing the same way, are a double bed for a couple.
 - [`PrefabCapture`](../src/main/java/lifeblood/building/PrefabCapture.java): Copies a box of the world into a Prefab, and finds blocks again by the names prefabs save them under.
 - [`PrefabCheck`](../src/main/java/lifeblood/building/PrefabCheck.java): The checks run on a prefab when it's saved, so problems are fixed by whoever builds it rather than found later in the world: parts of two-block things cut off by the box, blocks whose facing won't turn, and a summary of what will be swapped where it's placed.
 - [`PrefabFiles`](../src/main/java/lifeblood/building/PrefabFiles.java): The npc_prefabs folder in the game directory, next to npc_parts and npc_skins: one compressed NBT file per prefab, named after it ("cabin.prefab").
 - [`PrefabPlacer`](../src/main/java/lifeblood/building/PrefabPlacer.java): Puts a Prefab into the world all at once, turned and with its materials swapped.
 - [`StoneFamily`](../src/main/java/lifeblood/building/StoneFamily.java): The kinds of stone that differ from place to place, each with the same set of cut and built forms.
 - [`Swaps`](../src/main/java/lifeblood/building/Swaps.java): What a prefab's materials become where it's placed.
+- [`TerrainFit`](../src/main/java/lifeblood/building/TerrainFit.java): Fitting a prefab to the land the way the world places one: finding fairly flat, dry ground, sinking the floor layer into it so the door is at ground level, filling any gap under the floor with the local ground so the land looks leveled rather than built up, and clearing trees left hanging over the roof.
 - [`Turns`](../src/main/java/lifeblood/building/Turns.java): Quarter turns clockwise, seen from above (north, east, south, west), and what they do to positions and directions.
 - [`WoodType`](../src/main/java/lifeblood/building/WoodType.java): The kinds of wood that grow in different places, and the planks each makes.
 
@@ -116,6 +118,7 @@ The /lb command tree: tools for admins, content and testing, never the way to pl
 - [`CommandTree`](../src/main/java/lifeblood/command/CommandTree.java): How the /lb command tree describes itself.
 - [`FactionCommands`](../src/main/java/lifeblood/command/FactionCommands.java): /lb faction: factions, their stances, relations, colors and members.
 - [`FamilyCommands`](../src/main/java/lifeblood/command/FamilyCommands.java): Families and words.
+- [`HomesteadCommands`](../src/main/java/lifeblood/command/HomesteadCommands.java): /lb homestead: testing generated homesteads.
 - [`LifebloodCommand`](../src/main/java/lifeblood/command/LifebloodCommand.java): /lb, the one entry to every Lifeblood command.
 - [`LookCommands`](../src/main/java/lifeblood/command/LookCommands.java): /lb look: how NPCs look: appearance parts, palettes and skin files.
 - [`NpcCommands`](../src/main/java/lifeblood/command/NpcCommands.java): /lb npc: making NPCs and directing them, like vanilla commands do for entities: summon, list, remove, heal, teleport, plus orders (go to, follow, stay, wander, free), gender, how hard they are to kill, growing up, and saying a line.
@@ -181,7 +184,7 @@ Families and growing up: kinship, romance, children, birth, age stages and birth
 - [`FamilyNames`](../src/main/java/lifeblood/family/FamilyNames.java): How family names pass down, the traditional way: a child takes its father's family name, and a bride usually takes her husband's at the wedding, remembering the one she was born with.
 - [`FamilySetup`](../src/main/java/lifeblood/family/FamilySetup.java): A child keeping near a parent, as an instinct every NPC has (it only does anything while they're a child).
 - [`Kinship`](../src/main/java/lifeblood/family/Kinship.java): What one person is to another, worked out from parents and partnerships: "Tom is Ann's brother".
-- [`NpcLife`](../src/main/java/lifeblood/family/NpcLife.java): An NPC's life story so far: its family name, when it was born, how grown up it is, its birthdays, its graying hair, and where it's from.
+- [`NpcLife`](../src/main/java/lifeblood/family/NpcLife.java): An NPC's life story so far: its family name, when it was born, how grown up it is, its birthdays, its graying hair, where it's from, and why it came to live where it does.
 - [`Romance`](../src/main/java/lifeblood/family/Romance.java): How couples form and change, for NPCs with each other and with players.
 - [`StayNearParentBehavior`](../src/main/java/lifeblood/family/StayNearParentBehavior.java): A child keeps close to a parent who's around (an NPC or a player), toddling after them when they wander off and pottering about nearby otherwise.
 
@@ -215,6 +218,19 @@ Health by the player's rules: health modes, being downed and recovering, and eat
 - [`NpcHealth`](../src/main/java/lifeblood/health/NpcHealth.java): How an NPC takes a beating: its health mode, and for invincible NPCs, being knocked down instead of killed, lying there a few seconds, then going home to recover.
 - [`RecoverBehavior`](../src/main/java/lifeblood/health/RecoverBehavior.java): After being downed, the NPC goes home and stays there until it has recovered, whatever its orders were.
 
+## `homestead`
+
+Generated homesteads: lone houses the world places as it generates, with people already living there.
+
+- [`HomesteadGoods`](../src/main/java/lifeblood/homestead/HomesteadGoods.java): What a homestead's chests and furnaces hold when it's generated: what the household would have after a few days or weeks of living there, and nothing they couldn't have.
+- [`HomesteadPeople`](../src/main/java/lifeblood/homestead/HomesteadPeople.java): Brings a planned household to life: makes each person where they sleep, with their age, looks and family name, and writes their history into the register of people as history, not news: marriages from years ago, children's parents, a late husband or wife, siblings' parents back home.
+- [`HomesteadRegister`](../src/main/java/lifeblood/homestead/HomesteadRegister.java): Every homestead the world has generated, saved with it (BTA SavedData): where it is, which prefab, who heads the household, and when they settled.
+- [`Homesteads`](../src/main/java/lifeblood/homestead/Homesteads.java): Generated homesteads: as the overworld decorates a new chunk, rarely, a house from the prefabs/homestead folder is fitted to flat ground nearby, with its household already living there and its chests stocked.
+- [`HomesteadSetup`](../src/main/java/lifeblood/homestead/HomesteadSetup.java): Homesteaders talking about how they came to live out here, as a chat topic (chat_open_settling, chat_reply_settling).
+- [`HomesteadSites`](../src/main/java/lifeblood/homestead/HomesteadSites.java): Where homesteads may go: the overworld is split into square cells, about 400 blocks across, and each cell has a few chunks picked from the world seed where a homestead is tried.
+- [`HouseholdPlan`](../src/main/java/lifeblood/homestead/HouseholdPlan.java): Who lives in a homestead, decided before anyone is made: each member's place in the household, gender, age and bed, how long they've been there, and anyone missing from it (a late husband or wife, parents back home).
+- [`HouseholdPlanner`](../src/main/java/lifeblood/homestead/HouseholdPlanner.java): Decides who lives in a homestead from its beds: a double bed is a couple (or a widow or widower who still sleeps on their side), a single bed alone is one person.
+
 ## `inventory`
 
 What an NPC carries, as much as a player can, and the menu that shows it.
@@ -234,6 +250,7 @@ The mod's items, registered in NpcItems.
 
 Changes to BTA's own classes, each named after its target and listed in lifeblood.mixins.json.
 
+- [`ChunkDecoratorOverworldMixin`](../src/main/java/lifeblood/mixin/ChunkDecoratorOverworldMixin.java): Lets generated homesteads go up once the overworld has decorated a new chunk (trees and snow included).
 - [`ChunkLoaderMixin`](../src/main/java/lifeblood/mixin/ChunkLoaderMixin.java): Saves and loads each chunk's ownership records along with its blocks (every chunk format goes through here).
 - [`ChunkMixin`](../src/main/java/lifeblood/mixin/ChunkMixin.java): Gives every chunk its ownership records, and keeps them up to date as blocks change.
 - [`HudComponentCrosshairMixin`](../src/main/java/lifeblood/mixin/HudComponentCrosshairMixin.java): Hides the crosshair while talking to an NPC, since the player can't look around then.

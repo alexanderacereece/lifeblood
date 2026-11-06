@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
  */
 public final class FamilyNames {
 	/** How often a bride takes her husband's family name rather than keeping her own. */
-	static final float BRIDE_TAKES_NAME = 0.8F;
+	public static final float BRIDE_TAKES_NAME = 0.8F;
 
 	private FamilyNames() {
 	}

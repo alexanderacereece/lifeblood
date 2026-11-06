@@ -44,6 +44,8 @@ public enum MemoryType {
 	LIED_TO_ME("lied to me", -20, 0, 20, 3),
 	STOLE_FROM_ME("stole from me", -25, -5, 30, 3),
 	ATTACKED_MY_HOME("attacked my home", -30, -10, 40, 3),
+	// Friends who came out to a homestead together: a long-lasting bond, a year of in-game days.
+	SETTLED_HERE_TOGETHER("settled here together", 25, 0, 56, 1),
 	KILLED_A_FRIEND("killed a friend", -40, -15, 80, 3),
 	KILLED_FAMILY("killed family", -70, -30, 200, 3),
 	KILLED_MY_SPOUSE_OR_CHILD("killed my spouse or child", -100, -40, 400, 3),

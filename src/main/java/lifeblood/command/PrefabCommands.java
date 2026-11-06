@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringJoiner;
 import java.util.UUID;
 import net.minecraft.core.entity.player.Player;
@@ -24,6 +25,7 @@ import net.minecraft.core.world.World;
 import net.minecraft.core.world.pos.TilePos;
 import lifeblood.building.LocalMaterials;
 import lifeblood.building.Prefab;
+import lifeblood.building.PrefabBeds;
 import lifeblood.building.PrefabCapture;
 import lifeblood.building.PrefabCheck;
 import lifeblood.building.PrefabFiles;
@@ -90,7 +92,18 @@ final class PrefabCommands {
 
 	private static int list(CommandContext<CommandSource> c) {
 		List<String> names = PrefabFiles.list();
-		return reply(c, names.isEmpty() ? "No prefabs saved yet. Build something and use /lb prefab save." : "Prefabs: " + String.join(", ", names) + ".");
+		if (names.isEmpty()) {
+			return reply(c, "No prefabs saved yet. Build something and use /lb prefab save.");
+		}
+
+		// Folder tags in brackets: "single_shack (homestead)".
+		StringJoiner joiner = new StringJoiner(", ");
+		for (String name : names) {
+			Set<String> tags = PrefabFiles.tagsOf(name);
+			joiner.add(tags.isEmpty() ? name : name + " (" + String.join(", ", tags) + ")");
+		}
+
+		return reply(c, "Prefabs: " + joiner + ".");
 	}
 
 	/** Marks a corner: the block the player looks at, or the one under their feet if they look at nothing near. */
@@ -175,6 +188,15 @@ final class PrefabCommands {
 			StringJoiner swaps = new StringJoiner(", ");
 			report.swappable().forEach((kind, count) -> swaps.add(count + " " + kind));
 			reply(c, "Changes with the place: " + swaps + ".");
+		}
+
+		// Beds say who a house is for: a homestead without any is never used.
+		PrefabBeds.Layout beds = PrefabBeds.layout(prefab);
+		boolean homestead = PrefabFiles.tagsOf(prefab.name).contains(PrefabFiles.HOMESTEAD_TAG);
+		if (beds.sleeps() > 0) {
+			reply(c, "Beds: " + beds.doubles().size() + " double, " + beds.singles().size() + " single; sleeps " + beds.sleeps() + ".");
+		} else if (homestead) {
+			reply(c, "Warning: it's in the homestead folder but has no beds, so the world will never use it as a homestead.");
 		}
 
 		for (String warning : report.warnings()) {
