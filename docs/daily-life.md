@@ -1,6 +1,6 @@
 # Daily life (being built)
 
-**Built so far:** the day's schedule, sleeping in their own beds, meals from the chests, gathering wood, walks, and children playing near home. **Next:** farming, hunting, fishing, and older children's chores.
+**Built so far:** the day's schedule, sleeping in their own beds, meals from the chests, gathering wood, farming, walks, and children playing near home. **Next:** hunting, fishing, and older children's chores.
 
 How NPCs who live somewhere spend their days without anyone telling them what to do, starting with homesteaders: sleeping in their own beds, eating from the household's chests, and doing the chores a household needs. Adventurers and travelers come after ([travelers](travelers.md)). Numbers are starting points for playtesting.
 
@@ -28,13 +28,13 @@ Fights, brawls, being downed and conversations still interrupt anything, as now.
 ## Chores, by need and inclination
 
 Nobody has a fixed job yet (jobs come later as [life choices](life-choices.md)). Each time someone is free for chores, they pick one, weighing:
-- **What the household is short of:** little food in the chests makes farming, fishing and hunting likelier; few logs, gathering wood.
+- **What the household is short of:** under 12 food items (wheat counts) per person in the chests makes farming, fishing and hunting likelier; under 32 logs, gathering wood.
 - **What suits them:** the hardworking do more and rest less; the lazy take long walks; animal lovers never hunt; the restless walk farther.
 - **What they have:** a hoe to farm, an axe for wood (bare hands work, slowly, as for a player), a fishing rod to fish, a weapon to hunt. Tools come from the household's chests and go back when they're done.
 
 The chores, built in this order:
 1. **Gathering wood** (built): takes the household's axe if there is one (bare hands work, slowly), finds a natural tree within 48 blocks of home (nobody placed it, it stands on soil, it has leaves), chops its trunk from the bottom up as far as they can reach, gathers what falls for 15 seconds, plants a sapling if they have one, and brings the logs, saplings, apples, sticks and the axe home. Finding no tree puts wood off for an in-game day.
-2. **Farming:** tills a small field near the house with a hoe, near water if there's any, sows seeds, harvests ripe wheat and sows again. The field grows a little as the household does. Wheat goes home; some becomes bread at the crafting table.
+2. **Farming** (built): takes the hoe and seeds from home, harvests ripe wheat, sows bare farmland, and tills up to 4 new plots a trip until the field has 16. The field is the farmland the household tilled (by ownership), within 20 blocks of home and kept 2 blocks clear of the house. A new field starts beside water if there's any within the game's 4-block reach for wetting farmland, else near home; where it can't grow (a slope, a tree), a new patch starts the same way. Tall grass and flowers are knocked off before tilling. Wheat, spare seeds and the hoe go home. Not yet: baking the wheat into bread.
 3. **Hunting:** pigs, cows, chickens and sheep, never the last few in an area, so herds last. Meat goes home, cooked at the furnace.
 4. **Fishing:** at the nearest water, with the player's catch timing and rules.
 5. **Walks** (built): a stroll 12 to 28 blocks from home and a while looking around; the curious go up to twice as far, the lazy walk more and the hardworking less.
@@ -50,6 +50,10 @@ From about 10, children help: they gather what falls, harvest and fish with a pa
 - **Block actions** (`work/`, built): breaking at the player's digging speed for the held tool (`BlockBreaking`: the player's formula, a fifth as fast underwater or in the air, drops for that tool, tool wear), using an item on a block within the player's 4.5-block reach (`BlockUse`: placing, sowing, tilling with the hoe's own rules), walking until a block is in reach (`Approach`), picking up what drops (`ItemPickup`), and taking from and putting into containers (`Containers`). NPCs far from players think less often, so digging and chore timers count game time, not thinking ticks. Shared with building, mining and jobs later.
 - **The household's storage:** the homestead's chests, found from its prefab when it's generated and kept in its record, so nobody searches for them.
 - **Chores** are behaviors run by a chores activity, which picks the next one when one finishes.
+
+## Testing
+
+`/lb debug speed <1-20>` runs a dedicated server that many game ticks per real one, so a few minutes covers days of homestead life; `/lb homestead list` shows what each house's chests hold.
 
 ## Open questions
 

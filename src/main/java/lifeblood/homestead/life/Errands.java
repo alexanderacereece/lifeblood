@@ -8,8 +8,8 @@ import lifeblood.work.BlockUse;
 import lifeblood.work.Containers;
 
 /**
- * The trips to the house that chores begin and end with: fetching a tool from the household's chests, and putting
- * away what was gathered. Each call is one tick; the Approach walks them there.
+ * The trips to the house that chores begin and end with: fetching a tool or supplies (seeds) from the household's
+ * chests, and putting away what was gathered. Each call is one tick; the Approach walks them there.
  */
 final class Errands {
 	private Errands() {
@@ -29,7 +29,17 @@ final class Errands {
 			return Trip.DONE;
 		}
 
-		Household.Stored chest = Household.chestWith(npc, tool);
+		Trip trip = fetch(npc, approach, tool, 1);
+		if (trip == Trip.DONE) {
+			BlockUse.holdItem(npc, tool);
+		}
+
+		return trip;
+	}
+
+	/** Takes up to this many of something from the household's chests into the pack. FAILED if there's none at home. */
+	static Trip fetch(EntityNPC npc, Approach approach, Predicate<ItemStack> what, int most) {
+		Household.Stored chest = Household.chestWith(npc, what);
 		if (chest == null) {
 			return Trip.FAILED;
 		}
@@ -40,12 +50,11 @@ final class Errands {
 			return Trip.ON_THE_WAY;
 		}
 
-		if (status == Approach.Status.STUCK || Containers.take(npc, chest.container(), tool, 1) == 0) {
+		if (status == Approach.Status.STUCK || Containers.take(npc, chest.container(), what, most) == 0) {
 			return Trip.FAILED;
 		}
 
 		npc.swingArm();
-		BlockUse.holdItem(npc, tool);
 		return Trip.DONE;
 	}
 

@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import net.minecraft.core.block.BlockLogicLog;
+import net.minecraft.core.item.ItemFood;
+import net.minecraft.core.item.Items;
 import net.minecraft.core.item.block.ItemBlock;
 import lifeblood.ai.NpcBehavior;
 import lifeblood.entity.EntityNPC;
@@ -22,6 +24,8 @@ public final class ChoresBehavior implements NpcBehavior {
 	public static final int CHORE_AGE = 10;
 	/** How many logs the household likes to keep in its chests; fewer makes gathering wood likelier. */
 	private static final int LOGS_WANTED = 32;
+	/** How much food (wheat included) the household likes to keep, in items per person; less makes food chores likelier. */
+	private static final int FOOD_WANTED = 12;
 	/** The rest between chores, in ticks, before work ethic: 5 to 20 seconds. */
 	private static final int MIN_REST = 100;
 	private static final int MAX_REST = 400;
@@ -85,6 +89,9 @@ public final class ChoresBehavior implements NpcBehavior {
 		float woodNeed = noTrees ? 0.0F : logs < LOGS_WANTED ? 2.0F : 0.4F;
 		options.add(new Option(woodNeed * (1.0F + 0.5F * ethic), GatherWoodChore::new));
 		options.add(new Option((curious ? 1.2F : 0.6F) * (1.0F - 0.5F * ethic), who -> WalkChore.stroll(curious)));
+		int food = Household.count(npc, stack -> stack.getItem() instanceof ItemFood || stack.getItem() == Items.WHEAT);
+		float foodNeed = food < FOOD_WANTED * Math.max(1, Household.size(npc)) ? 2.0F : 0.6F;
+		options.add(new Option(foodNeed * (1.0F + 0.5F * ethic), FarmChore::new));
 		float total = 0.0F;
 		for (Option option : options) {
 			total += Math.max(0.0F, option.weight());

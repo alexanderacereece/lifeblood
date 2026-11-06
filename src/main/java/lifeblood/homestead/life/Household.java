@@ -10,12 +10,16 @@ import lifeblood.entity.EntityNPC;
 import lifeblood.homestead.HomesteadRegister;
 import lifeblood.work.Containers;
 import org.jetbrains.annotations.Nullable;
+import org.joml.primitives.AABBd;
 
 /**
  * A homesteader's household as far as their day goes: their house (found from their home, which is in it) and its
  * chests, what the chests hold, and which chest to walk to. Only loaded chests count.
  */
 public final class Household {
+	/** How far around the house its people are looked for when counting them, in blocks. */
+	private static final int NEARBY = 64;
+
 	private Household() {
 	}
 
@@ -40,6 +44,25 @@ public final class Household {
 
 	/** One chest: where it is and what's in it. */
 	public record Stored(int[] pos, Container container) {
+	}
+
+	/** How many people live in someone's house: those loaded whose home is in it (at least the one asking). */
+	public static int size(EntityNPC npc) {
+		HomesteadRegister.Homestead homestead = of(npc);
+		if (homestead == null) {
+			return 1;
+		}
+
+		int size = 0;
+		AABBd around = new AABBd(homestead.x() - NEARBY, homestead.y() - NEARBY, homestead.z() - NEARBY, homestead.x() + homestead.width() + NEARBY,
+			homestead.y() + homestead.height() + NEARBY, homestead.z() + homestead.depth() + NEARBY);
+		for (EntityNPC other : npc.world.getEntitiesWithinAABB(EntityNPC.class, around)) {
+			if (homestead.contains(other.home.getX(), other.home.getY(), other.home.getZ())) {
+				size++;
+			}
+		}
+
+		return Math.max(1, size);
 	}
 
 	/** How many items matching the household's chests hold between them. */
