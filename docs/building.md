@@ -50,8 +50,11 @@ The NPC places blocks the way a player does: it stands where the game's own plac
 
 The first use of prefabs, before any NPC builds: homesteads placed by world generation, with people already living there. A house placed by the world needs none of the honest-building machinery, so this comes first.
 
-- **Where:** occasionally, on fairly flat ground in the overworld, during the same decoration step that places dungeons. Each house stays inside the area being decorated, so generation never pulls in new chunks.
-- **The house:** a prefab fitted to the terrain (foundation filled, space above cleared), with swaps for the local wood, stone and colors. The household owns its blocks and chests ([ownership](ownership.md)), and the chests hold household goods.
+- **Where:** rarely, about one per 400 by 400 blocks, since towns and cities with factions will fill the land later. On fairly flat ground in the overworld, during the same decoration step that places dungeons. Each house stays inside the area being decorated, so generation never pulls in new chunks.
+- **Which prefabs:** only those in a `homestead` folder (`prefabs/homestead/` bundled, `npc_prefabs/homestead/` in the game folder). Folders are tags, as with parts. A house with the right beds isn't automatically a homestead, and a homestead prefab can still be used in towns.
+- **The house:** a prefab fitted to the terrain, with swaps for the local wood, stone and colors. Its bottom layer is the floor, sunk into the ground so the door is at ground level. Air in that bottom layer keeps the terrain instead of clearing it, so no trench is dug around the house. Any gap under the floor is filled down with the local ground (dirt, sand...), so the land looks leveled, not built up. Space above the floor is cleared. The household owns its blocks and chests ([ownership](ownership.md)).
+- **Goods:** chests and furnaces hold what the household would have after a few days or weeks of living there, and nothing they couldn't have: food they'd grow, hunt or cook, seeds, worn tools, leftover building materials. Taking it is theft from them.
+- **Beds decide the household.** Two single beds side by side, facing the same way, are a double bed: a couple. A single bed alone is one person: a lone settler, a widow or widower, a child, or a friend. A homestead prefab with no beds is never chosen, and the authoring check says so.
 - **Who lives there.** Most are families, but not all:
   - a family: a couple, often with children;
   - a lone settler;
@@ -68,7 +71,7 @@ The first use of prefabs, before any NPC builds: homesteads placed by world gene
 ## Open questions
 
 - Mirrored variants of prefabs, or rotations only.
-- Whether some air in a prefab should keep the terrain instead of clearing it (for builds set into a hillside).
+- Whether some air above the floor layer should keep the terrain too (for builds set into a hillside).
 - Which wood and stone to use where nothing's found nearby (worldgen may place a house before its trees): a table by biome.
 - Roads and paths between buildings: generated, or prefabs too.
 - How much a builder for hire charges, once there's currency.

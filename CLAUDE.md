@@ -70,5 +70,5 @@ The goal: anyone, including an AI that has never seen the project, can find the 
 - BTA's decompiled source isn't in the repo; Loom's `genSources` fails, so decompile `net/minecraft/**` with Vineflower when needed.
 - Mixins use `remap = false`. BTA blocks are id + metadata (+ tile entity); chunks are 16 sections of 16 (height 256).
 - Don't overwrite the jar in a running game's `mods/` folder: classes loaded later fail to load.
-- Commit each finished, tested step with a message saying what changed and why (the user works in checkpoints), then push it to GitHub (`origin`, branch `main`, private); messages end with the attribution line the session asks for.
+- Commit each finished, tested step with a message saying what changed and why (the user works in checkpoints), then push it to GitHub (`origin`, branch `main`; the repo is public, so nothing private goes in); messages end with the attribution line the session asks for.
 - Keep the AI memory up to date as decisions and plans are made: it's how later sessions know the state of the project.
