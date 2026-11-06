@@ -41,7 +41,7 @@ Four layers, each finer than the last. Read down only as far as you need:
 | `building` | Prefabs: saving, turning, material and color swaps, surveying a site, fitting to the land, beds, placing, the save check |
 | `work` | Work by the player's rules: breaking blocks at the player's digging speed, using items on blocks (placing, tilling, sowing), picking up drops, taking from and putting into chests |
 | `homestead` | Generated homesteads: where they go, who lives in them (from the beds), bringing the household to life with its history, and stocking the chests |
-| `world` | The calendar (`Calendar`), and world systems that run per world on their own clock |
+| `world` | The calendar (`Calendar`), world systems that run per world on their own clock, and the test speed-up (`GameSpeed`, `/lb debug speed`) |
 | `item` | The mod's items |
 | `command` | `/lb`, one class per area; admin and testing tools only |
 | `client` | Everything client-only: renderer, textures, screens |

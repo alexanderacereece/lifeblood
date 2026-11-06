@@ -269,6 +269,7 @@ Changes to BTA's own classes, each named after its target and listed in lifebloo
 - [`ChunkMixin`](../src/main/java/lifeblood/mixin/ChunkMixin.java): Gives every chunk its ownership records, and keeps them up to date as blocks change.
 - [`HudComponentCrosshairMixin`](../src/main/java/lifeblood/mixin/HudComponentCrosshairMixin.java): Hides the crosshair while talking to an NPC, since the player can't look around then.
 - [`ItemStackMixin`](../src/main/java/lifeblood/mixin/ItemStackMixin.java): Blocks a player places by using an item on a block are theirs.
+- [`MinecraftServerMixin`](../src/main/java/lifeblood/mixin/MinecraftServerMixin.java): Runs the extra game ticks /lb debug speed asks for, after each normal one, so testing doesn't take real hours.
 - [`MobDeathMixin`](../src/main/java/lifeblood/mixin/MobDeathMixin.java): Posts a DeathEvent whenever any mob dies (players included), so systems can react: witnesses, family, followers.
 - [`MobGhastMixin`](../src/main/java/lifeblood/mixin/MobGhastMixin.java): Ghasts re-pick their target when they have none or every second; at those moments a visible NPC that is closer than any valid player becomes the target instead.
 - [`MobMonsterMixin`](../src/main/java/lifeblood/mixin/MobMonsterMixin.java): Monsters (zombies, skeletons, creepers, snowmen...) hunt NPCs as well as players.
@@ -386,5 +387,6 @@ Work by the player's rules: breaking blocks at the player's digging speed with t
 The world's own clock and calendar, and systems that run per world whether or not an NPC is near.
 
 - [`Calendar`](../src/main/java/lifeblood/world/Calendar.java): Days, years and dates for ages and birthdays, following the world's own seasons: an overworld year is four 14-day seasons, 56 days.
+- [`GameSpeed`](../src/main/java/lifeblood/world/GameSpeed.java): How many game ticks a dedicated server runs for each real one, for testing: at 10, a minute of real time is ten minutes of game time, and everything (NPCs, crops, day and night) moves along together.
 - [`WorldSystem`](../src/main/java/lifeblood/world/WorldSystem.java): Something that runs for a whole world on its own clock, whether or not any NPC is nearby: keeping registers tidy now, and later elections, wars, trade between towns, and time passing for people who aren't loaded.
 - [`WorldSystems`](../src/main/java/lifeblood/world/WorldSystems.java): The world systems, run from each world's tick (see the world tick mixin).

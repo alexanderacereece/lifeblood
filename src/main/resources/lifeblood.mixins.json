@@ -19,6 +19,9 @@
     "PathAccessor",
     "WorldTickMixin"
   ],
+  "server": [
+    "MinecraftServerMixin"
+  ],
   "client": [
     "HudComponentCrosshairMixin"
   ]

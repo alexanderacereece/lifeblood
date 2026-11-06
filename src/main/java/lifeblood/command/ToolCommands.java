@@ -3,6 +3,7 @@ package lifeblood.command;
 import static lifeblood.command.CommandSupport.*;
 import static lifeblood.command.CommandTree.branch;
 
+import com.mojang.brigadier.arguments.ArgumentTypeInteger;
 import com.mojang.brigadier.builder.ArgumentBuilderLiteral;
 import com.mojang.brigadier.context.CommandContext;
 import java.util.UUID;
@@ -19,6 +20,7 @@ import lifeblood.ownership.BlockOwners;
 import lifeblood.people.PeopleRegistry;
 import lifeblood.perf.NpcProfiler;
 import lifeblood.speech.SpeechLibrary;
+import lifeblood.world.GameSpeed;
 
 /**
  * Tools for building and testing the mod rather than playing it:
@@ -58,6 +60,13 @@ final class ToolCommands {
 				int count = getNpcs(c.getSource().getWorld()).size();
 				return reply(c, count + " NPC(s) loaded. " + NpcProfiler.report());
 			}))
+			.then(branch("debug speed", "How many game ticks a dedicated server runs per real tick, for testing (1 is normal).")
+				.executes(c -> reply(c, "The game runs at " + GameSpeed.ticksPerTick() + "x."))
+				.then(argument("ticks", ArgumentTypeInteger.integer(1, GameSpeed.MAX)).executes(c -> {
+					GameSpeed.set(c.getArgument("ticks", Integer.class));
+					return reply(c, "The game now runs at " + GameSpeed.ticksPerTick() + "x" + (GameSpeed.ticksPerTick() > 1
+						? " on a dedicated server (single-player isn't sped up)." : "."));
+				})))
 			.then(branch("debug limits", "Shows or switches the one-gift-a-day and five-chats-a-minute limits.")
 				.executes(c -> reply(c, "Gift and chat limits are " + (SocialLimits.isEnabled() ? "on" : "off") + "."))
 				.then(branch("debug limits on", "One gift per NPC a day, five chats a minute.").executes(c -> {
