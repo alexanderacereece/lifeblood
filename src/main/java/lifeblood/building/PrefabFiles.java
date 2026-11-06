@@ -56,10 +56,28 @@ public final class PrefabFiles {
 		return dir;
 	}
 
-	/** Saves a prefab into the game folder: over its old file if it has one (keeping its folder), else at the top. */
+	/**
+	 * Saves a prefab into the game folder: over its old file if it has one, else in the same folders as a bundled one of
+	 * that name (so saving over a bundled homestead keeps it a homestead), else at the top.
+	 */
 	public static void save(Prefab prefab) throws IOException {
 		Entry existing = scan().get(prefab.name);
-		File file = existing != null && existing.file() != null ? existing.file() : new File(getDirectory(), prefab.name + EXTENSION);
+		File file;
+		if (existing != null && existing.file() != null) {
+			file = existing.file();
+		} else {
+			File folder = getDirectory();
+			if (existing != null) {
+				for (String tag : existing.tags()) {
+					folder = new File(folder, tag);
+				}
+
+				folder.mkdirs();
+			}
+
+			file = new File(folder, prefab.name + EXTENSION);
+		}
+
 		try (OutputStream out = new FileOutputStream(file)) {
 			NbtIo.writeCompressed(prefab.save(), out);
 		}
