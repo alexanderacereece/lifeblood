@@ -70,6 +70,13 @@ public enum MemoryType {
 	A_FRIEND_DIED("a friend died", 0, -20, 10, 3),
 	FAMILY_DIED("family died", 0, -30, 20, 3),
 	MY_BIRTHDAY("my birthday", 0, 10, 1, 1),
+	// Trips away from home (see travel): how they went, for mood and for what they talk about afterwards.
+	WENT_ON_A_JOURNEY("went on a journey", 0, 8, 7, 1),
+	HAD_AN_ADVENTURE("had an adventure", 0, 12, 7, 1),
+	FOUND_TREASURE("found treasure", 0, 15, 10, 1),
+	CAME_BACK_HURT("came back hurt", 0, -8, 5, 1),
+	VISITED_NEIGHBORS("visited the neighbors", 0, 6, 5, 1),
+	HOMESICK("homesick", 0, -6, 2, 1),
 	HAD_A_CHILD("had a child", 0, 25, 10, 2),
 	STARTED_DATING("started dating", 0, 10, 5, 1),
 	GOT_ENGAGED("got engaged", 0, 15, 7, 1),

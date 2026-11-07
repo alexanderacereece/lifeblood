@@ -126,6 +126,7 @@ The /lb command tree: tools for admins, content and testing, never the way to pl
 - [`PrefabCommands`](../src/main/java/lifeblood/command/PrefabCommands.java): /lb prefab: saving builds as prefabs and placing them, for making and testing the houses NPCs will live in.
 - [`TargetArgument`](../src/main/java/lifeblood/command/TargetArgument.java): A command argument naming NPCs, or people (NPCs and players), the way vanilla commands name entities, plus NPC names.
 - [`ToolCommands`](../src/main/java/lifeblood/command/ToolCommands.java): Tools for building and testing the mod rather than playing it.
+- [`TravelCommands`](../src/main/java/lifeblood/command/TravelCommands.java): /lb travel: testing trips.
 
 ## `dialogue`
 
@@ -369,6 +370,34 @@ What NPCs say: the line library read from .speech files, the facts lines can use
 - [`SpeechStyle`](../src/main/java/lifeblood/speech/SpeechStyle.java): The surface of an NPC's voice, independent of personality, so two NPCs with the same traits still sound different: what they call people, a catchphrase, a filler they tack on, and habits like dropping g's.
 - [`Word`](../src/main/java/lifeblood/speech/Word.java): A noun that knows its forms, so sentences agree with it: "a pork chop", "some blackberries", "some bread".
 
+## `travel`
+
+Trips away from home (see docs/travelers.md): journeys, adventures in caves, visits to other homesteads, and strangers passing through.
+
+- [`LongWalk`](../src/main/java/lifeblood/travel/LongWalk.java): Walking somewhere far, by the player's rules: the path search only plans so far ahead, so the trip goes in legs of about 24 blocks toward the goal, each walked with the navigator.
+- [`NpcOuting`](../src/main/java/lifeblood/travel/NpcOuting.java): An NPC's trips away from home: the one under way, if any, and deciding each morning whether to set out on one.
+- [`Outing`](../src/main/java/lifeblood/travel/Outing.java): One trip away from home: what kind, where to, how far along, and what it's turned up.
+- [`OutingBehavior`](../src/main/java/lifeblood/travel/OutingBehavior.java): Carrying out a trip, an instinct every NPC has that takes over from their day while they're away (orders, fights and the like still come first): packing at home, walking there in legs, doing what they came for, walking home, and putting things away.
+- [`OutingKind`](../src/main/java/lifeblood/travel/OutingKind.java): One kind of trip: who'd go on it, where, what they pack, what they do once there (as a behavior while they're loaded, or as an outcome while nobody's near), and how it's remembered.
+- [`OutingKinds`](../src/main/java/lifeblood/travel/OutingKinds.java): The kinds of trip people take, registered from setups, and picking one for someone by how much they'd want each.
+- [`Shelter`](../src/main/java/lifeblood/travel/Shelter.java): Shelter for a night away from home, as a player makes one: dig two blocks down where they stand, drop in, and put a block over their head, from what they just dug.
+- [`Strangers`](../src/main/java/lifeblood/travel/Strangers.java): Strangers passing through (a WorldSystem): now and then, somewhere out beyond where a player is, a person sets out for home far off on the other side of them, so their road passes near.
+- [`Supplies`](../src/main/java/lifeblood/travel/Supplies.java): What a trip takes from home and brings back: food for the road and what the kind of trip needs (torches and a pickaxe for caves, a weapon), taken from the household's chests before setting out; and everything brought back, put away again, but for a little food.
+- [`TravelRegister`](../src/main/java/lifeblood/travel/TravelRegister.java): Travelers who are away from every player, saved with the world (BTA SavedData): each one's whole NPC as it was when it left sight, its trip, where it's got to, and anything it's found since.
+- [`TravelSetup`](../src/main/java/lifeblood/travel/TravelSetup.java): Trips away from home: the kinds (journeys, visits, adventures), carrying a trip out as an instinct every NPC has, trips going on out of sight and strangers passing through (world systems), and talking a trip over (a chat topic).
+- [`TravelSimulation`](../src/main/java/lifeblood/travel/TravelSimulation.java): Trips going on out of sight (a WorldSystem): each traveler in TravelRegister walks on toward where they're going at a walking pace by day and rests by night, stays as long as they meant to (what they find or suffer there worked out by the trip's kind), and heads home.
+- [`TravelTalk`](../src/main/java/lifeblood/travel/TravelTalk.java): What travelers say about their trips: the facts for "Where are you headed?" (what kind of trip, how far along, which way and how far), and the "travels" chat topic for talking a trip over afterwards (chat_open_travels, chat_reply_travels).
+
+## `travel/kinds`
+
+The kinds of trip (each an OutingKind, registered from TravelSetup): journeys to somewhere far (JourneyKind), visits to another homestead (VisitKind), and adventures underground (AdventureKind, whose time in the caves is CaveExplorer).
+
+- [`AdventureKind`](../src/main/java/lifeblood/travel/kinds/AdventureKind.java): An adventure: out to somewhere a little way off, down into the caves there with torches and a pickaxe, and home with what they found, if they come home.
+- [`CaveExplorer`](../src/main/java/lifeblood/travel/kinds/CaveExplorer.java): Time underground on an adventure, by the player's rules: finds a way into a cave near where they've come to (or digs a short stair down to one), explores it lighting the way with the torches they carry, mines ore they come across with their pickaxe, empties any chest nobody owns (dungeons), and fights what's down there (the fight-or-flight instinct sees to that).
+- [`JourneyKind`](../src/main/java/lifeblood/travel/kinds/JourneyKind.java): A journey: a long walk to somewhere far, a look around, and the walk back, for the pleasure of seeing it.
+- [`StrollAround`](../src/main/java/lifeblood/travel/kinds/StrollAround.java): Looking about a place once there: strolls to spots around it, pausing between, until the stay is up.
+- [`VisitKind`](../src/main/java/lifeblood/travel/kinds/VisitKind.java): A visit: the walk over to another homestead, a while spent around it (chatting with whoever lives there, as NPCs near each other do), and the walk home.
+
 ## `util`
 
 Small helpers shared by several systems that belong to none of them.
@@ -388,7 +417,7 @@ Work by the player's rules: breaking blocks at the player's digging speed with t
 
 - [`Approach`](../src/main/java/lifeblood/work/Approach.java): Walking over to a block until it's within reach, for anything worked on by hand: a tree to chop, a chest to open, a field to till.
 - [`BlockBreaking`](../src/main/java/lifeblood/work/BlockBreaking.java): Breaking one block at a time by the player's rules (BlockLogic.getStrength and PlayerController): progress each tick is the held tool's strength against the block over its hardness (a fifth as fast underwater or off the ground, and very slow without the right tool), the arm swings as it digs, the block drops what it would for a player with that tool, and the tool wears down.
-- [`BlockUse`](../src/main/java/lifeblood/work/BlockUse.java): Using an item on a block as a player right-clicks it: placing a sapling or a block, sowing seeds, tilling with a hoe.
+- [`BlockUse`](../src/main/java/lifeblood/work/BlockUse.java): Using an item on a block as a player right-clicks it: placing a sapling or a block (against whatever it's placed on), sowing seeds, tilling with a hoe.
 - [`Containers`](../src/main/java/lifeblood/work/Containers.java): Taking from and putting into chests and other containers, within reach, the way a player moves stacks in a chest's screen: whole stacks, merging onto stacks of the same thing first.
 - [`Fishing`](../src/main/java/lifeblood/work/Fishing.java): Fishing by the player's rules (EntityFishingBobber), which only work for a player's own float: each tick the line is in the water, a bite comes one time in 500 (300 in the rain, 100 fewer under algae) and lasts 10 to 39 ticks; reeling in during a bite lands a raw fish and wears the rod by one.
 - [`ItemPickup`](../src/main/java/lifeblood/work/ItemPickup.java): Picking up items lying close by, and arrows of its own that landed, as a player does by walking over them: only once their pickup delay is over, only what fits in the pack, with the pickup sound.

@@ -20,6 +20,7 @@ import lifeblood.ownership.BlockOwners;
 import lifeblood.people.PeopleRegistry;
 import lifeblood.perf.NpcProfiler;
 import lifeblood.speech.SpeechLibrary;
+import lifeblood.travel.NpcOuting;
 import lifeblood.world.GameSpeed;
 
 /**
@@ -66,6 +67,16 @@ final class ToolCommands {
 					GameSpeed.set(c.getArgument("ticks", Integer.class));
 					return reply(c, "The game now runs at " + GameSpeed.ticksPerTick() + "x" + (GameSpeed.ticksPerTick() > 1
 						? " on a dedicated server (single-player isn't sped up)." : "."));
+				})))
+			.then(branch("debug keepreal", "Keeps travelers real (not simulated out of sight) as if a player were near, for testing on an empty server.")
+				.executes(c -> reply(c, "Keeping travelers real is " + (NpcOuting.isKeepingReal() ? "on" : "off") + "."))
+				.then(branch("debug keepreal on", "Travelers stay real wherever they are.").executes(c -> {
+					NpcOuting.setKeepReal(true);
+					return reply(c, "Travelers stay real now, as if a player were near.");
+				}))
+				.then(branch("debug keepreal off", "Travelers out of sight go on as records, as normal.").executes(c -> {
+					NpcOuting.setKeepReal(false);
+					return reply(c, "Travelers out of sight go on as records again.");
 				})))
 			.then(branch("debug limits", "Shows or switches the one-gift-a-day and five-chats-a-minute limits.")
 				.executes(c -> reply(c, "Gift and chat limits are " + (SocialLimits.isEnabled() ? "on" : "off") + "."))

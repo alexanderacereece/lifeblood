@@ -12,6 +12,7 @@ import lifeblood.homestead.HomesteadSetup;
 import lifeblood.ownership.OwnershipSetup;
 import lifeblood.people.PeopleSetup;
 import lifeblood.social.SocialSetup;
+import lifeblood.travel.TravelSetup;
 
 /**
  * Every system's setup, in one ordered list: the one place that shows everything wired into the mod. Each system
@@ -46,6 +47,7 @@ public final class Systems {
 		HealthSetup.register();
 		FamilySetup.register();
 		HomesteadSetup.register();
+		TravelSetup.register();
 		DialogueSetup.register();
 	}
 }

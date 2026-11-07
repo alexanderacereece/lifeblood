@@ -200,7 +200,7 @@ class ArchitectureTest {
 		List.of("util", "perf", "world", "lifeblood.Mod", "lifeblood.NpcConfig"),
 		List.of("entity", "event", "nav", "inventory", "item", "ai", "lifeblood.ClientHooks"),
 		List.of("personality", "social", "faction", "family", "people", "appearance", "health", "ownership", "speech", "words", "gossip"),
-		List.of("combat", "brawl", "following", "building", "work", "homestead"),
+		List.of("combat", "brawl", "following", "building", "work", "homestead", "travel"),
 		List.of("dialogue"),
 		List.of("command", "client", "mixin", "lifeblood.Lifeblood", "lifeblood.Systems"));
 

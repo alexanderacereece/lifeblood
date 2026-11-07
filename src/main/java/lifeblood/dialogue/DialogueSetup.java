@@ -6,6 +6,7 @@ import lifeblood.following.FollowDistance;
 import lifeblood.gossip.GossipTopics;
 import lifeblood.ownership.Ownership;
 import lifeblood.social.MemoryType;
+import lifeblood.travel.TravelTalk;
 import lifeblood.speech.SpeechContext;
 
 /**
@@ -83,6 +84,15 @@ public final class DialogueSetup {
 			if (!npc.life.getCameFor().isEmpty()) {
 				options.add(new DialogueOption("What brought you out here?",
 					session -> session.show(NpcDialogue.questions(npc, player, NpcDialogue.say(npc, player, "came_here", "Long story.")))));
+			}
+		});
+		// For travelers, whoever they are: where they're going and how far.
+		DialogueMenus.register(DialogueMenus.Menu.QUESTIONS, 260, (npc, player, options) -> {
+			if (npc.outing.isAway()) {
+				options.add(new DialogueOption("Where are you headed?", session -> {
+					String line = npc.voice.line("headed", player, context -> TravelTalk.addTripFacts(npc, context));
+					session.show(NpcDialogue.questions(npc, player, line != null ? line : "Just passing through."));
+				}));
 			}
 		});
 		DialogueMenus.register(DialogueMenus.Menu.QUESTIONS, 300, (npc, player, options) -> options.add(new DialogueOption("What do you think of...",

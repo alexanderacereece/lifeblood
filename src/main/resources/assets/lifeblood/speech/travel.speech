@@ -1,0 +1,85 @@
+# Trips away from home (see docs/travelers.md). Facts: trip (journey, adventure, visit), trip_stage (going, there,
+# heading_home), passing_through (yes for strangers), found_treasure and got_hurt (yes/no, on coming home), and on
+# anyone lately back from one: back_from (journey, adventure, visit, none), found_treasure_lately, came_back_hurt.
+# Words: [direction] (north, south-west...), [distance] ("a few hours' walk"). doing is the trip's kind while on it,
+# heading_home on the way back, sheltering at night.
+
+# ---------------------------------------------------------------------------------------------------------------
+# Setting out, and coming home.
+
+== trip_setting_out ==
+Off I go.
+I'll be back in a few days.                    {trip=journey}
+Going to see what's out there.                 {trip=journey, curious, w=3}
+Can't sit still. Time for a walk. A long one.  {trip=journey, wanderer, w=4}
+Off to the caves. Wish me luck.                {trip=adventure, w=4}
+There's treasure down there somewhere. I can feel it. {trip=adventure, greedy, w=4}
+If I'm not back in a week, don't come looking. {trip=adventure, pessimist, w=3}
+Going to call on the neighbors.                {trip=visit, w=4}
+Do I have to go? I suppose I should.           {homebody, w=3}
+
+== trip_home ==
+Home at last.
+Home. Nothing like it.                         {homebody, w=4}
+Good to be back. My feet don't think so.       {trip=journey, w=3}
+I saw things out there you wouldn't believe.   {trip=journey, liar, w=3}
+Back in one piece!                             {trip=adventure, got_hurt=no, w=3}
+Mostly in one piece.                           {trip=adventure, got_hurt=yes, w=5}
+Look what I found!                             {found_treasure=yes, w=6}
+Rich! Well. Richer.                            {found_treasure=yes, greedy, w=5}
+Nice folk, the neighbors.                      {trip=visit, w=4}
+Talked their ears off. They didn't mind.       {trip=visit, chatterbox, w=4}
+
+== trip_lost ==
+I don't know where I am. Best turn back.
+Lost. Brilliant.                               {pessimist}
+This isn't the way, is it.                     {lighthearted}
+
+== trip_found_treasure ==
+A chest! Somebody's left this for me.
+Treasure!                                      {extrovert}
+Mine now.                                      {greedy, w=3}
+
+# ---------------------------------------------------------------------------------------------------------------
+# Met on the road: greeting, and "Where are you headed?"
+
+== greet ==
+[hello] Just passing through.                  {passing_through=yes, w=5}
+[hello] Long road. Is it far to anywhere?      {doing=journey, w=4}
+[hello] Off on a bit of a journey.             {doing=journey, w=5}
+Mind yourself, it gets dark down there.        {doing=adventure, w=5}
+[hello] Don't suppose you've seen any caves about? {doing=adventure, w=4}
+[hello] Heading home. Finally.                 {doing=heading_home, w=5}
+[hello] Come to see the neighbors.             {doing=visit, w=5}
+Shh. Trying to get some rest in here.          {doing=sheltering, w=6}
+
+== headed ==
+Nowhere in particular.
+Home. It's [distance], [direction].            {trip_stage=heading_home, w=5}
+Home. [direction.cap] of here, [distance].     {passing_through=yes, w=6}
+Wherever the road goes. [direction.cap], for now. {trip=journey, wanderer, w=5}
+[direction.cap]. [distance.cap]. Just to see it. {trip=journey, trip_stage=going, w=5}
+I've got there. This is it. Not much, is it?   {trip=journey, trip_stage=there, pessimist, w=4}
+Looking for caves, [direction]. [distance.cap]. {trip=adventure, trip_stage=going, w=5}
+Down there. Into the dark.                     {trip=adventure, trip_stage=there, w=5}
+Over to the neighbors', [direction]. [distance.cap]. {trip=visit, trip_stage=going, w=5}
+Why do you want to know?                       {paranoid, w=3}
+
+# ---------------------------------------------------------------------------------------------------------------
+# Talking a trip over afterwards (the travels chat topic).
+
+== chat_open_travels ==
+[listener], I just got back from a journey. Walked for days. {back_from=journey, w=4}
+[listener], you won't believe what's down in those caves. {back_from=adventure, w=4}
+Went down a cave and nearly didn't come back up. {back_from=adventure, came_back_hurt=yes, w=5}
+Found a chest down there. A whole chest!       {back_from=adventure, found_treasure_lately=yes, w=6}
+I went and saw the neighbors. Nice enough.     {back_from=visit, w=4}
+I've been away. Did I miss anything?           {w=1}
+
+== chat_reply_travels ==
+Glad you made it back.
+You're braver than me.                         {timid, w=3}
+Next time, take me with you.                   {brave, w=3}
+I'd never go that far from home.               {homebody, w=4}
+I've seen farther.                             {wanderer, proud, w=3}
+And what did you bring me?                     {greedy, w=2}

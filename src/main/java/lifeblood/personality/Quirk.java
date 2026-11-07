@@ -34,6 +34,10 @@ public enum Quirk {
 	SENTIMENTAL,
 	COMPETITIVE,
 	ANIMAL_LOVER,
+	/** Strongly tied to home: rarely travels, homesick when away. */
+	HOMEBODY,
+	/** Restless: travels, comes back with stories. */
+	WANDERER,
 	// Orientation: most NPCs are attracted to the opposite gender; these two say otherwise. They don't count toward
 	// the quirk limit and aren't inherited.
 	GAY,
@@ -52,6 +56,7 @@ public enum Quirk {
 		pair(NOSY, DETACHED);
 		pair(PROUD, HUMBLE);
 		pair(EARLY_BIRD, NIGHT_OWL);
+		pair(HOMEBODY, WANDERER);
 		pair(GAY, BISEXUAL);
 	}
 
@@ -114,6 +119,8 @@ public enum Quirk {
 			case SENTIMENTAL -> "holds on to memories";
 			case COMPETITIVE -> "has to win";
 			case ANIMAL_LOVER -> "has a soft spot for animals";
+			case HOMEBODY -> "happiest at home";
+			case WANDERER -> "always off somewhere";
 			case GAY -> "attracted to the same gender";
 			case BISEXUAL -> "attracted to any gender";
 		};

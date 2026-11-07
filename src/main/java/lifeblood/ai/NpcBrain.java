@@ -73,6 +73,11 @@ public class NpcBrain {
 		}
 	}
 
+	/** Whether it has orders (follow, stay, go somewhere) from a player or command. */
+	public boolean hasOrders() {
+		return !this.behaviors.isEmpty();
+	}
+
 	/** The first behavior (not instinct) of the given type, if the NPC has one. */
 	@Nullable
 	public <T extends NpcBehavior> T findBehavior(Class<T> type) {

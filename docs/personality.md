@@ -141,7 +141,7 @@ Discrete traits. Most come in opposing pairs, where most NPCs sit in the unmarke
 - Early bird: wakes and starts work early, goes to bed early, grumpy if kept up. (Built for homesteaders: their day runs an hour early.)
 - Night owl: up late, sleeps in, more talkative at night. (Built for homesteaders: their day runs an hour late.)
 
-**Homebody / Wanderer** (planned, with [life choices](life-choices.md))
+**Homebody / Wanderer** (built for trips, see [travelers](travelers.md); more with [life choices](life-choices.md))
 - Homebody: strongly tied to home, rarely travels, homesick when away, slow to move even when unhappy.
 - Wanderer: restless, travels and comes back with stories, likelier to homestead or move on.
 

@@ -51,6 +51,7 @@ import lifeblood.social.MemoryType;
 import lifeblood.social.NpcMemories;
 import lifeblood.social.NpcSocial;
 import lifeblood.speech.NpcVoice;
+import lifeblood.travel.NpcOuting;
 import lifeblood.world.WorldSystems;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -113,10 +114,11 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 	/** What it's up to right now, for any system to ask (see NpcState). */
 	public final NpcState state = new NpcState(this);
 	public final NpcRoutine routine = new NpcRoutine(this);
+	public final NpcOuting outing = new NpcOuting(this);
 	/** The parts, in the order they tick and load: who it is first, then what it does. */
 	private final List<NpcPart> parts = List.of(this.personality, this.voice, this.memories, this.relations, this.inventory,
 		this.looks, this.home, this.life, this.health, this.eating, this.social, this.awareness, this.following,
-		this.brawling, this.melee, this.routine);
+		this.brawling, this.melee, this.routine, this.outing);
 	/** Who this NPC is, for others' memories of it; kept for life. */
 	private UUID uuid = UUID.randomUUID();
 	/** Whether it's been given a look from parts yet this session, if it needed one. */

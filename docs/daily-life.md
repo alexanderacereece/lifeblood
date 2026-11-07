@@ -1,6 +1,6 @@
 # Daily life (being built)
 
-**Built so far:** the day's schedule, sleeping in their own beds, meals from the chests, gathering wood, farming, hunting, fishing, cooking, walks, children's chores, and lines about their work. **Next:** a visible fishing float, and adventurers ([travelers](travelers.md)).
+**Built so far:** the day's schedule, sleeping in their own beds, meals from the chests, gathering wood, farming, hunting, fishing, cooking, walks, children's chores, and lines about their work. **Next:** a visible fishing float. Trips away from home are in [travelers](travelers.md).
 
 How NPCs who live somewhere spend their days without anyone telling them what to do, starting with homesteaders: sleeping in their own beds, eating from the household's chests, and doing the chores a household needs. Adventurers and travelers come after ([travelers](travelers.md)). Numbers are starting points for playtesting.
 

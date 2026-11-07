@@ -19,6 +19,8 @@ import lifeblood.family.Romance;
 import lifeblood.people.PeopleRegistry;
 import lifeblood.personality.Surroundings;
 import lifeblood.personality.Tastes;
+import lifeblood.social.Memory;
+import lifeblood.social.MemoryType;
 import lifeblood.social.Opinions;
 import lifeblood.words.WordBook;
 import lifeblood.words.WordCategory;
@@ -70,6 +72,9 @@ public final class SpeechFacts {
 		String cameFor = npc.life.getCameFor();
 		context.fact("came_for", cameFor.isEmpty() ? "none" : cameFor);
 		context.fact("doing", npc.state.doing().isEmpty() ? "none" : npc.state.doing());
+		context.fact("back_from", backFrom(npc));
+		context.fact("found_treasure_lately", remembersLately(npc, MemoryType.FOUND_TREASURE) ? "yes" : "no");
+		context.fact("came_back_hurt", remembersLately(npc, MemoryType.CAME_BACK_HURT) ? "yes" : "no");
 		// Settlers came from somewhere else to live where they do; those born there aren't.
 		context.fact("settler", !cameFor.isEmpty() && !"born_here".equals(cameFor) ? "yes" : "no");
 		context.fact("birthday", npc.life.isBirthday() ? "yes" : "no");
@@ -242,6 +247,37 @@ public final class SpeechFacts {
 	}
 
 	/** Whether it's in the biome it comes from right now. */
+	/** The trip they're lately back from, by what they remember: "adventure", "journey", "visit", or "none". */
+	public static String backFrom(EntityNPC npc) {
+		for (Memory memory : npc.memories.moodMemories(npc.world.getWorldTime())) {
+			switch (memory.type()) {
+				case HAD_AN_ADVENTURE -> {
+					return "adventure";
+				}
+				case WENT_ON_A_JOURNEY -> {
+					return "journey";
+				}
+				case VISITED_NEIGHBORS -> {
+					return "visit";
+				}
+				default -> {
+				}
+			}
+		}
+
+		return "none";
+	}
+
+	private static boolean remembersLately(EntityNPC npc, MemoryType type) {
+		for (Memory memory : npc.memories.moodMemories(npc.world.getWorldTime())) {
+			if (memory.type() == type) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	static boolean isAtHome(EntityNPC npc) {
 		return npc.life.getHomeBiome().equals(Surroundings.placeAt(npc.world, npc.x, npc.y, npc.z));
 	}

@@ -40,6 +40,7 @@ Four layers, each finer than the last. Read down only as far as you need:
 | `ownership` | Who placed each block, and who shares what |
 | `building` | Prefabs: saving, turning, material and color swaps, surveying a site, fitting to the land, beds, placing, the save check |
 | `work` | Work by the player's rules: breaking blocks at the player's digging speed, using items on blocks (placing, tilling, sowing), picking up drops, taking from and putting into chests |
+| `travel` | Trips away from home: journeys, adventures in caves, visits, strangers passing through; walking far, shelter at night, and trips going on while out of sight (`TravelRegister`, `TravelSimulation`) |
 | `homestead` | Generated homesteads: where they go, who lives in them (from the beds), bringing the household to life with its history, and stocking the chests |
 | `world` | The calendar (`Calendar`), world systems that run per world on their own clock, and the test speed-up (`GameSpeed`, `/lb debug speed`) |
 | `item` | The mod's items |
@@ -57,7 +58,7 @@ Packages are stacked in layers. A package may use its own layer and the ones bel
 | 1. Foundations | `util`, `perf`, `world`, `Mod`, `NpcConfig` | Time, world systems, the log and settings |
 | 2. The NPC | `entity`, `event`, `nav`, `inventory`, `item`, `ai`, `ClientHooks` | The entity, its brain and movement, what it carries, the event hub |
 | 3. Who they are | `personality`, `social`, `faction`, `family`, `people`, `appearance`, `health`, `ownership`, `speech`, `words`, `gossip` | Character, feelings, family and the register of people, looks, body, property, voice, news |
-| 4. What they do | `combat`, `brawl`, `following`, `building`, `work`, `homestead` | Systems that act in the world |
+| 4. What they do | `combat`, `brawl`, `following`, `building`, `work`, `homestead`, `travel` | Systems that act in the world |
 | 5. Conversation | `dialogue` | Talking with the player, which draws on everything |
 | 6. Tools and sides | `command`, `client`, `mixin`, `Lifeblood`, `Systems` | Wiring, screens, hooks into BTA, `/lb` |
 
@@ -176,6 +177,7 @@ The rest are `NpcPart`s. Each has its own `tick()`, `save()` and `load()`, and s
 | `brawling` | `brawl/NpcBrawling` | Fistfights, and telling a brawl punch from an attack |
 | `melee` | `combat/NpcMelee` | Drawing, swinging and putting away weapons, by the player's rules |
 | `routine` | `ai/routine/NpcRoutine` | Its schedule for the day |
+| `outing` | `travel/NpcOuting` | The trip it's on, if any, and deciding to set out |
 
 **A new per-NPC system is a new part in its own package:** write the class, add a field, add it to the `parts` list. The entity calls the rest. Behavior that grows inside the entity belongs in a part instead; the file limit keeps it honest.
 
@@ -217,6 +219,8 @@ Routines are in `ai/routine`.
 **Factions** (`faction/FactionRegistry`, saved as `lifeblood_factions`) hold each faction's default stance, its colors (`FactionColors`: primary and secondary), explicit relations between factions, and which faction each player has joined. `faction/NpcFactions` combines these with opinions and overrides into how one NPC regards one person.
 
 **The word book** (`words/WordBook`, saved as `lifeblood_words`) holds every word players have taught.
+
+**Travelers** (`travel/`) are on trips away from home. A traveler more than 96 blocks from every player is saved whole into `TravelRegister` (`lifeblood_travelers`) and taken out of the world; `TravelSimulation`, a world system, walks them on and works out their stay, and puts them back in the world where their road comes near a player, or at home. `Strangers` starts strangers out of sight so their road passes a player.
 
 **Homesteads** (`homestead/`) are generated with the world. `ChunkDecoratorOverworldMixin` calls `Homesteads` once each new overworld chunk is decorated; it places the house, brings the household to life and records it in `HomesteadRegister` (saved as `lifeblood_homesteads`). Only prefabs in a `homestead` folder are used (`building/PrefabFiles` treats folders as tags).
 
@@ -261,6 +265,7 @@ Moving a class between packages never touches saves: save keys and entity ids do
 | `FactionCommands` | Factions |
 | `PrefabCommands` | Prefabs |
 | `HomesteadCommands` | Generated homesteads |
+| `TravelCommands` | Trips and strangers |
 | `ToolCommands` | Owner, reload and debug |
 
 **A new area gets its own class** with an `addTo(root)` method.
