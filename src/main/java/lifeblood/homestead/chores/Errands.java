@@ -1,8 +1,9 @@
-package lifeblood.homestead.life;
+package lifeblood.homestead.chores;
 
 import java.util.function.Predicate;
 import net.minecraft.core.item.ItemStack;
 import lifeblood.entity.EntityNPC;
+import lifeblood.homestead.life.Household;
 import lifeblood.work.Approach;
 import lifeblood.work.BlockUse;
 import lifeblood.work.Containers;

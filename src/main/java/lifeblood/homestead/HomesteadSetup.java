@@ -3,7 +3,7 @@ package lifeblood.homestead;
 import lifeblood.ai.behavior.WanderBehavior;
 import lifeblood.ai.routine.Routines;
 import lifeblood.entity.EntityNPC;
-import lifeblood.homestead.life.ChoresBehavior;
+import lifeblood.homestead.chores.ChoresBehavior;
 import lifeblood.homestead.life.HomesteadDay;
 import lifeblood.homestead.life.MealBehavior;
 import lifeblood.homestead.life.SleepBehavior;

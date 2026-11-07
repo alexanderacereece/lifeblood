@@ -1,4 +1,4 @@
-package lifeblood.homestead.life;
+package lifeblood.homestead.chores;
 
 import java.util.UUID;
 import java.util.function.Predicate;
@@ -11,6 +11,7 @@ import net.minecraft.core.item.tool.ItemToolHoe;
 import net.minecraft.core.world.World;
 import net.minecraft.core.world.pos.TilePos;
 import lifeblood.entity.EntityNPC;
+import lifeblood.homestead.life.Household;
 import lifeblood.homestead.HomesteadRegister;
 import lifeblood.ownership.BlockOwners;
 import lifeblood.ownership.Ownership;

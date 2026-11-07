@@ -131,3 +131,10 @@ Clean shot. Mostly.
 Sorry, friend. We have to eat.                 {forgiving}
 That'll feed us for a few days.                {hardworking}
 Meat tonight!                                  {glutton, w=3}
+
+# Greeting someone digging gravel or making arrows (doing = digging, fletching).
+== greet ==
+[hello] Digging for flint. Arrows don't grow on trees. {doing=digging, w=5}
+[hello] Gravel. Lots of gravel. Hardly any flint.      {doing=digging, pessimist, w=4}
+[hello] Making arrows. Want to see?                    {doing=fletching, extrovert, w=4}
+[hello] Just fletching a few arrows.                   {doing=fletching, w=5}

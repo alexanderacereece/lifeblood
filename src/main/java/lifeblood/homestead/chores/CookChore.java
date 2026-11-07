@@ -1,4 +1,4 @@
-package lifeblood.homestead.life;
+package lifeblood.homestead.chores;
 
 import java.util.function.Predicate;
 import net.minecraft.core.block.BlockLogicLog;
@@ -9,6 +9,7 @@ import net.minecraft.core.item.block.ItemBlock;
 import net.minecraft.core.player.inventory.container.Container;
 import net.minecraft.core.world.pos.TilePos;
 import lifeblood.entity.EntityNPC;
+import lifeblood.homestead.life.Household;
 import lifeblood.homestead.HomesteadRegister;
 import lifeblood.work.Approach;
 import lifeblood.work.Smelting;

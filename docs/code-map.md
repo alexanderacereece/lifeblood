@@ -231,23 +231,30 @@ Generated homesteads: lone houses the world places as it generates, with people 
 - [`HouseholdPlan`](../src/main/java/lifeblood/homestead/HouseholdPlan.java): Who lives in a homestead, decided before anyone is made: each member's place in the household, gender, age and bed, how long they've been there, and anyone missing from it (a late husband or wife, parents back home).
 - [`HouseholdPlanner`](../src/main/java/lifeblood/homestead/HouseholdPlanner.java): Decides who lives in a homestead from its beds: a double bed is a couple (or a widow or widower who still sleeps on their side), a single bed alone is one person.
 
+## `homestead/chores`
+
+Homesteaders' chores (see docs/daily-life.md): ChoresBehavior picks one by what the household needs and what suits the person, and runs it start to finish; each kind is a Chore (gathering wood, farming, hunting, fishing, cooking, making arrows, digging gravel, walks).
+
+- [`Chore`](../src/main/java/lifeblood/homestead/chores/Chore.java): One chore a homesteader does start to finish: gathering wood, farming, a walk.
+- [`ChoresBehavior`](../src/main/java/lifeblood/homestead/chores/ChoresBehavior.java): Chore time: picks a chore by what the household needs and what suits the person, does it start to finish, rests a little, and picks the next.
+- [`CookChore`](../src/main/java/lifeblood/homestead/chores/CookChore.java): Cooking for the household, by the game's own recipes: wheat made into dough at the crafting table (three in a row, as the game's recipe has it), then raw meat, fish and dough taken to the furnace with fuel, and whatever the furnace has finished taken out.
+- [`Errands`](../src/main/java/lifeblood/homestead/chores/Errands.java): The trips to the house that chores begin and end with: fetching a tool or supplies (seeds) from the household's chests, and putting away what was gathered.
+- [`FarmChore`](../src/main/java/lifeblood/homestead/chores/FarmChore.java): Farming the household's own field: takes the hoe and seeds from home, harvests ripe wheat, sows any bare farmland, and tills a few new plots until the field is big enough, starting it beside water if there's some near so it stays wet.
+- [`FishChore`](../src/main/java/lifeblood/homestead/chores/FishChore.java): Fishing: takes a rod from home, finds open water near home with a bank to stand on, fishes by the player's rules (see work/Fishing) until they've caught a few or had enough, and brings the fish home.
+- [`FletchChore`](../src/main/java/lifeblood/homestead/chores/FletchChore.java): Making arrows at the crafting table for a household that hunts with a bow, by the game's recipe: a flint, a stick and a feather make four.
+- [`GatherWoodChore`](../src/main/java/lifeblood/homestead/chores/GatherWoodChore.java): Gathering wood: takes an axe from home if there is one (bare hands work too, slowly, as for a player), finds a natural tree nearby (one nobody placed, with leaves on it), chops its trunk from the bottom up as far as they can reach, gathers what falls (logs, saplings, apples), plants a sapling where the tree stood, and brings it all home.
+- [`GravelChore`](../src/main/java/lifeblood/homestead/chores/GravelChore.java): Digging gravel for flint, for a household that makes its own arrows: takes the shovel from home if there is one, finds loose gravel lying open near home (none anyone placed), digs it by the player's rules, and keeps what drops: flint about one time in ten, as for a player, and the gravel itself.
+- [`HuntChore`](../src/main/java/lifeblood/homestead/chores/HuntChore.java): Hunting: takes a bow and arrows from home if the household has them, else a sword (or an axe), finds an animal near home whose kind has more than a few left around it, so herds last, and brings it down: with a bow from a distance by the player's bow rules (see NpcArchery), else chasing it and striking by the player's melee rules.
+- [`WalkChore`](../src/main/java/lifeblood/homestead/chores/WalkChore.java): A walk for the pleasure of it: out to somewhere a fair way from home, a while to look around, then done (the next chore brings them back).
+
 ## `homestead/life`
 
-Homesteaders' days (see docs/daily-life.md): the homestead schedule (HomesteadDay), sleeping in their own beds (SleepBehavior), meals from the household's chests (MealBehavior), and chores picked by what the household needs and what suits them (ChoresBehavior, with one Chore class per kind).
+Homesteaders' days (see docs/daily-life.md): the homestead schedule (HomesteadDay), sleeping in their own beds (SleepBehavior) and meals from the household's chests (MealBehavior); chores are in homestead/chores.
 
-- [`Chore`](../src/main/java/lifeblood/homestead/life/Chore.java): One chore a homesteader does start to finish: gathering wood, farming, a walk.
-- [`ChoresBehavior`](../src/main/java/lifeblood/homestead/life/ChoresBehavior.java): Chore time: picks a chore by what the household needs and what suits the person, does it start to finish, rests a little, and picks the next.
-- [`CookChore`](../src/main/java/lifeblood/homestead/life/CookChore.java): Cooking for the household, by the game's own recipes: wheat made into dough at the crafting table (three in a row, as the game's recipe has it), then raw meat, fish and dough taken to the furnace with fuel, and whatever the furnace has finished taken out.
-- [`Errands`](../src/main/java/lifeblood/homestead/life/Errands.java): The trips to the house that chores begin and end with: fetching a tool or supplies (seeds) from the household's chests, and putting away what was gathered.
-- [`FarmChore`](../src/main/java/lifeblood/homestead/life/FarmChore.java): Farming the household's own field: takes the hoe and seeds from home, harvests ripe wheat, sows any bare farmland, and tills a few new plots until the field is big enough, starting it beside water if there's some near so it stays wet.
-- [`FishChore`](../src/main/java/lifeblood/homestead/life/FishChore.java): Fishing: takes a rod from home, finds open water near home with a bank to stand on, fishes by the player's rules (see work/Fishing) until they've caught a few or had enough, and brings the fish home.
-- [`GatherWoodChore`](../src/main/java/lifeblood/homestead/life/GatherWoodChore.java): Gathering wood: takes an axe from home if there is one (bare hands work too, slowly, as for a player), finds a natural tree nearby (one nobody placed, with leaves on it), chops its trunk from the bottom up as far as they can reach, gathers what falls (logs, saplings, apples), plants a sapling where the tree stood, and brings it all home.
 - [`HomesteadDay`](../src/main/java/lifeblood/homestead/life/HomesteadDay.java): A homesteader's day, as a schedule: chores from 6, a meal at home at 12, chores or a walk from 13, home for the evening at 18, and bed at 21.
 - [`Household`](../src/main/java/lifeblood/homestead/life/Household.java): A homesteader's household as far as their day goes: their house (found from their home, which is in it) and its chests, what the chests hold, and which chest to walk to.
-- [`HuntChore`](../src/main/java/lifeblood/homestead/life/HuntChore.java): Hunting: takes a sword (or an axe) from home if there is one, finds an animal near home whose kind has more than a few left around it, so herds last, chases it down and strikes by the player's melee rules, then gathers what it drops and brings it home.
 - [`MealBehavior`](../src/main/java/lifeblood/homestead/life/MealBehavior.java): Mealtime at home: back to the house, where someone carrying little food takes some from the household's chests, so they have it when they need it (they eat by the player's rules, when hurt; see NpcEating).
 - [`SleepBehavior`](../src/main/java/lifeblood/homestead/life/SleepBehavior.java): Bedtime: walks to their own bed and sleeps in it, lying on their back with their head on the pillow, until morning.
-- [`WalkChore`](../src/main/java/lifeblood/homestead/life/WalkChore.java): A walk for the pleasure of it: out to somewhere a fair way from home, a while to look around, then done (the next chore brings them back).
 
 ## `inventory`
 
@@ -384,7 +391,7 @@ Work by the player's rules: breaking blocks at the player's digging speed with t
 - [`BlockUse`](../src/main/java/lifeblood/work/BlockUse.java): Using an item on a block as a player right-clicks it: placing a sapling or a block, sowing seeds, tilling with a hoe.
 - [`Containers`](../src/main/java/lifeblood/work/Containers.java): Taking from and putting into chests and other containers, within reach, the way a player moves stacks in a chest's screen: whole stacks, merging onto stacks of the same thing first.
 - [`Fishing`](../src/main/java/lifeblood/work/Fishing.java): Fishing by the player's rules (EntityFishingBobber), which only work for a player's own float: each tick the line is in the water, a bite comes one time in 500 (300 in the rain, 100 fewer under algae) and lasts 10 to 39 ticks; reeling in during a bite lands a raw fish and wears the rod by one.
-- [`ItemPickup`](../src/main/java/lifeblood/work/ItemPickup.java): Picking up items lying close by, as a player does by walking over them: only once their pickup delay is over, only what fits in the pack, with the pickup sound.
+- [`ItemPickup`](../src/main/java/lifeblood/work/ItemPickup.java): Picking up items lying close by, and arrows of its own that landed, as a player does by walking over them: only once their pickup delay is over, only what fits in the pack, with the pickup sound.
 - [`Reach`](../src/main/java/lifeblood/work/Reach.java): How far an NPC can reach to a block, the player's own survival reach, and turning to look at what it works on.
 - [`Smelting`](../src/main/java/lifeblood/work/Smelting.java): What a furnace makes of something, by the game's own furnace recipes (modded ones included), the same lookup the furnace itself does: raw pork to cooked, dough to bread, ore to ingots.
 

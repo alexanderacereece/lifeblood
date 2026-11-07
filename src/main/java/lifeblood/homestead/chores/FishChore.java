@@ -1,4 +1,4 @@
-package lifeblood.homestead.life;
+package lifeblood.homestead.chores;
 
 import java.util.function.Predicate;
 import net.minecraft.core.block.material.Materials;
@@ -7,6 +7,7 @@ import net.minecraft.core.item.Items;
 import net.minecraft.core.world.World;
 import net.minecraft.core.world.pos.TilePos;
 import lifeblood.entity.EntityNPC;
+import lifeblood.homestead.life.Household;
 import lifeblood.work.Approach;
 import lifeblood.work.Fishing;
 import lifeblood.work.ItemPickup;

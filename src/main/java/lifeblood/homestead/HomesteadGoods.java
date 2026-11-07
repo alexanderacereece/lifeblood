@@ -31,6 +31,8 @@ public final class HomesteadGoods {
 	private static final float MAX_WEAR = 0.75F;
 	/** The chance they've found a little iron. */
 	private static final float IRON_CHANCE = 0.3F;
+	/** The chance they hunt with a bow and keep one at home. */
+	private static final float BOW_CHANCE = 0.35F;
 
 	private HomesteadGoods() {
 	}
@@ -117,6 +119,12 @@ public final class HomesteadGoods {
 
 		if (random.nextFloat() < 0.3F) {
 			goods.add(worn(Items.TOOL_SWORD_STONE, random));
+		}
+
+		// A bow (sticks and string) with a quiver's worth of arrows they made, for some.
+		if (random.nextFloat() < BOW_CHANCE) {
+			goods.add(worn(Items.TOOL_BOW, random));
+			goods.add(new ItemStack(Items.AMMO_ARROW, 6 + random.nextInt(11)));
 		}
 
 		return goods;

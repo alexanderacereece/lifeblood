@@ -1,4 +1,4 @@
-package lifeblood.homestead.life;
+package lifeblood.homestead.chores;
 
 import lifeblood.entity.EntityNPC;
 

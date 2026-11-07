@@ -20,7 +20,7 @@
 # health (fine/hurt/low), recovering (yes/no), has_faction, has_enemy, address, catchphrase,
 # came_for (why they came to live where they do: fresh_start/faith/land/quiet/running, family for children who came
 # with their family, born_here, or none), settler (yes when they came from somewhere else to live here), doing (what
-# they're busy with: wood, farming, hunting, fishing, cooking, walking, playing, sleeping, or none).
+# they're busy with: wood, farming, hunting, fishing, cooking, digging, fletching, walking, playing, sleeping, or none).
 # Words: taught_food, taught_animal, taught_thing, taught_place, taught_exclamation, taught_greeting,
 # taught_farewell, taught_describe, taught_activity, taught_angry, taught_happy, taught_sad, taught_scared (words
 # players taught them), partner, kin_call (Mom, Dad, Grandma, Grandpa, or the listener's name), favorite_food, hated_food, favorite_thing, hated_thing, weather_word, biome_word, season_word,

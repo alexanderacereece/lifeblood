@@ -1,4 +1,4 @@
-package lifeblood.homestead.life;
+package lifeblood.homestead.chores;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,6 +9,7 @@ import net.minecraft.core.item.Items;
 import net.minecraft.core.item.block.ItemBlock;
 import lifeblood.ai.NpcBehavior;
 import lifeblood.entity.EntityNPC;
+import lifeblood.homestead.life.Household;
 import lifeblood.family.StayNearParentBehavior;
 import lifeblood.personality.Quirk;
 import lifeblood.personality.TraitAxis;
@@ -30,7 +31,7 @@ public final class ChoresBehavior implements NpcBehavior {
 	/** The rest between chores, in ticks, before work ethic: 5 to 20 seconds. */
 	private static final int MIN_REST = 100;
 	private static final int MAX_REST = 400;
-	/** How long someone who found no trees near home leaves wood be, in ticks (an in-game day). */
+	/** How long someone who found no trees (or gravel) near home leaves it be, in ticks (an in-game day). */
 	private static final long NO_TREES_WAIT = 24000L;
 
 	/** One kind of chore: how much someone would want to do it right now, and making it. */
@@ -43,6 +44,8 @@ public final class ChoresBehavior implements NpcBehavior {
 	private long restUntil;
 	/** Until when they don't bother looking for trees, having found none near home (world time). */
 	private long noWoodUntil;
+	/** Until when they don't look for gravel, having found none near home (world time). */
+	private long noGravelUntil;
 
 	@Override
 	public String getId() {
@@ -61,13 +64,17 @@ public final class ChoresBehavior implements NpcBehavior {
 				return;
 			}
 
-			this.chore = pick(npc, npc.world.getWorldTime() < this.noWoodUntil);
+			this.chore = pick(npc, npc.world.getWorldTime() < this.noWoodUntil, npc.world.getWorldTime() < this.noGravelUntil);
 		}
 
 		npc.state.setDoing(this.chore.doing());
 		if (this.chore.tick(npc)) {
 			if (this.chore instanceof GatherWoodChore wood && wood.foundNoTrees()) {
 				this.noWoodUntil = npc.world.getWorldTime() + NO_TREES_WAIT;
+			}
+
+			if (this.chore instanceof GravelChore gravel && gravel.foundNoGravel()) {
+				this.noGravelUntil = npc.world.getWorldTime() + NO_TREES_WAIT;
 			}
 
 			this.chore = null;
@@ -80,7 +87,7 @@ public final class ChoresBehavior implements NpcBehavior {
 	}
 
 	/** The next chore, weighed by the household's needs and the person's inclinations; no wood if there are no trees near. */
-	private static Chore pick(EntityNPC npc, boolean noTrees) {
+	private static Chore pick(EntityNPC npc, boolean noTrees, boolean noGravel) {
 		if (npc.life.getAgeYears() < CHORE_AGE) {
 			return new WalkChore(2, 8);
 		}
@@ -104,6 +111,11 @@ public final class ChoresBehavior implements NpcBehavior {
 		options.add(new Option(CookChore.hasWork(npc) ? 1.5F : 0.0F, who -> new CookChore()));
 		// Fishing suits the patient as much as the hardworking: it doesn't lean on work ethic.
 		options.add(new Option(FishChore.canFish(npc) ? foodNeed * 0.7F : 0.0F, FishChore::new));
+		// A household that hunts with a bow keeps itself in arrows: made from flint, which comes from gravel.
+		boolean wantsArrows = grown && FletchChore.wantsArrows(npc);
+		options.add(new Option(wantsArrows && FletchChore.canFletch(npc) ? 1.2F : 0.0F, who -> new FletchChore()));
+		boolean noFlint = Household.count(npc, FletchChore.FLINT) == 0;
+		options.add(new Option(wantsArrows && noFlint && !noGravel ? 0.8F * (1.0F + 0.5F * ethic) : 0.0F, GravelChore::new));
 		float total = 0.0F;
 		for (Option option : options) {
 			total += Math.max(0.0F, option.weight());
