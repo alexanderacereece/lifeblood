@@ -48,7 +48,8 @@ public final class SleepBehavior implements NpcBehavior {
 		}
 
 		this.asleep = true;
-		npc.setSleeping(true);
+		npc.state.setSleeping(true);
+		npc.state.setDoing("sleeping");
 		// Lying from foot to head, the feet toward the foot of the bed: it faces the way the bed points, backwards.
 		int[] head = headOf(bed);
 		double x = (bed[0] + head[0]) / 2.0 + 0.5;
@@ -71,7 +72,8 @@ public final class SleepBehavior implements NpcBehavior {
 	private void wake(EntityNPC npc) {
 		if (this.asleep) {
 			this.asleep = false;
-			npc.setSleeping(false);
+			npc.state.setSleeping(false);
+			npc.state.setDoing("");
 			int[] bed = npc.home.getBed();
 			double[] spot = bed != null ? besideBed(npc.world, bed) : null;
 			if (spot != null) {

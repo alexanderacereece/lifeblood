@@ -76,3 +76,58 @@ I don't think about it much. Too busy.    {hardworking}
 I miss it sometimes. Then I remember why I left. {settler=yes, w=2}
 Never miss it. Not once.                  {settler=yes, proud, w=2}
 I was born out here, so I wouldn't know.  {came_for=born_here, w=4}
+
+# ---------------------------------------------------------------------------------------------------------------
+# Chores: greeting someone mid-chore (doing = wood, farming, hunting, fishing, cooking, walking, playing), and remarks
+# at the moments that earn them.
+
+== greet ==
+[hello] Just getting some wood in.             {doing=wood, w=5}
+[hello] Mind the tree, it's coming down soon.  {doing=wood, lighthearted, w=4}
+Busy. Wood doesn't chop itself.                {doing=wood, rude, w=4}
+[hello] Working the field.                     {doing=farming, w=5}
+[hello] Wheat's coming along. Slowly.          {doing=farming, pessimist, w=4}
+[hello] Good soil out here. Look at it!        {doing=farming, optimist, w=4}
+Shh. You'll scare off the game.                {doing=hunting, w=5}
+[hello] Out hunting. Keep your voice down.     {doing=hunting, polite, w=4}
+[hello] Fish aren't biting much today.         {doing=fishing, w=5}
+[hello] Pull up a rock. Fishing's better with company. {doing=fishing, extrovert, w=4}
+Quiet, please. I'm fishing.                    {doing=fishing, introvert, w=4}
+[hello] Something's on the fire, if you're hungry. {doing=cooking, generous, w=5}
+[hello] Just seeing to the cooking.            {doing=cooking, w=5}
+[hello] Out for a walk. Nice day for it.       {doing=walking, weather=clear, w=4}
+[hello] Just stretching my legs.               {doing=walking, w=4}
+
+== greet.child ==
+I'm helping!                                   {doing=farming, w=5}
+I'm fishing! I caught one before! Maybe.       {doing=fishing, w=5}
+We're playing!                                 {doing=playing, w=4}
+
+== chore_tree_down ==
+Timber!
+That's that one.
+There she goes.                                {lighthearted}
+One more for the pile.                         {hardworking}
+My arms are going to fall off.                 {lazy}
+Sorry, old tree.                               {animal_lover}
+
+== chore_harvest ==
+Good wheat this year.
+Look at that. All that from a handful of seeds. {optimist}
+Could've been better.                          {pessimist}
+Bread for a week, this.                        {glutton, w=3}
+Cube God be thanked for the harvest.           {pious, w=3}
+
+== chore_caught_fish ==
+Got one!
+There we go.
+Ha! Supper.                                    {glutton, w=2}
+Took its time.                                 {lazy}
+A beauty.                                      {proud}
+
+== chore_hunted ==
+Got it.
+Clean shot. Mostly.
+Sorry, friend. We have to eat.                 {forgiving}
+That'll feed us for a few days.                {hardworking}
+Meat tonight!                                  {glutton, w=3}

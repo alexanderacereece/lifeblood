@@ -42,7 +42,7 @@ Married couples have children, which keeps settlements alive across generations.
 - A married couple at 80+ opinion, near each other, has about one child every two in-game years, up to four, and not until the youngest is a year and a half old. An NPC married to the player has children the same way. Like everything time-based, these are real-life lengths with an in-game year (56 days) as a year.
 - A child is born beside its NPC parent, with a given name from `assets/lifeblood/names.txt`, its father's family name ([family names](#family-names)), its parents' faction and home, and family links set, so siblings, cousins and so on follow from the graph.
 - It starts at half size and grows to full size over 18 in-game years (1008 days in a world with 56-day years; `yearsToGrowUp` in `config/lifeblood.cfg` changes it). `/lb npc grow` shows or sets it. Its head grows from three quarters of an adult's to full size over the same years, for child proportions.
-- A child stays near a parent who's around, NPC or player, catching up when they walk off.
+- A child under 10 stays near a parent who's around, NPC or player, catching up when they walk off. From 10 they go about on their own, and homesteaders' children help with chores ([daily life](daily-life.md#children)).
 - Children inherit trait axes as a blend of both parents plus a random shift, and each parent quirk has a 30% chance to pass on (sometimes they get one of their own). Tastes are their own.
 - Looks: skin tone, hair color and eye color from one parent or the other, often a parent's hairstyle, eyes or mouth, and no facial hair. A young man may grow a beard on coming of age.
 - Children are invincible ([health modes](health.md)). They don't fight, brawl or date: they run from danger.

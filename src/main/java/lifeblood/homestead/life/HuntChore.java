@@ -94,6 +94,10 @@ public final class HuntChore implements Chore {
 	private void chase(EntityNPC npc) {
 		MobAnimal prey = this.prey;
 		if (prey == null || !prey.isAlive()) {
+			if (prey != null) {
+				npc.voice.bark("chore_hunted", null, null, false);
+			}
+
 			this.step = Step.GATHER;
 			this.gatherStart = npc.world.getWorldTime();
 			npc.navigator.stop();
@@ -145,6 +149,11 @@ public final class HuntChore implements Chore {
 	@Override
 	public void stop(EntityNPC npc) {
 		npc.navigator.stop();
+	}
+
+	@Override
+	public String doing() {
+		return "hunting";
 	}
 
 	@Override

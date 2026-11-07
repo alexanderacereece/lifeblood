@@ -1,6 +1,6 @@
 # Daily life (being built)
 
-**Built so far:** the day's schedule, sleeping in their own beds, meals from the chests, gathering wood, farming, hunting, walks, and children playing near home. **Next:** fishing, cooking meat at the furnace, older children's chores, and speech lines about their work.
+**Built so far:** the day's schedule, sleeping in their own beds, meals from the chests, gathering wood, farming, hunting, fishing, cooking, walks, children's chores, and lines about their work. **Next:** a visible fishing float, and adventurers ([travelers](travelers.md)).
 
 How NPCs who live somewhere spend their days without anyone telling them what to do, starting with homesteaders: sleeping in their own beds, eating from the household's chests, and doing the chores a household needs. Adventurers and travelers come after ([travelers](travelers.md)). Numbers are starting points for playtesting.
 
@@ -36,14 +36,19 @@ The chores, built in this order:
 1. **Gathering wood** (built): takes the household's axe if there is one (bare hands work, slowly), finds a natural tree within 48 blocks of home (nobody placed it, it stands on soil, it has leaves), chops its trunk from the bottom up as far as they can reach, gathers what falls for 15 seconds, plants a sapling if they have one, and brings the logs, saplings, apples, sticks and the axe home. Finding no tree puts wood off for an in-game day.
 2. **Farming** (built): takes the hoe and seeds from home, harvests ripe wheat, sows bare farmland, and tills up to 4 new plots a trip until the field has 16. The field is the farmland the household tilled (by ownership), within 20 blocks of home and kept 2 blocks clear of the house. A new field starts beside water if there's any within the game's 4-block reach for wetting farmland, else near home; where it can't grow (a slope, a tree), a new patch starts the same way. Tall grass and flowers are knocked off before tilling. Wheat, spare seeds and the hoe go home. Not yet: baking the wheat into bread.
 3. **Hunting** (built): takes a sword or axe from home if there is one (fists otherwise), picks the nearest animal within 32 blocks of home that has at least 2 others of its kind around it, so some are always left, chases it for up to 40 seconds striking by the player's melee rules, gathers what drops, and brings home the raw meat, leather, feathers and the like (and the weapon). The brave hunt more, the timid less, animal lovers never; animal lovers who see it are upset, as with any killing. Not yet: cooking the meat at the furnace.
-4. **Fishing:** at the nearest water, with the player's catch timing and rules.
-5. **Walks** (built): a stroll 12 to 28 blocks from home and a while looking around; the curious go up to twice as far, the lazy walk more and the hardworking less.
+4. **Fishing** (built): takes a rod from home (half of homesteads start with one), finds the nearest open water within 32 blocks with a bank to stand on, and fishes within reach by the game's own rules (`work/Fishing`): each tick a bite one time in 500 (300 in the rain, 100 fewer under algae) lasting 10 to 39 ticks, reeled in after a person's reaction time for a raw fish, the rod wearing by one per catch. Four fish, or two in-game hours, makes a day. The game's float only works for a player, so none is drawn yet.
+5. **Cooking** (built), whenever there's raw food in the chests or something done in the furnace: wheat made into dough at the crafting table (three in a row, the game's recipe), then raw meat, fish and dough taken to the furnace with coal or logs, and finished food taken out. What the furnace can cook is the game's own furnace recipe list. Cooked food goes into the chests.
+6. **Walks** (built): a stroll 12 to 28 blocks from home and a while looking around; the curious go up to twice as far, the lazy walk more and the hardworking less.
 
 Everything gathered goes into the household's chests.
 
 ## Children
 
-From about 10, children help: they gather what falls, harvest and fish with a parent. Younger ones play near home and stay near a parent, as now (built: under 10, chores time is play within a few blocks of home).
+Built: under 10, children stay near a parent and play within a few blocks of home at chore time. From 10 they go about on their own and do the lighter chores (farming, fishing, cooking, walks), not felling trees or hunting.
+
+## What they say
+
+Greeting someone mid-chore, they say what they're at, by personality ("Shh. You'll scare off the game."), from the `doing` fact. A tree coming down, the first of a harvest, a fish landed and a kill each earn a remark (`chore_tree_down`, `chore_harvest`, `chore_caught_fish`, `chore_hunted` in `homestead.speech`).
 
 ## What it's built from
 

@@ -9,19 +9,20 @@ import net.minecraft.core.item.Items;
 import net.minecraft.core.item.block.ItemBlock;
 import lifeblood.ai.NpcBehavior;
 import lifeblood.entity.EntityNPC;
+import lifeblood.family.StayNearParentBehavior;
 import lifeblood.personality.Quirk;
 import lifeblood.personality.TraitAxis;
 import org.jetbrains.annotations.Nullable;
 
 /**
  * Chore time: picks a chore by what the household needs and what suits the person, does it start to finish, rests a
- * little, and picks the next. Nobody has a fixed job yet. Children under 10 play near home instead; older ones do the
- * lighter chores.
+ * little, and picks the next. Nobody has a fixed job yet. Children under 10 play near home instead; from 10 they do
+ * the lighter chores (farming, fishing, cooking, walks), not felling trees or hunting.
  */
 public final class ChoresBehavior implements NpcBehavior {
 	public static final String ID = "chores";
-	/** The age children start doing chores, in years. */
-	public static final int CHORE_AGE = 10;
+	/** The age children start doing chores, in years: when they stop keeping close to a parent. */
+	public static final int CHORE_AGE = StayNearParentBehavior.INDEPENDENT_AGE;
 	/** How many logs the household likes to keep in its chests; fewer makes gathering wood likelier. */
 	private static final int LOGS_WANTED = 32;
 	/** How much food (wheat included) the household likes to keep, in items per person; less makes food chores likelier. */
@@ -63,12 +64,14 @@ public final class ChoresBehavior implements NpcBehavior {
 			this.chore = pick(npc, npc.world.getWorldTime() < this.noWoodUntil);
 		}
 
+		npc.state.setDoing(this.chore.doing());
 		if (this.chore.tick(npc)) {
 			if (this.chore instanceof GatherWoodChore wood && wood.foundNoTrees()) {
 				this.noWoodUntil = npc.world.getWorldTime() + NO_TREES_WAIT;
 			}
 
 			this.chore = null;
+			npc.state.setDoing("");
 			// The hardworking get back to it sooner; the lazy take their time.
 			float ethic = npc.personality.get(TraitAxis.WORK_ETHIC);
 			int rest = MIN_REST + npc.getRandom().nextInt(MAX_REST - MIN_REST);
@@ -84,17 +87,23 @@ public final class ChoresBehavior implements NpcBehavior {
 
 		float ethic = npc.personality.get(TraitAxis.WORK_ETHIC);
 		boolean curious = npc.personality.has(Quirk.CURIOUS);
+		// Children old enough to help do the lighter chores: no felling trees, no hunting.
+		boolean grown = !npc.life.isChild();
 		List<Option> options = new ArrayList<>();
 		int logs = Household.count(npc, stack -> stack.getItem() instanceof ItemBlock<?> block && block.getBlock().getLogic() instanceof BlockLogicLog);
 		float woodNeed = noTrees ? 0.0F : logs < LOGS_WANTED ? 2.0F : logs < LOGS_WANTED * 2 ? 0.3F : 0.05F;
-		options.add(new Option(woodNeed * (1.0F + 0.5F * ethic), GatherWoodChore::new));
+		options.add(new Option(grown ? woodNeed * (1.0F + 0.5F * ethic) : 0.0F, GatherWoodChore::new));
 		options.add(new Option((curious ? 1.2F : 0.6F) * (1.0F - 0.5F * ethic), who -> WalkChore.stroll(curious)));
 		int food = Household.count(npc, stack -> stack.getItem() instanceof ItemFood || stack.getItem() == Items.WHEAT);
 		float foodNeed = food < FOOD_WANTED * Math.max(1, Household.size(npc)) ? 2.0F : 0.6F;
 		options.add(new Option(foodNeed * (1.0F + 0.5F * ethic), FarmChore::new));
 		// Hunting is for the brave more than the timid, and never for animal lovers.
 		float courage = npc.personality.get(TraitAxis.COURAGE);
-		options.add(new Option(HuntChore.willHunt(npc) ? foodNeed * 0.6F * (1.0F + 0.5F * courage) : 0.0F, who -> new HuntChore()));
+		options.add(new Option(grown && HuntChore.willHunt(npc) ? foodNeed * 0.6F * (1.0F + 0.5F * courage) : 0.0F, who -> new HuntChore()));
+		// Raw food in the chests, or something done in the furnace, wants seeing to before it's wasted.
+		options.add(new Option(CookChore.hasWork(npc) ? 1.5F : 0.0F, who -> new CookChore()));
+		// Fishing suits the patient as much as the hardworking: it doesn't lean on work ethic.
+		options.add(new Option(FishChore.canFish(npc) ? foodNeed * 0.7F : 0.0F, FishChore::new));
 		float total = 0.0F;
 		for (Option option : options) {
 			total += Math.max(0.0F, option.weight());
@@ -117,6 +126,8 @@ public final class ChoresBehavior implements NpcBehavior {
 			this.chore.stop(npc);
 			this.chore = null;
 		}
+
+		npc.state.setDoing("");
 	}
 
 	@Override

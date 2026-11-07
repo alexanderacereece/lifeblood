@@ -189,6 +189,7 @@ public final class GatherWoodChore implements Chore {
 
 		if (this.trunk.isEmpty()) {
 			this.step = Step.GATHER;
+			npc.voice.bark("chore_tree_down", null, null, false);
 			return;
 		}
 
@@ -248,6 +249,11 @@ public final class GatherWoodChore implements Chore {
 	public void stop(EntityNPC npc) {
 		this.breaking.stop();
 		npc.navigator.stop();
+	}
+
+	@Override
+	public String doing() {
+		return "wood";
 	}
 
 	@Override

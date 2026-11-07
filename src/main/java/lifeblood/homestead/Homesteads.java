@@ -14,6 +14,7 @@ import lifeblood.Mod;
 import lifeblood.building.LocalMaterials;
 import lifeblood.building.Prefab;
 import lifeblood.building.PrefabBeds;
+import lifeblood.building.PrefabCheck;
 import lifeblood.building.PrefabFiles;
 import lifeblood.building.PrefabPlacer;
 import lifeblood.building.Swaps;
@@ -117,7 +118,8 @@ public final class Homesteads {
 		claim(world, prefab, site, head);
 		HomesteadGoods.stock(world, prefab, site, swaps, people.size(), random);
 		register.add(new HomesteadRegister.Homestead(site.x(), site.y(), site.z(), size[0], prefab.height, size[1], prefab.name, head,
-			world.getWorldTime() - plan.yearsHere() * Calendar.ticksPerYear(world), chests(prefab, site)));
+			world.getWorldTime() - plan.yearsHere() * Calendar.ticksPerYear(world), tileEntities(prefab, site, "minecraft:chest"),
+			tileEntities(prefab, site, "minecraft:furnace"), blocks(prefab, site, "workbench")));
 		StringJoiner who = new StringJoiner(", ");
 		for (EntityNPC npc : people) {
 			who.add(npc.life.getFullName() + " (" + npc.life.getAgeYears() + ")");
@@ -165,11 +167,11 @@ public final class Homesteads {
 		return spots;
 	}
 
-	/** Where the house's chests are, in the world. */
-	private static List<int[]> chests(Prefab prefab, TerrainFit.Site site) {
+	/** Where the house's containers of one kind are in the world, by their tile entity id ("minecraft:chest"). */
+	private static List<int[]> tileEntities(Prefab prefab, TerrainFit.Site site, String id) {
 		List<int[]> chests = new ArrayList<>();
 		for (var entry : prefab.tileEntities().entrySet()) {
-			if ("minecraft:chest".equals(entry.getValue().getStringOrDefault("id", ""))) {
+			if (id.equals(entry.getValue().getStringOrDefault("id", ""))) {
 				int spot = entry.getKey();
 				TilePos pos = PrefabPlacer.spotPosition(prefab, spot % prefab.width, spot / (prefab.width * prefab.depth), spot / prefab.width % prefab.depth,
 					site.x(), site.y(), site.z(), site.turns(), new TilePos());
@@ -178,6 +180,23 @@ public final class Homesteads {
 		}
 
 		return chests;
+	}
+
+	/** Where the house's blocks of one kind are in the world, by their short name ("workbench"). */
+	private static List<int[]> blocks(Prefab prefab, TerrainFit.Site site, String name) {
+		List<int[]> found = new ArrayList<>();
+		for (int y = 0; y < prefab.height; y++) {
+			for (int z = 0; z < prefab.depth; z++) {
+				for (int x = 0; x < prefab.width; x++) {
+					if (name.equals(PrefabCheck.shortName(prefab.blockAt(x, y, z)))) {
+						TilePos pos = PrefabPlacer.spotPosition(prefab, x, y, z, site.x(), site.y(), site.z(), site.turns(), new TilePos());
+						found.add(new int[] {pos.x, pos.y, pos.z});
+					}
+				}
+			}
+		}
+
+		return found;
 	}
 
 	/** A single bed by its index; if there are fewer, the first bed there is. */

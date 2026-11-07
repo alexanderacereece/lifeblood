@@ -21,9 +21,11 @@ public class HomesteadRegister extends SavedData {
 
 	/**
 	 * One homestead: the house's box (lowest corner, at floor level, and its size once turned), its prefab, the head
-	 * of the household, when they settled (world time), and where its chests are ({x, y, z} each).
+	 * of the household, when they settled (world time), and where its chests, furnaces and crafting tables are
+	 * ({x, y, z} each).
 	 */
-	public record Homestead(int x, int y, int z, int width, int height, int depth, String prefab, UUID head, long settled, List<int[]> chests) {
+	public record Homestead(int x, int y, int z, int width, int height, int depth, String prefab, UUID head, long settled, List<int[]> chests,
+		List<int[]> furnaces, List<int[]> workbenches) {
 		/** Whether a position is inside the house's box. */
 		public boolean contains(double px, double py, double pz) {
 			return px >= this.x && px < this.x + this.width && py >= this.y && py < this.y + this.height && pz >= this.z && pz < this.z + this.depth;
@@ -88,7 +90,8 @@ public class HomesteadRegister extends SavedData {
 				try {
 					this.homesteads.add(new Homestead(homestead.getInteger("X"), homestead.getInteger("Y"), homestead.getInteger("Z"),
 						homestead.getInteger("Width"), homestead.getInteger("Height"), homestead.getInteger("Depth"), homestead.getString("Prefab"),
-						UUID.fromString(homestead.getString("Head")), homestead.getLong("Settled"), readPositions(homestead.getStringOrDefault("Chests", ""))));
+						UUID.fromString(homestead.getString("Head")), homestead.getLong("Settled"), readPositions(homestead.getStringOrDefault("Chests", "")),
+						readPositions(homestead.getStringOrDefault("Furnaces", "")), readPositions(homestead.getStringOrDefault("Workbenches", ""))));
 				} catch (IllegalArgumentException e) {
 					// A damaged entry is skipped rather than losing the rest.
 				}
@@ -109,6 +112,15 @@ public class HomesteadRegister extends SavedData {
 		return positions;
 	}
 
+	private static String writePositions(List<int[]> positions) {
+		StringJoiner joiner = new StringJoiner(";");
+		for (int[] pos : positions) {
+			joiner.add(pos[0] + "," + pos[1] + "," + pos[2]);
+		}
+
+		return joiner.toString();
+	}
+
 	@Override
 	public void save(CompoundTag tag) {
 		ListTag list = new ListTag();
@@ -123,12 +135,9 @@ public class HomesteadRegister extends SavedData {
 			entry.putInt("Width", homestead.width());
 			entry.putInt("Height", homestead.height());
 			entry.putInt("Depth", homestead.depth());
-			StringJoiner chests = new StringJoiner(";");
-			for (int[] chest : homestead.chests()) {
-				chests.add(chest[0] + "," + chest[1] + "," + chest[2]);
-			}
-
-			entry.putString("Chests", chests.toString());
+			entry.putString("Chests", writePositions(homestead.chests()));
+			entry.putString("Furnaces", writePositions(homestead.furnaces()));
+			entry.putString("Workbenches", writePositions(homestead.workbenches()));
 			list.addTag(entry);
 		}
 

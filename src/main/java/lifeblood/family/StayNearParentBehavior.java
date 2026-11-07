@@ -8,13 +8,15 @@ import lifeblood.entity.EntityNPC;
 import lifeblood.people.PeopleRegistry;
 
 /**
- * A child keeps close to a parent who's around (an NPC or a player), toddling after them when they wander off and
- * pottering about nearby otherwise. An instinct, so every child has it; it stops mattering once they grow up, or
- * when no parent is near enough to see.
+ * A young child keeps close to a parent who's around (an NPC or a player), toddling after them when they wander off
+ * and pottering about nearby otherwise. An instinct, so every child has it until about 10, old enough to go about on
+ * their own (and help with chores); it also doesn't matter when no parent is near enough to see.
  */
 public class StayNearParentBehavior implements NpcBehavior {
 	public static final String ID = "stay_near_parent";
 	public static final int PRIORITY = 20;
+	/** The age a child stops keeping close to a parent, in years. */
+	public static final int INDEPENDENT_AGE = 10;
 	private static final double FIND_RANGE = 48.0;
 	private static final double CATCH_UP_DISTANCE = 5.0;
 	private static final int CHECK_INTERVAL = 20;
@@ -34,7 +36,7 @@ public class StayNearParentBehavior implements NpcBehavior {
 
 	@Override
 	public boolean canStart(EntityNPC npc) {
-		return npc.life.isChild() && !npc.isSleeping() && findParent(npc) != null;
+		return npc.life.isChild() && npc.life.getAgeYears() < INDEPENDENT_AGE && !npc.state.isSleeping() && findParent(npc) != null;
 	}
 
 	@Override
@@ -70,7 +72,7 @@ public class StayNearParentBehavior implements NpcBehavior {
 		for (UUID id : PeopleRegistry.get(npc.world).parentsOf(npc.getUuid())) {
 			Mob parent = Romance.findPerson(npc.world, id);
 			// A parent asleep in bed is left be: the child goes to its own bed when it's time.
-			boolean asleep = parent instanceof EntityNPC sleeper && sleeper.isSleeping();
+			boolean asleep = parent instanceof EntityNPC sleeper && sleeper.state.isSleeping();
 			if (parent != null && parent.isAlive() && !asleep && parent.distanceTo(npc) <= FIND_RANGE
 				&& (nearest == null || parent.distanceTo(npc) < nearest.distanceTo(npc))) {
 				nearest = parent;

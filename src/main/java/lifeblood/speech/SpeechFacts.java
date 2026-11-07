@@ -69,6 +69,7 @@ public final class SpeechFacts {
 		context.fact("age", npc.life.getStage().id());
 		String cameFor = npc.life.getCameFor();
 		context.fact("came_for", cameFor.isEmpty() ? "none" : cameFor);
+		context.fact("doing", npc.state.doing().isEmpty() ? "none" : npc.state.doing());
 		// Settlers came from somewhere else to live where they do; those born there aren't.
 		context.fact("settler", !cameFor.isEmpty() && !"born_here".equals(cameFor) ? "yes" : "no");
 		context.fact("birthday", npc.life.isBirthday() ? "yes" : "no");

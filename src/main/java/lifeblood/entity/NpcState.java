@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * What an NPC is up to right now, for any system to ask: whether it's busy, fighting someone, badly hurt, who it's
- * following, who attacked it lately. Systems in lower layers ask here rather than reaching into the parts of higher
+ * following, who attacked it lately, what it's busy with, whether it's asleep. Systems in lower layers ask here rather than reaching into the parts of higher
  * ones (npc.following, npc.attackers), so the questions they depend on stay few, named and stable while the parts
  * behind them change. A new question goes here only when a lower layer genuinely needs it; code in the same layer or
  * above uses the parts directly.
@@ -17,9 +17,32 @@ public final class NpcState {
 	private static final float BADLY_HURT_HEALTH = 0.3F;
 
 	private final EntityNPC npc;
+	/** What it's busy with, for lines (see doing). Not saved. */
+	private String doing = "";
 
 	NpcState(EntityNPC npc) {
 		this.npc = npc;
+	}
+
+	/**
+	 * What it's busy with right now, for what it says ("fishing", "farming", "sleeping"...); "" for nothing in
+	 * particular. Set by the behavior doing it.
+	 */
+	public String doing() {
+		return this.doing;
+	}
+
+	public void setDoing(String doing) {
+		this.doing = doing;
+	}
+
+	/** Whether it's asleep in bed, drawn lying down (synced, so the client sees it too). */
+	public boolean isSleeping() {
+		return this.npc.getEntityData().getByte(EntityNPC.DATA_SLEEPING) != 0;
+	}
+
+	public void setSleeping(boolean sleeping) {
+		this.npc.getEntityData().set(EntityNPC.DATA_SLEEPING, (byte) (sleeping ? 1 : 0));
 	}
 
 	/** Too occupied to start a conversation: fighting, brawling, talking to someone, or lying on the ground. */

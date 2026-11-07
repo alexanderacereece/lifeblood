@@ -69,6 +69,7 @@ public final class FarmChore implements Chore {
 	private Plot plot;
 	private int worked;
 	private int tilled;
+	private int harvested;
 
 	public FarmChore(EntityNPC npc) {
 		this.breaking = new BlockBreaking(npc);
@@ -121,6 +122,10 @@ public final class FarmChore implements Chore {
 				case HARVEST -> {
 					if (this.breaking.dig(plot.x(), plot.y() + 1, plot.z()) == BlockBreaking.Result.DIGGING) {
 						return;
+					}
+
+					if (this.harvested++ == 0) {
+						npc.voice.bark("chore_harvest", null, null, false);
 					}
 				}
 				case SOW -> {
@@ -290,6 +295,11 @@ public final class FarmChore implements Chore {
 	public void stop(EntityNPC npc) {
 		this.breaking.stop();
 		npc.navigator.stop();
+	}
+
+	@Override
+	public String doing() {
+		return "farming";
 	}
 
 	@Override

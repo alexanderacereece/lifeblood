@@ -87,6 +87,11 @@ public final class HomesteadGoods {
 		maybe(goods, 0.4F, Items.LEATHER, 1, 1, 4, random);
 		maybe(goods, 0.4F, Items.FEATHER_CHICKEN, 1, 1, 6, random);
 		maybe(goods, 0.3F, Items.STRING, 1, 1, 3, random);
+		// A rod made from sticks and string, as anyone living by water might.
+		if (random.nextFloat() < 0.5F) {
+			goods.add(worn(Items.TOOL_FISHINGROD, random));
+		}
+
 		maybe(goods, 0.3F, Items.BONE, 1, 1, 3, random);
 
 		// Leftovers from building, in the wood and stone the house was built from.

@@ -339,15 +339,6 @@ public class EntityNPC extends MobPathfinder implements IArmorWearing<HumanArmor
 		this.combatStyle = combatStyle;
 	}
 
-	/** Whether it's asleep in bed, drawn lying down. */
-	public boolean isSleeping() {
-		return this.entityData.getByte(DATA_SLEEPING) != 0;
-	}
-
-	public void setSleeping(boolean sleeping) {
-		this.entityData.set(DATA_SLEEPING, (byte) (sleeping ? 1 : 0));
-	}
-
 	public void swingArm() {
 		this.swinging = true;
 		this.swingTicks = 0;

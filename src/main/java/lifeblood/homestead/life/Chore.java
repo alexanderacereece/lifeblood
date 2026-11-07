@@ -14,4 +14,7 @@ public interface Chore {
 
 	/** What they're doing, for /lb npc list. */
 	String describe();
+
+	/** What kind of chore it is, as the "doing" fact lines use: "wood", "farming", "fishing"... */
+	String doing();
 }

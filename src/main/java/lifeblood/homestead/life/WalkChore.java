@@ -79,6 +79,11 @@ public final class WalkChore implements Chore {
 	}
 
 	@Override
+	public String doing() {
+		return this.distanceMax <= MIN_DISTANCE ? "playing" : "walking";
+	}
+
+	@Override
 	public String describe() {
 		return this.distanceMax <= MIN_DISTANCE ? "playing near home" : "out for a walk";
 	}
