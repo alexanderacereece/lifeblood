@@ -1,6 +1,6 @@
 # Life choices (planned)
 
-Not built yet. How NPCs decide the big things for themselves: what work to do, whether to travel, move away, homestead or run for office. Numbers are starting points for playtesting.
+How NPCs decide the big things for themselves: what work to do, whether to travel, move away, homestead or run for office. Not built yet, except two early pieces: the homebody and wanderer quirks, and homesteaders deciding each morning whether to set out on a trip ([travelers](travelers.md#who-goes-and-when)), which works the way choices here will. Numbers are starting points for playtesting.
 
 The idea in one line: **the NPC decides what it wants, and the world decides what's available and what it costs.** Agency is choosing among real options by inclination; balance comes from shaping the options, never from overriding the NPC.
 
@@ -9,7 +9,7 @@ The idea in one line: **the NPC decides what it wants, and the world decides wha
 Kept small on purpose, to avoid bloat.
 
 - **Ambition** (content to ambitious), a ninth trait axis. Ambitious NPCs want more: a better job, a bigger house, an office, mastery of their trade, and they'll leave for an opportunity. Content NPCs are happy with what they have and rarely change course. Old saves are fine: loading only overwrites values present in the save, so existing NPCs get a fresh roll for the new axis.
-- **Homebody / Wanderer**, a new quirk pair (see [quirks](personality.md#pairs)). Most NPCs sit in the unmarked middle.
+- **Homebody / Wanderer** (built), a new quirk pair (see [quirks](personality.md#pairs)). Most NPCs sit in the unmarked middle. Today they set how often someone travels and how far; the rest comes with life choices.
   - Homebody: strongly tied to home, rarely travels, homesick when away, slow to move even when unhappy.
   - Wanderer: restless, travels, comes back with stories, likelier to homestead or move on. Home pulls on them less.
 
@@ -44,7 +44,7 @@ Then:
 |---|---|---|
 | A job | depends on the job (see [work](work.md)) | Children lean toward a parent's trade and can apprentice. |
 | Changing jobs | ambitious, unhappy at work | Losing a job forces a choice. |
-| A journey | wanderer, curious, brave | Goes somewhere and comes back with stories and memories ([travelers](travelers.md)). |
+| A journey | wanderer, curious, brave | Goes somewhere and comes back with stories and memories ([travelers](travelers.md), built for homesteaders). |
 | Moving to another settlement | wanderer, ambitious, a grudge or heartbreak at home | Needs an opening or a relative there. |
 | Homesteading | wanderer, brave, introvert, ambitious | Picks land and builds a home ([building](building.md)). |
 | Running for office | ambitious, proud, competitive, extrovert | Wins by opinions (democracy) or appointment, per government. |

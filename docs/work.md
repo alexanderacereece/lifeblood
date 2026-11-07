@@ -1,6 +1,6 @@
-# Work and items (planned)
+# Work and items (partly built)
 
-Not built yet. Jobs, and the real items they move around. Numbers are starting points for playtesting.
+Jobs, and the real items they move around. **Built:** block actions by the player's rules (`work/`), and the household chores homesteaders do with them ([daily life](daily-life.md)), which prove the chain: chopping, farming, hunting, fishing, cooking and storing it all in real chests. **Planned:** jobs, workplaces, shops and demand. Numbers are starting points for playtesting.
 
 The goal is full detail: a fisherman fishes all day by the player's rules, carries the catch to his shop's chest, and townsfolk come and buy it; a blacksmith smelts real ore in a real furnace and crafts the guards' swords from the game's own recipes. Every item is a real item in a real container. Where nobody is watching, a ledger stands in, and turns back into real items when the area loads ([unloaded](unloaded.md)).
 
@@ -10,17 +10,17 @@ The same rules as everywhere else ([NPCs use the player's exact mechanics](READM
 - breaking blocks at the player's digging speed for the held tool, wearing the tool down, with the block's real drops;
 - placing blocks within the player's reach, against an existing face, with the player's placement delay;
 - the game's own recipe list for crafting (modded recipes come free), real furnaces at real smelting speed;
-- fishing with the player's timing and catch rules (BTA's bobber only works for a player, so NPCs get their own copy of it that follows the same rules);
+- fishing with the player's timing and catch rules (`work/Fishing` follows the game's bite and catch rules itself, since BTA's bobber only works for a player; no float is drawn yet);
 - swinging the arm, with the right sounds.
 
 ## The pieces
 
 Built in this order; each is useful on its own.
 
-1. **Block actions.** Break and place by the player's rules, using a tool from the inventory. Shared by building, farming, mining, forestry and repairs.
-2. **Job steps.** Small reusable steps: go to, break, place, use a block, take from a container, put into one, craft, smelt, fish, wait. A job strings them together; the brain runs one step at a time, and eating, fleeing and chatting still interrupt as now.
+1. **Block actions** (built). Break and place by the player's rules, using a tool from the inventory (`BlockBreaking`, `BlockUse`, `Reach`, `Approach`, `ItemPickup`). Shared by chores, travelers' digging, and later building, mining, forestry and repairs.
+2. **Job steps** (partly built). Small reusable steps: go to, break, place, use a block, take from a container, put into one, craft, smelt, fish, wait. `Containers`, `Smelting` and `Fishing` exist; the homestead chores string the steps together, and a job will do the same. The brain runs one step at a time, and eating, fleeing and chatting still interrupt as now.
 3. **Jobs.** A job is a [schedule](architecture.md) of activities, a workplace and the steps those activities use, plus the job's outfit, tastes and speech lines. Who gets which job is a [life choice](life-choices.md).
-4. **Storage.** Which chests and furnaces belong to which shop, home or armory, kept in an index so nobody searches for them. Owned containers tie into [ownership](ownership.md): taking from one that isn't yours is theft.
+4. **Storage** (built for homes). Which chests and furnaces belong to which shop, home or armory, kept in an index so nobody searches for them; a homestead's are kept in its record. Owned containers tie into [ownership](ownership.md): taking from one that isn't yours is theft.
 5. **Demand.** What people need: food (eating already works), tools that wore out, gear for guards, materials for builders. Shortfalls become requests to the player (planned on the roadmap).
 
 ## Example chains

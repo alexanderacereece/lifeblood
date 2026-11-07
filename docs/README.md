@@ -1,6 +1,6 @@
 # Lifeblood design
 
-An NPC framework for Better Than Adventure 8.0.1: villagers with personalities, opinions, families and their own way of talking, built so they can eventually live out their own days. Numbers throughout are starting points for playtesting, not final.
+An NPC framework for Better Than Adventure 8.0.1: villagers with personalities, opinions, families and their own way of talking, living in homesteads the world generates, going about their own days and trips, and carrying on while nobody is watching. Numbers throughout are starting points for playtesting, not final.
 
 | Doc | Covers |
 |---|---|
@@ -11,40 +11,43 @@ An NPC framework for Better Than Adventure 8.0.1: villagers with personalities, 
 | [health.md](health.md) | Health modes, being downed, the guardian amulet |
 | [speech.md](speech.md) | The speech engine, grammar, speech styles, the word book |
 | [appearance.md](appearance.md) | Parts, palettes, homelands, the art layout |
-| [building.md](building.md) | Prefabs (built): saving, turning, material and color swaps; NPC building and towns (planned) |
+| [building.md](building.md) | Prefabs and generated homesteads (built): saving, turning, material and color swaps, houses with households; NPC building and towns (planned) |
+| [daily-life.md](daily-life.md) | How homesteaders spend their days (built): sleeping in their beds, meals from the household chests, chores by need and inclination |
+| [travelers.md](travelers.md) | Journeys, adventures in caves, visits and strangers passing through (built): NPCs out in the world, and trips going on while out of sight |
+| [unloaded.md](unloaded.md) | Keeping the world alive where nobody is watching: travelers on the road and homesteads catching up (built); settlements, work and building (planned) |
+| [ownership.md](ownership.md) | Who placed what (built); protecting player builds, and property for crime and law (planned) |
 | [palette_reference.html](palette_reference.html) | Swatches of every bundled palette |
 
-Planned, not built yet (ownership and building are partly built):
+Planned, not built yet (work and life choices are partly built):
 
 | Doc | Covers |
 |---|---|
 | [life-choices.md](life-choices.md) | NPCs choosing jobs, journeys, moves, homesteads and offices; the ambition axis |
-| [work.md](work.md) | Jobs, block actions, real item chains, storage, honest mining |
-| [ownership.md](ownership.md) | Who placed what, protecting player builds, property for crime and law |
+| [work.md](work.md) | Jobs, real item chains, storage, honest mining; block actions (built) |
 | [skills.md](skills.md) | Archery and melee as real AI skill (aim, timing, footwork), where skill comes from and how it grows |
-| [daily-life.md](daily-life.md) | How homesteaders spend their days: sleeping in their beds, meals from the household chests, chores by need and inclination |
-| [travelers.md](travelers.md) | Journeys, adventures in caves, visits and strangers passing through: NPCs out in the world, and trips going on while out of sight |
-| [unloaded.md](unloaded.md) | Keeping the world alive where nobody is watching: travelers on the road, homesteads catching up |
 
 The roadmap (what's built and what's next, including settlements and factions) is a separate page.
 
-## Next: the first playtest
+## Now: the first playtest
 
-The aim is a world to play in and feel the mod's pace: a mix of NPCs living in places and NPCs showing up on their own, out doing things.
+The aim is a world to play in and feel the mod's pace: a mix of NPCs living in places and NPCs showing up on their own, out doing things. Everything for it is built, and the playtest is under way:
 1. **Prefabs** (built).
 2. **Generated homesteads** (built): families, lone settlers, widows and friends already living there ([building](building.md#generated-homesteads-built)).
-3. **Block actions**, the smallest set travelers need: breaking and placing by the player's rules ([work](work.md#the-pieces)).
-4. **Homesteader daily life:** beds, meals and chores (wood, farming, hunting, fishing, walks) by need and inclination ([daily life](daily-life.md)).
-5. **Travelers and adventures** (built): wanderers passing through, adventurers in caves and ruins, hunters, gatherers and long trips ([travelers](travelers.md)).
+3. **Block actions** (built): breaking, placing, tilling, chests, furnaces and fishing by the player's rules ([work](work.md#the-pieces)).
+4. **Homesteader daily life** (built): beds, meals and chores (wood, farming, hunting with bows, fishing, cooking, making arrows, walks) by need and inclination ([daily life](daily-life.md)).
+5. **Travelers and adventures** (built): journeys, adventures in caves, visits to the neighbors, and strangers passing through ([travelers](travelers.md)).
+6. **Life while unloaded** (built for these): travelers carry on along their road, and homesteads catch up on the time when they load again ([unloaded](unloaded.md)).
+
+Next after the playtest: [skills](skills.md), then working life.
 
 ## Build order for working life
 
 Each step is useful on its own and proves the next:
-1. **Block actions** by the player's rules, and **ownership records**, so NPCs can touch the world without touching your builds.
-2. **Job steps and storage:** one NPC who chops trees, replants, and stores logs in a chest proves the chain.
-3. **Jobs and life choices**, with the ambition axis and the homebody and wanderer quirks.
-4. **Prefabs** (built) and the full authoring check, then **construction sites**: a homesteader building a house. Generated homesteads come first, since the world places them all at once.
-5. **Life while unloaded**, alongside generated settlements.
+1. **Block actions** by the player's rules, and **ownership records**, so NPCs can touch the world without touching your builds (built).
+2. **Job steps and storage:** one NPC who chops trees, replants, and stores logs in a chest proves the chain (proved by homesteaders' chores and household chests; jobs are still to come).
+3. **Jobs and life choices**, with the ambition axis (the homebody and wanderer quirks are built).
+4. **Prefabs** (built) and the full authoring check, then **construction sites**: a homesteader building a house. Generated homesteads (built) came first, since the world places them all at once.
+5. **Life while unloaded**, alongside generated settlements (built for travelers and homesteads).
 
 ## Settled
 
@@ -75,6 +78,11 @@ Each step is useful on its own and proves the next:
 - **Time is real time, counted in in-game years.** One in-game year (56 days by default, the world's calendar) stands for a real year in every time-based mechanic, as growing up already does (18 years): skills, towns founding and falling, faction relations, elections, and the rest. Things take as long as they would for real people.
 - Skills are behavior, not bonuses: they change an NPC's decisions and precision, never damage, speed or other rules.
 - Mining stays honest; running out of ore is a story, not a problem. Unloaded areas run on ledgers measured from the real rules.
+- Homesteads are rare; towns and cities will fill the land. Only prefabs in a `homestead` folder are used, since folders are tags.
+- A homestead's beds decide its household: two single beds side by side make a double bed, a couple. Its floor is sunk so the door is at ground level, air in the floor layer keeps the terrain, and gaps under the floor fill with the local ground. Its chests hold what the household would have earned in a few weeks, nothing more.
+- Homesteaders choose chores by need and inclination, make their own fields, and children from 10 help. Their day runs on a schedule: chores, a midday meal, evenings at home, bed.
+- Homesteaders and strangers both travel. Travelers take shelter at night by digging in, since there are no campfires; a little digging to reach a cave or ore is fine.
+- The world keeps moving where nobody is watching: what would have happened is worked out, never paused.
 
 ## Open questions
 
@@ -88,9 +96,11 @@ Each step is useful on its own and proves the next:
 - **Skills:** archery and melee change how well an NPC fights, never the rules; from its history, age, aptitude and family, and grown by doing ([skills](skills.md)). Today every NPC fights like a veteran.
 - **Parenting:** both parents, NPC or player, shape who a child becomes, by nature at birth and by upbringing as it grows ([family](family.md#parenting-planned)).
 - **Player creation:** players choose their own axes, quirks and tastes, and can take a skin built from parts, so opinions and inheritance work for them as for NPCs ([family](family.md#player-creation-planned)).
-- **Reachable without commands:** NPCs enter the world through generated homesteads, being born, or `/lb npc summon`; players join factions only by command until faction membership happens through NPCs and play; player creation will be a screen.
+- **Reachable without commands:** NPCs enter the world through generated homesteads, being born, strangers passing through, or `/lb npc summon`; players join factions only by command until faction membership happens through NPCs and play; player creation will be a screen.
 - **Generated factions:** settlers and raiders are placeholders until factions are generated with the world; nothing should depend on them existing.
 - Whether the player can talk an NPC into or out of a life choice.
 - What BTA's trommel yields, and whether sifting is worth a job.
 - Ownership edge cases: pistons, falling blocks, a player's TNT.
 - How far the unloaded simulation reaches.
+- A visible fishing float for NPCs (the game's only works for a player).
+- Births, courtship and new trips while a homestead is unloaded.

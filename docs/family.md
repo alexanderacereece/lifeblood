@@ -47,7 +47,7 @@ Married couples have children, which keeps settlements alive across generations.
 - Looks: skin tone, hair color and eye color from one parent or the other, often a parent's hairstyle, eyes or mouth, and no facial hair. A young man may grow a beard on coming of age.
 - Children are invincible ([health modes](health.md)). They don't fight, brawl or date: they run from danger.
 - They sound their age: babies babble, then little kids, young teens and older teens each talk their own way, to their family most of all ([speech](speech.md#sounding-their-age)).
-- Not yet: playing, and helping with small tasks as they get older.
+- Homesteaders' children under 10 play within a few blocks of home while the grown-ups do chores; from 10 they help with the lighter chores ([daily life](daily-life.md#children)). Children never go on trips.
 
 ### Parenting (planned)
 

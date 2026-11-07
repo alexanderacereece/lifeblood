@@ -1,5 +1,6 @@
 # Lifeblood speech: the format, speech styles and building blocks. Lines for each topic are in the other
-# .speech files beside this one (conversation, gifts, remarks, combat, brawls, family, words).
+# .speech files beside this one (conversation, gifts, remarks, topics, combat, brawls, family, words, gossip, ages,
+# homestead, travel).
 #
 # Each "== name ==" is a symbol; each line under it is one way to say it. [name] fills in another symbol, a fact
 # or a word. Braces at the end hold conditions: a pole (polite, polite+ for strongly), a quirk (glutton), a fact
@@ -20,12 +21,15 @@
 # health (fine/hurt/low), recovering (yes/no), has_faction, has_enemy, address, catchphrase,
 # came_for (why they came to live where they do: fresh_start/faith/land/quiet/running, family for children who came
 # with their family, born_here, or none), settler (yes when they came from somewhere else to live here), doing (what
-# they're busy with: wood, farming, hunting, fishing, cooking, digging, fletching, walking, playing, sleeping, or none).
+# they're busy with: wood, farming, hunting, fishing, cooking, digging, fletching, walking, playing, sleeping, a trip
+# kind (journey/adventure/visit), heading_home, sheltering, or none), back_from (journey/adventure/visit when back from
+# one lately, or none), found_treasure_lately and came_back_hurt (yes/no, after a trip), trip and trip_stage (the trip
+# they're on, and where in it), passing_through (yes for strangers).
 # Words: taught_food, taught_animal, taught_thing, taught_place, taught_exclamation, taught_greeting,
 # taught_farewell, taught_describe, taught_activity, taught_angry, taught_happy, taught_sad, taught_scared (words
 # players taught them), partner, kin_call (Mom, Dad, Grandma, Grandpa, or the listener's name), favorite_food, hated_food, favorite_thing, hated_thing, weather_word, biome_word, season_word,
 # favorite_weather, hated_weather, favorite_biome, hated_biome, favorite_season, hated_season, home_biome, faction,
-# enemy_faction, and per event: enemy, food, item.
+# enemy_faction, and per event: enemy, food, item; direction and distance (where a traveler is headed).
 # Gifts add kind (food/valuable/junk/gross/material/tool/weapon/armor/flower/plant/curio/music/decor/dangerous/
 # comfort/fun/block/item), taste, rude_gift (yes for dirt and the like) and surprising (yes when they feel very
 # differently about it than most people would).

@@ -3,6 +3,7 @@
  *
  * Start with {@link lifeblood.building.PrefabPlacer} (placing) and {@link lifeblood.building.Swaps} (what materials
  * become). Rotation goes through {@link lifeblood.building.Turns} and {@link lifeblood.building.BlockTurns}, never
- * anything ad hoc. See docs/building.md.
+ * anything ad hoc. PrefabFiles finds prefab files and their folder tags, TerrainFit fits a build to the land, and
+ * PrefabBeds reads its beds. See docs/building.md.
  */
 package lifeblood.building;

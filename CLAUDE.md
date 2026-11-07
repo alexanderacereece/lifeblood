@@ -10,7 +10,7 @@ Keeping this project easy to find your way around is the top priority, above any
    - the package's `package-info.java`, then the class.
 
    Reading the code map is cheaper than grepping the whole project, and it's always current.
-2. **Check it doesn't exist already.** Search the code map for the idea, not just the name: "turn", "owner", "opinion", "years". If something close exists, use it or extend it, never write a second one. Common helpers: `BlockOwners`, `Ownership`, `PrefabPlacer`, `Swaps`, `BlockTurns`, `Turns`, `Opinions`, `Kinship`, `PeopleRegistry`, `Calendar`, `SpeechFacts`, `CommandSupport`, `NpcInventory`, `ClientHooks`.
+2. **Check it doesn't exist already.** Search the code map for the idea, not just the name: "turn", "owner", "opinion", "years". If something close exists, use it or extend it, never write a second one. Common helpers: `BlockOwners`, `Ownership`, `PrefabPlacer`, `Swaps`, `BlockTurns`, `Turns`, `Opinions`, `Kinship`, `PeopleRegistry`, `Calendar`, `SpeechFacts`, `CommandSupport`, `NpcInventory`, `ClientHooks`, and for acting in the world `BlockBreaking`, `BlockUse`, `Approach`, `Containers`, `ItemPickup`.
 3. **Read the design doc** for the system ([docs/README.md](docs/README.md) lists them). The design docs say how each system behaves; the class comments say how it's done.
 4. **Adding a whole new system?** Follow the checklist in `docs/architecture.md`, "Adding a new system".
 
@@ -62,7 +62,7 @@ The goal: anyone, including an AI that has never seen the project, can find the 
 ## Checking a change
 
 1. `./gradlew build` (with `JAVA_HOME` set to a JDK 21) compiles and runs the tests; keep them passing and add tests for pure logic, in the same package as the class.
-2. Start the dev client (`./gradlew runClient`) and wait for the `Display:` line in the log to confirm the mod loads. Mixins on world classes (chunks) only apply once a world loads: `./gradlew runServer` generates one and should reach `Done`.
+2. Start the dev client (`./gradlew runClient`) and wait for the `Display:` line in the log to confirm the mod loads. Mixins on world classes (chunks) only apply once a world loads: `./gradlew runServer` generates one and should reach `Done`. For behavior that takes in-game days (chores, trips, catching up), run the server with `/lb debug speed <1-20>`, and `/lb debug keepreal on` to keep travelers in the world with nobody on it.
 3. Say plainly what was and wasn't tested in game; the user tests in their own Babric install.
 
 ## Things to know

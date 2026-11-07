@@ -43,7 +43,7 @@ The beats for the weather, food and home are in `topics.speech`; idle remarks an
 
 ### Chats between NPCs
 
-The NPC who starts a chat picks a **topic**, and the other answers on the same topic, with its own facts: its own tastes, its own home, its own opinion of whoever the news is about. Built-in topics (`speech/ChatTopics`): the weather, food (often, for gluttons), home (mostly away from it), and general chat, which holds the family and age lines. Other systems add topics from their setup: gossip adds fresh news and old news. A topic's lines are `chat_open_<topic>` and `chat_reply_<topic>`; a topic with nothing to say right now (no news to tell) is skipped, and general chat is always there to fall back on.
+The NPC who starts a chat picks a **topic**, and the other answers on the same topic, with its own facts: its own tastes, its own home, its own opinion of whoever the news is about. Built-in topics (`speech/ChatTopics`): the weather, food (often, for gluttons), home (mostly away from it), and general chat, which holds the family and age lines. Other systems add topics from their setup: gossip adds fresh news and old news, homesteads add settling (what brought them out here), and travel adds travels (a trip they're back from). A topic's lines are `chat_open_<topic>` and `chat_reply_<topic>`; a topic with nothing to say right now (no news to tell) is skipped, and general chat is always there to fall back on.
 
 ### Gossip
 

@@ -2,7 +2,7 @@
 
 Keeping NPCs off the player's builds without claim commands, and the property records that crime and law will use. Numbers are starting points for playtesting.
 
-**Built:** block ownership records, item ownership by location, shared ownership in families, kept gifts, `/lb owner`. **Planned:** the protection buffers, which need NPCs that break and place blocks, and theft.
+**Built:** block ownership records, item ownership by location, shared ownership in families, kept gifts, `/lb owner`, and NPCs' own work keeping to it (below). **Planned:** the protection buffers around player builds, and theft.
 
 ## New worlds only
 
@@ -31,7 +31,11 @@ NPCs carry as much as a player: 4 armor slots, the hand and 35 more. Gifts go in
 
 Spouses, parents and children share what each of them owns, players and NPCs alike. So a player married into a family can open their spouse's inventory and their family's chests, and an NPC family shares its house. Everyone else, however friendly, can only give. There's no lending gear: equipping a companion means giving it to them, and it's theirs. (A divorce, breakup or death changes who shares, by itself.)
 
-## Rules for NPCs (planned)
+## Rules for NPCs
+
+**Built:** blocks NPCs place, and farmland they till, are theirs (`BlockOwners.placingAs`); a generated homestead's blocks belong to the head of the household. Chores only take from nature or the household: trees and gravel nobody placed, the household's own field, chests and furnaces. Adventurers empty only chests nobody owns (dungeons). Not yet: a traveler digging in for the night or cutting a stair into a cave doesn't check who owns the ground.
+
+**Planned:**
 
 | Rule | Starting value |
 |---|---|

@@ -1,8 +1,8 @@
-# Daily life (being built)
+# Daily life (built)
 
-**Built so far:** the day's schedule, sleeping in their own beds, meals from the chests, gathering wood, farming, hunting, fishing, cooking, walks, children's chores, and lines about their work. **Next:** a visible fishing float. Trips away from home are in [travelers](travelers.md).
+**Built:** the day's schedule, sleeping in their own beds, meals from the chests, gathering wood, farming, hunting with bows or blades, making arrows, digging gravel for flint, fishing, cooking, walks, children's chores, lines about their work, and catching up on the time while nobody's near. **Not yet:** a visible fishing float. Trips away from home are in [travelers](travelers.md).
 
-How NPCs who live somewhere spend their days without anyone telling them what to do, starting with homesteaders: sleeping in their own beds, eating from the household's chests, and doing the chores a household needs. Adventurers and travelers come after ([travelers](travelers.md)). Numbers are starting points for playtesting.
+How NPCs who live somewhere spend their days without anyone telling them what to do, starting with homesteaders: sleeping in their own beds, eating from the household's chests, and doing the chores a household needs. Their trips away from home (journeys, adventures, visits) are in [travelers](travelers.md). Numbers are starting points for playtesting.
 
 Everything here follows the player's rules ([work](work.md#player-parity)): blocks break at the player's digging speed for the tool in hand and drop what they'd drop for a player, tools wear down, blocks are placed within reach, and food comes from real chests.
 
@@ -20,7 +20,7 @@ A homesteader's day (`homestead` schedule), in in-game hours:
 
 Early birds live an hour ahead of the clock (up at 5, in bed at 20) and night owls an hour behind (up at 7, in bed at 22).
 
-Fights, brawls, being downed and conversations still interrupt anything, as now.
+Fights, brawls, being downed, conversations and setting out on a trip ([travelers](travelers.md), decided each morning) take over from anything here.
 
 - **Sleeping:** each person has their own bed (`NpcHome.getBed`), assigned when the homestead generates; they start the world standing beside it. At bedtime they walk to it and lie in it, head on the pillow, and get up beside it in the morning. A child whose parent is asleep stops following them and goes to its own bed. Sleeping NPCs don't count toward skipping the night.
 - **Eating:** players in Better than Adventure eat to heal, not to stave off hunger, and NPCs follow the same rule ([health](health.md)). So at the midday meal, anyone carrying fewer than 3 food items takes some from the household's chests, and eats it when hurt. Food runs out if nobody brings any in, which is what makes chores matter.
@@ -44,6 +44,10 @@ The chores, built in this order:
 
 Everything gathered goes into the household's chests.
 
+## While nobody's near
+
+A homestead far from every player doesn't run, so when it loads again after more than two in-game hours it catches up on the time at once: the field grows and is harvested, logs, fish and meat come in by the tools the household keeps, the furnace cooks what there's fuel for, food is eaten, and trips taken meanwhile are worked out. The rules are in [unloaded](unloaded.md#homesteads-built).
+
 ## Children
 
 Built: under 10, children stay near a parent and play within a few blocks of home at chore time. From 10 they go about on their own and do the lighter chores (farming, fishing, cooking, walks), not felling trees or hunting.
@@ -60,7 +64,7 @@ Greeting someone mid-chore, they say what they're at, by personality ("Shh. You'
 
 ## Testing
 
-`/lb debug speed <1-20>` runs a dedicated server that many game ticks per real one, so a few minutes covers days of homestead life; `/lb homestead list` shows what each house's chests hold.
+`/lb debug speed <1-20>` runs a dedicated server that many game ticks per real one, so a few minutes covers days of homestead life; `/lb homestead list` shows what each house's chests hold; `/lb homestead generate` puts one up beside you.
 
 ## Open questions
 

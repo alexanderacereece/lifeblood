@@ -27,8 +27,8 @@ Everything goes into the chests as far as they hold, the rest by the door. Time 
 
 ## What it needs
 
-1. **The register keeps whole NPCs.** Today the [register of people](architecture.md) keeps a summary: name, family, home, last place seen. To move an NPC or spawn it somewhere new, it needs the NPC's full save data, captured when its chunk unloads (BTA has no per-entity unload callback, so this hooks chunk saving).
-2. **One home for each NPC's state.** An NPC is either a live entity or a record, never both, so nobody is duplicated or lost when a chunk loads twice or a traveler arrives.
+1. **Whole NPCs kept as records.** The [register of people](architecture.md) keeps a summary: name, family, home, last place seen. Travelers are already kept whole: one far from every player is saved with all its data into `TravelRegister` and taken out of the world, and put back from it (built). Settlement folk who move or are needed somewhere new will need the same, captured when their chunk unloads (BTA has no per-entity unload callback, so that would hook chunk saving). Homesteaders don't: they stay in their own chunks, and catch up when those load.
+2. **One home for each NPC's state.** An NPC is either a live entity or a record, never both, so nobody is duplicated or lost when a chunk loads twice or a traveler arrives. Travelers keep this rule (built): the record goes only once the NPC is back in the world.
 3. **Ledgers** per workplace, mine and construction site: what was made, used and built since the area was last loaded.
 4. **Catch-up rules** that respect what changed: construction only places blocks into air or unowned natural ground and replans otherwise; items go into chests up to what fits.
 5. **Pacing.** Catch-up is spread over several ticks when a big area loads, so loading a town doesn't stutter.
@@ -37,4 +37,4 @@ Everything goes into the chests as far as they hold, the rest by the door. Time 
 
 - How far the simulation reaches: every settlement in the world, or only within some distance of a player.
 - Whether combat (raids, wars) is ever resolved while unloaded, and how.
-- Births and deaths while unloaded: allowed, with the register as the record.
+- Births and courtship while unloaded: allowed, with the register as the record. Deaths already happen (a trip that went wrong), posted as any death is.

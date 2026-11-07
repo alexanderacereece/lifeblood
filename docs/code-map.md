@@ -156,7 +156,7 @@ The NPC entity itself, the part system it's built from, and what any system may 
 
 ## `event`
 
-The event hub: what happens in the world (deaths, births, real attacks, gifts, couples changing), posted where it happens and heard by every system that subscribed.
+The event hub: what happens in the world (deaths, births, real attacks, gifts, couples changing, brawls ending, a household catching up on time away), posted where it happens and heard by every system that subscribed.
 
 - [`AttackedEvent`](../src/main/java/lifeblood/event/AttackedEvent.java): An NPC was attacked for real and hurt: not a brawl punch or a friend's shove (those are sorted out first).
 - [`BirthEvent`](../src/main/java/lifeblood/event/BirthEvent.java): A child was born, to two NPCs or to an NPC and a player.
@@ -416,7 +416,7 @@ The word book: words players teach NPCs, and who knows them.
 
 ## `work`
 
-Work by the player's rules: breaking blocks at the player's digging speed with the tool in hand (BlockBreaking), using an item on a block within reach, as a player clicks (BlockUse: placing, tilling, sowing), picking up what drops (ItemPickup), and taking from and putting into chests (Containers).
+Work by the player's rules: breaking blocks at the player's digging speed with the tool in hand (BlockBreaking), using an item on a block within reach, as a player clicks (BlockUse: placing, tilling, sowing), picking up what drops (ItemPickup), taking from and putting into chests (Containers), using furnaces (Smelting) and fishing (Fishing); Reach and Approach get within the player's reach.
 
 - [`Approach`](../src/main/java/lifeblood/work/Approach.java): Walking over to a block until it's within reach, for anything worked on by hand: a tree to chop, a chest to open, a field to till.
 - [`BlockBreaking`](../src/main/java/lifeblood/work/BlockBreaking.java): Breaking one block at a time by the player's rules (BlockLogic.getStrength and PlayerController): progress each tick is the held tool's strength against the block over its hardness (a fifth as fast underwater or off the ground, and very slow without the right tool), the arm swings as it digs, the block drops what it would for a player with that tool, and the tool wears down.

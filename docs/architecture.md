@@ -19,7 +19,7 @@ Four layers, each finer than the last. Read down only as far as you need:
 |---|---|
 | `lifeblood` | The entry point (`Lifeblood`), the list of every system's setup (`Systems`), the mod id and log (`Mod`), settings (`NpcConfig`), and `ClientHooks`, the only way common code reaches the client |
 | `entity` | `EntityNPC`, `NpcPart`, `NpcGender`, `NpcState` (what any system may ask about an NPC), and `Persons` (what counts as a person, who's behind an attack). Only the core; parts live with their systems |
-| `event` | The event hub (`LifeEvents`) and its events: deaths, births, real attacks, gifts, couples changing |
+| `event` | The event hub (`LifeEvents`) and its events: deaths, births, real attacks, gifts, couples changing, brawls ending, a household's time away |
 | `ai` | The brain (`NpcBrain`), the registry of saved behaviors (`NpcBehaviors`), and the NPC's home (`NpcHome`); `ai/behavior` holds the plain orders (go to, stay, wander), `ai/routine` the daily schedules |
 | `nav` | Getting around: the walkable-space grid, the path search, the per-tick budget, and `NpcNavigator`, which walks paths |
 | `health` | Health modes, being downed and recovering (`RecoverBehavior`), eating |
@@ -39,9 +39,9 @@ Four layers, each finer than the last. Read down only as far as you need:
 | `appearance` | An NPC's looks (`NpcLooks`): parts and palettes, hair color and graying (`HairColor`), who clothes are for (`Wearer`), whole skin files, slim arms |
 | `ownership` | Who placed each block, and who shares what |
 | `building` | Prefabs: saving, turning, material and color swaps, surveying a site, fitting to the land, beds, placing, the save check |
-| `work` | Work by the player's rules: breaking blocks at the player's digging speed, using items on blocks (placing, tilling, sowing), picking up drops, taking from and putting into chests |
-| `travel` | Trips away from home: journeys, adventures in caves, visits, strangers passing through; walking far, shelter at night, and trips going on while out of sight (`TravelRegister`, `TravelSimulation`) |
-| `homestead` | Generated homesteads: where they go, who lives in them (from the beds), bringing the household to life with its history, and stocking the chests |
+| `work` | Work by the player's rules: breaking blocks at the player's digging speed, using items on blocks (placing, tilling, sowing), picking up drops, taking from and putting into chests, furnaces (`Smelting`) and fishing (`Fishing`) |
+| `travel` | Trips away from home: journeys, adventures in caves, visits, strangers passing through; walking far, shelter at night, and trips going on while out of sight (`TravelRegister`, `TravelSimulation`, `TripsWhileAway`); `travel/kinds` holds each kind of trip |
+| `homestead` | Generated homesteads: where they go, who lives in them (from the beds), bringing the household to life with its history, and stocking the chests; `homestead/life` holds the household's day (sleeping, meals, the schedule) and catching up on time unwatched (`HouseholdCatchUp`), `homestead/chores` the chores (wood, farming, hunting, fishing, cooking, arrows, gravel, walks) |
 | `world` | The calendar (`Calendar`), world systems that run per world on their own clock, and the test speed-up (`GameSpeed`, `/lb debug speed`) |
 | `item` | The mod's items |
 | `command` | `/lb`, one class per area; admin and testing tools only |
@@ -186,14 +186,14 @@ The rest are `NpcPart`s. Each has its own `tick()`, `save()` and `load()`, and s
 
 `NpcBrain` runs the highest-priority behavior that can run, in three layers:
 
-1. **Instincts:** combat, brawls, recovering, staying near a parent. Every NPC gets them (registered by each system's setup), never saved.
+1. **Instincts:** combat, brawls, recovering, staying near a parent, being on a trip. Every NPC gets them (registered by each system's setup), never saved.
 2. **Orders:** follow, stay, go somewhere. Set by players and commands, and saved. Every behavior that can be saved is registered in `ai/NpcBehaviors`.
 3. **Routine:** with no orders, the NPC does what its schedule says for the hour.
 
 Routines are in `ai/routine`.
 - A `Schedule` is a list of blocks ("from 6, work; from 18, socialize; from 22, sleep"), and each activity names the behavior that carries it out.
 - Both are registered in `Routines`.
-- Today there's one activity (wander) and one schedule (wander all day).
+- The default schedule wanders all day. Homesteaders run the `homestead` schedule (`homestead/life/HomesteadDay`): chores, a midday meal, the evening around the house, and bed, shifted an hour for early birds and night owls (`NpcRoutine`'s hour shift).
 - **Occupations plug in here:** register their activities and schedules, then set an NPC's schedule.
 
 ## The world
@@ -207,7 +207,7 @@ Routines are in `ai/routine`.
 
 **World systems** (`world/WorldSystems`) run on a per-world clock, whether or not any NPC is nearby.
 - A `WorldSystem` has an interval and a `tick(world)` (`WorldSystem.every` makes one); register it from the system's setup.
-- The first one keeps the register's list of loaded NPCs tidy.
+- Today they keep the register's list of loaded NPCs tidy, carry travelers on out of sight (`TravelSimulation`), start strangers (`Strangers`) and let households catch up (`HouseholdCatchUp`).
 - **Settlements, factions, elections, wars and trade between towns go here.**
 - The clock counts steadily even when the time of day jumps (sleeping) or is frozen.
 
@@ -223,7 +223,7 @@ Routines are in `ai/routine`.
 
 **Travelers** (`travel/`) are on trips away from home. A traveler more than 96 blocks from every player is saved whole into `TravelRegister` (`lifeblood_travelers`) and taken out of the world; `TravelSimulation`, a world system, walks them on and works out their stay, and puts them back in the world where their road comes near a player, or at home. `Strangers` starts strangers out of sight so their road passes a player.
 
-**Homesteads** (`homestead/`) are generated with the world. `ChunkDecoratorOverworldMixin` calls `Homesteads` once each new overworld chunk is decorated; it places the house, brings the household to life and records it in `HomesteadRegister` (saved as `lifeblood_homesteads`). Only prefabs in a `homestead` folder are used (`building/PrefabFiles` treats folders as tags).
+**Homesteads** (`homestead/`) are generated with the world. `ChunkDecoratorOverworldMixin` calls `Homesteads` once each new overworld chunk is decorated; it places the house, brings the household to life and records it in `HomesteadRegister` (saved as `lifeblood_homesteads`), with its chests, furnaces and crafting tables so nobody searches for them. Only prefabs in a `homestead` folder are used (`building/PrefabFiles` treats folders as tags). The register also keeps when each house was last lived in: `HouseholdCatchUp`, a world system, notices a house that loads after going unwatched and works out the time away, posting a `TimeAwayEvent` so other systems (trips) add their part.
 
 ## Client and server
 
@@ -251,7 +251,9 @@ Moving a class between packages never touches saves: save keys and entity ids do
 
 ## Settings
 
-`NpcConfig` reads `config/lifeblood.cfg`: the item ids (in case they clash with another mod) and how many years children take to grow up.
+`NpcConfig` reads `config/lifeblood.cfg`: the item ids (in case they clash with another mod), how many years children take to grow up, how many trips a typical homesteader takes a year, and how many strangers set out toward each player a day.
+
+**Testing speed** (`world/GameSpeed`, through `MinecraftServerMixin`): `/lb debug speed <1-20>` runs a dedicated server that many game ticks per real tick, so days of life pass in minutes. `/lb debug keepreal on` keeps travelers in the world on a server with nobody on it.
 
 ## Commands
 
@@ -286,7 +288,8 @@ Rules every command follows:
 ## Tests
 
 `./gradlew test` runs the unit tests in `src/test/java`, each in the same package as the class it tests.
-- They cover pure logic: the calendar, kinship, age stages, romance and birth timing, personality compatibility, appearance encoding, slim arms, words, speech styles, the register of people, schedules, ownership records, prefab data, beds and double beds, turning (positions, directions and every facing rule going full circle), stone and wood swaps, homestead sites and households, faction colors, the command tree and the speech files.
+- They cover pure logic: the calendar, kinship, family names, age stages, romance and birth timing, personality compatibility, appearance encoding, hair color, slim arms, words, speech styles and facts, the register of people, gossip, schedules, ownership records, prefab data and the prefab check, beds and double beds, turning (positions, directions and every facing rule going full circle), stone and wood swaps, homestead sites and households, travel talk, faction colors, the command tree and the speech files.
+- Behavior in the world (chores, trips, catching up) is checked on a dev server sped up with `/lb debug speed`.
 - BTA attaches block behavior only in a running game, so anything that paints blocks (color swaps, planks taking a wood's color) is checked in game, not in tests.
 - `ArchitectureTest` and `CodeMapTest` check the layout itself.
 - Tests run with the default config, without a world.

@@ -69,12 +69,12 @@ Each axis is rolled from a bell curve centered on 0 (standard deviation 0.55, cl
 - Opinions: only the extremes clash. A strongly crude and a strongly proper NPC grate on each other, both ways. Everything else is neutral.
 
 **Courage (timid ↔ brave)**
-- Behavior: fight or flight. Courage sets how much danger the NPC will face before it runs ([combat](../src/main/java/lifeblood/combat/CombatBehavior.java)).
+- Behavior: fight or flight. Courage sets how much danger the NPC will face before it runs ([combat](../src/main/java/lifeblood/combat/CombatBehavior.java)). The brave hunt and go on adventures more, the timid less ([daily life](daily-life.md), [travelers](travelers.md)).
 - Voice: how they talk about danger, enemies and their own fights.
 - Opinions: none directly. Memories cover it ("fled and left me", "stood by me").
 
 **Sociability (introvert ↔ extrovert)**
-- Behavior: whether they seek company. Extroverts gather in the evenings, start conversations and join groups; introverts keep to their homes and work, and get tired of long conversations.
+- Behavior: whether they seek company. Extroverts gather in the evenings, start conversations and join groups, and visit the neighbors most; introverts keep to their homes and work, and get tired of long conversations.
 - Voice: whether they start talk and how they end it.
 - Opinions: a small similarity bonus.
 
@@ -89,13 +89,13 @@ Each axis is rolled from a bell curve centered on 0 (standard deviation 0.55, cl
 - Opinions: only through memory duration.
 
 **Work ethic (lazy ↔ hardworking)**
-- Behavior (planned, with [work](work.md)): how long they work each day, how many breaks they take, how quickly they get to tasks.
+- Behavior: for homesteaders, the hardworking do more chores and rest less, and the lazy take long walks instead ([daily life](daily-life.md#chores-by-need-and-inclination)). With [work](work.md): how long they work each day, how many breaks they take, how quickly they get to tasks.
 - Voice: complaining about work versus talking about it with pride.
 - Opinions: hardworking NPCs dislike lazy ones, scaled by both values. Lazy NPCs don't care either way.
 
 ## Quirks
 
-Discrete traits. Most come in opposing pairs, where most NPCs sit in the unmarked middle. Quirks already shape opinions, tastes, fighting and what NPCs say; the behaviors below that need systems not built yet (gossip, lying, daily schedules, work) arrive with those systems.
+Discrete traits. Most come in opposing pairs, where most NPCs sit in the unmarked middle. Quirks already shape opinions, tastes, fighting, gossip, homesteaders' days and trips, and what NPCs say; the behaviors below that need systems not built yet (lying, work, life choices) arrive with those systems.
 
 ### How many
 
@@ -142,8 +142,8 @@ Discrete traits. Most come in opposing pairs, where most NPCs sit in the unmarke
 - Night owl: up late, sleeps in, more talkative at night. (Built for homesteaders: their day runs an hour late.)
 
 **Homebody / Wanderer** (built for trips, see [travelers](travelers.md); more with [life choices](life-choices.md))
-- Homebody: strongly tied to home, rarely travels, homesick when away, slow to move even when unhappy.
-- Wanderer: restless, travels and comes back with stories, likelier to homestead or move on.
+- Homebody: strongly tied to home, rarely travels (a tenth as often), homesick at night when away, slow to move even when unhappy.
+- Wanderer: restless, travels four times as often and twice as far, and comes back with stories; likelier to homestead or move on.
 
 ### Singles
 
@@ -151,11 +151,11 @@ Discrete traits. Most come in opposing pairs, where most NPCs sit in the unmarke
 - **Loyal:** much slower to sour on friends, family and faction. Defends them in fights even when timid. Being betrayed hits them extra hard.
 - **Glutton:** talks about food constantly, eats more often, food preferences matter twice as much to them ([tastes](#tastes)).
 - **Pious:** devout follower of the Cube God, a lighthearted in-world faith ("Thank the Cube God!", "Cube God help us"). Swears by it, keeps a routine. Dislikes crude people and liars.
-- **Curious:** asks questions, wanders to look at things, interested in your travels and items. Gets along with chatterboxes.
+- **Curious:** asks questions, wanders to look at things (walks farther, travels more), interested in your travels and items. Gets along with chatterboxes.
 - **Jealous:** resents friends spending time with others, envies others' wealth and partners. Opinion penalties toward rivals for the same person.
 - **Sentimental:** good memories last longer (×1.5), remembers anniversaries and old favors, brings up the past.
 - **Competitive:** compares themselves to others in work and fights. Friction with other competitive people, but respects whoever beats them.
-- **Animal lover:** upset when someone kills an animal in front of them, and thinks less of whoever did it. Likes forests and meadows, dislikes leather, meat and other animal products.
+- **Animal lover:** upset when someone kills an animal in front of them, and thinks less of whoever did it. Never hunts. Likes forests and meadows, dislikes leather, meat and other animal products.
 
 ### Blacklist
 
@@ -217,6 +217,7 @@ The catalog (the exact numbers live in `social/MemoryType`; durations are in-gam
 | Lied to me (found out) | -20 | | 20 days | 3 |
 | Stole from me | -25 | -5 | 30 days | 3 |
 | Attacked my home | -30 | -10 | 40 days | 3 |
+| Settled here together (friends who homesteaded together) | +25 | | 56 days | 1 |
 | Killed a friend | -40 | -15 | 80 days | 3 |
 | Killed family | -70 | -30 | 200 days | 3 |
 | Killed my spouse or child | -100 | -40 | 400 days | 3 |
@@ -225,7 +226,7 @@ The catalog (the exact numbers live in `social/MemoryType`; durations are in-gam
 
 Not all of these happen yet: lying, stealing and attacking homes wait for crime, ownership and settlements. The two "heard" memories come from [gossip](speech.md#gossip), always at a quarter of their weight (half again if the story was exaggerated); hearing that a friend or relative was killed gives the witness's memory (killed a friend, family, spouse or child) at a quarter.
 
-Mood-only memories (no opinion effect): ate food I like or hate, slept in a bed or outside, enjoyed or was miserable in the weather, likes or hates it here, saw an animal die, saw a death, a friend or family member died, their birthday, had a child, started dating, got engaged, went to a wedding, got married, won or lost a fight, nearly died.
+Mood-only memories (no opinion effect): ate food I like or hate, slept in a bed or outside, enjoyed or was miserable in the weather, likes or hates it here, saw an animal die, saw a death, a friend or family member died, their birthday, went on a journey, had an adventure, found treasure, came back hurt, visited the neighbors, homesick, had a child, started dating, got engaged, went to a wedding, got married, won or lost a fight, nearly died.
 
 **Detecting "saved my life"** needs careful balancing. Starting rule: the NPC was in combat below 30% health, someone else killed or drove off the attacker (or healed them), and the NPC survived the next 10 seconds. Only whoever did the most damage to the attackers gets the memory. To be tuned in playtesting so ordinary teamwork doesn't count.
 
