@@ -24,7 +24,7 @@ Planned, not built yet (ownership and building are partly built):
 | [skills.md](skills.md) | Archery and melee as real AI skill (aim, timing, footwork), where skill comes from and how it grows |
 | [daily-life.md](daily-life.md) | How homesteaders spend their days: sleeping in their beds, meals from the household chests, chores by need and inclination |
 | [travelers.md](travelers.md) | Journeys, adventures in caves, visits and strangers passing through: NPCs out in the world, and trips going on while out of sight |
-| [unloaded.md](unloaded.md) | Keeping the world alive where nobody is watching |
+| [unloaded.md](unloaded.md) | Keeping the world alive where nobody is watching: travelers on the road, homesteads catching up |
 
 The roadmap (what's built and what's next, including settlements and factions) is a separate page.
 

@@ -84,6 +84,7 @@ When a lower package needs something to happen above it, turn the dependency aro
 | `PartnershipEvent` | A couple starts dating, gets engaged, marries or splits (`people/PeopleRegistry`) | `gossip` (news) |
 | `AttackedEvent` | An NPC is attacked for real (`combat/NpcAttackers`) | `gossip` (news of an attack out of nowhere) |
 | `BrawlEndedEvent` | A brawl ends with a winner (`brawl/Brawl`) | `gossip` (news) |
+| `TimeAwayEvent` | A household that went unwatched is loaded again and catches up (`homestead/life/HouseholdCatchUp`) | `travel` (trips taken meanwhile) |
 | `GiftEvent` | An NPC takes a gift (`dialogue/NpcGifts`) | Nothing yet |
 
 Use an event when others should react to something; call directly when one system asks another for something. A new kind of event is a record in `event/` and a row in this table.

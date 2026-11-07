@@ -48,7 +48,7 @@ Coming home leaves a memory that lifts their mood for a while: went on a journey
 
 ## Not yet
 
-- Homesteads far from every player don't live while unloaded: their people only start trips when their area is loaded, and chores don't catch up ([unloaded](unloaded.md)).
+- A homestead far from every player catches up when it's loaded again, trips taken meanwhile included ([unloaded](unloaded.md#homesteads-built)), but a trip doesn't start, and play out on the road, while its house is unloaded.
 - How well a traveler fights, aims and finds its way is its [skill](skills.md), planned next; for now every NPC is as good as the code.
 - Strangers' homes are a point on the map; when generated settlements exist, they become real places.
 - Gathering trips, hunting trips farther from home, and travelers joining the player for a while.

@@ -5,7 +5,9 @@ import com.mojang.nbt.tags.ListTag;
 import com.mojang.nbt.tags.Tag;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
 import java.util.UUID;
 import net.minecraft.core.world.World;
@@ -14,7 +16,8 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * Every homestead the world has generated, saved with it (BTA SavedData): where it is, which prefab, who heads the
- * household, and when they settled. Also how a cell knows it already has its homestead.
+ * household, when they settled, and when each was last loaded and living (for catching up on time away). Also how a
+ * cell knows it already has its homestead.
  */
 public class HomesteadRegister extends SavedData {
 	public static final String DATA_ID = "lifeblood_homesteads";
@@ -33,6 +36,8 @@ public class HomesteadRegister extends SavedData {
 	}
 
 	private final List<Homestead> homesteads = new ArrayList<>();
+	/** When each house was last loaded and living (world time), by its corner ("x,y,z"), for catching up on time away. */
+	private final Map<String, Long> lastLived = new HashMap<>();
 
 	/** Called by BTA through reflection when loading saved data. */
 	public HomesteadRegister(String id) {
@@ -77,6 +82,20 @@ public class HomesteadRegister extends SavedData {
 		return null;
 	}
 
+	/** When a house was last loaded and living (world time), or -1 if not yet known. */
+	public long lastLived(Homestead homestead) {
+		return this.lastLived.getOrDefault(key(homestead), -1L);
+	}
+
+	public void setLived(Homestead homestead, long time) {
+		this.lastLived.put(key(homestead), time);
+		this.setDirty();
+	}
+
+	private static String key(Homestead homestead) {
+		return homestead.x() + "," + homestead.y() + "," + homestead.z();
+	}
+
 	public void add(Homestead homestead) {
 		this.homesteads.add(homestead);
 		this.setDirty();
@@ -85,6 +104,7 @@ public class HomesteadRegister extends SavedData {
 	@Override
 	public void load(CompoundTag tag) {
 		this.homesteads.clear();
+		this.lastLived.clear();
 		for (Tag<?> entry : tag.getList("Homesteads")) {
 			if (entry instanceof CompoundTag homestead) {
 				try {
@@ -92,6 +112,7 @@ public class HomesteadRegister extends SavedData {
 						homestead.getInteger("Width"), homestead.getInteger("Height"), homestead.getInteger("Depth"), homestead.getString("Prefab"),
 						UUID.fromString(homestead.getString("Head")), homestead.getLong("Settled"), readPositions(homestead.getStringOrDefault("Chests", "")),
 						readPositions(homestead.getStringOrDefault("Furnaces", "")), readPositions(homestead.getStringOrDefault("Workbenches", ""))));
+					this.lastLived.put(key(this.homesteads.get(this.homesteads.size() - 1)), homestead.getLongOrDefault("LastLived", -1L));
 				} catch (IllegalArgumentException e) {
 					// A damaged entry is skipped rather than losing the rest.
 				}
@@ -138,6 +159,7 @@ public class HomesteadRegister extends SavedData {
 			entry.putString("Chests", writePositions(homestead.chests()));
 			entry.putString("Furnaces", writePositions(homestead.furnaces()));
 			entry.putString("Workbenches", writePositions(homestead.workbenches()));
+			entry.putLong("LastLived", this.lastLived(homestead));
 			list.addTag(entry);
 		}
 

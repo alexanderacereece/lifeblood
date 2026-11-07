@@ -5,10 +5,12 @@ import lifeblood.ai.routine.Routines;
 import lifeblood.entity.EntityNPC;
 import lifeblood.homestead.chores.ChoresBehavior;
 import lifeblood.homestead.life.HomesteadDay;
+import lifeblood.homestead.life.HouseholdCatchUp;
 import lifeblood.homestead.life.MealBehavior;
 import lifeblood.homestead.life.SleepBehavior;
 import lifeblood.speech.ChatTopic;
 import lifeblood.speech.ChatTopics;
+import lifeblood.world.WorldSystems;
 
 /**
  * Homesteaders' days (the homestead schedule and its activities: sleeping, chores, meals, evenings) and their talk of
@@ -47,5 +49,6 @@ public final class HomesteadSetup {
 		Routines.registerActivity(HomesteadDay.MEAL, MealBehavior::new);
 		Routines.registerActivity(HomesteadDay.EVENING, () -> new WanderBehavior(HomesteadDay.EVENING_RADIUS));
 		Routines.registerSchedule(HomesteadDay.schedule());
+		WorldSystems.register(HouseholdCatchUp.SYSTEM);
 	}
 }

@@ -94,7 +94,7 @@ public final class Containers {
 	}
 
 	/** Puts a stack into the container: onto matching stacks first, then empty slots. What doesn't fit stays in it. */
-	private static void insert(Container container, ItemStack stack) {
+	public static void insert(Container container, ItemStack stack) {
 		int limit = Math.min(stack.getMaxStackSize(), container.getMaxStackSize());
 		for (int slot = 0; slot < container.getContainerSize() && stack.stackSize > 0; slot++) {
 			ItemStack there = container.getItem(slot);

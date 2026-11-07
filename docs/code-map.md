@@ -165,6 +165,7 @@ The event hub: what happens in the world (deaths, births, real attacks, gifts, c
 - [`GiftEvent`](../src/main/java/lifeblood/event/GiftEvent.java): A player gave an NPC something, and the NPC took it.
 - [`LifeEvents`](../src/main/java/lifeblood/event/LifeEvents.java): The event hub: something happens (a death, a birth, a hit, a gift, a couple changing), the code where it happens posts an event, and every system that cares has subscribed to it.
 - [`PartnershipEvent`](../src/main/java/lifeblood/event/PartnershipEvent.java): Two people's relationship changed: they started dating, got engaged, married, or split up.
+- [`TimeAwayEvent`](../src/main/java/lifeblood/event/TimeAwayEvent.java): A household that went unwatched for a while has just been loaded again and is catching up on the time (see homestead/life/HouseholdCatchUp).
 
 ## `faction`
 
@@ -225,7 +226,7 @@ Generated homesteads: lone houses the world places as it generates, with people 
 
 - [`HomesteadGoods`](../src/main/java/lifeblood/homestead/HomesteadGoods.java): What a homestead's chests and furnaces hold when it's generated: what the household would have after a few days or weeks of living there, and nothing they couldn't have.
 - [`HomesteadPeople`](../src/main/java/lifeblood/homestead/HomesteadPeople.java): Brings a planned household to life: makes each person where they sleep, with their age, looks and family name, and writes their history into the register of people as history, not news: marriages from years ago, children's parents, a late husband or wife, siblings' parents back home.
-- [`HomesteadRegister`](../src/main/java/lifeblood/homestead/HomesteadRegister.java): Every homestead the world has generated, saved with it (BTA SavedData): where it is, which prefab, who heads the household, and when they settled.
+- [`HomesteadRegister`](../src/main/java/lifeblood/homestead/HomesteadRegister.java): Every homestead the world has generated, saved with it (BTA SavedData): where it is, which prefab, who heads the household, when they settled, and when each was last loaded and living (for catching up on time away).
 - [`Homesteads`](../src/main/java/lifeblood/homestead/Homesteads.java): Generated homesteads: as the overworld decorates a new chunk, rarely, a house from the prefabs/homestead folder is fitted to flat ground nearby, with its household already living there and its chests stocked.
 - [`HomesteadSetup`](../src/main/java/lifeblood/homestead/HomesteadSetup.java): Homesteaders' days (the homestead schedule and its activities: sleeping, chores, meals, evenings) and their talk of how they came to live out here, as a chat topic (chat_open_settling, chat_reply_settling).
 - [`HomesteadSites`](../src/main/java/lifeblood/homestead/HomesteadSites.java): Where homesteads may go: the overworld is split into square cells, about 400 blocks across, and each cell has a few chunks picked from the world seed where a homestead is tried.
@@ -254,6 +255,7 @@ Homesteaders' days (see docs/daily-life.md): the homestead schedule (HomesteadDa
 
 - [`HomesteadDay`](../src/main/java/lifeblood/homestead/life/HomesteadDay.java): A homesteader's day, as a schedule: chores from 6, a meal at home at 12, chores or a walk from 13, home for the evening at 18, and bed at 21.
 - [`Household`](../src/main/java/lifeblood/homestead/life/Household.java): A homesteader's household as far as their day goes: their house (found from their home, which is in it) and its chests, what the chests hold, and which chest to walk to.
+- [`HouseholdCatchUp`](../src/main/java/lifeblood/homestead/life/HouseholdCatchUp.java): Homesteads living while unloaded, as a ledger (see docs/unloaded.md): a household nobody was near doesn't tick, so when its house is loaded again after a while, it catches up on the time at once, at rates measured from the chores themselves.
 - [`MealBehavior`](../src/main/java/lifeblood/homestead/life/MealBehavior.java): Mealtime at home: back to the house, where someone carrying little food takes some from the household's chests, so they have it when they need it (they eat by the player's rules, when hurt; see NpcEating).
 - [`SleepBehavior`](../src/main/java/lifeblood/homestead/life/SleepBehavior.java): Bedtime: walks to their own bed and sleeps in it, lying on their back with their head on the pillow, until morning.
 
@@ -384,9 +386,10 @@ Trips away from home (see docs/travelers.md): journeys, adventures in caves, vis
 - [`Strangers`](../src/main/java/lifeblood/travel/Strangers.java): Strangers passing through (a WorldSystem): now and then, somewhere out beyond where a player is, a person sets out for home far off on the other side of them, so their road passes near.
 - [`Supplies`](../src/main/java/lifeblood/travel/Supplies.java): What a trip takes from home and brings back: food for the road and what the kind of trip needs (torches and a pickaxe for caves, a weapon), taken from the household's chests before setting out; and everything brought back, put away again, but for a little food.
 - [`TravelRegister`](../src/main/java/lifeblood/travel/TravelRegister.java): Travelers who are away from every player, saved with the world (BTA SavedData): each one's whole NPC as it was when it left sight, its trip, where it's got to, and anything it's found since.
-- [`TravelSetup`](../src/main/java/lifeblood/travel/TravelSetup.java): Trips away from home: the kinds (journeys, visits, adventures), carrying a trip out as an instinct every NPC has, trips going on out of sight and strangers passing through (world systems), and talking a trip over (a chat topic).
+- [`TravelSetup`](../src/main/java/lifeblood/travel/TravelSetup.java): Trips away from home: the kinds (journeys, visits, adventures), carrying a trip out as an instinct every NPC has, trips going on out of sight and strangers passing through (world systems), trips taken while a household was unwatched (a TimeAwayEvent listener), and talking a trip over (a chat topic).
 - [`TravelSimulation`](../src/main/java/lifeblood/travel/TravelSimulation.java): Trips going on out of sight (a WorldSystem): each traveler in TravelRegister walks on toward where they're going at a walking pace by day and rests by night, stays as long as they meant to (what they find or suffer there worked out by the trip's kind), and heads home.
 - [`TravelTalk`](../src/main/java/lifeblood/travel/TravelTalk.java): What travelers say about their trips: the facts for "Where are you headed?" (what kind of trip, how far along, which way and how far), and the "travels" chat topic for talking a trip over afterwards (chat_open_travels, chat_reply_travels).
+- [`TripsWhileAway`](../src/main/java/lifeblood/travel/TripsWhileAway.java): The trips a household's people took while nobody was near (a TimeAwayEvent listener): each grown-up who isn't away already may have set out a few times in the days unwatched, as often as they would have in sight.
 
 ## `travel/kinds`
 
