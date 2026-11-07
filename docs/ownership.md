@@ -33,7 +33,7 @@ Spouses, parents and children share what each of them owns, players and NPCs ali
 
 ## Rules for NPCs
 
-**Built:** blocks NPCs place, and farmland they till, are theirs (`BlockOwners.placingAs`); a generated homestead's blocks belong to the head of the household. Chores only take from nature or the household: trees and gravel nobody placed, the household's own field, chests and furnaces. Adventurers empty only chests nobody owns (dungeons). Not yet: a traveler digging in for the night or cutting a stair into a cave doesn't check who owns the ground.
+**Built:** blocks NPCs place, and farmland they till, are theirs (`BlockOwners.placingAs`); a generated homestead's blocks belong to the head of the household. Chores only take from nature or the household: trees and gravel nobody placed, the household's own field, chests and furnaces. Travelers dig only blocks nobody placed: a shelter for the night goes where the ground isn't anyone's, a stair into or out of a cave turns back at someone's block, and adventurers mine only ore and empty only chests nobody owns (dungeons).
 
 **Planned:**
 

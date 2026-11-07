@@ -9,6 +9,7 @@ import net.minecraft.core.item.block.ItemBlock;
 import net.minecraft.core.world.World;
 import net.minecraft.core.world.pos.TilePos;
 import lifeblood.entity.EntityNPC;
+import lifeblood.ownership.BlockOwners;
 import lifeblood.work.BlockBreaking;
 import lifeblood.work.BlockUse;
 import lifeblood.work.ItemPickup;
@@ -140,15 +141,25 @@ public final class Shelter {
 		}
 	}
 
-	/** Two blocks of plain ground under the feet, solid beneath them, with no water, lava or falling sand to come in. */
+	/**
+	 * Two blocks of plain ground under the feet, solid beneath them, with no water, lava or falling sand to come in, and
+	 * nobody's: the hole and the step cut to climb out by are only dug where no one placed the blocks, so a traveler never
+	 * digs into someone's floor.
+	 */
 	private static boolean diggable(World world, int x, int y, int z) {
 		TilePos pos = new TilePos();
 		for (int depth = 1; depth <= 3; depth++) {
 			Block<?> block = world.getBlockType(pos.set(x, y - depth, z));
 			Material material = block.getMaterial();
-			if (!material.blocksMotion() || block.getHardness() < 0.0F || block.getHardness() > 3.0F || isLoose(block)) {
+			if (!material.blocksMotion() || block.getHardness() < 0.0F || block.getHardness() > 3.0F || isLoose(block)
+				|| BlockOwners.ownerAt(world, x, y - depth, z) != null) {
 				return false;
 			}
+		}
+
+		// The step out, cut into the side of the hole (see morning()).
+		if (BlockOwners.ownerAt(world, x + 1, y - 1, z) != null || BlockOwners.ownerAt(world, x + 1, y, z) != null) {
+			return false;
 		}
 
 		// Nothing wet or burning beside the hole.

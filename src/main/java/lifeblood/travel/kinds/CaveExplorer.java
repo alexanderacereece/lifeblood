@@ -191,9 +191,13 @@ public final class CaveExplorer implements NpcBehavior {
 			}
 
 			if (block.getMaterial().blocksMotion()) {
-				if (this.breaking.dig(x, y + up, z) == BlockBreaking.Result.FAILED) {
+				// Someone's block is never dug through: the stair turns the other way.
+				if (BlockOwners.ownerAt(npc.world, x, y + up, z) != null
+					|| this.breaking.dig(x, y + up, z) == BlockBreaking.Result.FAILED) {
 					this.stairDirX = -this.stairDirX;
 					this.stairDirZ = -this.stairDirZ;
+					// A turn counts as a try, so a stair boxed in both ways gives up.
+					this.stairSteps++;
 				}
 
 				return;
@@ -357,7 +361,7 @@ public final class CaveExplorer implements NpcBehavior {
 			for (int dy = -1; dy <= 3; dy++) {
 				for (int dz = -ORE_RANGE; dz <= ORE_RANGE; dz++) {
 					Block<?> block = npc.world.getBlockType(pos.set(cx + dx, cy + dy, cz + dz));
-					if (isOre(block) && exposed(npc.world, pos.x, pos.y, pos.z)) {
+					if (isOre(block) && exposed(npc.world, pos.x, pos.y, pos.z) && BlockOwners.ownerAt(npc.world, pos.x, pos.y, pos.z) == null) {
 						return new int[] {pos.x, pos.y, pos.z};
 					}
 				}
